@@ -72,22 +72,23 @@ const scheduleData = [
   },
 ];
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "")
+  .trim()
+  .replace(/\/+$/, "");
+
 function getApiEndpoints(path) {
-  const endpoints = [];
-  const { origin, protocol } = window.location;
-
-  // Prefer same-origin /chat when served by Flask on localhost:5000.
-  if (origin && origin !== "null") {
-    endpoints.push(`${origin}${path}`);
+  if (API_BASE_URL) {
+    return [`${API_BASE_URL}${path}`];
   }
 
-  // Fallback to local Flask endpoint for file:// and other local static hosts.
-  if (protocol === "http:" || protocol === "file:") {
-    endpoints.push(`http://localhost:5000${path}`);
-    endpoints.push(`http://127.0.0.1:5000${path}`);
+  if (["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+    return [
+      `http://localhost:5000${path}`,
+      `http://127.0.0.1:5000${path}`,
+    ];
   }
 
-  return [...new Set(endpoints)];
+  return [];
 }
 
 const CHAT_ENDPOINTS = getApiEndpoints("/chat");
@@ -124,7 +125,9 @@ function appendMessage(type, text) {
 }
 
 async function fetchBotReply(message) {
-  let lastError = "Unable to reach chat backend.";
+  let lastError = API_BASE_URL
+    ? "Unable to reach chat backend."
+    : "Backend URL is not configured. Set VITE_API_BASE_URL in Vercel.";
 
   for (const endpoint of CHAT_ENDPOINTS) {
     try {
@@ -158,28 +161,13 @@ async function fetchBotReply(message) {
     }
   }
 
-  if (/Failed to fetch/i.test(lastError)) {
-    const { origin, protocol } = window.location;
-    if (protocol === "file:") {
-      throw new Error(
-        "Failed to fetch. Run `python Model/model.py` and open http://localhost:5000 (not the file directly)."
-      );
-    }
-    if (protocol === "https:") {
-      throw new Error(
-        "Failed to fetch. HTTPS pages cannot call an HTTP backend; open the app at http://localhost:5000."
-      );
-    }
-    throw new Error(
-      `Failed to fetch from chat backend. Ensure Flask is running at http://localhost:5000 and try reloading ${origin}.`
-    );
-  }
-
   throw new Error(lastError);
 }
 
 async function fetchStores(zipCode) {
-  let lastError = "Unable to reach the grocery store backend.";
+  let lastError = API_BASE_URL
+    ? "Unable to reach the grocery store backend."
+    : "Backend URL is not configured. Set VITE_API_BASE_URL in Vercel.";
 
   for (const endpoint of getApiEndpoints("/grocery-stores")) {
     try {

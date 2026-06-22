@@ -6,10 +6,10 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlparse
 from urllib.request import Request, urlopen
 
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request
 from openai import OpenAI
 
-app = Flask(__name__, static_folder="../Web", static_url_path="")
+app = Flask(__name__)
 
 SYSTEM_PROMPT = (
     "You are a helpful meal generating assistant who generates concise meal ideas initially, asks for feedback, iterates, then returns recipes upon confirmation of meals from user. "
@@ -21,13 +21,24 @@ NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 HTTP_TIMEOUT_SECONDS = 12
 USER_AGENT = "SNAPP-grocery-finder/1.0"
+DEFAULT_CORS_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173"
+CORS_ORIGINS = {
+    origin.strip().rstrip("/")
+    for origin in os.getenv("CORS_ORIGINS", DEFAULT_CORS_ORIGINS).split(",")
+    if origin.strip()
+}
 
 
 @app.after_request
 def add_cors_headers(response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
-    response.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS"
+    origin = request.headers.get("Origin", "").rstrip("/")
+    if "*" in CORS_ORIGINS or origin in CORS_ORIGINS:
+        response.headers["Access-Control-Allow-Origin"] = (
+            "*" if "*" in CORS_ORIGINS else origin
+        )
+        response.headers["Vary"] = "Origin"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        response.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS"
     return response
 
 
@@ -170,7 +181,12 @@ def find_grocery_stores(zip_code):
 
 @app.get("/")
 def index():
-    return send_from_directory(app.static_folder, "main.html")
+    return jsonify({"name": "SNAPP API", "status": "ok"})
+
+
+@app.get("/health")
+def health():
+    return jsonify({"status": "ok"})
 
 
 @app.post("/chat")
