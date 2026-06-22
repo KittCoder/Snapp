@@ -72,7 +72,9 @@ const scheduleData = [
   },
 ];
 
-const API_BASE_URL = (import.meta.env?.VITE_API_BASE_URL || "")
+const API_BASE_URL = (
+  document.querySelector('meta[name="snapp-api-base-url"]')?.content || ""
+)
   .trim()
   .replace(/\/+$/, "");
 
@@ -127,7 +129,7 @@ function appendMessage(type, text) {
 async function fetchBotReply(message) {
   let lastError = API_BASE_URL
     ? "Unable to reach chat backend."
-    : "Backend URL is not configured. Set VITE_API_BASE_URL in Vercel.";
+    : "Backend URL is not configured.";
 
   for (const endpoint of CHAT_ENDPOINTS) {
     try {
@@ -167,7 +169,7 @@ async function fetchBotReply(message) {
 async function fetchStores(zipCode) {
   let lastError = API_BASE_URL
     ? "Unable to reach the grocery store backend."
-    : "Backend URL is not configured. Set VITE_API_BASE_URL in Vercel.";
+    : "Backend URL is not configured.";
 
   for (const endpoint of getApiEndpoints("/grocery-stores")) {
     try {

@@ -6,11 +6,10 @@ SNAPP is a web application that generates healthy meal ideas for SNAP benefits u
 
 ```text
 .
-├── Web/                 # Vite frontend deployed by Vercel
+├── Web/                 # Static frontend deployed by Vercel
 │   ├── index.html
 │   ├── app.js
-│   ├── looks.css
-│   └── package.json
+│   └── looks.css
 ├── Model/               # Flask API deployed by Render
 │   ├── model.py
 │   └── requirements.txt
@@ -30,22 +29,13 @@ export OPENAI_API_KEY="your_api_key_here"
 python Model/model.py
 ```
 
-In another terminal, start the frontend:
-
-```bash
-npm --prefix Web install
-npm --prefix Web run dev
-```
-
-Vite serves the frontend at `http://localhost:5173`. During local development it automatically calls the Flask API at `http://localhost:5000`.
-
-To preview only the frontend without Node or the backend:
+In another terminal, serve the frontend:
 
 ```bash
 python3 -m http.server 5173 --directory Web
 ```
 
-Then open `http://localhost:5173`. Do not open `Web/index.html` directly as a `file://` URL because browsers restrict module scripts loaded from local files.
+Then open `http://localhost:5173`. During local development the frontend automatically calls the Flask API at `http://localhost:5000`.
 
 ## Deploy the backend to Render
 
@@ -58,12 +48,12 @@ The API exposes `GET /health`, `POST /chat`, and `GET /grocery-stores?zip=12345`
 
 ## Deploy the frontend to Vercel
 
-1. Import this repository into Vercel. The root `vercel.json` supplies the install command, build command, and output directory.
-2. Add the environment variable `VITE_API_BASE_URL` with the Render service URL. Do not include a trailing slash.
-3. Deploy the project.
-4. If Vercel assigned a different URL than expected, update `CORS_ORIGINS` in Render and redeploy the backend.
+1. Import this repository into Vercel. The root `vercel.json` disables install and build commands and publishes `Web/` directly.
+2. Deploy the project with Framework Preset set to `Other`.
+3. If a Render backend is available, set the `snapp-api-base-url` meta tag in `Web/index.html` to its HTTPS URL and redeploy.
+4. Add the final Vercel URL to `CORS_ORIGINS` in Render and redeploy the backend.
 
-`VITE_API_BASE_URL` is public frontend configuration. Never put an OpenAI key or Supabase service-role key in a `VITE_*` variable.
+The backend URL is public frontend configuration. OpenAI and Supabase service-role keys must remain backend-only.
 
 ## Supabase preparation
 
