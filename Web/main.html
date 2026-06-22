@@ -16,6 +16,7 @@
         <button data-target="home" class="nav-button active">Home</button>
         <button data-target="chat" class="nav-button">Chat</button>
         <button data-target="schedule" class="nav-button">Schedule</button>
+        <button data-target="information" class="nav-button">Information</button>
         <button data-target="settings" class="nav-button">Settings</button>
       </nav>
     </header>
@@ -222,6 +223,34 @@
             <tbody></tbody>
           </table>
         </div>
+      </section>
+
+      <section id="information" class="panel">
+        <h2>Grocery Store Information</h2>
+        <p>Enter a 5-digit US ZIP code to find grocery stores in that area.</p>
+        <form id="store-search-form" class="store-search-form">
+          <label for="zip-code">ZIP code</label>
+          <div class="store-search-controls">
+            <input
+              type="text"
+              id="zip-code"
+              name="zip"
+              inputmode="numeric"
+              autocomplete="postal-code"
+              pattern="[0-9]{5}"
+              maxlength="5"
+              placeholder="e.g. 10001"
+              required
+            />
+            <button type="submit">Find stores</button>
+          </div>
+        </form>
+        <div id="store-search-status" class="store-search-status" role="status" aria-live="polite"></div>
+        <ul id="store-results" class="store-results"></ul>
+        <p id="store-source" class="store-source" hidden>
+          Store data ©
+          <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>.
+        </p>
       </section>
 
       <section id="settings" class="panel">

@@ -7,6 +7,11 @@ const scheduleTableBody = document.querySelector("#schedule-table tbody");
 const themeSelect = document.getElementById("theme-select");
 const notificationsToggle = document.getElementById("notifications-toggle");
 const dietSelect = document.getElementById("diet-select");
+const storeSearchForm = document.getElementById("store-search-form");
+const zipCodeInput = document.getElementById("zip-code");
+const storeSearchStatus = document.getElementById("store-search-status");
+const storeResults = document.getElementById("store-results");
+const storeSource = document.getElementById("store-source");
 
 const scheduleData = [
   {
@@ -67,25 +72,25 @@ const scheduleData = [
   },
 ];
 
-function getChatEndpoints() {
+function getApiEndpoints(path) {
   const endpoints = [];
   const { origin, protocol } = window.location;
 
   // Prefer same-origin /chat when served by Flask on localhost:5000.
   if (origin && origin !== "null") {
-    endpoints.push(`${origin}/chat`);
+    endpoints.push(`${origin}${path}`);
   }
 
   // Fallback to local Flask endpoint for file:// and other local static hosts.
   if (protocol === "http:" || protocol === "file:") {
-    endpoints.push("http://localhost:5000/chat");
-    endpoints.push("http://127.0.0.1:5000/chat");
+    endpoints.push(`http://localhost:5000${path}`);
+    endpoints.push(`http://127.0.0.1:5000${path}`);
   }
 
   return [...new Set(endpoints)];
 }
 
-const CHAT_ENDPOINTS = getChatEndpoints();
+const CHAT_ENDPOINTS = getApiEndpoints("/chat");
 
 function showPanel(id) {
   panels.forEach((panel) => panel.classList.toggle("visible", panel.id === id));
@@ -173,6 +178,65 @@ async function fetchBotReply(message) {
   throw new Error(lastError);
 }
 
+async function fetchStores(zipCode) {
+  let lastError = "Unable to reach the grocery store backend.";
+
+  for (const endpoint of getApiEndpoints("/grocery-stores")) {
+    try {
+      const response = await fetch(`${endpoint}?zip=${encodeURIComponent(zipCode)}`);
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const responseError = data.error || `Store search failed (${response.status}).`;
+        if (response.status !== 404 || data.error) {
+          return Promise.reject(new Error(responseError));
+        }
+        lastError = responseError;
+        continue;
+      }
+      return data;
+    } catch (error) {
+      lastError = error.message || "Network error while searching for stores.";
+    }
+  }
+
+  throw new Error(lastError);
+}
+
+function renderStores(stores) {
+  storeResults.replaceChildren();
+  stores.forEach((store) => {
+    const item = document.createElement("li");
+    const name = document.createElement("h3");
+    const address = document.createElement("p");
+    name.textContent = store.name;
+    address.textContent = store.address;
+    item.append(name, address);
+
+    const links = document.createElement("div");
+    links.className = "store-links";
+    if (store.latitude != null && store.longitude != null) {
+      const mapLink = document.createElement("a");
+      mapLink.href = `https://www.openstreetmap.org/?mlat=${encodeURIComponent(store.latitude)}&mlon=${encodeURIComponent(store.longitude)}#map=17/${encodeURIComponent(store.latitude)}/${encodeURIComponent(store.longitude)}`;
+      mapLink.target = "_blank";
+      mapLink.rel = "noopener noreferrer";
+      mapLink.textContent = "View on map";
+      links.appendChild(mapLink);
+    }
+
+    if (store.website) {
+      const websiteLink = document.createElement("a");
+      websiteLink.href = store.website;
+      websiteLink.target = "_blank";
+      websiteLink.rel = "noopener noreferrer";
+      websiteLink.textContent = "Visit website";
+      links.appendChild(websiteLink);
+    }
+
+    item.appendChild(links);
+    storeResults.appendChild(item);
+  });
+}
+
 navButtons.forEach((button) =>
   button.addEventListener("click", () => showPanel(button.dataset.target))
 );
@@ -190,6 +254,36 @@ chatForm.addEventListener("submit", async (event) => {
     pendingMessage.textContent = `Chat backend error: ${error.message}`;
   }
   chatInput.value = "";
+});
+
+storeSearchForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const zipCode = zipCodeInput.value.trim();
+  if (!/^\d{5}$/.test(zipCode)) {
+    storeSearchStatus.textContent = "Enter a valid 5-digit US ZIP code.";
+    storeResults.replaceChildren();
+    storeSource.hidden = true;
+    return;
+  }
+
+  const submitButton = storeSearchForm.querySelector("button");
+  submitButton.disabled = true;
+  storeSearchStatus.textContent = "Searching for grocery stores...";
+  storeResults.replaceChildren();
+  storeSource.hidden = true;
+
+  try {
+    const data = await fetchStores(zipCode);
+    renderStores(data.stores);
+    storeSearchStatus.textContent = data.stores.length
+      ? `${data.stores.length} grocery store${data.stores.length === 1 ? "" : "s"} found near ${data.location}.`
+      : `No grocery stores were found in ${data.location}.`;
+    storeSource.hidden = false;
+  } catch (error) {
+    storeSearchStatus.textContent = `Store search error: ${error.message}`;
+  } finally {
+    submitButton.disabled = false;
+  }
 });
 
 themeSelect.addEventListener("change", () => {

@@ -16,4 +16,4 @@ A web application that generates healthy recipes for SNAP benefits users, using 
    ```
 4. Open `http://localhost:5000` in your browser.
 
-The frontend sends chatbot requests to `/chat`, and the backend forwards them to the OpenAI ChatGPT API.
+The frontend sends chatbot requests to `/chat`, and the backend forwards them to the OpenAI API. The Information tab calls `/grocery-stores?zip=12345` and uses OpenStreetMap's Nominatim and Overpass services to return grocery stores without an additional API key.
