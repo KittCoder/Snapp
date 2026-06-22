@@ -1,19 +1,73 @@
 # SNAPP
-A web application that generates healthy recipes for SNAP benefits users, using AI on the backend. Checks local grocery store availability.
+
+SNAPP is a web application that generates healthy meal ideas for SNAP benefits users and finds nearby grocery stores. The frontend deploys to Vercel, the Flask API deploys to Render, and Supabase is reserved for persistent data when the application needs it.
+
+## Project structure
+
+```text
+.
+├── Web/                 # Vite frontend deployed by Vercel
+│   ├── index.html
+│   ├── app.js
+│   ├── looks.css
+│   └── package.json
+├── Model/               # Flask API deployed by Render
+│   ├── model.py
+│   └── requirements.txt
+├── render.yaml          # Render Blueprint
+└── vercel.json          # Vercel build configuration
+```
 
 ## Run locally
-1. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-2. Set your OpenAI API key:
-   ```bash
-   export OPENAI_API_KEY="your_api_key_here"
-   ```
-3. Start the app:
-   ```bash
-   python Model/model.py
-   ```
-4. Open `http://localhost:5000` in your browser.
 
-The frontend sends chatbot requests to `/chat`, and the backend forwards them to the OpenAI API. The Information tab calls `/grocery-stores?zip=12345` and uses OpenStreetMap's Nominatim and Overpass services to return grocery stores without an additional API key.
+Start the backend:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r Model/requirements.txt
+export OPENAI_API_KEY="your_api_key_here"
+python Model/model.py
+```
+
+In another terminal, start the frontend:
+
+```bash
+npm --prefix Web install
+npm --prefix Web run dev
+```
+
+Vite serves the frontend at `http://localhost:5173`. During local development it automatically calls the Flask API at `http://localhost:5000`.
+
+## Deploy the backend to Render
+
+1. In Render, create a Blueprint from this repository. Render reads `render.yaml` and creates the `snapp-api` free web service.
+2. Provide `OPENAI_API_KEY` when prompted.
+3. Initially set `CORS_ORIGINS` to your Vercel URL, such as `https://snapp.vercel.app`. Multiple origins can be comma-separated.
+4. After deployment, copy the Render URL, such as `https://snapp-api.onrender.com`.
+
+The API exposes `GET /health`, `POST /chat`, and `GET /grocery-stores?zip=12345`.
+
+## Deploy the frontend to Vercel
+
+1. Import this repository into Vercel. The root `vercel.json` supplies the install command, build command, and output directory.
+2. Add the environment variable `VITE_API_BASE_URL` with the Render service URL. Do not include a trailing slash.
+3. Deploy the project.
+4. If Vercel assigned a different URL than expected, update `CORS_ORIGINS` in Render and redeploy the backend.
+
+`VITE_API_BASE_URL` is public frontend configuration. Never put an OpenAI key or Supabase service-role key in a `VITE_*` variable.
+
+## Supabase preparation
+
+No database client is installed yet because the application does not currently persist data. When persistence is added:
+
+- Keep `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in Render environment variables.
+- Never expose the service-role key to the browser.
+- Use Supabase Row Level Security for any browser-accessible tables.
+- Replace the in-memory global chat history before scaling; it is process-local and is currently shared across requests.
+
+The expected variable names are documented in `Model/.env.example`.
+
+## Free-tier behavior
+
+Render free web services spin down after inactivity, so the first API request after an idle period can be noticeably slower. The filesystem is ephemeral; persistent application data should go to Supabase rather than local files.
