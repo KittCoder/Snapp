@@ -13,8 +13,7 @@ SNAPP is a web application that generates healthy meal ideas for SNAP benefits u
 ├── Model/               # Flask API deployed by Render
 │   ├── model.py
 │   └── requirements.txt
-├── render.yaml          # Render Blueprint
-└── vercel.json          # Vercel build configuration
+└── render.yaml          # Render Blueprint
 ```
 
 ## Run locally
@@ -48,8 +47,8 @@ The API exposes `GET /health`, `POST /chat`, and `GET /grocery-stores?zip=12345`
 
 ## Deploy the frontend to Vercel
 
-1. Import this repository into Vercel. The root `vercel.json` disables install and build commands and publishes `Web/` directly.
-2. Deploy the project with Framework Preset set to `Other`.
+1. Import this repository into Vercel and set the Root Directory to `Web`.
+2. Set Framework Preset to `Other`, leave the Build Command empty, and deploy.
 3. If a Render backend is available, set the `snapp-api-base-url` meta tag in `Web/index.html` to its HTTPS URL and redeploy.
 4. Add the final Vercel URL to `CORS_ORIGINS` in Render and redeploy the backend.
 
