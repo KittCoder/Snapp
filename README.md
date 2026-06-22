@@ -39,6 +39,14 @@ npm --prefix Web run dev
 
 Vite serves the frontend at `http://localhost:5173`. During local development it automatically calls the Flask API at `http://localhost:5000`.
 
+To preview only the frontend without Node or the backend:
+
+```bash
+python3 -m http.server 5173 --directory Web
+```
+
+Then open `http://localhost:5173`. Do not open `Web/index.html` directly as a `file://` URL because browsers restrict module scripts loaded from local files.
+
 ## Deploy the backend to Render
 
 1. In Render, create a Blueprint from this repository. Render reads `render.yaml` and creates the `snapp-api` free web service.
