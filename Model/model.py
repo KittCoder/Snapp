@@ -1,29 +1,45 @@
 
+import os
+
 from flask import Flask, jsonify, request, send_from_directory
 from openai import OpenAI
-
-key = "your_openai_api_key_here"  # Replace with your actual OpenAI API key
-
-client = OpenAI(api_key=key)
 
 app = Flask(__name__, static_folder="../Web", static_url_path="")
 
 SYSTEM_PROMPT = (
-    "You are a helpful meal generating assistant who generates concise meal ideas only. "
-    "Names, not recipes."
+    "You are a helpful meal generating assistant who generates concise meal ideas initially, asks for feedback, iterates, then returns recipes upon confirmation of meals from user. "
 )
+MAX_TURNS = 6
+conversation_history = []
+
+
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    response.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS"
+    return response
 
 
 def generate_reply(message):
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY is not set.")
+
+    client = OpenAI(api_key=api_key)
+    history = conversation_history[-MAX_TURNS * 2 :]
+    prompt = [{"role": "system", "content": SYSTEM_PROMPT}]
+    prompt.extend(history)
+    prompt.append({"role": "user", "content": message})
     response = client.responses.create(
         model="gpt-4.1-nano",
-        input=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": message},
-        ],
-        store=True,
+        input=prompt,
+        store=False,
     )
-    return response.output_text, response.usage.total_tokens
+    reply = response.output_text
+    conversation_history.append({"role": "user", "content": message})
+    conversation_history.append({"role": "assistant", "content": reply})
+    return reply, response.usage.total_tokens
 
 
 @app.get("/")
@@ -39,10 +55,15 @@ def chat():
         return jsonify({"error": "Message is required."}), 400
     try:
         reply, total_tokens = generate_reply(message)
-    except Exception:
-        return jsonify({"error": "Model request failed."}), 500
+    except Exception as exc:
+        return jsonify({"error": "Model request failed.", "details": str(exc)}), 500
     return jsonify({"reply": reply, "usage": {"total_tokens": total_tokens}})
 
 
+@app.route("/chat", methods=["OPTIONS"])
+def chat_options():
+    return ("", 204)
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)

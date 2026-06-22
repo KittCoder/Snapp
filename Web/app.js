@@ -67,15 +67,25 @@ const scheduleData = [
   },
 ];
 
-const cannedResponses = [
-  { keywords: ["breakfast", "morning"], reply: "Start the day with protein and fiber—how about Greek yogurt with berries?" },
-  { keywords: ["lunch", "midday"], reply: "Need something quick? Try a grain bowl with roasted veggies." },
-  { keywords: ["dinner", "evening"], reply: "A lean protein with greens will keep dinner light but satisfying." },
-  { keywords: ["swap", "change"], reply: "Sure! Pick a meal you want to swap, and I'll suggest an alternative." },
-  { keywords: ["schedule", "plan"], reply: "Your weekly schedule shows three meals per day—check the Schedule tab for details." },
-];
+function getChatEndpoints() {
+  const endpoints = [];
+  const { origin, protocol } = window.location;
 
-const fallbackReply = "I'm here to help with meals, schedules, or settings. Try asking about breakfast ideas!";
+  // Prefer same-origin /chat when served by Flask on localhost:5000.
+  if (origin && origin !== "null") {
+    endpoints.push(`${origin}/chat`);
+  }
+
+  // Fallback to local Flask endpoint for file:// and other local static hosts.
+  if (protocol === "http:" || protocol === "file:") {
+    endpoints.push("http://localhost:5000/chat");
+    endpoints.push("http://127.0.0.1:5000/chat");
+  }
+
+  return [...new Set(endpoints)];
+}
+
+const CHAT_ENDPOINTS = getChatEndpoints();
 
 function showPanel(id) {
   panels.forEach((panel) => panel.classList.toggle("visible", panel.id === id));
@@ -109,16 +119,58 @@ function appendMessage(type, text) {
 }
 
 async function fetchBotReply(message) {
-  const response = await fetch("http://localhost:5000/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message }),
-  });
-  if (!response.ok) {
-    throw new Error("Chat request failed");
+  let lastError = "Unable to reach chat backend.";
+
+  for (const endpoint of CHAT_ENDPOINTS) {
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
+
+      let data = {};
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
+
+      if (!response.ok) {
+        lastError =
+          data.details || data.error || `Chat request failed (${response.status}).`;
+        continue;
+      }
+
+      if (!data.reply) {
+        lastError = "Chat backend returned an invalid response.";
+        continue;
+      }
+
+      return data.reply;
+    } catch (error) {
+      lastError = error.message || "Network error while contacting chat backend.";
+    }
   }
-  const data = await response.json();
-  return data.reply;
+
+  if (/Failed to fetch/i.test(lastError)) {
+    const { origin, protocol } = window.location;
+    if (protocol === "file:") {
+      throw new Error(
+        "Failed to fetch. Run `python Model/model.py` and open http://localhost:5000 (not the file directly)."
+      );
+    }
+    if (protocol === "https:") {
+      throw new Error(
+        "Failed to fetch. HTTPS pages cannot call an HTTP backend; open the app at http://localhost:5000."
+      );
+    }
+    throw new Error(
+      `Failed to fetch from chat backend. Ensure Flask is running at http://localhost:5000 and try reloading ${origin}.`
+    );
+  }
+
+  throw new Error(lastError);
 }
 
 navButtons.forEach((button) =>
@@ -135,11 +187,7 @@ chatForm.addEventListener("submit", async (event) => {
     const reply = await fetchBotReply(message);
     pendingMessage.textContent = reply;
   } catch (error) {
-    const normalized = message.toLowerCase();
-    const match = cannedResponses.find(({ keywords }) =>
-      keywords.some((keyword) => normalized.includes(keyword))
-    );
-    pendingMessage.textContent = match ? match.reply : fallbackReply;
+    pendingMessage.textContent = `Chat backend error: ${error.message}`;
   }
   chatInput.value = "";
 });
