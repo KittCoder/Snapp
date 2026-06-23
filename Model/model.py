@@ -21,7 +21,11 @@ NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 HTTP_TIMEOUT_SECONDS = 12
 USER_AGENT = "SNAPP-grocery-finder/1.0"
-DEFAULT_CORS_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173"
+DEFAULT_CORS_ORIGINS = (
+    "http://localhost:5173,"
+    "http://127.0.0.1:5173,"
+    "https://snapp-1d5j.vercel.app"
+)
 CORS_ORIGINS = {
     origin.strip().rstrip("/")
     for origin in os.getenv("CORS_ORIGINS", DEFAULT_CORS_ORIGINS).split(",")
@@ -237,4 +241,5 @@ def grocery_stores_options():
 
 
 if __name__ == "__main__":
-    app.run(debug=False)
+    port = int(os.getenv("PORT", "5000"))
+    app.run(host="0.0.0.0", port=port, debug=False)
