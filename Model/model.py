@@ -2,6 +2,7 @@
 import os
 import json
 import re
+import time
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlparse
 from urllib.request import Request, urlopen
@@ -19,8 +20,11 @@ conversation_history = []
 ZIP_CODE_PATTERN = re.compile(r"^\d{5}$")
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
-HTTP_TIMEOUT_SECONDS = 12
+HTTP_TIMEOUT_SECONDS = 20
+HTTP_RETRY_ATTEMPTS = 2
 USER_AGENT = "SNAPP-grocery-finder/1.0"
+STORE_CACHE_TTL_SECONDS = 15 * 60
+store_search_cache = {}
 DEFAULT_CORS_ORIGINS = (
     "http://localhost:5173,"
     "http://127.0.0.1:5173,"
@@ -73,7 +77,7 @@ def generate_reply(message):
     return reply, response.usage.total_tokens
 
 
-def fetch_json(url, data=None):
+def fetch_json(url, data=None, service_name="data service"):
     headers = {
         "Accept": "application/json",
         "User-Agent": USER_AGENT,
@@ -82,12 +86,22 @@ def fetch_json(url, data=None):
         headers["Content-Type"] = "application/x-www-form-urlencoded"
         data = urlencode(data).encode("utf-8")
 
-    request_object = Request(url, data=data, headers=headers)
-    try:
-        with urlopen(request_object, timeout=HTTP_TIMEOUT_SECONDS) as response:
-            return json.load(response)
-    except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
-        raise RuntimeError("The grocery store data service is unavailable.") from exc
+    last_error = None
+    for attempt in range(HTTP_RETRY_ATTEMPTS):
+        request_object = Request(url, data=data, headers=headers)
+        try:
+            with urlopen(request_object, timeout=HTTP_TIMEOUT_SECONDS) as response:
+                return json.load(response)
+        except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
+            last_error = exc
+            print(
+                f"{service_name} request failed on attempt {attempt + 1}: {exc}",
+                flush=True,
+            )
+            if attempt + 1 < HTTP_RETRY_ATTEMPTS:
+                time.sleep(1)
+
+    raise RuntimeError("The grocery store data service is unavailable.") from last_error
 
 
 def normalize_website(value):
@@ -141,6 +155,11 @@ def format_store(element):
 
 
 def find_grocery_stores(zip_code):
+    cached_result = store_search_cache.get(zip_code)
+    now = time.time()
+    if cached_result and now - cached_result["cached_at"] < STORE_CACHE_TTL_SECONDS:
+        return cached_result["location"], cached_result["stores"]
+
     location_params = urlencode(
         {
             "postalcode": zip_code,
@@ -150,7 +169,10 @@ def find_grocery_stores(zip_code):
             "limit": 1,
         }
     )
-    locations = fetch_json(f"{NOMINATIM_URL}?{location_params}")
+    locations = fetch_json(
+        f"{NOMINATIM_URL}?{location_params}",
+        service_name="Nominatim",
+    )
     if not locations:
         return None, []
 
@@ -160,7 +182,7 @@ def find_grocery_stores(zip_code):
     except (KeyError, TypeError, ValueError) as exc:
         raise RuntimeError("The grocery store data service returned invalid location data.") from exc
     overpass_query = f"""
-        [out:json][timeout:10];
+        [out:json][timeout:20];
         (
           nwr["shop"~"^(supermarket|grocery)$"]
              ["addr:postcode"~"^{zip_code}(-[0-9]{{4}})?$"]
@@ -168,7 +190,11 @@ def find_grocery_stores(zip_code):
         );
         out center tags;
     """
-    store_data = fetch_json(OVERPASS_URL, {"data": overpass_query})
+    store_data = fetch_json(
+        OVERPASS_URL,
+        {"data": overpass_query},
+        service_name="Overpass",
+    )
 
     stores = []
     seen = set()
@@ -186,7 +212,14 @@ def find_grocery_stores(zip_code):
         stores.append(store)
 
     stores.sort(key=lambda store: store["name"].casefold())
-    return location.get("display_name", zip_code), stores[:30]
+    location_name = location.get("display_name", zip_code)
+    stores = stores[:30]
+    store_search_cache[zip_code] = {
+        "cached_at": now,
+        "location": location_name,
+        "stores": stores,
+    }
+    return location_name, stores
 
 
 @app.get("/")
