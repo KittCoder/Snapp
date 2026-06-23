@@ -20,6 +20,12 @@ The backend is configured for Render with [render.yaml](/Users/2027kstarkie/Desk
 
 Render injects `PORT` automatically. Gunicorn handles the hosted service process.
 
+The backend also accepts Vercel deployment URLs that match this project, such as:
+
+```text
+https://snapp-1d5j-b7g466kuj-snapp-app.vercel.app
+```
+
 ## Frontend on Vercel
 
 After Render deploys the backend, copy the Render service URL and set it in [Web/index.html](/Users/2027kstarkie/Desktop/SNAPP/Web/index.html:7):
