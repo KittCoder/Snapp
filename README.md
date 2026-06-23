@@ -43,3 +43,4 @@ OPENAI_API_KEY=your_key_here python model.py
 ```
 
 The API runs on `http://localhost:5000` locally.
+ 
