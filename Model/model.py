@@ -22,7 +22,7 @@ NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 HTTP_TIMEOUT_SECONDS = 20
 HTTP_RETRY_ATTEMPTS = 2
-USER_AGENT = "SNAPP-grocery-finder/1.0"
+USER_AGENT = "SNAPP/1.0 (https://github.com/KittCoder/Snapp)"
 STORE_CACHE_TTL_SECONDS = 15 * 60
 store_search_cache = {}
 DEFAULT_CORS_ORIGINS = (
@@ -154,6 +154,61 @@ def format_store(element):
     }
 
 
+def format_nominatim_store(place):
+    name = place.get("name")
+    if not name:
+        display_name = place.get("display_name", "")
+        name = display_name.split(",", 1)[0].strip()
+    if not name:
+        return None
+
+    return {
+        "name": name,
+        "address": place.get("display_name") or "Address not available",
+        "latitude": place.get("lat"),
+        "longitude": place.get("lon"),
+        "website": None,
+    }
+
+
+def find_stores_with_nominatim(zip_code, boundingbox):
+    south, north, west, east = boundingbox
+    stores = []
+    seen = set()
+
+    for query in ("supermarket", "grocery"):
+        params = urlencode(
+            {
+                "q": query,
+                "countrycodes": "us",
+                "format": "jsonv2",
+                "limit": 20,
+                "viewbox": f"{west},{north},{east},{south}",
+                "bounded": 1,
+            }
+        )
+        places = fetch_json(
+            f"{NOMINATIM_URL}?{params}",
+            service_name="Nominatim store fallback",
+        )
+        for place in places:
+            if place.get("category") != "shop":
+                continue
+            if place.get("type") not in ("supermarket", "grocery"):
+                continue
+            store = format_nominatim_store(place)
+            if not store:
+                continue
+            identity = (store["name"].casefold(), store["address"].casefold())
+            if identity in seen:
+                continue
+            seen.add(identity)
+            stores.append(store)
+
+    stores.sort(key=lambda store: store["name"].casefold())
+    return stores[:30]
+
+
 def find_grocery_stores(zip_code):
     cached_result = store_search_cache.get(zip_code)
     now = time.time()
@@ -190,26 +245,29 @@ def find_grocery_stores(zip_code):
         );
         out center tags;
     """
-    store_data = fetch_json(
-        OVERPASS_URL,
-        {"data": overpass_query},
-        service_name="Overpass",
-    )
-
-    stores = []
-    seen = set()
-    for element in store_data.get("elements", []):
-        store = format_store(element)
-        if not store:
-            continue
-        element_postcode = element.get("tags", {}).get("addr:postcode")
-        if element_postcode and element_postcode[:5] != zip_code:
-            continue
-        identity = (store["name"].casefold(), store["address"].casefold())
-        if identity in seen:
-            continue
-        seen.add(identity)
-        stores.append(store)
+    try:
+        store_data = fetch_json(
+            OVERPASS_URL,
+            {"data": overpass_query},
+            service_name="Overpass",
+        )
+        stores = []
+        seen = set()
+        for element in store_data.get("elements", []):
+            store = format_store(element)
+            if not store:
+                continue
+            element_postcode = element.get("tags", {}).get("addr:postcode")
+            if element_postcode and element_postcode[:5] != zip_code:
+                continue
+            identity = (store["name"].casefold(), store["address"].casefold())
+            if identity in seen:
+                continue
+            seen.add(identity)
+            stores.append(store)
+    except RuntimeError:
+        print("Overpass unavailable; using Nominatim store fallback.", flush=True)
+        stores = find_stores_with_nominatim(zip_code, location["boundingbox"])
 
     stores.sort(key=lambda store: store["name"].casefold())
     location_name = location.get("display_name", zip_code)
