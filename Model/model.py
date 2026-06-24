@@ -67,6 +67,29 @@ FOOD_MATCH_PENALTY_TERMS = (
     "soup",
     "syrup",
 )
+DEFAULT_PRICE_PER_100G = 0.55
+PRICE_PER_100G_RULES = (
+    (r"\b(lamb)\b", 1.75),
+    (r"\b(beef)\b", 1.25),
+    (r"\b(salmon|fish)\b", 1.65),
+    (r"\b(shrimp)\b", 1.45),
+    (r"\b(chicken|turkey|pork)\b", 0.75),
+    (r"\b(tofu|tempeh)\b", 0.65),
+    (r"\b(beans|lentils|chickpeas|black beans|kidney beans|pinto beans)\b", 0.28),
+    (r"\b(egg|eggs)\b", 0.45),
+    (r"\b(cheese|cheddar|parmesan|feta|mozzarella)\b", 1.10),
+    (r"\b(oil|olive oil|vegetable oil|canola oil|butter|ghee)\b", 0.85),
+    (r"\b(peanut butter|almond butter|nut butter|nuts|almonds|walnuts|cashews|pecans|peanuts|seeds)\b", 0.95),
+    (r"\b(rice|pasta|noodle|noodles|potato|potatoes|quinoa|couscous|grain|grains|oats)\b", 0.22),
+    (r"\b(tortilla|bread)\b", 0.35),
+    (r"\b(fruit|apple|banana|berries|strawberries|blueberries|orange|grapes|mango|pineapple|peach|pear)\b", 0.45),
+    (r"\b(greens|spinach|lettuce|arugula|kale|spring mix|romaine)\b", 0.75),
+    (r"\b(broccoli|pepper|peppers|tomato|tomatoes|zucchini|vegetable|vegetables)\b", 0.42),
+    (r"\b(onion|carrot|celery|cabbage)\b", 0.24),
+    (r"\b(mint|basil|cilantro|parsley|dill|thyme|rosemary|oregano|sage)\b", 2.80),
+    (r"\b(garlic|ginger|jalapeno|chili|lemon juice|lime juice|spice|spices)\b", 0.85),
+    (r"\b(sauce|salsa|dressing|yogurt|cream|broth|stock)\b", 0.55),
+)
 DEFAULT_CORS_ORIGINS = (
     "http://localhost:5173,"
     "http://127.0.0.1:5173,"
@@ -387,6 +410,14 @@ def has_valid_dish_weight(dish_name, ingredients, servings):
     return total_per_serving <= 750
 
 
+def estimate_price_per_100g(ingredient_name):
+    name = (ingredient_name or "").casefold()
+    for pattern, price_per_100g in PRICE_PER_100G_RULES:
+        if re.search(pattern, name):
+            return price_per_100g
+    return DEFAULT_PRICE_PER_100G
+
+
 def generate_dish_candidates(ingredients):
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
@@ -500,6 +531,7 @@ def build_dishes(dish_candidates):
         ingredient_lines = []
         candidate_missing_ingredients = []
         total_calories = 0
+        total_price = 0
         total_nutrients = {
             "protein_g": 0,
             "carbohydrates_g": 0,
@@ -519,7 +551,9 @@ def build_dishes(dish_candidates):
             nutrients = food["nutrients_per_100g"]
             recipe_multiplier = grams_total / 100
             ingredient_total_calories = nutrients["calories"] * recipe_multiplier
+            ingredient_total_price = estimate_price_per_100g(ingredient["name"]) * recipe_multiplier
             total_calories += ingredient_total_calories
+            total_price += ingredient_total_price
             for key in total_nutrients:
                 total_nutrients[key] += nutrients[key] * recipe_multiplier
             ingredient_lines.append(
@@ -531,6 +565,8 @@ def build_dishes(dish_candidates):
                     "fdc_id": food["fdc_id"],
                     "calories_per_person": round(ingredient_total_calories / servings),
                     "calories_total": round(ingredient_total_calories),
+                    "estimated_price_per_serving": round(ingredient_total_price / servings, 2),
+                    "estimated_price_total": round(ingredient_total_price, 2),
                 }
             )
         if candidate_missing_ingredients:
@@ -544,6 +580,8 @@ def build_dishes(dish_candidates):
                 "name": candidate["name"],
                 "servings": servings,
                 "calories_per_person": round(total_calories / servings),
+                "estimated_price_per_serving": round(total_price / servings, 2),
+                "estimated_price_total": round(total_price, 2),
                 "nutrition_per_person": {
                     key: round(value / servings, 1)
                     for key, value in total_nutrients.items()

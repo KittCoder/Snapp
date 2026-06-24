@@ -267,6 +267,7 @@ function renderDishes(data) {
     const item = document.createElement("li");
     const title = document.createElement("h3");
     const calories = document.createElement("p");
+    const price = document.createElement("p");
     const method = document.createElement("p");
     const nutrition = document.createElement("div");
     const ingredientList = document.createElement("ul");
@@ -274,6 +275,8 @@ function renderDishes(data) {
     title.textContent = dish.name;
     calories.className = "dish-calories";
     calories.textContent = `${dish.calories_per_person} calories per serving`;
+    price.className = "dish-price";
+    price.textContent = `$${dish.estimated_price_per_serving.toFixed(2)} estimated per serving`;
     method.textContent = dish.method;
     nutrition.className = "dish-nutrition";
     nutrition.textContent = [
@@ -290,7 +293,7 @@ function renderDishes(data) {
       ingredientList.appendChild(ingredientItem);
     });
 
-    item.append(title, calories, nutrition, method, ingredientList);
+    item.append(title, calories, price, nutrition, method, ingredientList);
     dishResults.appendChild(item);
   });
 

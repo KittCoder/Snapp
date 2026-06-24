@@ -504,6 +504,11 @@ main {
   font-weight: 700;
 }
 
+.dish-price {
+  color: var(--color-text) !important;
+  font-weight: 700;
+}
+
 .dish-nutrition {
   margin-top: 0.55rem;
   color: var(--color-text);
