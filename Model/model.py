@@ -44,6 +44,29 @@ NUTRIENT_ALIASES = {
     "sodium_mg": {"sodium, na"},
 }
 INGREDIENT_SPLIT_PATTERN = re.compile(r",|\n|;|\band\b", re.IGNORECASE)
+FOOD_SEARCH_OVERRIDES = {
+    "mint": "spearmint fresh",
+    "fresh mint": "spearmint fresh",
+    "potato": "potatoes raw",
+    "potatoes": "potatoes raw",
+}
+FOOD_MATCH_PENALTY_TERMS = (
+    "babyfood",
+    "beverage",
+    "cake",
+    "candies",
+    "candy",
+    "chips",
+    "chocolate",
+    "cookies",
+    "dessert",
+    "flour",
+    "french fried",
+    "ice cream",
+    "snack",
+    "soup",
+    "syrup",
+)
 DEFAULT_CORS_ORIGINS = (
     "http://localhost:5173,"
     "http://127.0.0.1:5173,"
@@ -185,19 +208,66 @@ def extract_nutrients(food):
                 nutrient_units[key] = nutrient.get("unitName") or nutrient.get("unit")
                 break
 
+    macro_calories = (
+        nutrients["protein_g"] * 4
+        + nutrients["carbohydrates_g"] * 4
+        + nutrients["fat_g"] * 9
+    )
+    if macro_calories and nutrients["calories"] < macro_calories * 0.6:
+        nutrients["calories"] = macro_calories
+        nutrient_units["calories"] = "KCAL_CALCULATED_FROM_MACROS"
+
     return {
         key: round(value, 1) if value else 0
         for key, value in nutrients.items()
     }, nutrient_units
 
 
-def choose_food_match(foods):
-    preferred_types = ("Foundation", "SR Legacy", "Survey (FNDDS)")
-    for preferred_type in preferred_types:
-        for food in foods:
-            if food.get("dataType") == preferred_type:
-                return food
-    return foods[0] if foods else None
+def tokenize_food_query(value):
+    return {
+        token
+        for token in re.findall(r"[a-z]+", (value or "").casefold())
+        if len(token) > 1
+    }
+
+
+def score_food_match(food, ingredient):
+    query_tokens = tokenize_food_query(ingredient)
+    description = (food.get("description") or "").casefold()
+    category = (food.get("foodCategory") or "").casefold()
+    searchable_text = f"{description} {category}"
+    score = 0
+
+    data_type = food.get("dataType")
+    if data_type == "Foundation":
+        score += 30
+    elif data_type == "SR Legacy":
+        score += 24
+    elif data_type == "Survey (FNDDS)":
+        score += 12
+
+    if ingredient.casefold() in description:
+        score += 60
+    if query_tokens and all(token in searchable_text for token in query_tokens):
+        score += 45
+    score += 12 * sum(token in description for token in query_tokens)
+    score += 6 * sum(token in category for token in query_tokens)
+
+    for penalty_term in FOOD_MATCH_PENALTY_TERMS:
+        if penalty_term in description and penalty_term not in query_tokens:
+            score -= 90
+
+    if "raw" in description or "fresh" in description:
+        score += 12
+    if "unprepared" in description:
+        score += 8
+    return score
+
+
+def choose_food_match(foods, ingredient):
+    if not foods:
+        return None
+    return max(foods, key=lambda food: score_food_match(food, ingredient))
 
 
 def search_food_nutrition(ingredient):
@@ -206,15 +276,16 @@ def search_food_nutrition(ingredient):
     if cached_result and now - cached_result["cached_at"] < FOOD_CACHE_TTL_SECONDS:
         return cached_result["food"]
 
+    search_query = FOOD_SEARCH_OVERRIDES.get(ingredient.casefold(), ingredient)
     data = fetch_fooddata_json(
         f"{FDC_SEARCH_URL}?{urlencode({'api_key': FDC_API_KEY})}",
         {
-            "query": ingredient,
-            "pageSize": 8,
+            "query": search_query,
+            "pageSize": 25,
             "dataType": ["Foundation", "SR Legacy", "Survey (FNDDS)"],
         },
     )
-    food = choose_food_match(data.get("foods", []))
+    food = choose_food_match(data.get("foods", []), search_query)
     if not food:
         return None
 

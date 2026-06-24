@@ -273,7 +273,7 @@ function renderDishes(data) {
 
     title.textContent = dish.name;
     calories.className = "dish-calories";
-    calories.textContent = `${dish.calories_per_person} calories per person`;
+    calories.textContent = `${dish.calories_per_person} calories per serving`;
     method.textContent = dish.method;
     nutrition.className = "dish-nutrition";
     nutrition.textContent = [
@@ -286,7 +286,7 @@ function renderDishes(data) {
 
     dish.ingredients.forEach((ingredient) => {
       const ingredientItem = document.createElement("li");
-      ingredientItem.textContent = `${ingredient.grams_per_person}g per person ${ingredient.name} matched to ${ingredient.matched_food}`;
+      ingredientItem.textContent = `${ingredient.grams_per_person}g per serving ${ingredient.name} matched to ${ingredient.matched_food}`;
       ingredientList.appendChild(ingredientItem);
     });
 
