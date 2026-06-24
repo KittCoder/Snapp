@@ -328,22 +328,34 @@ def clean_dish_name(value):
 
 def ingredient_portion_bounds(ingredient_name):
     name = (ingredient_name or "").casefold()
-    if re.search(r"\b(oil|butter|ghee|mayo|mayonnaise)\b", name):
-        return 3, 25
+    if re.search(r"\b(oil|olive oil|vegetable oil|canola oil|butter|ghee)\b", name):
+        return 3, 15
+    if re.search(r"\b(peanut butter|almond butter|nut butter)\b", name):
+        return 8, 32
+    if re.search(r"\b(nuts|almonds|walnuts|cashews|pecans|peanuts|seeds|sunflower seeds|pumpkin seeds|chia|flax)\b", name):
+        return 5, 30
     if re.search(r"\b(mint|basil|cilantro|parsley|dill|thyme|rosemary|oregano|sage|spice|spices|cumin|paprika|pepper|salt)\b", name):
         return 0.5, 12
     if re.search(r"\b(garlic|ginger|jalapeno|chili|lemon juice|lime juice)\b", name):
         return 2, 20
     if re.search(r"\b(cheese|cheddar|parmesan|feta|mozzarella)\b", name):
-        return 15, 80
+        return 10, 50
+    if re.search(r"\b(egg|eggs)\b", name):
+        return 45, 150
+    if re.search(r"\b(beans|lentils|chickpeas|black beans|kidney beans|pinto beans)\b", name):
+        return 50, 150
+    if re.search(r"\b(lamb|beef|chicken|turkey|pork|fish|salmon|shrimp|tofu|tempeh)\b", name):
+        return 45, 170
+    if re.search(r"\b(rice|pasta|noodle|noodles|potato|potatoes|tortilla|bread|quinoa|couscous|grain|grains|oats)\b", name):
+        return 40, 180
+    if re.search(r"\b(fruit|apple|banana|berries|strawberries|blueberries|orange|grapes|mango|pineapple|peach|pear)\b", name):
+        return 30, 180
+    if re.search(r"\b(greens|spinach|lettuce|arugula|kale|spring mix|romaine)\b", name):
+        return 15, 120
+    if re.search(r"\b(onion|carrot|celery|broccoli|pepper|peppers|tomato|tomatoes|cabbage|zucchini|vegetable|vegetables)\b", name):
+        return 20, 200
     if re.search(r"\b(sauce|salsa|dressing|yogurt|cream|broth|stock)\b", name):
         return 20, 160
-    if re.search(r"\b(lamb|beef|chicken|turkey|pork|fish|salmon|shrimp|tofu|tempeh|beans|lentils|egg|eggs)\b", name):
-        return 45, 160
-    if re.search(r"\b(rice|pasta|noodle|noodles|potato|potatoes|tortilla|bread|quinoa|couscous|grain|grains|oats)\b", name):
-        return 50, 320
-    if re.search(r"\b(onion|carrot|celery|broccoli|pepper|peppers|tomato|tomatoes|greens|spinach|lettuce|cabbage|zucchini|vegetable|vegetables)\b", name):
-        return 20, 250
     return 10, 250
 
 
@@ -356,9 +368,23 @@ def clean_grams_total(value, ingredient_name, servings):
         return None
     min_per_serving, max_per_serving = ingredient_portion_bounds(ingredient_name)
     grams_per_serving = grams / servings
+    if grams_per_serving > 250:
+        return None
     if grams_per_serving < min_per_serving or grams_per_serving > max_per_serving:
         return None
     return grams
+
+
+def has_valid_dish_weight(dish_name, ingredients, servings):
+    total_per_serving = sum(
+        ingredient["grams_total"] for ingredient in ingredients
+    ) / servings
+    is_soup_or_stew = bool(
+        re.search(r"\b(soup|stew|chili|tagine|curry)\b", dish_name or "", re.IGNORECASE)
+    )
+    if is_soup_or_stew:
+        return total_per_serving <= 500
+    return total_per_serving <= 750
 
 
 def generate_dish_candidates(ingredients):
@@ -383,9 +409,11 @@ Rules:
 - Use 2 to 4 servings per dish.
 - Use cooked-food portions when the ingredient is normally eaten cooked.
 - Do not force ingredients into neat 100g, 50g, or 25g increments. Use natural portion sizes.
-- Keep grams realistic per serving:
-  meat, fish, tofu, beans, or lentils usually 75-150g; cooked rice/pasta/potatoes 100-300g; vegetables 40-220g;
-  cheese 20-60g; sauces 30-120g; oils 5-18g; fresh herbs like mint 1-8g.
+- Hard per-serving limits:
+  no single ingredient over 250g; meat/fish up to 170g cooked; cooked grains/rice/pasta/potatoes up to 180g;
+  vegetables up to 200g; salad greens up to 120g raw; fruit up to 180g; beans/lentils up to 150g cooked;
+  cheese up to 50g; oils up to 15g; peanut butter up to 32g; nuts/seeds up to 30g; eggs up to 3 eggs.
+- Soup/stew can be up to 500g total per serving, but no single ingredient may exceed 200g per serving.
 - Multiply those per-serving amounts by servings when returning grams_total.
 - Aim for main-dish portions that would usually calculate to about 500-650 calories per serving.
   Include realistic calorie-bearing staples such as oil, pasta, rice, tortillas, cheese, or sauce when the dish needs them.
@@ -443,7 +471,11 @@ Return this JSON shape only:
                 {"name": ingredient_name, "grams_total": grams_total}
             )
 
-        if has_invalid_portion or not dish_ingredients:
+        if (
+            has_invalid_portion
+            or not dish_ingredients
+            or not has_valid_dish_weight(name, dish_ingredients, servings)
+        ):
             continue
         dishes.append(
             {
