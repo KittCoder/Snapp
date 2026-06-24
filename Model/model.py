@@ -263,8 +263,8 @@ def build_dishes(ingredients):
     dishes = []
     for index, style in enumerate(dish_styles):
         ingredient_lines = []
-        calories_per_person = 0
-        totals = {
+        total_calories = 0
+        total_nutrients = {
             "protein_g": 0,
             "carbohydrates_g": 0,
             "fat_g": 0,
@@ -277,11 +277,11 @@ def build_dishes(ingredients):
             grams_per_person = style["grams_per_person"][ingredient_index]
             grams_total = grams_per_person * servings
             nutrients = ingredient["nutrients_per_100g"]
-            multiplier = grams_per_person / 100
-            calories = nutrients["calories"] * multiplier
-            calories_per_person += calories
-            for key in totals:
-                totals[key] += nutrients[key] * multiplier
+            recipe_multiplier = grams_total / 100
+            ingredient_total_calories = nutrients["calories"] * recipe_multiplier
+            total_calories += ingredient_total_calories
+            for key in total_nutrients:
+                total_nutrients[key] += nutrients[key] * recipe_multiplier
             ingredient_lines.append(
                 {
                     "name": ingredient["ingredient"],
@@ -289,8 +289,8 @@ def build_dishes(ingredients):
                     "grams_per_person": grams_per_person,
                     "grams_total": grams_total,
                     "fdc_id": ingredient["fdc_id"],
-                    "calories_per_person": round(calories),
-                    "calories_total": round(calories * servings),
+                    "calories_per_person": round(ingredient_total_calories / servings),
+                    "calories_total": round(ingredient_total_calories),
                 }
             )
 
@@ -298,9 +298,10 @@ def build_dishes(ingredients):
             {
                 "name": make_dish_name(index, ingredients),
                 "servings": servings,
-                "calories_per_person": round(calories_per_person),
+                "calories_per_person": round(total_calories / servings),
                 "nutrition_per_person": {
-                    key: round(value, 1) for key, value in totals.items()
+                    key: round(value / servings, 1)
+                    for key, value in total_nutrients.items()
                 },
                 "ingredients": ingredient_lines,
                 "method": style["method"],
