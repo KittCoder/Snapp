@@ -18,6 +18,11 @@ const dishStatus = document.getElementById("dish-status");
 const dishResults = document.getElementById("dish-results");
 const dishSource = document.getElementById("dish-source");
 const dishEmptyState = document.getElementById("dish-empty-state");
+const budgetForm = document.getElementById("budget-form");
+const budgetInput = document.getElementById("budget-input");
+const remainingBudget = document.getElementById("remaining-budget");
+const budgetMealCount = document.getElementById("budget-meal-count");
+const scheduledMealCost = document.getElementById("scheduled-meal-cost");
 
 const scheduledMeals = [];
 
@@ -43,12 +48,34 @@ function getApiEndpoints(path) {
 }
 
 const CHAT_ENDPOINTS = getApiEndpoints("/chat");
+const currencyFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+});
 
 function showPanel(id) {
   panels.forEach((panel) => panel.classList.toggle("visible", panel.id === id));
   navButtons.forEach((button) =>
     button.classList.toggle("active", button.dataset.target === id)
   );
+}
+
+function getScheduledMealTotal() {
+  return scheduledMeals.reduce(
+    (total, meal) => total + Number(meal.estimated_price_per_serving || 0),
+    0
+  );
+}
+
+function renderBudget() {
+  const budget = Number(budgetInput.value || 0);
+  const scheduledTotal = getScheduledMealTotal();
+  const remaining = budget - scheduledTotal;
+
+  remainingBudget.textContent = currencyFormatter.format(remaining);
+  remainingBudget.classList.toggle("over-budget", remaining < 0);
+  budgetMealCount.textContent = scheduledMeals.length;
+  scheduledMealCost.textContent = currencyFormatter.format(scheduledTotal);
 }
 
 function renderSchedule() {
@@ -69,6 +96,8 @@ function renderSchedule() {
     row.append(orderCell, mealCell, caloriesCell, priceCell);
     scheduleTableBody.appendChild(row);
   });
+
+  renderBudget();
 }
 
 function addMealToSchedule(dish) {
@@ -339,6 +368,12 @@ dishForm.addEventListener("submit", async (event) => {
   } finally {
     submitButton.disabled = false;
   }
+});
+
+budgetInput.addEventListener("input", renderBudget);
+
+budgetForm.addEventListener("submit", (event) => {
+  event.preventDefault();
 });
 
 themeSelect.addEventListener("change", () => {
