@@ -326,12 +326,37 @@ def clean_dish_name(value):
     return name[:90]
 
 
-def clean_grams(value):
+def ingredient_portion_bounds(ingredient_name):
+    name = (ingredient_name or "").casefold()
+    if re.search(r"\b(oil|butter|ghee|mayo|mayonnaise)\b", name):
+        return 3, 25
+    if re.search(r"\b(mint|basil|cilantro|parsley|dill|thyme|rosemary|oregano|sage|spice|spices|cumin|paprika|pepper|salt)\b", name):
+        return 0.5, 12
+    if re.search(r"\b(garlic|ginger|jalapeno|chili|lemon juice|lime juice)\b", name):
+        return 2, 20
+    if re.search(r"\b(cheese|cheddar|parmesan|feta|mozzarella)\b", name):
+        return 15, 80
+    if re.search(r"\b(sauce|salsa|dressing|yogurt|cream|broth|stock)\b", name):
+        return 20, 160
+    if re.search(r"\b(lamb|beef|chicken|turkey|pork|fish|salmon|shrimp|tofu|tempeh|beans|lentils|egg|eggs)\b", name):
+        return 45, 225
+    if re.search(r"\b(rice|pasta|noodle|noodles|potato|potatoes|tortilla|bread|quinoa|couscous|grain|grains|oats)\b", name):
+        return 50, 320
+    if re.search(r"\b(onion|carrot|celery|broccoli|pepper|peppers|tomato|tomatoes|greens|spinach|lettuce|cabbage|zucchini|vegetable|vegetables)\b", name):
+        return 20, 250
+    return 10, 250
+
+
+def clean_grams_total(value, ingredient_name, servings):
     try:
         grams = int(round(float(value)))
     except (TypeError, ValueError):
         return None
-    if grams < 5 or grams > 2500:
+    if grams < 1 or grams > 2500:
+        return None
+    min_per_serving, max_per_serving = ingredient_portion_bounds(ingredient_name)
+    grams_per_serving = grams / servings
+    if grams_per_serving < min_per_serving or grams_per_serving > max_per_serving:
         return None
     return grams
 
@@ -357,6 +382,11 @@ Rules:
 - Portions must be realistic for a full dish and must be in grams for the whole recipe, not per person.
 - Use 2 to 4 servings per dish.
 - Use cooked-food portions when the ingredient is normally eaten cooked.
+- Do not force ingredients into neat 100g, 50g, or 25g increments. Use natural portion sizes.
+- Keep grams realistic per serving:
+  proteins usually 85-200g; cooked rice/pasta/potatoes 100-300g; vegetables 40-220g;
+  cheese 20-60g; sauces 30-120g; oils 5-18g; fresh herbs like mint 1-8g.
+- Multiply those per-serving amounts by servings when returning grams_total.
 - Aim for main-dish portions that would usually calculate to about 500-650 calories per serving.
   Include realistic calorie-bearing staples such as oil, pasta, rice, tortillas, cheese, or sauce when the dish needs them.
 - Calories will be calculated separately from USDA data, so do not estimate calories.
@@ -395,11 +425,15 @@ Return this JSON shape only:
             continue
 
         dish_ingredients = []
+        has_invalid_portion = False
         seen = set()
         for ingredient in dish.get("ingredients", []):
             ingredient_name = normalize_ingredient_name(ingredient.get("name"))
-            grams_total = clean_grams(ingredient.get("grams_total"))
+            grams_total = clean_grams_total(
+                ingredient.get("grams_total"), ingredient_name, servings
+            )
             if not ingredient_name or grams_total is None:
+                has_invalid_portion = True
                 continue
             identity = ingredient_name.casefold()
             if identity in seen:
@@ -409,7 +443,7 @@ Return this JSON shape only:
                 {"name": ingredient_name, "grams_total": grams_total}
             )
 
-        if not dish_ingredients:
+        if has_invalid_portion or not dish_ingredients:
             continue
         dishes.append(
             {
