@@ -18,7 +18,7 @@ The backend is configured for Render with [render.yaml](/Users/2027kstarkie/Desk
    - `OPENAI_API_KEY`: your OpenAI API key
    - `FDC_API_KEY`: your USDA FoodData Central API key
    - `CORS_ORIGINS`: `https://snapp-1d5j.vercel.app`
-
+ 
 Render injects `PORT` automatically. Gunicorn handles the hosted service process.
 
 The backend also accepts Vercel deployment URLs that match this project, such as:
