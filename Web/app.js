@@ -12,6 +12,12 @@ const zipCodeInput = document.getElementById("zip-code");
 const storeSearchStatus = document.getElementById("store-search-status");
 const storeResults = document.getElementById("store-results");
 const storeSource = document.getElementById("store-source");
+const dishForm = document.getElementById("dish-form");
+const dishInput = document.getElementById("dish-input");
+const dishStatus = document.getElementById("dish-status");
+const dishResults = document.getElementById("dish-results");
+const dishSource = document.getElementById("dish-source");
+const dishEmptyState = document.getElementById("dish-empty-state");
 
 const scheduleData = [
   {
@@ -192,6 +198,32 @@ async function fetchStores(zipCode) {
   throw new Error(lastError);
 }
 
+async function fetchDishes(ingredients) {
+  let lastError = API_BASE_URL
+    ? "Unable to reach the dishes backend."
+    : "Backend URL is not configured.";
+
+  for (const endpoint of getApiEndpoints("/dishes")) {
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ingredients }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        lastError = data.error || `Dish request failed (${response.status}).`;
+        continue;
+      }
+      return data;
+    } catch (error) {
+      lastError = error.message || "Network error while finding dishes.";
+    }
+  }
+
+  throw new Error(lastError);
+}
+
 function renderStores(stores) {
   storeResults.replaceChildren();
   stores.forEach((store) => {
@@ -225,6 +257,49 @@ function renderStores(stores) {
     item.appendChild(links);
     storeResults.appendChild(item);
   });
+}
+
+function renderDishes(data) {
+  dishResults.replaceChildren();
+  dishEmptyState.hidden = true;
+
+  data.dishes.forEach((dish) => {
+    const item = document.createElement("li");
+    const title = document.createElement("h3");
+    const calories = document.createElement("p");
+    const method = document.createElement("p");
+    const nutrition = document.createElement("div");
+    const ingredientList = document.createElement("ul");
+
+    title.textContent = dish.name;
+    calories.className = "dish-calories";
+    calories.textContent = `${dish.calories_per_person} calories per person`;
+    method.textContent = dish.method;
+    nutrition.className = "dish-nutrition";
+    nutrition.textContent = [
+      `${dish.nutrition_per_person.protein_g}g protein`,
+      `${dish.nutrition_per_person.carbohydrates_g}g carbs`,
+      `${dish.nutrition_per_person.fat_g}g fat`,
+      `${dish.nutrition_per_person.fiber_g}g fiber`,
+    ].join(" | ");
+    ingredientList.className = "dish-ingredients";
+
+    dish.ingredients.forEach((ingredient) => {
+      const ingredientItem = document.createElement("li");
+      ingredientItem.textContent = `${ingredient.grams_total}g ${ingredient.name} matched to ${ingredient.matched_food}`;
+      ingredientList.appendChild(ingredientItem);
+    });
+
+    item.append(title, calories, nutrition, method, ingredientList);
+    dishResults.appendChild(item);
+  });
+
+  if (data.missing_ingredients.length) {
+    const missing = document.createElement("li");
+    missing.className = "dish-missing";
+    missing.textContent = `No USDA match found for: ${data.missing_ingredients.join(", ")}.`;
+    dishResults.appendChild(missing);
+  }
 }
 
 navButtons.forEach((button) =>
@@ -271,6 +346,30 @@ storeSearchForm.addEventListener("submit", async (event) => {
     storeSource.hidden = false;
   } catch (error) {
     storeSearchStatus.textContent = `Store search error: ${error.message}`;
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+
+dishForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const ingredients = dishInput.value.trim();
+  if (!ingredients) return;
+
+  const submitButton = dishForm.querySelector("button");
+  submitButton.disabled = true;
+  dishStatus.textContent = "Checking USDA FoodData Central...";
+  dishResults.replaceChildren();
+  dishSource.hidden = true;
+  dishEmptyState.hidden = false;
+
+  try {
+    const data = await fetchDishes(ingredients);
+    renderDishes(data);
+    dishStatus.textContent = `Built 3 dishes from ${data.matched_ingredients.length} USDA food match${data.matched_ingredients.length === 1 ? "" : "es"}.`;
+    dishSource.hidden = false;
+  } catch (error) {
+    dishStatus.textContent = `Dish search error: ${error.message}`;
   } finally {
     submitButton.disabled = false;
   }

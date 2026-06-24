@@ -24,7 +24,21 @@ HTTP_TIMEOUT_SECONDS = 20
 HTTP_RETRY_ATTEMPTS = 2
 USER_AGENT = "SNAPP/1.0 (https://github.com/KittCoder/Snapp)"
 STORE_CACHE_TTL_SECONDS = 15 * 60
+FOOD_CACHE_TTL_SECONDS = 60 * 60
 store_search_cache = {}
+food_search_cache = {}
+FDC_SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
+FDC_API_KEY = os.getenv("FDC_API_KEY") or os.getenv("FOODDATA_CENTRAL_API_KEY") or "DEMO_KEY"
+NUTRIENT_ALIASES = {
+    "calories": {"energy"},
+    "protein_g": {"protein"},
+    "carbohydrates_g": {"carbohydrate, by difference", "carbohydrate, by summation"},
+    "fat_g": {"total lipid (fat)", "total fat (nlea)"},
+    "fiber_g": {"fiber, total dietary", "total dietary fiber"},
+    "sugars_g": {"total sugars", "sugars, total including nlea"},
+    "sodium_mg": {"sodium, na"},
+}
+INGREDIENT_SPLIT_PATTERN = re.compile(r",|\n|;|\band\b", re.IGNORECASE)
 DEFAULT_CORS_ORIGINS = (
     "http://localhost:5173,"
     "http://127.0.0.1:5173,"
@@ -77,12 +91,15 @@ def generate_reply(message):
     return reply, response.usage.total_tokens
 
 
-def fetch_json(url, data=None, service_name="data service"):
+def fetch_json(url, data=None, json_data=None, service_name="data service"):
     headers = {
         "Accept": "application/json",
         "User-Agent": USER_AGENT,
     }
-    if data is not None:
+    if json_data is not None:
+        headers["Content-Type"] = "application/json"
+        data = json.dumps(json_data).encode("utf-8")
+    elif data is not None:
         headers["Content-Type"] = "application/x-www-form-urlencoded"
         data = urlencode(data).encode("utf-8")
 
@@ -102,6 +119,191 @@ def fetch_json(url, data=None, service_name="data service"):
                 time.sleep(1)
 
     raise RuntimeError("The grocery store data service is unavailable.") from last_error
+
+
+def fetch_fooddata_json(url, json_data):
+    try:
+        return fetch_json(url, json_data=json_data, service_name="FoodData Central")
+    except RuntimeError as exc:
+        raise RuntimeError("The USDA FoodData Central service is unavailable.") from exc
+
+
+def normalize_ingredient_name(value):
+    cleaned = re.sub(r"\([^)]*\)", "", value or "")
+    cleaned = re.sub(r"\b\d+([./]\d+)?\b", " ", cleaned)
+    cleaned = re.sub(
+        r"\b(cups?|tbsp|tablespoons?|tsp|teaspoons?|oz|ounces?|lbs?|pounds?|grams?|g|kg|ml|l|liters?)\b",
+        " ",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    cleaned = re.sub(r"\s+", " ", cleaned).strip(" .-")
+    return cleaned[:80]
+
+
+def parse_ingredients(raw_ingredients):
+    ingredients = []
+    seen = set()
+    for part in INGREDIENT_SPLIT_PATTERN.split(raw_ingredients or ""):
+        ingredient = normalize_ingredient_name(part)
+        if len(ingredient) < 2:
+            continue
+        identity = ingredient.casefold()
+        if identity in seen:
+            continue
+        seen.add(identity)
+        ingredients.append(ingredient)
+    return ingredients[:8]
+
+
+def nutrient_number(value):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def extract_nutrients(food):
+    nutrients = {key: 0 for key in NUTRIENT_ALIASES}
+    nutrient_units = {}
+    for nutrient in food.get("foodNutrients", []):
+        name = (nutrient.get("nutrientName") or nutrient.get("name") or "").casefold()
+        value = nutrient_number(nutrient.get("value") or nutrient.get("amount"))
+        if value is None:
+            continue
+        for key, aliases in NUTRIENT_ALIASES.items():
+            if name in aliases:
+                unit = (nutrient.get("unitName") or nutrient.get("unit") or "").casefold()
+                if key == "calories" and unit == "kj":
+                    value = value / 4.184
+                nutrients[key] = value
+                nutrient_units[key] = nutrient.get("unitName") or nutrient.get("unit")
+                break
+
+    return {
+        key: round(value, 1) if value else 0
+        for key, value in nutrients.items()
+    }, nutrient_units
+
+
+def choose_food_match(foods):
+    preferred_types = ("Foundation", "SR Legacy", "Survey (FNDDS)")
+    for preferred_type in preferred_types:
+        for food in foods:
+            if food.get("dataType") == preferred_type:
+                return food
+    return foods[0] if foods else None
+
+
+def search_food_nutrition(ingredient):
+    cached_result = food_search_cache.get(ingredient.casefold())
+    now = time.time()
+    if cached_result and now - cached_result["cached_at"] < FOOD_CACHE_TTL_SECONDS:
+        return cached_result["food"]
+
+    data = fetch_fooddata_json(
+        f"{FDC_SEARCH_URL}?{urlencode({'api_key': FDC_API_KEY})}",
+        {
+            "query": ingredient,
+            "pageSize": 8,
+            "dataType": ["Foundation", "SR Legacy", "Survey (FNDDS)"],
+        },
+    )
+    food = choose_food_match(data.get("foods", []))
+    if not food:
+        return None
+
+    nutrients, nutrient_units = extract_nutrients(food)
+    result = {
+        "ingredient": ingredient,
+        "description": food.get("description", ingredient).title(),
+        "fdc_id": food.get("fdcId"),
+        "data_type": food.get("dataType"),
+        "nutrients_per_100g": nutrients,
+        "nutrient_units": nutrient_units,
+    }
+    food_search_cache[ingredient.casefold()] = {
+        "cached_at": now,
+        "food": result,
+    }
+    return result
+
+
+def make_dish_name(index, ingredients):
+    names = [ingredient["ingredient"].title() for ingredient in ingredients]
+    if len(names) == 1:
+        base = names[0]
+    elif len(names) == 2:
+        base = f"{names[0]} and {names[1]}"
+    else:
+        base = f"{names[0]}, {names[1]}, and {names[2]}"
+
+    dish_types = ("Skillet Bowl", "Sheet-Pan Plate", "Warm Grain Bowl")
+    return f"{base} {dish_types[index]}"
+
+
+def build_dishes(ingredients):
+    dish_styles = (
+        {
+            "method": "Saute the main ingredients with garlic or onion, then serve over rice, pasta, or greens.",
+            "servings": 2,
+            "grams": (160, 140, 100, 80, 60, 50, 40, 30),
+        },
+        {
+            "method": "Roast everything on one pan with a little oil, salt, and pepper until browned and tender.",
+            "servings": 3,
+            "grams": (180, 150, 120, 90, 70, 50, 40, 30),
+        },
+        {
+            "method": "Combine the ingredients in a bowl with a simple sauce, herbs, and an optional cooked grain.",
+            "servings": 4,
+            "grams": (140, 120, 100, 80, 70, 55, 45, 35),
+        },
+    )
+    dishes = []
+    for index, style in enumerate(dish_styles):
+        ingredient_lines = []
+        total_calories = 0
+        totals = {
+            "protein_g": 0,
+            "carbohydrates_g": 0,
+            "fat_g": 0,
+            "fiber_g": 0,
+            "sugars_g": 0,
+            "sodium_mg": 0,
+        }
+        for ingredient_index, ingredient in enumerate(ingredients):
+            grams = style["grams"][ingredient_index]
+            nutrients = ingredient["nutrients_per_100g"]
+            multiplier = grams / 100
+            calories = nutrients["calories"] * multiplier
+            total_calories += calories
+            for key in totals:
+                totals[key] += nutrients[key] * multiplier
+            ingredient_lines.append(
+                {
+                    "name": ingredient["ingredient"],
+                    "matched_food": ingredient["description"],
+                    "grams_total": grams,
+                    "fdc_id": ingredient["fdc_id"],
+                    "calories_total": round(calories),
+                }
+            )
+
+        servings = style["servings"]
+        dishes.append(
+            {
+                "name": make_dish_name(index, ingredients),
+                "servings": servings,
+                "calories_per_person": round(total_calories / servings),
+                "nutrition_per_person": {
+                    key: round(value / servings, 1) for key, value in totals.items()
+                },
+                "ingredients": ingredient_lines,
+                "method": style["method"],
+            }
+        )
+    return dishes
 
 
 def normalize_website(value):
@@ -334,6 +536,45 @@ def grocery_stores():
 
 @app.route("/grocery-stores", methods=["OPTIONS"])
 def grocery_stores_options():
+    return ("", 204)
+
+
+@app.post("/dishes")
+def dishes():
+    data = request.get_json(silent=True) or {}
+    raw_ingredients = (data.get("ingredients") or data.get("message") or "").strip()
+    ingredients = parse_ingredients(raw_ingredients)
+    if not ingredients:
+        return jsonify({"error": "Enter at least one ingredient."}), 400
+
+    matched_ingredients = []
+    missing_ingredients = []
+    try:
+        for ingredient in ingredients:
+            food = search_food_nutrition(ingredient)
+            if food:
+                matched_ingredients.append(food)
+            else:
+                missing_ingredients.append(ingredient)
+    except RuntimeError as exc:
+        return jsonify({"error": str(exc)}), 503
+
+    if not matched_ingredients:
+        return jsonify({"error": "No matching foods were found in FoodData Central."}), 404
+
+    return jsonify(
+        {
+            "input_ingredients": ingredients,
+            "matched_ingredients": matched_ingredients,
+            "missing_ingredients": missing_ingredients,
+            "dishes": build_dishes(matched_ingredients),
+            "source": "U.S. Department of Agriculture, Agricultural Research Service. FoodData Central.",
+        }
+    )
+
+
+@app.route("/dishes", methods=["OPTIONS"])
+def dishes_options():
     return ("", 204)
 
 

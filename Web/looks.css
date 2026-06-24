@@ -357,6 +357,24 @@ main {
   margin-bottom: 1rem;
 }
 
+.dish-chat-window {
+  border: 1px solid var(--color-border);
+  border-radius: 1.1rem;
+  min-height: 330px;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--color-panel-strong) 90%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  margin: 1rem 0;
+}
+
+.dish-empty-state {
+  min-height: 270px;
+  display: grid;
+  place-items: center;
+  color: var(--color-muted);
+  text-align: center;
+}
+
 #chat-log {
   list-style: none;
   padding: 0;
@@ -394,6 +412,7 @@ main {
 }
 
 #chat-input,
+#dish-input,
 #zip-code,
 .settings-form select {
   width: 100%;
@@ -407,6 +426,7 @@ main {
 }
 
 #chat-input:focus,
+#dish-input:focus,
 #zip-code:focus,
 .settings-form select:focus {
   outline: 2px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
@@ -414,6 +434,7 @@ main {
 }
 
 #chat-form button,
+.dish-form button,
 .store-search-form button {
   border: none;
   border-radius: 0.85rem;
@@ -428,9 +449,92 @@ main {
 }
 
 #chat-form button:hover,
+.dish-form button:hover,
 .store-search-form button:hover {
   transform: translateY(-1px);
   box-shadow: 0 14px 26px rgba(17, 94, 89, 0.33);
+}
+
+.dish-form {
+  display: flex;
+  gap: 0.7rem;
+}
+
+.dish-form button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.dish-status {
+  min-height: 1.5rem;
+  margin-top: 1rem;
+  color: var(--color-muted);
+}
+
+.dish-results {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.9rem;
+}
+
+.dish-results > li {
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--color-panel-strong) 92%, transparent);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+}
+
+.dish-results h3 {
+  margin: 0;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 1.05rem;
+}
+
+.dish-results p {
+  margin: 0.65rem 0 0;
+  color: var(--color-muted);
+}
+
+.dish-calories {
+  color: var(--color-primary-strong) !important;
+  font-weight: 700;
+}
+
+.dish-nutrition {
+  margin-top: 0.55rem;
+  color: var(--color-text);
+  font-size: 0.88rem;
+}
+
+.dish-ingredients {
+  margin: 0.8rem 0 0;
+  padding-left: 1.15rem;
+  color: var(--color-muted);
+  font-size: 0.86rem;
+}
+
+.dish-ingredients li + li {
+  margin-top: 0.28rem;
+}
+
+.dish-missing {
+  grid-column: 1 / -1;
+  color: var(--color-muted);
+}
+
+.dish-source {
+  margin: 0.8rem 0 0;
+  color: var(--color-muted);
+  font-size: 0.78rem;
+}
+
+.dish-source a {
+  color: var(--color-primary-strong);
+  font-weight: 600;
 }
 
 .store-search-form {
@@ -603,11 +707,16 @@ tbody tr:last-child td {
     flex-direction: column;
   }
 
+  .dish-form {
+    flex-direction: column;
+  }
+
   .store-search-controls {
     flex-direction: column;
   }
 
   #chat-form button,
+  .dish-form button,
   .store-search-form button {
     width: 100%;
   }

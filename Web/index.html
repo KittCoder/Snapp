@@ -16,6 +16,7 @@
       <nav class="nav-buttons">
         <button data-target="home" class="nav-button active">Home</button>
         <button data-target="chat" class="nav-button">Chat</button>
+        <button data-target="dishes" class="nav-button">Dishes</button>
         <button data-target="schedule" class="nav-button">Schedule</button>
         <button data-target="information" class="nav-button">Information</button>
         <button data-target="settings" class="nav-button">Settings</button>
@@ -206,6 +207,32 @@
           />
           <button type="submit">Send</button>
         </form>
+      </section>
+
+      <section id="dishes" class="panel">
+        <h2>Dishes</h2>
+        <p>Enter ingredients you have, separated by commas, to get three dish ideas with USDA-based calories per person.</p>
+        <div class="dish-chat-window">
+          <div id="dish-empty-state" class="dish-empty-state">
+            Try chicken, rice, broccoli or eggs, spinach, potatoes.
+          </div>
+          <ul id="dish-results" class="dish-results"></ul>
+        </div>
+        <form id="dish-form" class="dish-form">
+          <input
+            type="text"
+            id="dish-input"
+            placeholder="Enter ingredients..."
+            autocomplete="off"
+            required
+          />
+          <button type="submit">Find dishes</button>
+        </form>
+        <div id="dish-status" class="dish-status" role="status" aria-live="polite"></div>
+        <p id="dish-source" class="dish-source" hidden>
+          Nutrition data:
+          <a href="https://fdc.nal.usda.gov/" target="_blank" rel="noopener noreferrer">USDA FoodData Central</a>.
+        </p>
       </section>
 
       <section id="schedule" class="panel">
