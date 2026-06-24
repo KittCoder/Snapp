@@ -435,6 +435,7 @@ main {
 
 #chat-form button,
 .dish-form button,
+.add-to-schedule-button,
 .store-search-form button {
   border: none;
   border-radius: 0.85rem;
@@ -450,9 +451,15 @@ main {
 
 #chat-form button:hover,
 .dish-form button:hover,
+.add-to-schedule-button:hover,
 .store-search-form button:hover {
   transform: translateY(-1px);
   box-shadow: 0 14px 26px rgba(17, 94, 89, 0.33);
+}
+
+.add-to-schedule-button {
+  width: 100%;
+  margin-top: 1rem;
 }
 
 .dish-form {
@@ -722,6 +729,7 @@ tbody tr:last-child td {
 
   #chat-form button,
   .dish-form button,
+  .add-to-schedule-button,
   .store-search-form button {
     width: 100%;
   }

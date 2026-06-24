@@ -19,64 +19,7 @@ const dishResults = document.getElementById("dish-results");
 const dishSource = document.getElementById("dish-source");
 const dishEmptyState = document.getElementById("dish-empty-state");
 
-const scheduleData = [
-  {
-    day: "Monday",
-    meals: {
-      breakfast: "Greek yogurt parfait with berries",
-      lunch: "Quinoa bowl with roasted veggies",
-      dinner: "Lemon herb salmon with asparagus",
-    },
-  },
-  {
-    day: "Tuesday",
-    meals: {
-      breakfast: "Avocado toast with poached egg",
-      lunch: "Chickpea salad wrap",
-      dinner: "Turkey meatballs with zucchini noodles",
-    },
-  },
-  {
-    day: "Wednesday",
-    meals: {
-      breakfast: "Overnight oats with chia and banana",
-      lunch: "Miso soup and sesame soba",
-      dinner: "Grilled tofu with stir-fried greens",
-    },
-  },
-  {
-    day: "Thursday",
-    meals: {
-      breakfast: "Spinach smoothie with almond butter",
-      lunch: "Mediterranean farro bowl",
-      dinner: "Curry cauliflower with basmati rice",
-    },
-  },
-  {
-    day: "Friday",
-    meals: {
-      breakfast: "Veggie omelet with feta",
-      lunch: "Teriyaki salmon lettuce cups",
-      dinner: "Garlic shrimp with quinoa pilaf",
-    },
-  },
-  {
-    day: "Saturday",
-    meals: {
-      breakfast: "Pancakes with fresh fruit",
-      lunch: "Caprese sandwich on sourdough",
-      dinner: "BBQ chicken with roasted sweet potatoes",
-    },
-  },
-  {
-    day: "Sunday",
-    meals: {
-      breakfast: "Breakfast burrito with black beans",
-      lunch: "Sun-dried tomato pasta salad",
-      dinner: "Mushroom risotto with arugula",
-    },
-  },
-];
+const scheduledMeals = [];
 
 const API_BASE_URL = (
   document.querySelector('meta[name="snapp-api-base-url"]')?.content || ""
@@ -109,18 +52,33 @@ function showPanel(id) {
 }
 
 function renderSchedule() {
-  const rows = scheduleData
-    .map(
-      ({ day, meals }) => `
-      <tr>
-        <td>${day}</td>
-        <td>${meals.breakfast}</td>
-        <td>${meals.lunch}</td>
-        <td>${meals.dinner}</td>
-      </tr>`
-    )
-    .join("");
-  scheduleTableBody.innerHTML = rows;
+  scheduleTableBody.replaceChildren();
+
+  scheduledMeals.forEach((meal, index) => {
+    const row = document.createElement("tr");
+    const orderCell = document.createElement("td");
+    const mealCell = document.createElement("td");
+    const caloriesCell = document.createElement("td");
+    const priceCell = document.createElement("td");
+
+    orderCell.textContent = index + 1;
+    mealCell.textContent = meal.name;
+    caloriesCell.textContent = `${meal.calories_per_person} per serving`;
+    priceCell.textContent = `$${meal.estimated_price_per_serving.toFixed(2)} per serving`;
+
+    row.append(orderCell, mealCell, caloriesCell, priceCell);
+    scheduleTableBody.appendChild(row);
+  });
+}
+
+function addMealToSchedule(dish) {
+  const isAlreadyScheduled = scheduledMeals.some((meal) => meal.name === dish.name);
+  if (!isAlreadyScheduled) {
+    scheduledMeals.push(dish);
+    renderSchedule();
+  }
+
+  showPanel("schedule");
 }
 
 function appendMessage(type, text) {
@@ -271,6 +229,7 @@ function renderDishes(data) {
     const method = document.createElement("p");
     const nutrition = document.createElement("div");
     const ingredientList = document.createElement("ul");
+    const scheduleButton = document.createElement("button");
 
     title.textContent = dish.name;
     calories.className = "dish-calories";
@@ -286,6 +245,10 @@ function renderDishes(data) {
       `${dish.nutrition_per_person.fiber_g}g fiber`,
     ].join(" | ");
     ingredientList.className = "dish-ingredients";
+    scheduleButton.type = "button";
+    scheduleButton.className = "add-to-schedule-button";
+    scheduleButton.textContent = "Add to schedule";
+    scheduleButton.addEventListener("click", () => addMealToSchedule(dish));
 
     dish.ingredients.forEach((ingredient) => {
       const ingredientItem = document.createElement("li");
@@ -293,7 +256,7 @@ function renderDishes(data) {
       ingredientList.appendChild(ingredientItem);
     });
 
-    item.append(title, calories, price, nutrition, method, ingredientList);
+    item.append(title, calories, price, nutrition, method, ingredientList, scheduleButton);
     dishResults.appendChild(item);
   });
 
