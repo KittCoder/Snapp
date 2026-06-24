@@ -247,23 +247,23 @@ def build_dishes(ingredients):
         {
             "method": "Saute the main ingredients with garlic or onion, then serve over rice, pasta, or greens.",
             "servings": 2,
-            "grams": (160, 140, 100, 80, 60, 50, 40, 30),
+            "grams_per_person": (150, 220, 130, 60, 45, 35, 30, 25),
         },
         {
             "method": "Roast everything on one pan with a little oil, salt, and pepper until browned and tender.",
             "servings": 3,
-            "grams": (180, 150, 120, 90, 70, 50, 40, 30),
+            "grams_per_person": (170, 180, 160, 70, 50, 40, 30, 25),
         },
         {
             "method": "Combine the ingredients in a bowl with a simple sauce, herbs, and an optional cooked grain.",
             "servings": 4,
-            "grams": (140, 120, 100, 80, 70, 55, 45, 35),
+            "grams_per_person": (145, 230, 150, 65, 50, 40, 30, 25),
         },
     )
     dishes = []
     for index, style in enumerate(dish_styles):
         ingredient_lines = []
-        total_calories = 0
+        calories_per_person = 0
         totals = {
             "protein_g": 0,
             "carbohydrates_g": 0,
@@ -272,32 +272,35 @@ def build_dishes(ingredients):
             "sugars_g": 0,
             "sodium_mg": 0,
         }
+        servings = style["servings"]
         for ingredient_index, ingredient in enumerate(ingredients):
-            grams = style["grams"][ingredient_index]
+            grams_per_person = style["grams_per_person"][ingredient_index]
+            grams_total = grams_per_person * servings
             nutrients = ingredient["nutrients_per_100g"]
-            multiplier = grams / 100
+            multiplier = grams_per_person / 100
             calories = nutrients["calories"] * multiplier
-            total_calories += calories
+            calories_per_person += calories
             for key in totals:
                 totals[key] += nutrients[key] * multiplier
             ingredient_lines.append(
                 {
                     "name": ingredient["ingredient"],
                     "matched_food": ingredient["description"],
-                    "grams_total": grams,
+                    "grams_per_person": grams_per_person,
+                    "grams_total": grams_total,
                     "fdc_id": ingredient["fdc_id"],
-                    "calories_total": round(calories),
+                    "calories_per_person": round(calories),
+                    "calories_total": round(calories * servings),
                 }
             )
 
-        servings = style["servings"]
         dishes.append(
             {
                 "name": make_dish_name(index, ingredients),
                 "servings": servings,
-                "calories_per_person": round(total_calories / servings),
+                "calories_per_person": round(calories_per_person),
                 "nutrition_per_person": {
-                    key: round(value / servings, 1) for key, value in totals.items()
+                    key: round(value, 1) for key, value in totals.items()
                 },
                 "ingredients": ingredient_lines,
                 "method": style["method"],

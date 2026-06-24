@@ -286,7 +286,7 @@ function renderDishes(data) {
 
     dish.ingredients.forEach((ingredient) => {
       const ingredientItem = document.createElement("li");
-      ingredientItem.textContent = `${ingredient.grams_total}g ${ingredient.name} matched to ${ingredient.matched_food}`;
+      ingredientItem.textContent = `${ingredient.grams_per_person}g per person ${ingredient.name} matched to ${ingredient.matched_food}`;
       ingredientList.appendChild(ingredientItem);
     });
 
