@@ -5,7 +5,7 @@ A web application that generates healthy recipes for SNAP benefits users, using 
 ## Backend Deployment on Render
   
 The backend is configured for Render with [render.yaml](/Users/2027kstarkie/Desktop/SNAPP/render.yaml:1).
-
+ 
 1. Create a new Render Blueprint from this GitHub repository, or create a Web Service manually.
 2. If using the blueprint, Render reads `render.yaml` automatically.
 3. If creating the service manually, use these settings:
