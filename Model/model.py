@@ -339,7 +339,7 @@ def ingredient_portion_bounds(ingredient_name):
     if re.search(r"\b(sauce|salsa|dressing|yogurt|cream|broth|stock)\b", name):
         return 20, 160
     if re.search(r"\b(lamb|beef|chicken|turkey|pork|fish|salmon|shrimp|tofu|tempeh|beans|lentils|egg|eggs)\b", name):
-        return 45, 225
+        return 45, 160
     if re.search(r"\b(rice|pasta|noodle|noodles|potato|potatoes|tortilla|bread|quinoa|couscous|grain|grains|oats)\b", name):
         return 50, 320
     if re.search(r"\b(onion|carrot|celery|broccoli|pepper|peppers|tomato|tomatoes|greens|spinach|lettuce|cabbage|zucchini|vegetable|vegetables)\b", name):
@@ -384,7 +384,7 @@ Rules:
 - Use cooked-food portions when the ingredient is normally eaten cooked.
 - Do not force ingredients into neat 100g, 50g, or 25g increments. Use natural portion sizes.
 - Keep grams realistic per serving:
-  proteins usually 85-200g; cooked rice/pasta/potatoes 100-300g; vegetables 40-220g;
+  meat, fish, tofu, beans, or lentils usually 75-150g; cooked rice/pasta/potatoes 100-300g; vegetables 40-220g;
   cheese 20-60g; sauces 30-120g; oils 5-18g; fresh herbs like mint 1-8g.
 - Multiply those per-serving amounts by servings when returning grams_total.
 - Aim for main-dish portions that would usually calculate to about 500-650 calories per serving.
