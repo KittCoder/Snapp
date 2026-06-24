@@ -15,6 +15,11 @@ app = Flask(__name__)
 SYSTEM_PROMPT = (
     "You are a helpful meal generating assistant who generates concise meal ideas initially, asks for feedback, iterates, then returns recipes upon confirmation of meals from user. "
 )
+DISH_SYSTEM_PROMPT = (
+    "You generate real, recognizable dish ideas from available ingredients. "
+    "Return only valid JSON. Do not include recipes or cooking steps."
+)
+OPENAI_DISH_MODEL = os.getenv("OPENAI_DISH_MODEL", "gpt-4.1-nano")
 MAX_TURNS = 6
 conversation_history = []
 ZIP_CODE_PATTERN = re.compile(r"^\d{5}$")
@@ -229,40 +234,134 @@ def search_food_nutrition(ingredient):
     return result
 
 
-def make_dish_name(index, ingredients):
-    names = [ingredient["ingredient"].title() for ingredient in ingredients]
-    if len(names) == 1:
-        base = names[0]
-    elif len(names) == 2:
-        base = f"{names[0]} and {names[1]}"
-    else:
-        base = f"{names[0]}, {names[1]}, and {names[2]}"
-
-    dish_types = ("Skillet Bowl", "Sheet-Pan Plate", "Warm Grain Bowl")
-    return f"{base} {dish_types[index]}"
+def extract_json_object(text):
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        start = text.find("{")
+        end = text.rfind("}")
+        if start == -1 or end == -1 or end <= start:
+            raise
+        return json.loads(text[start : end + 1])
 
 
-def build_dishes(ingredients):
-    dish_styles = (
-        {
-            "method": "Saute the main ingredients with garlic or onion, then serve over rice, pasta, or greens.",
-            "servings": 2,
-            "grams_per_person": (150, 220, 130, 60, 45, 35, 30, 25),
-        },
-        {
-            "method": "Roast everything on one pan with a little oil, salt, and pepper until browned and tender.",
-            "servings": 3,
-            "grams_per_person": (170, 180, 160, 70, 50, 40, 30, 25),
-        },
-        {
-            "method": "Combine the ingredients in a bowl with a simple sauce, herbs, and an optional cooked grain.",
-            "servings": 4,
-            "grams_per_person": (145, 230, 150, 65, 50, 40, 30, 25),
-        },
+def clean_dish_name(value):
+    name = re.sub(r"\s+", " ", value or "").strip()
+    if not name:
+        return None
+    generic_words = ("skillet", "bowl", "plate")
+    if name.casefold() in generic_words:
+        return None
+    return name[:90]
+
+
+def clean_grams(value):
+    try:
+        grams = int(round(float(value)))
+    except (TypeError, ValueError):
+        return None
+    if grams < 5 or grams > 2500:
+        return None
+    return grams
+
+
+def generate_dish_candidates(ingredients):
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY is not set.")
+
+    client = OpenAI(api_key=api_key)
+    ingredient_text = ", ".join(ingredients)
+    user_prompt = f"""
+Available ingredients: {ingredient_text}
+
+Generate exactly 3 real dishes a person would recognize by name. Do not use generic names like
+"skillet", "rice bowl", "warm grain bowl", or "sheet-pan plate" as the dish name.
+
+Rules:
+- Each dish must use at least one available ingredient.
+- You may add common pantry staples only when needed for a real dish name, such as olive oil,
+  onion, garlic, flour tortillas, pasta, cheese, eggs, broth, spices, or sauce.
+- Return no recipes and no steps.
+- Portions must be realistic for a full dish and must be in grams for the whole recipe, not per person.
+- Use 2 to 4 servings per dish.
+- Use cooked-food portions when the ingredient is normally eaten cooked.
+- Aim for main-dish portions that would usually calculate to about 500-650 calories per serving.
+  Include realistic calorie-bearing staples such as oil, pasta, rice, tortillas, cheese, or sauce when the dish needs them.
+- Calories will be calculated separately from USDA data, so do not estimate calories.
+
+Return this JSON shape only:
+{{
+  "dishes": [
+    {{
+      "name": "real dish name",
+      "servings": 2,
+      "portion_note": "short note with no recipe steps",
+      "ingredients": [
+        {{"name": "ingredient name", "grams_total": 300}}
+      ]
+    }}
+  ]
+}}
+""".strip()
+    response = client.responses.create(
+        model=OPENAI_DISH_MODEL,
+        input=[
+            {"role": "system", "content": DISH_SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt},
+        ],
+        store=False,
     )
+    data = extract_json_object(response.output_text)
     dishes = []
-    for index, style in enumerate(dish_styles):
+    for dish in data.get("dishes", []):
+        name = clean_dish_name(dish.get("name"))
+        try:
+            servings = int(dish.get("servings"))
+        except (TypeError, ValueError):
+            servings = None
+        if not name or servings not in (2, 3, 4):
+            continue
+
+        dish_ingredients = []
+        seen = set()
+        for ingredient in dish.get("ingredients", []):
+            ingredient_name = normalize_ingredient_name(ingredient.get("name"))
+            grams_total = clean_grams(ingredient.get("grams_total"))
+            if not ingredient_name or grams_total is None:
+                continue
+            identity = ingredient_name.casefold()
+            if identity in seen:
+                continue
+            seen.add(identity)
+            dish_ingredients.append(
+                {"name": ingredient_name, "grams_total": grams_total}
+            )
+
+        if not dish_ingredients:
+            continue
+        dishes.append(
+            {
+                "name": name,
+                "servings": servings,
+                "portion_note": re.sub(
+                    r"\s+", " ", dish.get("portion_note") or ""
+                ).strip()[:140],
+                "ingredients": dish_ingredients[:10],
+            }
+        )
+
+    if len(dishes) != 3:
+        raise RuntimeError("The dish generator returned an invalid response.")
+    return dishes
+
+
+def build_dishes(dish_candidates):
+    dishes = []
+    missing_ingredients = []
+    for candidate in dish_candidates:
         ingredient_lines = []
+        candidate_missing_ingredients = []
         total_calories = 0
         total_nutrients = {
             "protein_g": 0,
@@ -272,11 +371,15 @@ def build_dishes(ingredients):
             "sugars_g": 0,
             "sodium_mg": 0,
         }
-        servings = style["servings"]
-        for ingredient_index, ingredient in enumerate(ingredients):
-            grams_per_person = style["grams_per_person"][ingredient_index]
-            grams_total = grams_per_person * servings
-            nutrients = ingredient["nutrients_per_100g"]
+        servings = candidate["servings"]
+        for ingredient in candidate["ingredients"]:
+            food = search_food_nutrition(ingredient["name"])
+            if not food:
+                candidate_missing_ingredients.append(ingredient["name"])
+                continue
+            grams_total = ingredient["grams_total"]
+            grams_per_person = round(grams_total / servings)
+            nutrients = food["nutrients_per_100g"]
             recipe_multiplier = grams_total / 100
             ingredient_total_calories = nutrients["calories"] * recipe_multiplier
             total_calories += ingredient_total_calories
@@ -284,19 +387,24 @@ def build_dishes(ingredients):
                 total_nutrients[key] += nutrients[key] * recipe_multiplier
             ingredient_lines.append(
                 {
-                    "name": ingredient["ingredient"],
-                    "matched_food": ingredient["description"],
+                    "name": ingredient["name"],
+                    "matched_food": food["description"],
                     "grams_per_person": grams_per_person,
                     "grams_total": grams_total,
-                    "fdc_id": ingredient["fdc_id"],
+                    "fdc_id": food["fdc_id"],
                     "calories_per_person": round(ingredient_total_calories / servings),
                     "calories_total": round(ingredient_total_calories),
                 }
             )
+        if candidate_missing_ingredients:
+            missing_ingredients.extend(candidate_missing_ingredients)
+            continue
+        if not ingredient_lines:
+            continue
 
         dishes.append(
             {
-                "name": make_dish_name(index, ingredients),
+                "name": candidate["name"],
                 "servings": servings,
                 "calories_per_person": round(total_calories / servings),
                 "nutrition_per_person": {
@@ -304,10 +412,13 @@ def build_dishes(ingredients):
                     for key, value in total_nutrients.items()
                 },
                 "ingredients": ingredient_lines,
-                "method": style["method"],
+                "portion_note": candidate["portion_note"],
+                "method": candidate["portion_note"],
             }
         )
-    return dishes
+    if len(dishes) != 3:
+        raise RuntimeError("USDA nutrition data could not be matched for all generated dishes.")
+    return dishes, sorted(set(missing_ingredients), key=str.casefold)
 
 
 def normalize_website(value):
@@ -551,27 +662,24 @@ def dishes():
     if not ingredients:
         return jsonify({"error": "Enter at least one ingredient."}), 400
 
-    matched_ingredients = []
-    missing_ingredients = []
     try:
-        for ingredient in ingredients:
-            food = search_food_nutrition(ingredient)
-            if food:
-                matched_ingredients.append(food)
-            else:
-                missing_ingredients.append(ingredient)
+        dish_candidates = generate_dish_candidates(ingredients)
+        dishes, missing_ingredients = build_dishes(dish_candidates)
     except RuntimeError as exc:
         return jsonify({"error": str(exc)}), 503
-
-    if not matched_ingredients:
-        return jsonify({"error": "No matching foods were found in FoodData Central."}), 404
+    except Exception as exc:
+        return jsonify({"error": "Dish generation failed.", "details": str(exc)}), 503
 
     return jsonify(
         {
             "input_ingredients": ingredients,
-            "matched_ingredients": matched_ingredients,
+            "matched_ingredients": [
+                ingredient
+                for dish in dishes
+                for ingredient in dish["ingredients"]
+            ],
             "missing_ingredients": missing_ingredients,
-            "dishes": build_dishes(matched_ingredients),
+            "dishes": dishes,
             "source": "U.S. Department of Agriculture, Agricultural Research Service. FoodData Central.",
         }
     )
