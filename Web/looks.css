@@ -415,6 +415,7 @@ main {
 #dish-input,
 #zip-code,
 #budget-input,
+.settings-form input:not([type="checkbox"]),
 .settings-form select {
   width: 100%;
   border: 1px solid var(--color-border);
@@ -430,6 +431,7 @@ main {
 #dish-input:focus,
 #zip-code:focus,
 #budget-input:focus,
+.settings-form input:not([type="checkbox"]):focus,
 .settings-form select:focus {
   outline: 2px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
   outline-offset: 1px;
@@ -624,18 +626,6 @@ main {
   font-size: 0.78rem;
 }
 
-.budget-form {
-  max-width: 460px;
-  margin-top: 1.35rem;
-}
-
-.budget-form label {
-  display: block;
-  margin-bottom: 0.45rem;
-  color: var(--color-muted);
-  font-weight: 600;
-}
-
 .budget-display {
   min-height: 260px;
   display: grid;
@@ -681,6 +671,16 @@ main {
 
 .budget-summary strong {
   color: var(--color-text);
+}
+
+.settings-section + .settings-section {
+  margin-top: 2rem;
+}
+
+.settings-section h3 {
+  margin: 0 0 1rem;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 1.2rem;
 }
 
 .table-wrapper {

@@ -256,25 +256,13 @@
 
       <section id="budget" class="panel">
         <h2>Budget</h2>
-        <p>Enter your meal budget and SNAPP will subtract the estimated price of each scheduled meal.</p>
-        <form id="budget-form" class="budget-form">
-          <label for="budget-input">Meal budget</label>
-          <div class="budget-controls">
-            <input
-              type="number"
-              id="budget-input"
-              min="0"
-              step="0.01"
-              inputmode="decimal"
-              placeholder="e.g. 75.00"
-            />
-          </div>
-        </form>
+        <p>Set your meal budget in Settings, and SNAPP will subtract the estimated price of each scheduled meal.</p>
         <div class="budget-display" aria-live="polite">
           <span class="budget-label">Remaining budget</span>
           <strong id="remaining-budget">$0.00</strong>
         </div>
         <div class="budget-summary">
+          <span>Meal budget: <strong id="current-budget">$0.00</strong></span>
           <span>Scheduled meals: <strong id="budget-meal-count">0</strong></span>
           <span>Scheduled cost: <strong id="scheduled-meal-cost">$0.00</strong></span>
         </div>
@@ -310,28 +298,67 @@
 
       <section id="settings" class="panel">
         <h2>Settings</h2>
-        <form class="settings-form">
-          <label>
-            Theme
-            <select id="theme-select">
-              <option value="light" selected>Light</option>
-              <option value="dark">Dark</option>
-            </select>
-          </label>
-          <label>
-            Dietary Preference
-            <select id="diet-select">
-              <option value="balanced" selected>Balanced</option>
-              <option value="vegetarian">Vegetarian</option>
-              <option value="vegan">Vegan</option>
-              <option value="keto">Keto</option>
-            </select>
-          </label>
-          <label class="toggle">
-            <input type="checkbox" id="notifications-toggle" checked />
-            <span>Enable daily reminders</span>
-          </label>
-        </form>
+        <section class="settings-section">
+          <h3>Personal Information</h3>
+          <div class="settings-form">
+            <label>
+              Name
+              <input type="text" id="profile-name" autocomplete="name" placeholder="Your name" />
+            </label>
+            <label>
+              Household size
+              <input type="number" id="household-size" min="1" step="1" inputmode="numeric" placeholder="e.g. 4" />
+            </label>
+            <label>
+              ZIP code
+              <input
+                type="text"
+                id="profile-zip-code"
+                inputmode="numeric"
+                autocomplete="postal-code"
+                pattern="[0-9]{5}"
+                maxlength="5"
+                placeholder="e.g. 10001"
+              />
+            </label>
+            <label>
+              Budget
+              <input
+                type="number"
+                id="budget-input"
+                min="0"
+                step="0.01"
+                inputmode="decimal"
+                placeholder="e.g. 75.00"
+              />
+            </label>
+          </div>
+        </section>
+        <section class="settings-section">
+          <h3>Preferences</h3>
+          <div class="settings-form">
+            <label>
+              Theme
+              <select id="theme-select">
+                <option value="light" selected>Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </label>
+            <label>
+              Dietary Preference
+              <select id="diet-select">
+                <option value="balanced" selected>Balanced</option>
+                <option value="vegetarian">Vegetarian</option>
+                <option value="vegan">Vegan</option>
+                <option value="keto">Keto</option>
+              </select>
+            </label>
+            <label class="toggle">
+              <input type="checkbox" id="notifications-toggle" checked />
+              <span>Enable daily reminders</span>
+            </label>
+          </div>
+        </section>
       </section>
     </main>
 

@@ -18,8 +18,8 @@ const dishStatus = document.getElementById("dish-status");
 const dishResults = document.getElementById("dish-results");
 const dishSource = document.getElementById("dish-source");
 const dishEmptyState = document.getElementById("dish-empty-state");
-const budgetForm = document.getElementById("budget-form");
 const budgetInput = document.getElementById("budget-input");
+const currentBudget = document.getElementById("current-budget");
 const remainingBudget = document.getElementById("remaining-budget");
 const budgetMealCount = document.getElementById("budget-meal-count");
 const scheduledMealCost = document.getElementById("scheduled-meal-cost");
@@ -72,6 +72,7 @@ function renderBudget() {
   const scheduledTotal = getScheduledMealTotal();
   const remaining = budget - scheduledTotal;
 
+  currentBudget.textContent = currencyFormatter.format(budget);
   remainingBudget.textContent = currencyFormatter.format(remaining);
   remainingBudget.classList.toggle("over-budget", remaining < 0);
   budgetMealCount.textContent = scheduledMeals.length;
@@ -371,10 +372,6 @@ dishForm.addEventListener("submit", async (event) => {
 });
 
 budgetInput.addEventListener("input", renderBudget);
-
-budgetForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-});
 
 themeSelect.addEventListener("change", () => {
   document.body.classList.toggle("dark-theme", themeSelect.value === "dark");
