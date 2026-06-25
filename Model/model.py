@@ -23,6 +23,8 @@ OPENAI_DISH_MODEL = os.getenv("OPENAI_DISH_MODEL", "gpt-4.1-nano")
 MAX_TURNS = 6
 conversation_history = []
 ZIP_CODE_PATTERN = re.compile(r"^\d{5}$")
+MIN_HOUSEHOLD_SIZE = 1
+MAX_HOUSEHOLD_SIZE = 12
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 HTTP_TIMEOUT_SECONDS = 20
@@ -207,6 +209,14 @@ def parse_ingredients(raw_ingredients):
     return ingredients[:8]
 
 
+def parse_household_size(value):
+    try:
+        household_size = int(value)
+    except (TypeError, ValueError):
+        return MIN_HOUSEHOLD_SIZE
+    return max(MIN_HOUSEHOLD_SIZE, min(household_size, MAX_HOUSEHOLD_SIZE))
+
+
 def nutrient_number(value):
     try:
         return float(value)
@@ -387,7 +397,7 @@ def clean_grams_total(value, ingredient_name, servings):
         grams = int(round(float(value)))
     except (TypeError, ValueError):
         return None
-    if grams < 1 or grams > 2500:
+    if grams < 1 or grams > 5000:
         return None
     min_per_serving, max_per_serving = ingredient_portion_bounds(ingredient_name)
     grams_per_serving = grams / servings
@@ -418,7 +428,7 @@ def estimate_price_per_100g(ingredient_name):
     return DEFAULT_PRICE_PER_100G
 
 
-def generate_dish_candidates(ingredients):
+def generate_dish_candidates(ingredients, household_size):
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY is not set.")
@@ -427,17 +437,18 @@ def generate_dish_candidates(ingredients):
     ingredient_text = ", ".join(ingredients)
     user_prompt = f"""
 Available ingredients: {ingredient_text}
+Household size: {household_size} people
 
 Generate exactly 3 real dishes a person would recognize by name. Do not use generic names like
 "skillet", "rice bowl", "warm grain bowl", or "sheet-pan plate" as the dish name.
 
 Rules:
-- Each dish must use at least one available ingredient.
-- You may add common pantry staples only when needed for a real dish name, such as olive oil,
-  onion, garlic, flour tortillas, pasta, cheese, eggs, broth, spices, or sauce.
+- Treat the available ingredients as starting points. Each dish must use at least one available ingredient.
+- You may add realistic supporting ingredients that make the dish complete, including produce, protein,
+  starches, dairy, oil, broth, spices, sauces, or other common grocery ingredients.
 - Return no recipes and no steps.
 - Portions must be realistic for a full dish and must be in grams for the whole recipe, not per person.
-- Use 2 to 4 servings per dish.
+- Set servings to exactly {household_size} so the dish feeds everyone in the household.
 - Use cooked-food portions when the ingredient is normally eaten cooked.
 - Do not force ingredients into neat 100g, 50g, or 25g increments. Use natural portion sizes.
 - Hard per-serving limits:
@@ -480,7 +491,7 @@ Return this JSON shape only:
             servings = int(dish.get("servings"))
         except (TypeError, ValueError):
             servings = None
-        if not name or servings not in (2, 3, 4):
+        if not name or servings != household_size:
             continue
 
         dish_ingredients = []
@@ -579,14 +590,20 @@ def build_dishes(dish_candidates):
             {
                 "name": candidate["name"],
                 "servings": servings,
+                "calories_total": round(total_calories),
                 "calories_per_person": round(total_calories / servings),
-                "estimated_price_per_serving": round(total_price / servings, 2),
                 "estimated_price_total": round(total_price, 2),
+                "estimated_price_per_serving": round(total_price / servings, 2),
+                "nutrition_total": {
+                    key: round(value, 1)
+                    for key, value in total_nutrients.items()
+                },
                 "nutrition_per_person": {
                     key: round(value / servings, 1)
                     for key, value in total_nutrients.items()
                 },
                 "ingredients": ingredient_lines,
+                "ingredients_to_buy": ingredient_lines,
                 "portion_note": candidate["portion_note"],
                 "method": candidate["portion_note"],
             }
@@ -834,11 +851,12 @@ def dishes():
     data = request.get_json(silent=True) or {}
     raw_ingredients = (data.get("ingredients") or data.get("message") or "").strip()
     ingredients = parse_ingredients(raw_ingredients)
+    household_size = parse_household_size(data.get("household_size"))
     if not ingredients:
         return jsonify({"error": "Enter at least one ingredient."}), 400
 
     try:
-        dish_candidates = generate_dish_candidates(ingredients)
+        dish_candidates = generate_dish_candidates(ingredients, household_size)
         dishes, missing_ingredients = build_dishes(dish_candidates)
     except RuntimeError as exc:
         return jsonify({"error": str(exc)}), 503
@@ -848,6 +866,7 @@ def dishes():
     return jsonify(
         {
             "input_ingredients": ingredients,
+            "household_size": household_size,
             "matched_ingredients": [
                 ingredient
                 for dish in dishes

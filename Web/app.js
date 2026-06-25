@@ -18,6 +18,7 @@ const dishStatus = document.getElementById("dish-status");
 const dishResults = document.getElementById("dish-results");
 const dishSource = document.getElementById("dish-source");
 const dishEmptyState = document.getElementById("dish-empty-state");
+const householdSizeInput = document.getElementById("household-size");
 const budgetInput = document.getElementById("budget-input");
 const currentBudget = document.getElementById("current-budget");
 const remainingBudget = document.getElementById("remaining-budget");
@@ -62,9 +63,14 @@ function showPanel(id) {
 
 function getScheduledMealTotal() {
   return scheduledMeals.reduce(
-    (total, meal) => total + Number(meal.estimated_price_per_serving || 0),
+    (total, meal) => total + Number(meal.estimated_price_total || 0),
     0
   );
+}
+
+function getHouseholdSize() {
+  const householdSize = Number.parseInt(householdSizeInput.value, 10);
+  return Number.isFinite(householdSize) && householdSize > 0 ? householdSize : 1;
 }
 
 function renderBudget() {
@@ -91,8 +97,8 @@ function renderSchedule() {
 
     orderCell.textContent = index + 1;
     mealCell.textContent = meal.name;
-    caloriesCell.textContent = `${meal.calories_per_person} per serving`;
-    priceCell.textContent = `$${meal.estimated_price_per_serving.toFixed(2)} per serving`;
+    caloriesCell.textContent = `${meal.calories_total || meal.calories_per_person} total`;
+    priceCell.textContent = currencyFormatter.format(meal.estimated_price_total);
 
     row.append(orderCell, mealCell, caloriesCell, priceCell);
     scheduleTableBody.appendChild(row);
@@ -186,7 +192,7 @@ async function fetchStores(zipCode) {
   throw new Error(lastError);
 }
 
-async function fetchDishes(ingredients) {
+async function fetchDishes(ingredients, householdSize) {
   let lastError = API_BASE_URL
     ? "Unable to reach the dishes backend."
     : "Backend URL is not configured.";
@@ -196,7 +202,7 @@ async function fetchDishes(ingredients) {
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ingredients }),
+        body: JSON.stringify({ ingredients, household_size: householdSize }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
@@ -252,41 +258,67 @@ function renderDishes(data) {
   dishEmptyState.hidden = true;
 
   data.dishes.forEach((dish) => {
+    const nutritionTotal = dish.nutrition_total || {};
+    const nutritionPerPerson = dish.nutrition_per_person || {};
+    const ingredientsToBuy = dish.ingredients_to_buy || dish.ingredients || [];
     const item = document.createElement("li");
     const title = document.createElement("h3");
     const calories = document.createElement("p");
     const price = document.createElement("p");
     const method = document.createElement("p");
-    const nutrition = document.createElement("div");
+    const totalNutrition = document.createElement("div");
+    const perPersonNutrition = document.createElement("div");
+    const ingredientsHeading = document.createElement("h4");
     const ingredientList = document.createElement("ul");
     const scheduleButton = document.createElement("button");
 
     title.textContent = dish.name;
     calories.className = "dish-calories";
-    calories.textContent = `${dish.calories_per_person} calories per serving`;
+    calories.textContent = `${dish.calories_total || dish.calories_per_person} total calories | ${dish.calories_per_person} per person`;
     price.className = "dish-price";
-    price.textContent = `$${dish.estimated_price_per_serving.toFixed(2)} estimated per serving`;
+    price.textContent = `${currencyFormatter.format(dish.estimated_price_total)} total | ${currencyFormatter.format(dish.estimated_price_per_serving)} per person`;
     method.textContent = dish.method;
-    nutrition.className = "dish-nutrition";
-    nutrition.textContent = [
-      `${dish.nutrition_per_person.protein_g}g protein`,
-      `${dish.nutrition_per_person.carbohydrates_g}g carbs`,
-      `${dish.nutrition_per_person.fat_g}g fat`,
-      `${dish.nutrition_per_person.fiber_g}g fiber`,
+    totalNutrition.className = "dish-nutrition";
+    totalNutrition.textContent = [
+      "Total nutrition:",
+      `${nutritionTotal.protein_g || 0}g protein`,
+      `${nutritionTotal.carbohydrates_g || 0}g carbs`,
+      `${nutritionTotal.fat_g || 0}g fat`,
+      `${nutritionTotal.fiber_g || 0}g fiber`,
     ].join(" | ");
+    perPersonNutrition.className = "dish-nutrition";
+    perPersonNutrition.textContent = [
+      "Per person:",
+      `${nutritionPerPerson.protein_g || 0}g protein`,
+      `${nutritionPerPerson.carbohydrates_g || 0}g carbs`,
+      `${nutritionPerPerson.fat_g || 0}g fat`,
+      `${nutritionPerPerson.fiber_g || 0}g fiber`,
+    ].join(" | ");
+    ingredientsHeading.className = "dish-ingredients-heading";
+    ingredientsHeading.textContent = "Ingredients to buy";
     ingredientList.className = "dish-ingredients";
     scheduleButton.type = "button";
     scheduleButton.className = "add-to-schedule-button";
     scheduleButton.textContent = "Add to schedule";
     scheduleButton.addEventListener("click", () => addMealToSchedule(dish));
 
-    dish.ingredients.forEach((ingredient) => {
+    ingredientsToBuy.forEach((ingredient) => {
       const ingredientItem = document.createElement("li");
-      ingredientItem.textContent = `${ingredient.grams_per_person}g per serving ${ingredient.name} matched to ${ingredient.matched_food}`;
+      ingredientItem.textContent = `${ingredient.grams_total}g ${ingredient.name} - ${currencyFormatter.format(ingredient.estimated_price_total)}`;
       ingredientList.appendChild(ingredientItem);
     });
 
-    item.append(title, calories, price, nutrition, method, ingredientList, scheduleButton);
+    item.append(
+      title,
+      calories,
+      price,
+      totalNutrition,
+      perPersonNutrition,
+      method,
+      ingredientsHeading,
+      ingredientList,
+      scheduleButton
+    );
     dishResults.appendChild(item);
   });
 
@@ -360,9 +392,10 @@ dishForm.addEventListener("submit", async (event) => {
   dishEmptyState.hidden = false;
 
   try {
-    const data = await fetchDishes(ingredients);
+    const householdSize = getHouseholdSize();
+    const data = await fetchDishes(ingredients, householdSize);
     renderDishes(data);
-    dishStatus.textContent = `Built 3 dishes from ${data.matched_ingredients.length} USDA food match${data.matched_ingredients.length === 1 ? "" : "es"}.`;
+    dishStatus.textContent = `Built 3 dishes for ${data.household_size} ${data.household_size === 1 ? "person" : "people"} from ${data.matched_ingredients.length} USDA food match${data.matched_ingredients.length === 1 ? "" : "es"}.`;
     dishSource.hidden = false;
   } catch (error) {
     dishStatus.textContent = `Dish search error: ${error.message}`;
