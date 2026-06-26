@@ -308,6 +308,29 @@ def add_nutrients(total_nutrients, nutrients):
         total_nutrients[key] += nutrients.get(key, 0)
 
 
+def is_fruit_appropriate_for_dish(product, dish_name, portion_note):
+    if (product.get("food_group") or "").casefold() != "fruits":
+        return True
+
+    dish_text = f"{dish_name} {portion_note}".casefold()
+    fruit_context_patterns = (
+        r"\bfruit\b",
+        r"\bapple\b",
+        r"\bbanana\b",
+        r"\bberry\b",
+        r"\bberries\b",
+        r"\bsmoothie\b",
+        r"\byogurt\b",
+        r"\boatmeal\b",
+        r"\boats\b",
+        r"\bparfait\b",
+        r"\bpancake\b",
+        r"\btoast\b",
+        r"\bsalad\b",
+    )
+    return any(re.search(pattern, dish_text) for pattern in fruit_context_patterns)
+
+
 def nutrient_number(value):
     try:
         return float(value)
@@ -655,6 +678,10 @@ Rules:
 - The user is describing the kind of meal they want, not listing pantry ingredients.
 - Choose 3 to 6 grocery products per dish.
 - Use product_id values exactly as provided.
+- Every selected product must be an actual ingredient or direct topping/filling in the named dish.
+- Do not add unrelated sides, snacks, drinks, desserts, or fruit just to improve health or calories.
+- Fruit products are only allowed when the dish name or user request is a fruit-forward meal, such as
+  oatmeal, yogurt, smoothie, fruit bowl, peanut butter toast, pancakes, or a salad that names fruit.
 - If the user requests a food that is unavailable in the catalog, choose the closest normal substitute
   available in the catalog and mention the substitution in portion_note.
 - grams_total is the amount used by the whole household meal, not the full package unless needed.
@@ -825,6 +852,10 @@ def build_demo_grocery_dishes(dish_candidates, products_by_id, stores):
         for selected in candidate["products"]:
             product = products_by_id.get(selected["product_id"])
             if not product or selected["product_id"] in seen_product_ids:
+                continue
+            if not is_fruit_appropriate_for_dish(
+                product, candidate["name"], candidate["portion_note"]
+            ):
                 continue
             seen_product_ids.add(selected["product_id"])
             grams_total = min(selected["grams_total"], int(product.get("package_grams") or 0))
