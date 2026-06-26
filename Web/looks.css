@@ -20,6 +20,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -142,6 +146,34 @@ body.dark-theme {
   background: color-mix(in srgb, var(--color-primary) 14%, transparent);
   border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
   color: var(--color-primary-strong);
+}
+
+.account-status {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.account-status span {
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-status button,
+.secondary-button {
+  border: 1px solid var(--color-border);
+  border-radius: 0.85rem;
+  padding: 0.58rem 0.78rem;
+  background: color-mix(in srgb, var(--color-panel-strong) 90%, transparent);
+  color: var(--color-primary-strong);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 main {
@@ -346,6 +378,62 @@ main {
   aspect-ratio: 4 / 3;
 }
 
+.auth-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 420px);
+  gap: clamp(1.2rem, 4vw, 2.5rem);
+  align-items: center;
+}
+
+.auth-copy p:last-child {
+  color: var(--color-muted);
+  max-width: 58ch;
+}
+
+.auth-card {
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--color-panel-strong) 92%, transparent);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+}
+
+.auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.auth-tabs button {
+  border: 1px solid var(--color-border);
+  border-radius: 0.85rem;
+  padding: 0.65rem;
+  background: transparent;
+  color: var(--color-muted);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.auth-tabs button.active {
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
+  color: var(--color-primary-strong);
+}
+
+.auth-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.auth-form label {
+  display: grid;
+  gap: 0.4rem;
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
 .chat-window {
   border: 1px solid var(--color-border);
   border-radius: 1.1rem;
@@ -415,6 +503,7 @@ main {
 #dish-input,
 #zip-code,
 #budget-input,
+.auth-form input,
 .settings-form input:not([type="checkbox"]),
 .settings-form select {
   width: 100%;
@@ -431,6 +520,7 @@ main {
 #dish-input:focus,
 #zip-code:focus,
 #budget-input:focus,
+.auth-form input:focus,
 .settings-form input:not([type="checkbox"]):focus,
 .settings-form select:focus {
   outline: 2px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
@@ -438,6 +528,7 @@ main {
 }
 
 #chat-form button,
+.auth-form button[type="submit"],
 .dish-form button,
 .add-to-schedule-button,
 .store-search-form button {
@@ -454,11 +545,36 @@ main {
 }
 
 #chat-form button:hover,
+.auth-form button[type="submit"]:hover,
 .dish-form button:hover,
 .add-to-schedule-button:hover,
 .store-search-form button:hover {
   transform: translateY(-1px);
   box-shadow: 0 14px 26px rgba(17, 94, 89, 0.33);
+}
+
+.auth-form button:disabled,
+.account-status button:disabled,
+.secondary-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.auth-status {
+  min-height: 1.5rem;
+  margin-top: 1rem;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.auth-status[data-type="success"] {
+  color: var(--color-primary-strong);
+  font-weight: 700;
+}
+
+.auth-status[data-type="error"] {
+  color: #b91c1c;
+  font-weight: 700;
 }
 
 .add-to-schedule-button {
@@ -776,6 +892,11 @@ tbody tr:last-child td {
     flex-direction: column;
   }
 
+  .account-status {
+    width: 100%;
+    justify-content: space-between;
+  }
+
   main {
     width: min(1080px, 100% - 1.2rem);
     margin-top: 1.2rem;
@@ -801,6 +922,7 @@ tbody tr:last-child td {
   }
 
   .home-hero,
+  .auth-layout,
   .plate-layout {
     grid-template-columns: 1fr;
   }

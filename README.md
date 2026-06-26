@@ -41,6 +41,10 @@ Then redeploy the static frontend to Vercel. The current allowed production fron
 https://snapp-1d5j.vercel.app
 ```
 
+## Supabase Auth
+
+The frontend uses Supabase email/password auth with the project URL and publishable key in [Web/index.html](/Users/2027kstarkie/Desktop/SNAPP/Web/index.html:7). In the Supabase dashboard, enable Email auth and add the deployed frontend URL to the Auth redirect URL allow list so confirmation and password reset links can return to SNAPP.
+
 ## Local Backend
 
 ```sh

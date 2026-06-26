@@ -24,14 +24,39 @@ const currentBudget = document.getElementById("current-budget");
 const remainingBudget = document.getElementById("remaining-budget");
 const budgetMealCount = document.getElementById("budget-meal-count");
 const scheduledMealCost = document.getElementById("scheduled-meal-cost");
+const accountEmail = document.getElementById("account-email");
+const signOutButton = document.getElementById("sign-out-button");
+const authStatus = document.getElementById("auth-status");
+const signInForm = document.getElementById("sign-in-form");
+const signUpForm = document.getElementById("sign-up-form");
+const authTabs = document.querySelector(".auth-tabs");
+const showSignInButton = document.getElementById("show-sign-in");
+const showSignUpButton = document.getElementById("show-sign-up");
+const resetPasswordButton = document.getElementById("reset-password-button");
+const signInEmailInput = document.getElementById("sign-in-email");
+const signInPasswordInput = document.getElementById("sign-in-password");
+const signUpNameInput = document.getElementById("sign-up-name");
+const signUpEmailInput = document.getElementById("sign-up-email");
+const signUpPasswordInput = document.getElementById("sign-up-password");
 
 const scheduledMeals = [];
+let currentUser = null;
 
 const API_BASE_URL = (
   document.querySelector('meta[name="snapp-api-base-url"]')?.content || ""
 )
   .trim()
   .replace(/\/+$/, "");
+const SUPABASE_URL = (
+  document.querySelector('meta[name="snapp-supabase-url"]')?.content || ""
+).trim();
+const SUPABASE_KEY = (
+  document.querySelector('meta[name="snapp-supabase-key"]')?.content || ""
+).trim();
+const supabaseClient =
+  window.supabase && SUPABASE_URL && SUPABASE_KEY
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+    : null;
 
 function getApiEndpoints(path) {
   if (API_BASE_URL) {
@@ -55,10 +80,53 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
 });
 
 function showPanel(id) {
-  panels.forEach((panel) => panel.classList.toggle("visible", panel.id === id));
-  navButtons.forEach((button) =>
-    button.classList.toggle("active", button.dataset.target === id)
+  const targetId = currentUser || id === "account" ? id : "account";
+  panels.forEach((panel) =>
+    panel.classList.toggle("visible", panel.id === targetId)
   );
+  navButtons.forEach((button) =>
+    button.classList.toggle("active", button.dataset.target === targetId)
+  );
+}
+
+function setAuthStatus(message, type = "neutral") {
+  authStatus.textContent = message;
+  authStatus.dataset.type = type;
+}
+
+function showAuthMode(mode) {
+  const isSignUp = mode === "sign-up";
+  authTabs.hidden = false;
+  signInForm.hidden = isSignUp;
+  signUpForm.hidden = !isSignUp;
+  showSignInButton.classList.toggle("active", !isSignUp);
+  showSignUpButton.classList.toggle("active", isSignUp);
+  setAuthStatus("");
+}
+
+function renderAuthState(user) {
+  const wasSignedIn = Boolean(currentUser);
+  currentUser = user;
+  document.body.classList.toggle("signed-in", Boolean(user));
+  accountEmail.textContent = user?.email || "Signed out";
+  signOutButton.hidden = !user;
+
+  if (user) {
+    authTabs.hidden = true;
+    signInForm.hidden = true;
+    signUpForm.hidden = true;
+    setAuthStatus(`Signed in as ${user.email}.`, "success");
+    if (document.querySelector(".panel.visible")?.id === "account") {
+      showPanel("home");
+    }
+    return;
+  }
+
+  if (wasSignedIn) {
+    showAuthMode("sign-in");
+    setAuthStatus("Signed out.", "success");
+  }
+  showPanel("account");
 }
 
 function getScheduledMealTotal() {
@@ -331,9 +399,121 @@ function renderDishes(data) {
   }
 }
 
+async function initializeAuth() {
+  if (!supabaseClient) {
+    setAuthStatus("Supabase is not configured. Check the project URL and publishable key.", "error");
+    renderAuthState(null);
+    return;
+  }
+
+  const { data, error } = await supabaseClient.auth.getSession();
+  if (error) {
+    setAuthStatus(error.message, "error");
+  }
+  renderAuthState(data.session?.user || null);
+
+  supabaseClient.auth.onAuthStateChange((_event, session) => {
+    renderAuthState(session?.user || null);
+  });
+}
+
 navButtons.forEach((button) =>
   button.addEventListener("click", () => showPanel(button.dataset.target))
 );
+
+showSignInButton.addEventListener("click", () => showAuthMode("sign-in"));
+showSignUpButton.addEventListener("click", () => showAuthMode("sign-up"));
+
+signInForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!supabaseClient) return;
+
+  const submitButton = signInForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  setAuthStatus("Signing in...");
+
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email: signInEmailInput.value.trim(),
+    password: signInPasswordInput.value,
+  });
+
+  if (error) {
+    setAuthStatus(error.message, "error");
+  } else {
+    signInForm.reset();
+    setAuthStatus("Signed in.", "success");
+  }
+
+  submitButton.disabled = false;
+});
+
+signUpForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!supabaseClient) return;
+
+  const submitButton = signUpForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  setAuthStatus("Creating account...");
+
+  const { data, error } = await supabaseClient.auth.signUp({
+    email: signUpEmailInput.value.trim(),
+    password: signUpPasswordInput.value,
+    options: {
+      data: {
+        full_name: signUpNameInput.value.trim(),
+      },
+    },
+  });
+
+  if (error) {
+    setAuthStatus(error.message, "error");
+  } else if (data.session) {
+    signUpForm.reset();
+    setAuthStatus("Account created. You are signed in.", "success");
+  } else {
+    signUpForm.reset();
+    showAuthMode("sign-in");
+    setAuthStatus("Account created. Check your email to confirm before signing in.", "success");
+  }
+
+  submitButton.disabled = false;
+});
+
+resetPasswordButton.addEventListener("click", async () => {
+  if (!supabaseClient) return;
+
+  const email = signInEmailInput.value.trim();
+  if (!email) {
+    setAuthStatus("Enter your email before requesting a password reset.", "error");
+    return;
+  }
+
+  resetPasswordButton.disabled = true;
+  setAuthStatus("Sending password reset email...");
+
+  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.href.split("#")[0],
+  });
+
+  if (error) {
+    setAuthStatus(error.message, "error");
+  } else {
+    setAuthStatus("Password reset email sent.", "success");
+  }
+
+  resetPasswordButton.disabled = false;
+});
+
+signOutButton.addEventListener("click", async () => {
+  if (!supabaseClient) return;
+
+  signOutButton.disabled = true;
+  const { error } = await supabaseClient.auth.signOut();
+  if (error) {
+    setAuthStatus(error.message, "error");
+  }
+  signOutButton.disabled = false;
+});
 
 chatForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -421,3 +601,5 @@ dietSelect.addEventListener("change", () => {
 });
 
 renderSchedule();
+showAuthMode("sign-in");
+initializeAuth();

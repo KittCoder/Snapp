@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="snapp-api-base-url" content="https://snapp-a64d.onrender.com" />
+    <meta name="snapp-supabase-url" content="https://wmagmsatawlwvcobtkxh.supabase.co" />
+    <meta name="snapp-supabase-key" content="sb_publishable_jA7UgqXT8G1gv8FvHrFjbQ_wL8_DTIn" />
     <title>SNAPP</title>
     <link rel="stylesheet" href="looks.css" />
   </head>
@@ -14,7 +16,8 @@
         <span class="brand-name">SNAPP</span>
       </div>
       <nav class="nav-buttons">
-        <button data-target="home" class="nav-button active">Home</button>
+        <button data-target="account" class="nav-button active">Account</button>
+        <button data-target="home" class="nav-button">Home</button>
         <button data-target="chat" class="nav-button">Chat</button>
         <button data-target="dishes" class="nav-button">Dishes</button>
         <button data-target="schedule" class="nav-button">Schedule</button>
@@ -22,10 +25,70 @@
         <button data-target="information" class="nav-button">Information</button>
         <button data-target="settings" class="nav-button">Settings</button>
       </nav>
+      <div class="account-status">
+        <span id="account-email">Signed out</span>
+        <button id="sign-out-button" type="button" hidden>Sign out</button>
+      </div>
     </header>
 
     <main>
-      <section id="home" class="panel visible">
+      <section id="account" class="panel visible">
+        <div class="auth-layout">
+          <div class="auth-copy">
+            <p class="eyebrow">SNAPP Account</p>
+            <h1>Save your planning session with Supabase.</h1>
+            <p>
+              Create an account or sign in to use SNAPP. Supabase handles the
+              email/password session and keeps you signed in on this browser.
+            </p>
+          </div>
+          <div class="auth-card">
+            <div class="auth-tabs" role="tablist" aria-label="Account actions">
+              <button id="show-sign-in" type="button" class="active">Sign in</button>
+              <button id="show-sign-up" type="button">Create account</button>
+            </div>
+
+            <form id="sign-in-form" class="auth-form">
+              <label>
+                Email
+                <input type="email" id="sign-in-email" autocomplete="email" required />
+              </label>
+              <label>
+                Password
+                <input type="password" id="sign-in-password" autocomplete="current-password" required />
+              </label>
+              <button type="submit">Sign in</button>
+              <button id="reset-password-button" type="button" class="secondary-button">Send password reset</button>
+            </form>
+
+            <form id="sign-up-form" class="auth-form" hidden>
+              <label>
+                Name
+                <input type="text" id="sign-up-name" autocomplete="name" required />
+              </label>
+              <label>
+                Email
+                <input type="email" id="sign-up-email" autocomplete="email" required />
+              </label>
+              <label>
+                Password
+                <input
+                  type="password"
+                  id="sign-up-password"
+                  autocomplete="new-password"
+                  minlength="6"
+                  required
+                />
+              </label>
+              <button type="submit">Create account</button>
+            </form>
+
+            <div id="auth-status" class="auth-status" role="status" aria-live="polite"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="home" class="panel">
         <div class="home-hero">
           <div>
             <p class="eyebrow">Nourishment Made Practical</p>
@@ -361,6 +424,7 @@
       </section>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="app.js"></script>
   </body>
 </html>
