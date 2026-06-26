@@ -439,13 +439,18 @@ def generate_dish_candidates(ingredients, household_size):
 Available ingredients: {ingredient_text}
 Household size: {household_size} people
 
-Generate exactly 3 real dishes a person would recognize by name. Do not use generic names like
-"skillet", "rice bowl", "warm grain bowl", or "sheet-pan plate" as the dish name.
+Generate exactly 3 traditional, normal dishes a person would recognize by name. Prefer familiar
+restaurant, home-cooking, or cookbook-style foods that naturally include at least one listed ingredient.
+Do not use generic names like "skillet", "rice bowl", "warm grain bowl", or "sheet-pan plate" as
+the dish name.
 
 Rules:
-- Treat the available ingredients as starting points. Each dish must use at least one available ingredient.
-- You may add realistic supporting ingredients that make the dish complete, including produce, protein,
-  starches, dairy, oil, broth, spices, sauces, or other common grocery ingredients.
+- Treat the available ingredients as inspiration and anchors, not a strict pantry limit.
+- Each dish must use at least one available ingredient, but you should freely add the normal ingredients
+  needed for that dish, including produce, protein, starches, dairy, oil, broth, spices, sauces,
+  aromatics, garnishes, or other common grocery ingredients.
+- Do not invent unusual fusion dishes just to include every listed ingredient. It is better to recommend
+  a normal dish that uses one or two listed ingredients well.
 - Return no recipes and no steps.
 - Portions must be realistic for a full dish and must be in grams for the whole recipe, not per person.
 - Set servings to exactly {household_size} so the dish feeds everyone in the household.
