@@ -212,10 +212,10 @@
 
       <section id="dishes" class="panel">
         <h2>Dishes</h2>
-        <p>Enter ingredients you have as starting points. SNAPP will build three dishes sized for your household, with USDA-based nutrition and estimated grocery costs.</p>
+        <p>Describe the kind of meal you want, and SNAPP will build three grocery-backed ideas optimized for price, taste, and health.</p>
         <div class="dish-chat-window">
           <div id="dish-empty-state" class="dish-empty-state">
-            Try chicken, rice, broccoli or eggs, spinach, potatoes.
+            Try Mexican breakfast, savory lunch, or dinner with beef.
           </div>
           <ul id="dish-results" class="dish-results"></ul>
         </div>
@@ -223,7 +223,7 @@
           <input
             type="text"
             id="dish-input"
-            placeholder="Enter ingredients..."
+            placeholder="What meal do you want?"
             autocomplete="off"
             required
           />
@@ -231,8 +231,7 @@
         </form>
         <div id="dish-status" class="dish-status" role="status" aria-live="polite"></div>
         <p id="dish-source" class="dish-source" hidden>
-          Nutrition data:
-          <a href="https://fdc.nal.usda.gov/" target="_blank" rel="noopener noreferrer">USDA FoodData Central</a>.
+          Grocery data: SNAPP demo grocery database.
         </p>
       </section>
 

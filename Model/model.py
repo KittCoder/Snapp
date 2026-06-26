@@ -3,6 +3,7 @@ import os
 import json
 import re
 import time
+from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlparse
 from urllib.request import Request, urlopen
@@ -32,6 +33,7 @@ HTTP_RETRY_ATTEMPTS = 2
 USER_AGENT = "SNAPP/1.0 (https://github.com/KittCoder/Snapp)"
 STORE_CACHE_TTL_SECONDS = 15 * 60
 FOOD_CACHE_TTL_SECONDS = 60 * 60
+DEMO_GROCERY_DB_FILENAME = "snapp_demo_grocery_db.json"
 store_search_cache = {}
 food_search_cache = {}
 FDC_SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
@@ -215,6 +217,94 @@ def parse_household_size(value):
     except (TypeError, ValueError):
         return MIN_HOUSEHOLD_SIZE
     return max(MIN_HOUSEHOLD_SIZE, min(household_size, MAX_HOUSEHOLD_SIZE))
+
+
+def load_demo_grocery_db():
+    search_paths = (
+        Path(__file__).with_name(DEMO_GROCERY_DB_FILENAME),
+        Path(__file__).resolve().parent.parent / DEMO_GROCERY_DB_FILENAME,
+    )
+    for path in search_paths:
+        if path.exists():
+            with path.open(encoding="utf-8") as file:
+                return json.load(file)
+    raise RuntimeError("The SNAPP demo grocery database is missing.")
+
+
+def product_effective_price(product):
+    price = product.get("sale_price")
+    if price is None:
+        price = product.get("price")
+    try:
+        return round(float(price), 2)
+    except (TypeError, ValueError):
+        return 0
+
+
+def available_demo_products(grocery_db):
+    return [
+        product
+        for product in grocery_db.get("products", [])
+        if product.get("in_stock") and product.get("snap_eligible")
+    ]
+
+
+def demo_store_lookup(grocery_db):
+    return {
+        store["id"]: store
+        for store in grocery_db.get("stores", [])
+        if store.get("id")
+    }
+
+
+def demo_catalog_for_prompt(products, stores):
+    catalog = []
+    for product in products:
+        store = stores.get(product.get("store_id"), {})
+        catalog.append(
+            {
+                "id": product.get("id"),
+                "ingredient": product.get("ingredient"),
+                "product_name": product.get("product_name"),
+                "food_group": product.get("food_group"),
+                "store": store.get("name", product.get("store_id")),
+                "package_size": product.get("package_size"),
+                "package_grams": product.get("package_grams"),
+                "price": product_effective_price(product),
+                "calories_per_100g": product.get("calories_per_100g"),
+            }
+        )
+    return catalog
+
+
+def nutrition_from_calories(calories, grams, food_group):
+    group = (food_group or "").casefold()
+    if group == "protein":
+        protein_share, carb_share, fat_share, fiber_per_100g = 0.42, 0.18, 0.40, 1.0
+    elif group == "grains":
+        protein_share, carb_share, fat_share, fiber_per_100g = 0.12, 0.80, 0.08, 3.0
+    elif group == "vegetables":
+        protein_share, carb_share, fat_share, fiber_per_100g = 0.18, 0.74, 0.08, 3.2
+    elif group == "fruits":
+        protein_share, carb_share, fat_share, fiber_per_100g = 0.04, 0.94, 0.02, 2.4
+    elif group == "dairy":
+        protein_share, carb_share, fat_share, fiber_per_100g = 0.28, 0.38, 0.34, 0
+    else:
+        protein_share, carb_share, fat_share, fiber_per_100g = 0.18, 0.62, 0.20, 1.0
+
+    return {
+        "protein_g": calories * protein_share / 4,
+        "carbohydrates_g": calories * carb_share / 4,
+        "fat_g": calories * fat_share / 9,
+        "fiber_g": grams * fiber_per_100g / 100,
+        "sugars_g": 0,
+        "sodium_mg": 0,
+    }
+
+
+def add_nutrients(total_nutrients, nutrients):
+    for key in total_nutrients:
+        total_nutrients[key] += nutrients.get(key, 0)
 
 
 def nutrient_number(value):
@@ -542,6 +632,100 @@ Return this JSON shape only:
     return dishes
 
 
+def generate_demo_grocery_dish_candidates(meal_prompt, household_size, catalog):
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY is not set.")
+
+    client = OpenAI(api_key=api_key)
+    user_prompt = f"""
+User meal request: {meal_prompt}
+Household size: {household_size} people
+Available grocery products JSON:
+{json.dumps(catalog, separators=(",", ":"))}
+
+Generate exactly 3 normal meal ideas that satisfy the user's request. Use only product IDs from the
+available grocery products JSON. Optimize across:
+- price: prefer sale prices, lower total package cost, and overlapping inexpensive staples
+- taste: choose familiar, coherent meals people would actually want to eat
+- health: include balanced food groups when possible and avoid meals that are only starch or only dairy
+
+Rules:
+- The user is describing the kind of meal they want, not listing pantry ingredients.
+- Choose 3 to 6 grocery products per dish.
+- Use product_id values exactly as provided.
+- If the user requests a food that is unavailable in the catalog, choose the closest normal substitute
+  available in the catalog and mention the substitution in portion_note.
+- grams_total is the amount used by the whole household meal, not the full package unless needed.
+- grams_total may be less than package_grams because the shopper buys the package and uses part of it.
+- Keep portions realistic for {household_size} people.
+- Return short notes only, with no recipes and no cooking steps.
+
+Return this JSON shape only:
+{{
+  "dishes": [
+    {{
+      "name": "normal recognizable meal name",
+      "portion_note": "why this balances price, taste, and health",
+      "products": [
+        {{"product_id": "p001", "grams_total": 300}}
+      ]
+    }}
+  ]
+}}
+""".strip()
+    response = client.responses.create(
+        model=OPENAI_DISH_MODEL,
+        input=[
+            {"role": "system", "content": DISH_SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt},
+        ],
+        store=False,
+    )
+    data = extract_json_object(response.output_text)
+    dishes = []
+    valid_product_ids = {product["id"] for product in catalog if product.get("id")}
+
+    for dish in data.get("dishes", []):
+        name = clean_dish_name(dish.get("name"))
+        if not name:
+            continue
+
+        selected_products = []
+        seen = set()
+        for product in dish.get("products", []):
+            product_id = str(product.get("product_id") or "").strip()
+            if product_id not in valid_product_ids or product_id in seen:
+                continue
+            try:
+                grams_total = int(round(float(product.get("grams_total"))))
+            except (TypeError, ValueError):
+                continue
+            if grams_total < 1 or grams_total > 5000:
+                continue
+            seen.add(product_id)
+            selected_products.append(
+                {"product_id": product_id, "grams_total": grams_total}
+            )
+
+        if len(selected_products) < 2:
+            continue
+        dishes.append(
+            {
+                "name": name,
+                "servings": household_size,
+                "portion_note": re.sub(
+                    r"\s+", " ", dish.get("portion_note") or ""
+                ).strip()[:180],
+                "products": selected_products[:6],
+            }
+        )
+
+    if len(dishes) != 3:
+        raise RuntimeError("The meal generator could not build 3 grocery-backed dishes.")
+    return dishes
+
+
 def build_dishes(dish_candidates):
     dishes = []
     missing_ingredients = []
@@ -618,6 +802,93 @@ def build_dishes(dish_candidates):
     if len(dishes) != 3:
         raise RuntimeError("USDA nutrition data could not be matched for all generated dishes.")
     return dishes, sorted(set(missing_ingredients), key=str.casefold)
+
+
+def build_demo_grocery_dishes(dish_candidates, products_by_id, stores):
+    dishes = []
+    for candidate in dish_candidates:
+        ingredient_lines = []
+        total_calories = 0
+        total_price = 0
+        total_nutrients = {
+            "protein_g": 0,
+            "carbohydrates_g": 0,
+            "fat_g": 0,
+            "fiber_g": 0,
+            "sugars_g": 0,
+            "sodium_mg": 0,
+        }
+        servings = candidate["servings"]
+        seen_product_ids = set()
+
+        for selected in candidate["products"]:
+            product = products_by_id.get(selected["product_id"])
+            if not product or selected["product_id"] in seen_product_ids:
+                continue
+            seen_product_ids.add(selected["product_id"])
+            grams_total = min(selected["grams_total"], int(product.get("package_grams") or 0))
+            if grams_total < 1:
+                continue
+
+            package_price = product_effective_price(product)
+            calories_total = (float(product.get("calories_per_100g") or 0) * grams_total) / 100
+            total_calories += calories_total
+            total_price += package_price
+            add_nutrients(
+                total_nutrients,
+                nutrition_from_calories(
+                    calories_total, grams_total, product.get("food_group")
+                ),
+            )
+            store = stores.get(product.get("store_id"), {})
+            ingredient_lines.append(
+                {
+                    "product_id": product.get("id"),
+                    "name": product.get("ingredient"),
+                    "product_name": product.get("product_name"),
+                    "matched_food": product.get("product_name"),
+                    "food_group": product.get("food_group"),
+                    "store_name": store.get("name", product.get("store_id")),
+                    "package_size": product.get("package_size"),
+                    "package_grams": product.get("package_grams"),
+                    "grams_total": grams_total,
+                    "grams_per_person": round(grams_total / servings),
+                    "calories_total": round(calories_total),
+                    "calories_per_person": round(calories_total / servings),
+                    "estimated_price_total": package_price,
+                    "estimated_price_per_serving": round(package_price / servings, 2),
+                }
+            )
+
+        if len(ingredient_lines) < 2:
+            continue
+
+        dishes.append(
+            {
+                "name": candidate["name"],
+                "servings": servings,
+                "calories_total": round(total_calories),
+                "calories_per_person": round(total_calories / servings),
+                "estimated_price_total": round(total_price, 2),
+                "estimated_price_per_serving": round(total_price / servings, 2),
+                "nutrition_total": {
+                    key: round(value, 1)
+                    for key, value in total_nutrients.items()
+                },
+                "nutrition_per_person": {
+                    key: round(value / servings, 1)
+                    for key, value in total_nutrients.items()
+                },
+                "ingredients": ingredient_lines,
+                "ingredients_to_buy": ingredient_lines,
+                "portion_note": candidate["portion_note"],
+                "method": candidate["portion_note"],
+            }
+        )
+
+    if len(dishes) != 3:
+        raise RuntimeError("The grocery database could not support 3 complete dish ideas.")
+    return dishes
 
 
 def normalize_website(value):
@@ -856,15 +1127,25 @@ def grocery_stores_options():
 @app.post("/dishes")
 def dishes():
     data = request.get_json(silent=True) or {}
-    raw_ingredients = (data.get("ingredients") or data.get("message") or "").strip()
-    ingredients = parse_ingredients(raw_ingredients)
+    meal_prompt = (data.get("meal_prompt") or data.get("ingredients") or data.get("message") or "").strip()
     household_size = parse_household_size(data.get("household_size"))
-    if not ingredients:
-        return jsonify({"error": "Enter at least one ingredient."}), 400
+    if not meal_prompt:
+        return jsonify({"error": "Describe the meal you want."}), 400
 
     try:
-        dish_candidates = generate_dish_candidates(ingredients, household_size)
-        dishes, missing_ingredients = build_dishes(dish_candidates)
+        grocery_db = load_demo_grocery_db()
+        stores = demo_store_lookup(grocery_db)
+        products = available_demo_products(grocery_db)
+        products_by_id = {
+            product["id"]: product
+            for product in products
+            if product.get("id")
+        }
+        catalog = demo_catalog_for_prompt(products, stores)
+        dish_candidates = generate_demo_grocery_dish_candidates(
+            meal_prompt, household_size, catalog
+        )
+        dishes = build_demo_grocery_dishes(dish_candidates, products_by_id, stores)
     except RuntimeError as exc:
         return jsonify({"error": str(exc)}), 503
     except Exception as exc:
@@ -872,16 +1153,16 @@ def dishes():
 
     return jsonify(
         {
-            "input_ingredients": ingredients,
+            "meal_prompt": meal_prompt,
             "household_size": household_size,
             "matched_ingredients": [
                 ingredient
                 for dish in dishes
                 for ingredient in dish["ingredients"]
             ],
-            "missing_ingredients": missing_ingredients,
+            "missing_ingredients": [],
             "dishes": dishes,
-            "source": "U.S. Department of Agriculture, Agricultural Research Service. FoodData Central.",
+            "source": "SNAPP demo grocery database",
         }
     )
 

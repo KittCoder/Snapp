@@ -192,7 +192,7 @@ async function fetchStores(zipCode) {
   throw new Error(lastError);
 }
 
-async function fetchDishes(ingredients, householdSize) {
+async function fetchDishes(mealPrompt, householdSize) {
   let lastError = API_BASE_URL
     ? "Unable to reach the dishes backend."
     : "Backend URL is not configured.";
@@ -202,7 +202,7 @@ async function fetchDishes(ingredients, householdSize) {
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ingredients, household_size: householdSize }),
+        body: JSON.stringify({ meal_prompt: mealPrompt, household_size: householdSize }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
@@ -304,7 +304,8 @@ function renderDishes(data) {
 
     ingredientsToBuy.forEach((ingredient) => {
       const ingredientItem = document.createElement("li");
-      ingredientItem.textContent = `${ingredient.grams_total}g ${ingredient.name} - ${currencyFormatter.format(ingredient.estimated_price_total)}`;
+      const storeText = ingredient.store_name ? ` at ${ingredient.store_name}` : "";
+      ingredientItem.textContent = `${ingredient.product_name || ingredient.name} (${ingredient.package_size})${storeText} - ${currencyFormatter.format(ingredient.estimated_price_total)}`;
       ingredientList.appendChild(ingredientItem);
     });
 
@@ -381,21 +382,21 @@ storeSearchForm.addEventListener("submit", async (event) => {
 
 dishForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const ingredients = dishInput.value.trim();
-  if (!ingredients) return;
+  const mealPrompt = dishInput.value.trim();
+  if (!mealPrompt) return;
 
   const submitButton = dishForm.querySelector("button");
   submitButton.disabled = true;
-  dishStatus.textContent = "Checking USDA FoodData Central...";
+  dishStatus.textContent = "Building grocery-backed meal ideas...";
   dishResults.replaceChildren();
   dishSource.hidden = true;
   dishEmptyState.hidden = false;
 
   try {
     const householdSize = getHouseholdSize();
-    const data = await fetchDishes(ingredients, householdSize);
+    const data = await fetchDishes(mealPrompt, householdSize);
     renderDishes(data);
-    dishStatus.textContent = `Built 3 dishes for ${data.household_size} ${data.household_size === 1 ? "person" : "people"} from ${data.matched_ingredients.length} USDA food match${data.matched_ingredients.length === 1 ? "" : "es"}.`;
+    dishStatus.textContent = `Built 3 grocery-backed ideas for ${data.household_size} ${data.household_size === 1 ? "person" : "people"}.`;
     dishSource.hidden = false;
   } catch (error) {
     dishStatus.textContent = `Dish search error: ${error.message}`;
