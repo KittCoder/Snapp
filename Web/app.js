@@ -402,7 +402,7 @@ dishForm.addEventListener("submit", async (event) => {
   } finally {
     submitButton.disabled = false;
   }
-});
+}); 
 
 budgetInput.addEventListener("input", renderBudget);
 
