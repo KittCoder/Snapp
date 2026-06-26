@@ -26,7 +26,7 @@
         <button data-target="settings" class="nav-button">Settings</button>
       </nav>
       <div class="account-status">
-        <span id="account-email">Signed out</span>
+        <span id="account-username">Signed out</span>
         <button id="sign-out-button" type="button" hidden>Sign out</button>
       </div>
     </header>
@@ -38,8 +38,9 @@
             <p class="eyebrow">SNAPP Account</p>
             <h1>Save your planning session with Supabase.</h1>
             <p>
-              Create an account or sign in to use SNAPP. Supabase handles the
-              email/password session and keeps you signed in on this browser.
+              Create an account or sign in to use SNAPP. This prototype uses a
+              username and password while Supabase keeps you signed in on this
+              browser.
             </p>
           </div>
           <div class="auth-card">
@@ -50,25 +51,32 @@
 
             <form id="sign-in-form" class="auth-form">
               <label>
-                Email
-                <input type="email" id="sign-in-email" autocomplete="email" required />
+                Username
+                <input
+                  type="text"
+                  id="sign-in-username"
+                  autocomplete="username"
+                  pattern="[A-Za-z0-9._-]{3,24}"
+                  required
+                />
               </label>
               <label>
                 Password
                 <input type="password" id="sign-in-password" autocomplete="current-password" required />
               </label>
               <button type="submit">Sign in</button>
-              <button id="reset-password-button" type="button" class="secondary-button">Send password reset</button>
             </form>
 
             <form id="sign-up-form" class="auth-form" hidden>
               <label>
-                Name
-                <input type="text" id="sign-up-name" autocomplete="name" required />
-              </label>
-              <label>
-                Email
-                <input type="email" id="sign-up-email" autocomplete="email" required />
+                Username
+                <input
+                  type="text"
+                  id="sign-up-username"
+                  autocomplete="username"
+                  pattern="[A-Za-z0-9._-]{3,24}"
+                  required
+                />
               </label>
               <label>
                 Password
@@ -364,8 +372,8 @@
           <h3>Personal Information</h3>
           <div class="settings-form">
             <label>
-              Name
-              <input type="text" id="profile-name" autocomplete="name" placeholder="Your name" />
+              Username
+              <input type="text" id="profile-name" autocomplete="username" placeholder="Signed out" readonly />
             </label>
             <label>
               How many people are you cooking for?
@@ -395,6 +403,7 @@
               />
             </label>
           </div>
+          <div id="settings-status" class="settings-status" role="status" aria-live="polite"></div>
         </section>
         <section class="settings-section">
           <h3>Preferences</h3>

@@ -18,13 +18,16 @@ const dishStatus = document.getElementById("dish-status");
 const dishResults = document.getElementById("dish-results");
 const dishSource = document.getElementById("dish-source");
 const dishEmptyState = document.getElementById("dish-empty-state");
+const profileNameInput = document.getElementById("profile-name");
 const householdSizeInput = document.getElementById("household-size");
+const profileZipCodeInput = document.getElementById("profile-zip-code");
 const budgetInput = document.getElementById("budget-input");
 const currentBudget = document.getElementById("current-budget");
 const remainingBudget = document.getElementById("remaining-budget");
 const budgetMealCount = document.getElementById("budget-meal-count");
 const scheduledMealCost = document.getElementById("scheduled-meal-cost");
-const accountEmail = document.getElementById("account-email");
+const settingsStatus = document.getElementById("settings-status");
+const accountUsername = document.getElementById("account-username");
 const signOutButton = document.getElementById("sign-out-button");
 const authStatus = document.getElementById("auth-status");
 const signInForm = document.getElementById("sign-in-form");
@@ -32,15 +35,14 @@ const signUpForm = document.getElementById("sign-up-form");
 const authTabs = document.querySelector(".auth-tabs");
 const showSignInButton = document.getElementById("show-sign-in");
 const showSignUpButton = document.getElementById("show-sign-up");
-const resetPasswordButton = document.getElementById("reset-password-button");
-const signInEmailInput = document.getElementById("sign-in-email");
+const signInUsernameInput = document.getElementById("sign-in-username");
 const signInPasswordInput = document.getElementById("sign-in-password");
-const signUpNameInput = document.getElementById("sign-up-name");
-const signUpEmailInput = document.getElementById("sign-up-email");
+const signUpUsernameInput = document.getElementById("sign-up-username");
 const signUpPasswordInput = document.getElementById("sign-up-password");
 
 const scheduledMeals = [];
 let currentUser = null;
+let settingsSaveTimer = null;
 
 const API_BASE_URL = (
   document.querySelector('meta[name="snapp-api-base-url"]')?.content || ""
@@ -57,6 +59,7 @@ const supabaseClient =
   window.supabase && SUPABASE_URL && SUPABASE_KEY
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
     : null;
+const USERNAME_EMAIL_DOMAIN = "snapp.local";
 
 function getApiEndpoints(path) {
   if (API_BASE_URL) {
@@ -94,6 +97,99 @@ function setAuthStatus(message, type = "neutral") {
   authStatus.dataset.type = type;
 }
 
+function setSettingsStatus(message, type = "neutral") {
+  settingsStatus.textContent = message;
+  settingsStatus.dataset.type = type;
+}
+
+function normalizeUsername(username) {
+  return username.trim().toLowerCase();
+}
+
+function getUsernameError(username) {
+  if (!/^[a-z0-9._-]{3,24}$/.test(username)) {
+    return "Use 3-24 letters, numbers, dots, underscores, or hyphens.";
+  }
+
+  return "";
+}
+
+function usernameToEmail(username) {
+  return `${username}@${USERNAME_EMAIL_DOMAIN}`;
+}
+
+function getDisplayUsername(user) {
+  if (!user) return "Signed out";
+  return (
+    user.user_metadata?.username ||
+    user.email?.replace(/@snapp\.local$/, "") ||
+    user.email
+  );
+}
+
+function syncSettingsFromUser(user) {
+  const metadata = user?.user_metadata || {};
+  profileNameInput.value = getDisplayUsername(user);
+  householdSizeInput.value = metadata.household_size || "2";
+  profileZipCodeInput.value = metadata.zip_code || "";
+  renderBudget();
+
+  if (!user) {
+    setSettingsStatus("");
+  }
+}
+
+function getSettingsError() {
+  const householdSize = Number.parseInt(householdSizeInput.value, 10);
+  const zipCode = profileZipCodeInput.value.trim();
+
+  if (!Number.isFinite(householdSize) || householdSize < 1) {
+    return "Household size must be at least 1.";
+  }
+
+  if (zipCode && !/^\d{5}$/.test(zipCode)) {
+    return "ZIP code must be 5 digits.";
+  }
+
+  return "";
+}
+
+async function saveSettingsToUser() {
+  if (!supabaseClient || !currentUser) return;
+
+  const settingsError = getSettingsError();
+  if (settingsError) {
+    setSettingsStatus(settingsError, "error");
+    return;
+  }
+
+  const householdSize = Number.parseInt(householdSizeInput.value, 10);
+  const zipCode = profileZipCodeInput.value.trim();
+  setSettingsStatus("Saving settings...");
+
+  const { data, error } = await supabaseClient.auth.updateUser({
+    data: {
+      ...currentUser.user_metadata,
+      household_size: householdSize,
+      zip_code: zipCode,
+    },
+  });
+
+  if (error) {
+    setSettingsStatus(error.message, "error");
+    return;
+  }
+
+  currentUser = data.user;
+  setSettingsStatus("Settings saved.", "success");
+}
+
+function queueSettingsSave() {
+  if (!currentUser) return;
+  window.clearTimeout(settingsSaveTimer);
+  settingsSaveTimer = window.setTimeout(saveSettingsToUser, 450);
+}
+
 function showAuthMode(mode) {
   const isSignUp = mode === "sign-up";
   authTabs.hidden = false;
@@ -108,14 +204,15 @@ function renderAuthState(user) {
   const wasSignedIn = Boolean(currentUser);
   currentUser = user;
   document.body.classList.toggle("signed-in", Boolean(user));
-  accountEmail.textContent = user?.email || "Signed out";
+  accountUsername.textContent = getDisplayUsername(user);
   signOutButton.hidden = !user;
+  syncSettingsFromUser(user);
 
   if (user) {
     authTabs.hidden = true;
     signInForm.hidden = true;
     signUpForm.hidden = true;
-    setAuthStatus(`Signed in as ${user.email}.`, "success");
+    setAuthStatus(`Signed in as ${getDisplayUsername(user)}.`, "success");
     if (document.querySelector(".panel.visible")?.id === "account") {
       showPanel("home");
     }
@@ -431,9 +528,17 @@ signInForm.addEventListener("submit", async (event) => {
   const submitButton = signInForm.querySelector('button[type="submit"]');
   submitButton.disabled = true;
   setAuthStatus("Signing in...");
+  const username = normalizeUsername(signInUsernameInput.value);
+  const usernameError = getUsernameError(username);
+
+  if (usernameError) {
+    setAuthStatus(usernameError, "error");
+    submitButton.disabled = false;
+    return;
+  }
 
   const { error } = await supabaseClient.auth.signInWithPassword({
-    email: signInEmailInput.value.trim(),
+    email: usernameToEmail(username),
     password: signInPasswordInput.value,
   });
 
@@ -454,13 +559,23 @@ signUpForm.addEventListener("submit", async (event) => {
   const submitButton = signUpForm.querySelector('button[type="submit"]');
   submitButton.disabled = true;
   setAuthStatus("Creating account...");
+  const username = normalizeUsername(signUpUsernameInput.value);
+  const usernameError = getUsernameError(username);
+
+  if (usernameError) {
+    setAuthStatus(usernameError, "error");
+    submitButton.disabled = false;
+    return;
+  }
 
   const { data, error } = await supabaseClient.auth.signUp({
-    email: signUpEmailInput.value.trim(),
+    email: usernameToEmail(username),
     password: signUpPasswordInput.value,
     options: {
       data: {
-        full_name: signUpNameInput.value.trim(),
+        username,
+        household_size: 2,
+        zip_code: "",
       },
     },
   });
@@ -473,35 +588,10 @@ signUpForm.addEventListener("submit", async (event) => {
   } else {
     signUpForm.reset();
     showAuthMode("sign-in");
-    setAuthStatus("Account created. Check your email to confirm before signing in.", "success");
+    setAuthStatus("Account created. Sign in with your username and password.", "success");
   }
 
   submitButton.disabled = false;
-});
-
-resetPasswordButton.addEventListener("click", async () => {
-  if (!supabaseClient) return;
-
-  const email = signInEmailInput.value.trim();
-  if (!email) {
-    setAuthStatus("Enter your email before requesting a password reset.", "error");
-    return;
-  }
-
-  resetPasswordButton.disabled = true;
-  setAuthStatus("Sending password reset email...");
-
-  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.href.split("#")[0],
-  });
-
-  if (error) {
-    setAuthStatus(error.message, "error");
-  } else {
-    setAuthStatus("Password reset email sent.", "success");
-  }
-
-  resetPasswordButton.disabled = false;
 });
 
 signOutButton.addEventListener("click", async () => {
@@ -584,6 +674,13 @@ dishForm.addEventListener("submit", async (event) => {
     submitButton.disabled = false;
   }
 }); 
+
+householdSizeInput.addEventListener("input", () => {
+  renderBudget();
+  queueSettingsSave();
+});
+
+profileZipCodeInput.addEventListener("input", queueSettingsSave);
 
 budgetInput.addEventListener("input", renderBudget);
 

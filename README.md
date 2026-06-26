@@ -43,7 +43,9 @@ https://snapp-1d5j.vercel.app
 
 ## Supabase Auth
 
-The frontend uses Supabase email/password auth with the project URL and publishable key in [Web/index.html](/Users/2027kstarkie/Desktop/SNAPP/Web/index.html:7). In the Supabase dashboard, enable Email auth and add the deployed frontend URL to the Auth redirect URL allow list so confirmation and password reset links can return to SNAPP.
+The frontend currently uses a temporary username/password flow backed by Supabase Auth. Usernames are converted into internal `@snapp.local` email addresses before calling Supabase, so no custom database table is required for authentication. Settings for ZIP code and household size are stored in the logged-in user's Supabase Auth metadata.
+
+In the Supabase dashboard, enable Email auth and disable email confirmation while this username prototype is active. Password reset emails will not work until the app moves to real email addresses.
 
 ## Local Backend
 
