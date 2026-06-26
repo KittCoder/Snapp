@@ -466,7 +466,7 @@ Return this JSON shape only:
   "dishes": [
     {{
       "name": "real dish name",
-      "servings": 2,
+      "servings": {household_size},
       "portion_note": "short note with no recipe steps",
       "ingredients": [
         {{"name": "ingredient name", "grams_total": 300}}
@@ -490,20 +490,23 @@ Return this JSON shape only:
         try:
             servings = int(dish.get("servings"))
         except (TypeError, ValueError):
-            servings = None
-        if not name or servings != household_size:
+            servings = household_size
+        if not name or servings < MIN_HOUSEHOLD_SIZE or servings > MAX_HOUSEHOLD_SIZE:
             continue
 
         dish_ingredients = []
-        has_invalid_portion = False
+        scale_factor = household_size / servings
         seen = set()
         for ingredient in dish.get("ingredients", []):
             ingredient_name = normalize_ingredient_name(ingredient.get("name"))
+            try:
+                scaled_grams_total = float(ingredient.get("grams_total")) * scale_factor
+            except (TypeError, ValueError):
+                continue
             grams_total = clean_grams_total(
-                ingredient.get("grams_total"), ingredient_name, servings
+                scaled_grams_total, ingredient_name, household_size
             )
             if not ingredient_name or grams_total is None:
-                has_invalid_portion = True
                 continue
             identity = ingredient_name.casefold()
             if identity in seen:
@@ -514,15 +517,14 @@ Return this JSON shape only:
             )
 
         if (
-            has_invalid_portion
-            or not dish_ingredients
-            or not has_valid_dish_weight(name, dish_ingredients, servings)
+            not dish_ingredients
+            or not has_valid_dish_weight(name, dish_ingredients, household_size)
         ):
             continue
         dishes.append(
             {
                 "name": name,
-                "servings": servings,
+                "servings": household_size,
                 "portion_note": re.sub(
                     r"\s+", " ", dish.get("portion_note") or ""
                 ).strip()[:140],
