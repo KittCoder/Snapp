@@ -27,6 +27,7 @@ ZIP_CODE_PATTERN = re.compile(r"^\d{5}$")
 MIN_HOUSEHOLD_SIZE = 1
 MAX_HOUSEHOLD_SIZE = 12
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
+ZIPPOPOTAM_URL = "https://api.zippopotam.us/us"
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 HTTP_TIMEOUT_SECONDS = 20
 HTTP_RETRY_ATTEMPTS = 2
@@ -996,12 +997,7 @@ def find_stores_with_nominatim(zip_code, boundingbox):
     return stores[:30]
 
 
-def find_grocery_stores(zip_code):
-    cached_result = store_search_cache.get(zip_code)
-    now = time.time()
-    if cached_result and now - cached_result["cached_at"] < STORE_CACHE_TTL_SECONDS:
-        return cached_result["location"], cached_result["stores"]
-
+def find_zip_location(zip_code):
     location_params = urlencode(
         {
             "postalcode": zip_code,
@@ -1011,50 +1007,104 @@ def find_grocery_stores(zip_code):
             "limit": 1,
         }
     )
-    locations = fetch_json(
-        f"{NOMINATIM_URL}?{location_params}",
-        service_name="Nominatim",
-    )
-    if not locations:
-        return None, []
-
-    location = locations[0]
     try:
-        south, north, west, east = location["boundingbox"]
+        locations = fetch_json(
+            f"{NOMINATIM_URL}?{location_params}",
+            service_name="Nominatim",
+        )
+        if locations:
+            return locations[0]
+    except RuntimeError:
+        print("Nominatim ZIP lookup unavailable; trying Zippopotam.", flush=True)
+
+    zip_data = fetch_json(
+        f"{ZIPPOPOTAM_URL}/{zip_code}",
+        service_name="Zippopotam",
+    )
+    places = zip_data.get("places") or []
+    if not places:
+        return None
+
+    place = places[0]
+    try:
+        latitude = float(place["latitude"])
+        longitude = float(place["longitude"])
     except (KeyError, TypeError, ValueError) as exc:
-        raise RuntimeError("The grocery store data service returned invalid location data.") from exc
+        raise RuntimeError("The ZIP code data service returned invalid location data.") from exc
+
+    radius_degrees = 0.14
+    place_name = place.get("place name") or zip_code
+    state = place.get("state abbreviation") or place.get("state")
+    return {
+        "display_name": ", ".join(value for value in (place_name, state, zip_code) if value),
+        "boundingbox": [
+            str(latitude - radius_degrees),
+            str(latitude + radius_degrees),
+            str(longitude - radius_degrees),
+            str(longitude + radius_degrees),
+        ],
+    }
+
+
+def find_stores_with_overpass(zip_code, boundingbox, require_postcode=True):
+    south, north, west, east = boundingbox
+    postcode_filter = (
+        f'["addr:postcode"~"^{zip_code}(-[0-9]{{4}})?$"]'
+        if require_postcode
+        else ""
+    )
     overpass_query = f"""
         [out:json][timeout:20];
         (
           nwr["shop"~"^(supermarket|grocery)$"]
-             ["addr:postcode"~"^{zip_code}(-[0-9]{{4}})?$"]
+             {postcode_filter}
              ({south},{west},{north},{east});
         );
         out center tags;
     """
+    store_data = fetch_json(
+        OVERPASS_URL,
+        {"data": overpass_query},
+        service_name="Overpass",
+    )
+    stores = []
+    seen = set()
+    for element in store_data.get("elements", []):
+        store = format_store(element)
+        if not store:
+            continue
+        element_postcode = element.get("tags", {}).get("addr:postcode")
+        if element_postcode and element_postcode[:5] != zip_code:
+            continue
+        identity = (store["name"].casefold(), store["address"].casefold())
+        if identity in seen:
+            continue
+        seen.add(identity)
+        stores.append(store)
+    return stores
+
+
+def find_grocery_stores(zip_code):
+    cached_result = store_search_cache.get(zip_code)
+    now = time.time()
+    if cached_result and now - cached_result["cached_at"] < STORE_CACHE_TTL_SECONDS:
+        return cached_result["location"], cached_result["stores"]
+
+    location = find_zip_location(zip_code)
+    if not location:
+        return None, []
     try:
-        store_data = fetch_json(
-            OVERPASS_URL,
-            {"data": overpass_query},
-            service_name="Overpass",
-        )
-        stores = []
-        seen = set()
-        for element in store_data.get("elements", []):
-            store = format_store(element)
-            if not store:
-                continue
-            element_postcode = element.get("tags", {}).get("addr:postcode")
-            if element_postcode and element_postcode[:5] != zip_code:
-                continue
-            identity = (store["name"].casefold(), store["address"].casefold())
-            if identity in seen:
-                continue
-            seen.add(identity)
-            stores.append(store)
+        boundingbox = location["boundingbox"]
+    except (KeyError, TypeError, ValueError) as exc:
+        raise RuntimeError("The grocery store data service returned invalid location data.") from exc
+
+    try:
+        stores = find_stores_with_overpass(zip_code, boundingbox, require_postcode=True)
+        if not stores:
+            stores = find_stores_with_overpass(zip_code, boundingbox, require_postcode=False)
     except RuntimeError:
         print("Overpass unavailable; using Nominatim store fallback.", flush=True)
-        stores = find_stores_with_nominatim(zip_code, location["boundingbox"])
+        stores = find_stores_with_nominatim(zip_code, boundingbox)
 
     stores.sort(key=lambda store: store["name"].casefold())
     location_name = location.get("display_name", zip_code)
