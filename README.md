@@ -3,7 +3,7 @@
 A web application that generates healthy recipes for SNAP benefits users, using AI on the backend. Checks local grocery store availability.
  
 ## Backend Deployment on Render
-                    
+                     
 The backend is configured for Render with [render.yaml](/Users/2027kstarkie/Desktop/SNAPP/render.yaml:1).
  
 1. Create a new Render Blueprint from this GitHub repository, or create a Web Service manually.
