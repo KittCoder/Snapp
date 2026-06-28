@@ -504,6 +504,7 @@ main {
 #zip-code,
 #budget-input,
 .auth-form input,
+.settings-form textarea,
 .settings-form input:not([type="checkbox"]),
 .settings-form select {
   width: 100%;
@@ -521,6 +522,7 @@ main {
 #zip-code:focus,
 #budget-input:focus,
 .auth-form input:focus,
+.settings-form textarea:focus,
 .settings-form input:not([type="checkbox"]):focus,
 .settings-form select:focus {
   outline: 2px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
@@ -859,9 +861,9 @@ tbody tr:last-child td {
 
 .settings-form {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1rem;
-  max-width: 700px;
+  max-width: 100%;
 }
 
 .settings-form label {
@@ -870,6 +872,16 @@ tbody tr:last-child td {
   gap: 0.42rem;
   font-weight: 600;
   color: var(--color-muted);
+  min-width: 0;
+}
+
+.settings-form textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.settings-wide {
+  grid-column: 1 / -1;
 }
 
 .toggle {

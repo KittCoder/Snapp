@@ -21,6 +21,7 @@ const dishEmptyState = document.getElementById("dish-empty-state");
 const profileNameInput = document.getElementById("profile-name");
 const householdSizeInput = document.getElementById("household-size");
 const profileZipCodeInput = document.getElementById("profile-zip-code");
+const dietaryRestrictionsInput = document.getElementById("dietary-restrictions");
 const budgetInput = document.getElementById("budget-input");
 const currentBudget = document.getElementById("current-budget");
 const remainingBudget = document.getElementById("remaining-budget");
@@ -137,6 +138,7 @@ function getDefaultUserInfo(user) {
     household_size: 2,
     budget: null,
     dietary_preference: "balanced",
+    dietary_restrictions: "",
     notifications_enabled: true,
   };
 }
@@ -154,6 +156,7 @@ function syncSettingsFromUserInfo(user, userInfo) {
   if (info?.dietary_preference) {
     dietSelect.value = info.dietary_preference;
   }
+  dietaryRestrictionsInput.value = info?.dietary_restrictions || "";
   if (info?.notifications_enabled != null) {
     notificationsToggle.checked = Boolean(info.notifications_enabled);
   }
@@ -239,6 +242,7 @@ async function saveSettingsToUser() {
       zip_code: zipCode,
       budget: budgetInput.value ? Number(budgetInput.value) : null,
       dietary_preference: dietSelect.value,
+      dietary_restrictions: dietaryRestrictionsInput.value.trim(),
       notifications_enabled: notificationsToggle.checked,
     })
     .select()
@@ -433,7 +437,7 @@ async function fetchStores(zipCode) {
   throw new Error(lastError);
 }
 
-async function fetchDishes(mealPrompt, householdSize) {
+async function fetchDishes(mealPrompt, householdSize, dietaryRestrictions) {
   let lastError = API_BASE_URL
     ? "Unable to reach the dishes backend."
     : "Backend URL is not configured.";
@@ -443,7 +447,11 @@ async function fetchDishes(mealPrompt, householdSize) {
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ meal_prompt: mealPrompt, household_size: householdSize }),
+        body: JSON.stringify({
+          meal_prompt: mealPrompt,
+          household_size: householdSize,
+          dietary_restrictions: dietaryRestrictions,
+        }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
@@ -738,7 +746,8 @@ dishForm.addEventListener("submit", async (event) => {
 
   try {
     const householdSize = getHouseholdSize();
-    const data = await fetchDishes(mealPrompt, householdSize);
+    const dietaryRestrictions = dietaryRestrictionsInput.value.trim();
+    const data = await fetchDishes(mealPrompt, householdSize, dietaryRestrictions);
     renderDishes(data);
     dishStatus.textContent = `Built 3 grocery-backed ideas for ${data.household_size} ${data.household_size === 1 ? "person" : "people"}.`;
     dishSource.hidden = false;
@@ -755,6 +764,8 @@ householdSizeInput.addEventListener("input", () => {
 });
 
 profileZipCodeInput.addEventListener("input", queueSettingsSave);
+
+dietaryRestrictionsInput.addEventListener("input", queueSettingsSave);
 
 budgetInput.addEventListener("input", () => {
   renderBudget();

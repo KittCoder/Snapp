@@ -542,7 +542,7 @@ def estimate_price_per_100g(ingredient_name):
     return DEFAULT_PRICE_PER_100G
 
 
-def generate_dish_candidates(ingredients, household_size):
+def generate_dish_candidates(ingredients, household_size, dietary_restrictions=""):
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY is not set.")
@@ -552,6 +552,7 @@ def generate_dish_candidates(ingredients, household_size):
     user_prompt = f"""
 Available ingredients: {ingredient_text}
 Household size: {household_size} people
+Dietary restrictions: {dietary_restrictions or "none"}
 
 Generate exactly 3 traditional, normal dishes a person would recognize by name. Prefer familiar
 restaurant, home-cooking, or cookbook-style foods that naturally include at least one listed ingredient.
@@ -579,6 +580,8 @@ Rules:
 - Aim for main-dish portions that would usually calculate to about 500-650 calories per serving.
   Include realistic calorie-bearing staples such as oil, pasta, rice, tortillas, cheese, or sauce when the dish needs them.
 - Calories will be calculated separately from USDA data, so do not estimate calories.
+- Respect every dietary restriction. Do not include restricted ingredients, allergens,
+  or food categories in dish names, ingredients, toppings, sauces, or garnishes.
 
 Return this JSON shape only:
 {{
@@ -656,7 +659,9 @@ Return this JSON shape only:
     return dishes
 
 
-def generate_demo_grocery_dish_candidates(meal_prompt, household_size, catalog):
+def generate_demo_grocery_dish_candidates(
+    meal_prompt, household_size, catalog, dietary_restrictions=""
+):
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY is not set.")
@@ -665,6 +670,7 @@ def generate_demo_grocery_dish_candidates(meal_prompt, household_size, catalog):
     user_prompt = f"""
 User meal request: {meal_prompt}
 Household size: {household_size} people
+Dietary restrictions: {dietary_restrictions or "none"}
 Available grocery products JSON:
 {json.dumps(catalog, separators=(",", ":"))}
 
@@ -688,6 +694,8 @@ Rules:
 - grams_total may be less than package_grams because the shopper buys the package and uses part of it.
 - Keep portions realistic for {household_size} people.
 - Return short notes only, with no recipes and no cooking steps.
+- Respect every dietary restriction. Do not choose restricted ingredients, allergens,
+  or food categories even if they appear in the available grocery products JSON.
 
 Return this JSON shape only:
 {{
@@ -1210,6 +1218,9 @@ def dishes():
     data = request.get_json(silent=True) or {}
     meal_prompt = (data.get("meal_prompt") or data.get("ingredients") or data.get("message") or "").strip()
     household_size = parse_household_size(data.get("household_size"))
+    dietary_restrictions = re.sub(
+        r"\s+", " ", (data.get("dietary_restrictions") or "").strip()
+    )[:500]
     if not meal_prompt:
         return jsonify({"error": "Describe the meal you want."}), 400
 
@@ -1224,7 +1235,7 @@ def dishes():
         }
         catalog = demo_catalog_for_prompt(products, stores)
         dish_candidates = generate_demo_grocery_dish_candidates(
-            meal_prompt, household_size, catalog
+            meal_prompt, household_size, catalog, dietary_restrictions
         )
         dishes = build_demo_grocery_dishes(dish_candidates, products_by_id, stores)
     except RuntimeError as exc:
@@ -1236,6 +1247,7 @@ def dishes():
         {
             "meal_prompt": meal_prompt,
             "household_size": household_size,
+            "dietary_restrictions": dietary_restrictions,
             "matched_ingredients": [
                 ingredient
                 for dish in dishes

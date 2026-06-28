@@ -43,7 +43,7 @@ https://snapp-1d5j.vercel.app
 
 ## Supabase Auth
 
-The frontend currently uses a temporary username/password flow backed by Supabase Auth. Usernames are converted into internal `@snapp.local` email addresses before calling Supabase. Personalized settings are stored in `public.user_info` with the row `id` matching the logged-in Auth user id. The app saves `zip_code`, `household_size`, `budget`, `dietary_preference`, and `notifications_enabled`; `created_at` and `updated_at` are managed by the database.
+The frontend currently uses a temporary username/password flow backed by Supabase Auth. Usernames are converted into internal `@snapp.local` email addresses before calling Supabase. Personalized settings are stored in `public.user_info` with the row `id` matching the logged-in Auth user id. The app saves `zip_code`, `household_size`, `budget`, `dietary_preference`, `dietary_restrictions`, and `notifications_enabled`; `created_at` and `updated_at` are managed by the database.
 
 In the Supabase dashboard, enable Email auth and disable email confirmation while this username prototype is active. Password reset emails will not work until the app moves to real email addresses.
 
