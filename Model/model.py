@@ -1,6 +1,7 @@
 
 import os
 import json
+import math
 import re
 import time
 from pathlib import Path
@@ -26,6 +27,7 @@ conversation_history = []
 ZIP_CODE_PATTERN = re.compile(r"^\d{5}$")
 MIN_HOUSEHOLD_SIZE = 1
 MAX_HOUSEHOLD_SIZE = 12
+MAX_STORE_RADIUS_MILES = 25
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 ZIPPOPOTAM_URL = "https://api.zippopotam.us/us"
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
@@ -218,6 +220,62 @@ def parse_household_size(value):
     except (TypeError, ValueError):
         return MIN_HOUSEHOLD_SIZE
     return max(MIN_HOUSEHOLD_SIZE, min(household_size, MAX_HOUSEHOLD_SIZE))
+
+
+def parse_store_radius_miles(value):
+    if value in (None, ""):
+        return None
+    try:
+        radius_miles = float(value)
+    except (TypeError, ValueError):
+        return None
+    if radius_miles <= 0:
+        return None
+    return min(radius_miles, MAX_STORE_RADIUS_MILES)
+
+
+def parse_pantry_items(value):
+    if not isinstance(value, list):
+        return []
+
+    pantry_items = []
+    for item in value:
+        if not isinstance(item, dict):
+            continue
+        name = re.sub(r"\s+", " ", str(item.get("name") or "")).strip()
+        quantity = re.sub(r"\s+", " ", str(item.get("quantity") or "")).strip()
+        if not name or not quantity:
+            continue
+        pantry_items.append(
+            {
+                "name": name[:80],
+                "quantity": quantity[:60],
+            }
+        )
+    return pantry_items[:25]
+
+
+def pantry_items_text(pantry_items):
+    if not pantry_items:
+        return "none"
+    return "; ".join(
+        f"{item['name']} ({item['quantity']})" for item in pantry_items
+    )
+
+
+def distance_miles(lat1, lon1, lat2, lon2):
+    earth_radius_miles = 3958.8
+    lat1_rad = math.radians(lat1)
+    lat2_rad = math.radians(lat2)
+    delta_lat = math.radians(lat2 - lat1)
+    delta_lon = math.radians(lon2 - lon1)
+    haversine = (
+        math.sin(delta_lat / 2) ** 2
+        + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon / 2) ** 2
+    )
+    return earth_radius_miles * 2 * math.atan2(
+        math.sqrt(haversine), math.sqrt(1 - haversine)
+    )
 
 
 def load_demo_grocery_db():
@@ -660,7 +718,7 @@ Return this JSON shape only:
 
 
 def generate_demo_grocery_dish_candidates(
-    meal_prompt, household_size, catalog, dietary_restrictions=""
+    meal_prompt, household_size, catalog, dietary_restrictions="", pantry_items=None
 ):
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
@@ -671,6 +729,7 @@ def generate_demo_grocery_dish_candidates(
 User meal request: {meal_prompt}
 Household size: {household_size} people
 Dietary restrictions: {dietary_restrictions or "none"}
+User pantry items: {pantry_items_text(pantry_items or [])}
 Available grocery products JSON:
 {json.dumps(catalog, separators=(",", ":"))}
 
@@ -682,6 +741,8 @@ available grocery products JSON. Optimize across:
 
 Rules:
 - The user is describing the kind of meal they want, not listing pantry ingredients.
+- Prefer meals that can use pantry items when compatible, but only return product IDs
+  from the available grocery products JSON for items the user still needs to buy.
 - Choose 3 to 6 grocery products per dish.
 - Use product_id values exactly as provided.
 - Every selected product must be an actual ingredient or direct topping/filling in the named dish.
@@ -1076,6 +1137,8 @@ def find_zip_location(zip_code):
     state = place.get("state abbreviation") or place.get("state")
     return {
         "display_name": ", ".join(value for value in (place_name, state, zip_code) if value),
+        "lat": latitude,
+        "lon": longitude,
         "boundingbox": [
             str(latitude - radius_degrees),
             str(latitude + radius_degrees),
@@ -1123,37 +1186,76 @@ def find_stores_with_overpass(zip_code, boundingbox, require_postcode=True):
     return stores
 
 
-def find_grocery_stores(zip_code):
+def store_with_distance(store, latitude, longitude):
+    try:
+        store_latitude = float(store["latitude"])
+        store_longitude = float(store["longitude"])
+    except (KeyError, TypeError, ValueError):
+        return store
+
+    store = {**store}
+    store["distance_miles"] = round(
+        distance_miles(latitude, longitude, store_latitude, store_longitude), 2
+    )
+    return store
+
+
+def find_grocery_stores(zip_code, radius_miles=None):
     cached_result = store_search_cache.get(zip_code)
     now = time.time()
     if cached_result and now - cached_result["cached_at"] < STORE_CACHE_TTL_SECONDS:
-        return cached_result["location"], cached_result["stores"]
+        location_name = cached_result["location"]
+        stores = cached_result["stores"]
+        center = cached_result.get("center")
+    else:
+        location = find_zip_location(zip_code)
+        if not location:
+            return None, [], None
+        try:
+            boundingbox = location["boundingbox"]
+            center = {
+                "latitude": float(location["lat"]),
+                "longitude": float(location["lon"]),
+            }
+        except (KeyError, TypeError, ValueError) as exc:
+            raise RuntimeError("The grocery store data service returned invalid location data.") from exc
 
-    location = find_zip_location(zip_code)
-    if not location:
-        return None, []
-    try:
-        boundingbox = location["boundingbox"]
-    except (KeyError, TypeError, ValueError) as exc:
-        raise RuntimeError("The grocery store data service returned invalid location data.") from exc
+        try:
+            stores = find_stores_with_overpass(zip_code, boundingbox, require_postcode=True)
+            if not stores:
+                stores = find_stores_with_overpass(zip_code, boundingbox, require_postcode=False)
+        except RuntimeError:
+            print("Overpass unavailable; using Nominatim store fallback.", flush=True)
+            stores = find_stores_with_nominatim(zip_code, boundingbox)
 
-    try:
-        stores = find_stores_with_overpass(zip_code, boundingbox, require_postcode=True)
-        if not stores:
-            stores = find_stores_with_overpass(zip_code, boundingbox, require_postcode=False)
-    except RuntimeError:
-        print("Overpass unavailable; using Nominatim store fallback.", flush=True)
-        stores = find_stores_with_nominatim(zip_code, boundingbox)
+        stores = [
+            store_with_distance(store, center["latitude"], center["longitude"])
+            for store in stores
+        ]
+        stores.sort(
+            key=lambda store: (
+                store.get("distance_miles", float("inf")),
+                store["name"].casefold(),
+            )
+        )
+        location_name = location.get("display_name", zip_code)
+        stores = stores[:30]
+        store_search_cache[zip_code] = {
+            "cached_at": now,
+            "location": location_name,
+            "center": center,
+            "stores": stores,
+        }
 
-    stores.sort(key=lambda store: store["name"].casefold())
-    location_name = location.get("display_name", zip_code)
-    stores = stores[:30]
-    store_search_cache[zip_code] = {
-        "cached_at": now,
-        "location": location_name,
-        "stores": stores,
-    }
-    return location_name, stores
+    if radius_miles is not None:
+        stores = [
+            store
+            for store in stores
+            if store.get("distance_miles") is not None
+            and store["distance_miles"] <= radius_miles
+        ]
+
+    return location_name, stores, center
 
 
 @app.get("/")
@@ -1187,11 +1289,12 @@ def chat_options():
 @app.get("/grocery-stores")
 def grocery_stores():
     zip_code = request.args.get("zip", "").strip()
+    radius_miles = parse_store_radius_miles(request.args.get("radius_miles"))
     if not ZIP_CODE_PATTERN.fullmatch(zip_code):
         return jsonify({"error": "Enter a valid 5-digit US ZIP code."}), 400
 
     try:
-        location, stores = find_grocery_stores(zip_code)
+        location, stores, center = find_grocery_stores(zip_code, radius_miles)
     except RuntimeError as exc:
         return jsonify({"error": str(exc)}), 503
 
@@ -1202,6 +1305,8 @@ def grocery_stores():
         {
             "zip_code": zip_code,
             "location": location,
+            "center": center,
+            "radius_miles": radius_miles,
             "stores": stores,
             "source": "OpenStreetMap contributors",
         }
@@ -1221,6 +1326,7 @@ def dishes():
     dietary_restrictions = re.sub(
         r"\s+", " ", (data.get("dietary_restrictions") or "").strip()
     )[:500]
+    pantry_items = parse_pantry_items(data.get("pantry_items"))
     if not meal_prompt:
         return jsonify({"error": "Describe the meal you want."}), 400
 
@@ -1235,7 +1341,7 @@ def dishes():
         }
         catalog = demo_catalog_for_prompt(products, stores)
         dish_candidates = generate_demo_grocery_dish_candidates(
-            meal_prompt, household_size, catalog, dietary_restrictions
+            meal_prompt, household_size, catalog, dietary_restrictions, pantry_items
         )
         dishes = build_demo_grocery_dishes(dish_candidates, products_by_id, stores)
     except RuntimeError as exc:
@@ -1248,6 +1354,7 @@ def dishes():
             "meal_prompt": meal_prompt,
             "household_size": household_size,
             "dietary_restrictions": dietary_restrictions,
+            "pantry_items": pantry_items,
             "matched_ingredients": [
                 ingredient
                 for dish in dishes

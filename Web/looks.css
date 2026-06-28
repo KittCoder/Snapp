@@ -752,6 +752,151 @@ main {
   gap: 0.35rem;
 }
 
+.store-map {
+  height: 360px;
+  margin: 1rem 0;
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--color-panel-strong) 90%, transparent);
+  overflow: hidden;
+}
+
+.my-store-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
+  gap: 1rem;
+  align-items: start;
+}
+
+.selectable-store-results label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  cursor: pointer;
+}
+
+.selectable-store-results input {
+  margin-top: 0.25rem;
+}
+
+.selectable-store-results li.selected {
+  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-panel-strong));
+}
+
+.selected-store-panel {
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--color-panel-strong) 90%, transparent);
+}
+
+.selected-store-panel h3 {
+  margin: 0;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 1.05rem;
+}
+
+.selected-store-panel ul {
+  margin: 0.7rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--color-muted);
+}
+
+.my-pantry-section {
+  margin-top: 2rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 75%, transparent);
+}
+
+.my-pantry-section h2 {
+  margin-bottom: 0.8rem;
+}
+
+.pantry-form {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(160px, 0.8fr) auto;
+  gap: 0.8rem;
+  align-items: end;
+}
+
+.pantry-form label {
+  display: grid;
+  gap: 0.42rem;
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.pantry-form input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-panel-strong) 92%, transparent);
+  color: var(--color-text);
+  border-radius: 0.85rem;
+  padding: 0.72rem 0.95rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.pantry-form input:focus {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
+  outline-offset: 1px;
+}
+
+.pantry-form button,
+.pantry-list button {
+  border: none;
+  border-radius: 0.85rem;
+  padding: 0.72rem 1rem;
+  background: linear-gradient(140deg, var(--color-primary) 15%, #22c55e 100%);
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pantry-form button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.pantry-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.8rem 0 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.pantry-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--color-panel-strong) 90%, transparent);
+}
+
+.pantry-list button {
+  padding: 0.5rem 0.75rem;
+  background: color-mix(in srgb, #b91c1c 85%, var(--color-primary));
+}
+
+.pantry-empty {
+  color: var(--color-muted);
+}
+
+#pantry-status[data-type="success"] {
+  color: var(--color-primary-strong);
+  font-weight: 700;
+}
+
+#pantry-status[data-type="error"] {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
 .store-source {
   margin: 1rem 0 0;
   color: var(--color-muted);
@@ -950,6 +1095,14 @@ tbody tr:last-child td {
 
   .store-search-controls {
     flex-direction: column;
+  }
+
+  .my-store-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .pantry-form {
+    grid-template-columns: 1fr;
   }
 
   #chat-form button,

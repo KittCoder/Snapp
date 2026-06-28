@@ -7,6 +7,10 @@
     <meta name="snapp-supabase-url" content="https://wmagmsatawlwvcobtkxh.supabase.co" />
     <meta name="snapp-supabase-key" content="sb_publishable_jA7UgqXT8G1gv8FvHrFjbQ_wL8_DTIn" />
     <title>SNAPP</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
     <link rel="stylesheet" href="looks.css" />
   </head>
   <body>
@@ -20,6 +24,7 @@
         <button data-target="account" data-auth-view="signed-out" class="nav-button">Account</button>
         <button data-target="chat" data-auth-view="signed-in" class="nav-button" hidden>Chat</button>
         <button data-target="dishes" data-auth-view="signed-in" class="nav-button" hidden>Dishes</button>
+        <button data-target="my" data-auth-view="signed-in" class="nav-button" hidden>My</button>
         <button data-target="schedule" data-auth-view="signed-in" class="nav-button" hidden>Schedule</button>
         <button data-target="budget" data-auth-view="signed-in" class="nav-button" hidden>Budget</button>
         <button data-target="information" data-auth-view="signed-in" class="nav-button" hidden>Information</button>
@@ -324,6 +329,72 @@
         </div>
       </section>
 
+      <section id="my" class="panel">
+        <h2>My stores</h2>
+        <p>Enter a 5-digit US ZIP code to find grocery stores within 1 mile, then select the stores you want to use.</p>
+        <form id="my-store-form" class="store-search-form">
+          <label for="my-zip-code">ZIP code</label>
+          <div class="store-search-controls">
+            <input
+              type="text"
+              id="my-zip-code"
+              name="zip"
+              inputmode="numeric"
+              autocomplete="postal-code"
+              pattern="[0-9]{5}"
+              maxlength="5"
+              placeholder="e.g. 10001"
+              required
+            />
+            <button type="submit">Find nearby stores</button>
+          </div>
+        </form>
+        <div id="my-store-status" class="store-search-status" role="status" aria-live="polite"></div>
+        <div id="my-store-map" class="store-map" aria-label="Nearby grocery store map"></div>
+        <div class="my-store-layout">
+          <ul id="my-store-results" class="store-results selectable-store-results"></ul>
+          <div class="selected-store-panel">
+            <h3>Selected stores</h3>
+            <ul id="selected-store-list"></ul>
+          </div>
+        </div>
+        <p id="my-store-source" class="store-source" hidden>
+          Store data and map tiles ©
+          <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>.
+        </p>
+
+        <section class="my-pantry-section">
+          <h2>My pantry</h2>
+          <form id="pantry-form" class="pantry-form">
+            <label>
+              Food
+              <input
+                type="text"
+                id="pantry-name"
+                autocomplete="off"
+                maxlength="80"
+                placeholder="e.g. rice"
+                required
+              />
+            </label>
+            <label>
+              Quantity
+              <input
+                type="text"
+                id="pantry-quantity"
+                autocomplete="off"
+                maxlength="60"
+                placeholder="e.g. 2 cups"
+                required
+              />
+            </label>
+            <button type="submit">Add item</button>
+          </form>
+          <div id="pantry-status" class="store-search-status" role="status" aria-live="polite"></div>
+          <ul id="pantry-list" class="pantry-list"></ul>
+        </section>
+      </section>
+
       <section id="budget" class="panel">
         <h2>Budget</h2>
         <p>Set your meal budget in Settings, and SNAPP will subtract the estimated price of each scheduled meal.</p>
@@ -447,6 +518,7 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

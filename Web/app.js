@@ -12,6 +12,18 @@ const zipCodeInput = document.getElementById("zip-code");
 const storeSearchStatus = document.getElementById("store-search-status");
 const storeResults = document.getElementById("store-results");
 const storeSource = document.getElementById("store-source");
+const myStoreForm = document.getElementById("my-store-form");
+const myZipCodeInput = document.getElementById("my-zip-code");
+const myStoreStatus = document.getElementById("my-store-status");
+const myStoreMapElement = document.getElementById("my-store-map");
+const myStoreResults = document.getElementById("my-store-results");
+const selectedStoreList = document.getElementById("selected-store-list");
+const myStoreSource = document.getElementById("my-store-source");
+const pantryForm = document.getElementById("pantry-form");
+const pantryNameInput = document.getElementById("pantry-name");
+const pantryQuantityInput = document.getElementById("pantry-quantity");
+const pantryStatus = document.getElementById("pantry-status");
+const pantryList = document.getElementById("pantry-list");
 const dishForm = document.getElementById("dish-form");
 const dishInput = document.getElementById("dish-input");
 const dishStatus = document.getElementById("dish-status");
@@ -46,6 +58,10 @@ const scheduledMeals = [];
 let currentUser = null;
 let currentUserInfo = null;
 let settingsSaveTimer = null;
+let myStoreMap = null;
+let myStoreMarkers = [];
+let pantryItems = [];
+const selectedMyStoreIds = new Set();
 
 const API_BASE_URL = (
   document.querySelector('meta[name="snapp-api-base-url"]')?.content || ""
@@ -143,6 +159,10 @@ function showPanel(id) {
   navButtons.forEach((button) =>
     button.classList.toggle("active", button.dataset.target === targetId)
   );
+
+  if (targetId === "my" && myStoreMap) {
+    window.setTimeout(() => myStoreMap.invalidateSize(), 0);
+  }
 }
 
 function renderNavigationForAuthState() {
@@ -210,6 +230,9 @@ function syncSettingsFromUserInfo(user, userInfo) {
   profileNameInput.value = getDisplayUsername(user);
   householdSizeInput.value = info?.household_size || "2";
   profileZipCodeInput.value = info?.zip_code || "";
+  if (!myZipCodeInput.value) {
+    myZipCodeInput.value = info?.zip_code || "";
+  }
   if (info?.budget != null) {
     budgetInput.value = info.budget;
   } else {
@@ -325,6 +348,111 @@ function queueSettingsSave() {
   settingsSaveTimer = window.setTimeout(saveSettingsToUser, 450);
 }
 
+function setPantryStatus(message, type = "neutral") {
+  pantryStatus.textContent = message;
+  pantryStatus.dataset.type = type;
+}
+
+function renderPantryItems() {
+  pantryList.replaceChildren();
+
+  if (!currentUser) {
+    setPantryStatus("");
+    return;
+  }
+
+  if (!pantryItems.length) {
+    const emptyItem = document.createElement("li");
+    emptyItem.className = "pantry-empty";
+    emptyItem.textContent = "No pantry items added yet.";
+    pantryList.appendChild(emptyItem);
+    return;
+  }
+
+  pantryItems.forEach((item) => {
+    const listItem = document.createElement("li");
+    const itemText = document.createElement("span");
+    const removeButton = document.createElement("button");
+
+    itemText.textContent = `${item.name} - ${item.quantity}`;
+    removeButton.type = "button";
+    removeButton.textContent = "Remove";
+    removeButton.addEventListener("click", () => deletePantryItem(item.id));
+
+    listItem.append(itemText, removeButton);
+    pantryList.appendChild(listItem);
+  });
+}
+
+async function loadPantryItems() {
+  if (!supabaseClient || !currentUser) {
+    pantryItems = [];
+    renderPantryItems();
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("user_pantry_items")
+    .select("id,name,quantity,created_at")
+    .eq("user_id", currentUser.id)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    pantryItems = [];
+    renderPantryItems();
+    setPantryStatus(error.message, "error");
+    return;
+  }
+
+  pantryItems = data || [];
+  renderPantryItems();
+  setPantryStatus("");
+}
+
+async function addPantryItem(name, quantity) {
+  if (!supabaseClient || !currentUser) return false;
+
+  setPantryStatus("Adding pantry item...");
+  const { data, error } = await supabaseClient
+    .from("user_pantry_items")
+    .insert({
+      user_id: currentUser.id,
+      name,
+      quantity,
+    })
+    .select("id,name,quantity,created_at")
+    .single();
+
+  if (error) {
+    setPantryStatus(error.message, "error");
+    return false;
+  }
+
+  pantryItems = [data, ...pantryItems];
+  renderPantryItems();
+  setPantryStatus("Pantry item added.", "success");
+  return true;
+}
+
+async function deletePantryItem(itemId) {
+  if (!supabaseClient || !currentUser) return;
+
+  const { error } = await supabaseClient
+    .from("user_pantry_items")
+    .delete()
+    .eq("id", itemId)
+    .eq("user_id", currentUser.id);
+
+  if (error) {
+    setPantryStatus(error.message, "error");
+    return;
+  }
+
+  pantryItems = pantryItems.filter((item) => item.id !== itemId);
+  renderPantryItems();
+  setPantryStatus("Pantry item removed.", "success");
+}
+
 function showAuthMode(mode) {
   const isSignUp = mode === "sign-up";
   authTabs.hidden = false;
@@ -350,6 +478,7 @@ async function renderAuthState(user) {
 
   accountUsername.textContent = getDisplayUsername(user);
   syncSettingsFromUserInfo(user, currentUserInfo);
+  await loadPantryItems();
 
   if (user) {
     authTabs.hidden = true;
@@ -502,14 +631,18 @@ async function fetchBotReply(message) {
   throw new Error(lastError);
 }
 
-async function fetchStores(zipCode) {
+async function fetchStores(zipCode, options = {}) {
   let lastError = API_BASE_URL
     ? "Unable to reach the grocery store backend."
     : "Backend URL is not configured.";
 
   for (const endpoint of getApiEndpoints("/grocery-stores")) {
     try {
-      const response = await fetch(`${endpoint}?zip=${encodeURIComponent(zipCode)}`);
+      const params = new URLSearchParams({ zip: zipCode });
+      if (options.radiusMiles) {
+        params.set("radius_miles", options.radiusMiles);
+      }
+      const response = await fetch(`${endpoint}?${params.toString()}`);
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
         const responseError = data.error || `Store search failed (${response.status}).`;
@@ -528,6 +661,134 @@ async function fetchStores(zipCode) {
   throw new Error(lastError);
 }
 
+function getStoreId(store, index) {
+  return [
+    store.name || "store",
+    store.address || "address",
+    store.latitude ?? "lat",
+    store.longitude ?? "lon",
+    index,
+  ].join("|");
+}
+
+function clearMyStoreMap() {
+  myStoreMarkers.forEach((marker) => marker.remove());
+  myStoreMarkers = [];
+}
+
+function ensureMyStoreMap(center) {
+  if (!window.L || !myStoreMapElement) return null;
+
+  const mapCenter = [
+    Number(center?.latitude) || 39.8283,
+    Number(center?.longitude) || -98.5795,
+  ];
+
+  if (!myStoreMap) {
+    myStoreMap = window.L.map(myStoreMapElement).setView(mapCenter, 14);
+    window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(myStoreMap);
+  } else {
+    myStoreMap.setView(mapCenter, 14);
+    myStoreMap.invalidateSize();
+  }
+
+  return myStoreMap;
+}
+
+function renderSelectedMyStores(stores) {
+  selectedStoreList.replaceChildren();
+  const selectedStores = stores.filter((store) => selectedMyStoreIds.has(store.id));
+
+  if (!selectedStores.length) {
+    const emptyItem = document.createElement("li");
+    emptyItem.textContent = "No stores selected.";
+    selectedStoreList.appendChild(emptyItem);
+    return;
+  }
+
+  selectedStores.forEach((store) => {
+    const item = document.createElement("li");
+    item.textContent = store.name;
+    selectedStoreList.appendChild(item);
+  });
+}
+
+function renderMyStores(data) {
+  const stores = (data.stores || []).map((store, index) => ({
+    ...store,
+    id: getStoreId(store, index),
+  }));
+  myStoreResults.replaceChildren();
+  selectedMyStoreIds.clear();
+  clearMyStoreMap();
+
+  const map = ensureMyStoreMap(data.center);
+  if (!window.L || !map) {
+    myStoreStatus.textContent = "Map library could not load. Store list is still available.";
+  }
+
+  stores.forEach((store) => {
+    const item = document.createElement("li");
+    const label = document.createElement("label");
+    const checkbox = document.createElement("input");
+    const text = document.createElement("span");
+    const distanceText =
+      store.distance_miles != null ? ` (${store.distance_miles} mi)` : "";
+
+    checkbox.type = "checkbox";
+    checkbox.value = store.id;
+    text.textContent = `${store.name}${distanceText} - ${store.address}`;
+    label.append(checkbox, text);
+    item.appendChild(label);
+    myStoreResults.appendChild(item);
+
+    const marker =
+      window.L && store.latitude != null && store.longitude != null
+        ? window.L.marker([Number(store.latitude), Number(store.longitude)]).addTo(map)
+        : null;
+
+    function setSelected(isSelected) {
+      checkbox.checked = isSelected;
+      item.classList.toggle("selected", isSelected);
+      if (isSelected) {
+        selectedMyStoreIds.add(store.id);
+      } else {
+        selectedMyStoreIds.delete(store.id);
+      }
+      if (marker) {
+        marker.setOpacity(isSelected ? 1 : 0.72);
+      }
+      renderSelectedMyStores(stores);
+    }
+
+    checkbox.addEventListener("change", () => setSelected(checkbox.checked));
+
+    if (marker) {
+      const popup = document.createElement("div");
+      const popupName = document.createElement("strong");
+      const popupAddress = document.createElement("div");
+      popupName.textContent = store.name;
+      popupAddress.textContent = store.address;
+      popup.append(popupName, popupAddress);
+      marker
+        .bindPopup(popup)
+        .on("click", () => setSelected(!selectedMyStoreIds.has(store.id)));
+      myStoreMarkers.push(marker);
+    }
+  });
+
+  if (map && myStoreMarkers.length) {
+    const group = window.L.featureGroup(myStoreMarkers);
+    map.fitBounds(group.getBounds().pad(0.22));
+  }
+
+  renderSelectedMyStores(stores);
+  myStoreSource.hidden = false;
+}
+
 async function fetchDishes(mealPrompt, householdSize, dietaryRestrictions) {
   let lastError = API_BASE_URL
     ? "Unable to reach the dishes backend."
@@ -542,6 +803,10 @@ async function fetchDishes(mealPrompt, householdSize, dietaryRestrictions) {
           meal_prompt: mealPrompt,
           household_size: householdSize,
           dietary_restrictions: dietaryRestrictions,
+          pantry_items: pantryItems.map((item) => ({
+            name: item.name,
+            quantity: item.quantity,
+          })),
         }),
       });
       const data = await response.json().catch(() => ({}));
@@ -829,6 +1094,62 @@ storeSearchForm.addEventListener("submit", async (event) => {
     storeSource.hidden = false;
   } catch (error) {
     storeSearchStatus.textContent = `Store search error: ${error.message}`;
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+
+myStoreForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const zipCode = myZipCodeInput.value.trim();
+  if (!/^\d{5}$/.test(zipCode)) {
+    myStoreStatus.textContent = "Enter a valid 5-digit US ZIP code.";
+    myStoreResults.replaceChildren();
+    selectedStoreList.replaceChildren();
+    myStoreSource.hidden = true;
+    clearMyStoreMap();
+    return;
+  }
+
+  const submitButton = myStoreForm.querySelector("button");
+  submitButton.disabled = true;
+  myStoreStatus.textContent = "Searching within 1 mile...";
+  myStoreResults.replaceChildren();
+  selectedStoreList.replaceChildren();
+  myStoreSource.hidden = true;
+  clearMyStoreMap();
+
+  try {
+    const data = await fetchStores(zipCode, { radiusMiles: "1" });
+    renderMyStores(data);
+    myStoreStatus.textContent = data.stores.length
+      ? `${data.stores.length} grocery store${data.stores.length === 1 ? "" : "s"} found within 1 mile of ${data.location}.`
+      : `No grocery stores were found within 1 mile of ${data.location}.`;
+  } catch (error) {
+    myStoreStatus.textContent = `Store search error: ${error.message}`;
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+
+pantryForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const name = pantryNameInput.value.trim();
+  const quantity = pantryQuantityInput.value.trim();
+
+  if (!name || !quantity) {
+    setPantryStatus("Enter both a food name and quantity.", "error");
+    return;
+  }
+
+  const submitButton = pantryForm.querySelector("button");
+  submitButton.disabled = true;
+
+  try {
+    const wasAdded = await addPantryItem(name, quantity);
+    if (wasAdded) {
+      pantryForm.reset();
+    }
   } finally {
     submitButton.disabled = false;
   }
