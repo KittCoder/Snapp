@@ -42,6 +42,7 @@ const signUpPasswordInput = document.getElementById("sign-up-password");
 
 const scheduledMeals = [];
 let currentUser = null;
+let currentUserInfo = null;
 let settingsSaveTimer = null;
 
 const API_BASE_URL = (
@@ -121,22 +122,84 @@ function usernameToEmail(username) {
 function getDisplayUsername(user) {
   if (!user) return "Signed out";
   return (
+    currentUserInfo?.username ||
     user.user_metadata?.username ||
     user.email?.replace(/@snapp\.local$/, "") ||
     user.email
   );
 }
 
-function syncSettingsFromUser(user) {
-  const metadata = user?.user_metadata || {};
+function getDefaultUserInfo(user) {
+  return {
+    id: user.id,
+    username: getDisplayUsername(user),
+    zip_code: "",
+    household_size: 2,
+    budget: null,
+    dietary_preference: "balanced",
+    notifications_enabled: true,
+  };
+}
+
+function syncSettingsFromUserInfo(user, userInfo) {
+  const info = userInfo || (user ? getDefaultUserInfo(user) : null);
   profileNameInput.value = getDisplayUsername(user);
-  householdSizeInput.value = metadata.household_size || "2";
-  profileZipCodeInput.value = metadata.zip_code || "";
+  householdSizeInput.value = info?.household_size || "2";
+  profileZipCodeInput.value = info?.zip_code || "";
+  if (info?.budget != null) {
+    budgetInput.value = info.budget;
+  } else {
+    budgetInput.value = "";
+  }
+  if (info?.dietary_preference) {
+    dietSelect.value = info.dietary_preference;
+  }
+  if (info?.notifications_enabled != null) {
+    notificationsToggle.checked = Boolean(info.notifications_enabled);
+  }
   renderBudget();
 
   if (!user) {
     setSettingsStatus("");
   }
+}
+
+async function fetchUserInfo(user) {
+  if (!supabaseClient || !user) return null;
+
+  const { data, error } = await supabaseClient
+    .from("user_info")
+    .select("*")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (error) {
+    setSettingsStatus(error.message, "error");
+    return null;
+  }
+
+  return data;
+}
+
+async function ensureUserInfo(user) {
+  if (!supabaseClient || !user) return null;
+
+  const existingUserInfo = await fetchUserInfo(user);
+  if (existingUserInfo) return existingUserInfo;
+
+  const newUserInfo = getDefaultUserInfo(user);
+  const { data, error } = await supabaseClient
+    .from("user_info")
+    .insert(newUserInfo)
+    .select()
+    .single();
+
+  if (error) {
+    setSettingsStatus(error.message, "error");
+    return null;
+  }
+
+  return data;
 }
 
 function getSettingsError() {
@@ -167,20 +230,26 @@ async function saveSettingsToUser() {
   const zipCode = profileZipCodeInput.value.trim();
   setSettingsStatus("Saving settings...");
 
-  const { data, error } = await supabaseClient.auth.updateUser({
-    data: {
-      ...currentUser.user_metadata,
+  const { data, error } = await supabaseClient
+    .from("user_info")
+    .upsert({
+      id: currentUser.id,
+      username: getDisplayUsername(currentUser),
       household_size: householdSize,
       zip_code: zipCode,
-    },
-  });
+      budget: budgetInput.value ? Number(budgetInput.value) : null,
+      dietary_preference: dietSelect.value,
+      notifications_enabled: notificationsToggle.checked,
+    })
+    .select()
+    .single();
 
   if (error) {
     setSettingsStatus(error.message, "error");
     return;
   }
 
-  currentUser = data.user;
+  currentUserInfo = data;
   setSettingsStatus("Settings saved.", "success");
 }
 
@@ -200,13 +269,20 @@ function showAuthMode(mode) {
   setAuthStatus("");
 }
 
-function renderAuthState(user) {
+async function renderAuthState(user) {
   const wasSignedIn = Boolean(currentUser);
   currentUser = user;
+  currentUserInfo = null;
   document.body.classList.toggle("signed-in", Boolean(user));
   accountUsername.textContent = getDisplayUsername(user);
   signOutButton.hidden = !user;
-  syncSettingsFromUser(user);
+
+  if (user) {
+    currentUserInfo = await ensureUserInfo(user);
+  }
+
+  accountUsername.textContent = getDisplayUsername(user);
+  syncSettingsFromUserInfo(user, currentUserInfo);
 
   if (user) {
     authTabs.hidden = true;
@@ -499,7 +575,7 @@ function renderDishes(data) {
 async function initializeAuth() {
   if (!supabaseClient) {
     setAuthStatus("Supabase is not configured. Check the project URL and publishable key.", "error");
-    renderAuthState(null);
+    await renderAuthState(null);
     return;
   }
 
@@ -507,10 +583,10 @@ async function initializeAuth() {
   if (error) {
     setAuthStatus(error.message, "error");
   }
-  renderAuthState(data.session?.user || null);
+  await renderAuthState(data.session?.user || null);
 
-  supabaseClient.auth.onAuthStateChange((_event, session) => {
-    renderAuthState(session?.user || null);
+  supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+    await renderAuthState(session?.user || null);
   });
 }
 
@@ -574,8 +650,6 @@ signUpForm.addEventListener("submit", async (event) => {
     options: {
       data: {
         username,
-        household_size: 2,
-        zip_code: "",
       },
     },
   });
@@ -673,7 +747,7 @@ dishForm.addEventListener("submit", async (event) => {
   } finally {
     submitButton.disabled = false;
   }
-}); 
+});
 
 householdSizeInput.addEventListener("input", () => {
   renderBudget();
@@ -682,7 +756,10 @@ householdSizeInput.addEventListener("input", () => {
 
 profileZipCodeInput.addEventListener("input", queueSettingsSave);
 
-budgetInput.addEventListener("input", renderBudget);
+budgetInput.addEventListener("input", () => {
+  renderBudget();
+  queueSettingsSave();
+});
 
 themeSelect.addEventListener("change", () => {
   document.body.classList.toggle("dark-theme", themeSelect.value === "dark");
@@ -691,10 +768,12 @@ themeSelect.addEventListener("change", () => {
 notificationsToggle.addEventListener("change", () => {
   const status = notificationsToggle.checked ? "enabled" : "disabled";
   appendMessage("bot", `Daily reminders ${status}.`);
+  queueSettingsSave();
 });
 
 dietSelect.addEventListener("change", () => {
   appendMessage("bot", `Dietary preference set to ${dietSelect.value}.`);
+  queueSettingsSave();
 });
 
 renderSchedule();
