@@ -803,17 +803,8 @@ main {
   color: var(--color-muted);
 }
 
-.my-pantry-section {
-  margin-top: 2rem;
-  padding-top: 1.4rem;
-  border-top: 1px solid color-mix(in srgb, var(--color-border) 75%, transparent);
-}
-
-.my-pantry-section h2 {
-  margin-bottom: 0.8rem;
-}
-
 .pantry-form {
+  margin-top: 1.1rem;
   display: grid;
   grid-template-columns: minmax(180px, 1fr) minmax(160px, 0.8fr) auto;
   gap: 0.8rem;

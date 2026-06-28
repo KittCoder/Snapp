@@ -353,6 +353,18 @@ function setPantryStatus(message, type = "neutral") {
   pantryStatus.dataset.type = type;
 }
 
+function getPantryErrorMessage(error) {
+  const message = error?.message || "";
+  if (
+    message.includes("user_pantry_items") &&
+    message.includes("schema cache")
+  ) {
+    return "Pantry setup is missing. Run the user_pantry_items SQL table setup in Supabase, then refresh.";
+  }
+
+  return message || "Pantry request failed.";
+}
+
 function renderPantryItems() {
   pantryList.replaceChildren();
 
@@ -400,7 +412,7 @@ async function loadPantryItems() {
   if (error) {
     pantryItems = [];
     renderPantryItems();
-    setPantryStatus(error.message, "error");
+    setPantryStatus(getPantryErrorMessage(error), "error");
     return;
   }
 
@@ -424,7 +436,7 @@ async function addPantryItem(name, quantity) {
     .single();
 
   if (error) {
-    setPantryStatus(error.message, "error");
+    setPantryStatus(getPantryErrorMessage(error), "error");
     return false;
   }
 
@@ -444,7 +456,7 @@ async function deletePantryItem(itemId) {
     .eq("user_id", currentUser.id);
 
   if (error) {
-    setPantryStatus(error.message, "error");
+    setPantryStatus(getPantryErrorMessage(error), "error");
     return;
   }
 

@@ -25,6 +25,7 @@
         <button data-target="chat" data-auth-view="signed-in" class="nav-button" hidden>Chat</button>
         <button data-target="dishes" data-auth-view="signed-in" class="nav-button" hidden>Dishes</button>
         <button data-target="my" data-auth-view="signed-in" class="nav-button" hidden>My</button>
+        <button data-target="pantry" data-auth-view="signed-in" class="nav-button" hidden>My pantry</button>
         <button data-target="schedule" data-auth-view="signed-in" class="nav-button" hidden>Schedule</button>
         <button data-target="budget" data-auth-view="signed-in" class="nav-button" hidden>Budget</button>
         <button data-target="information" data-auth-view="signed-in" class="nav-button" hidden>Information</button>
@@ -362,37 +363,38 @@
           Store data and map tiles ©
           <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>.
         </p>
+      </section>
 
-        <section class="my-pantry-section">
-          <h2>My pantry</h2>
-          <form id="pantry-form" class="pantry-form">
-            <label>
-              Food
-              <input
-                type="text"
-                id="pantry-name"
-                autocomplete="off"
-                maxlength="80"
-                placeholder="e.g. rice"
-                required
-              />
-            </label>
-            <label>
-              Quantity
-              <input
-                type="text"
-                id="pantry-quantity"
-                autocomplete="off"
-                maxlength="60"
-                placeholder="e.g. 2 cups"
-                required
-              />
-            </label>
-            <button type="submit">Add item</button>
-          </form>
-          <div id="pantry-status" class="store-search-status" role="status" aria-live="polite"></div>
-          <ul id="pantry-list" class="pantry-list"></ul>
-        </section>
+      <section id="pantry" class="panel">
+        <h2>My pantry</h2>
+        <p>Add foods you already have so SNAPP can consider them when suggesting dishes.</p>
+        <form id="pantry-form" class="pantry-form">
+          <label>
+            Food
+            <input
+              type="text"
+              id="pantry-name"
+              autocomplete="off"
+              maxlength="80"
+              placeholder="e.g. rice"
+              required
+            />
+          </label>
+          <label>
+            Quantity
+            <input
+              type="text"
+              id="pantry-quantity"
+              autocomplete="off"
+              maxlength="60"
+              placeholder="e.g. 2 cups"
+              required
+            />
+          </label>
+          <button type="submit">Add item</button>
+        </form>
+        <div id="pantry-status" class="store-search-status" role="status" aria-live="polite"></div>
+        <ul id="pantry-list" class="pantry-list"></ul>
       </section>
 
       <section id="budget" class="panel">
