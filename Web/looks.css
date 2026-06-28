@@ -799,8 +799,28 @@ main {
 
 .selected-store-panel ul {
   margin: 0.7rem 0 0;
-  padding-left: 1.1rem;
+  padding: 0;
   color: var(--color-muted);
+  list-style: none;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.selected-store-panel li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.selected-store-panel button {
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.45rem 0.65rem;
+  background: color-mix(in srgb, #b91c1c 85%, var(--color-primary));
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .pantry-form {

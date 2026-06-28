@@ -61,6 +61,7 @@ let settingsSaveTimer = null;
 let myStoreMap = null;
 let myStoreMarkers = [];
 let pantryItems = [];
+let savedMyStores = [];
 const selectedMyStoreIds = new Set();
 
 const API_BASE_URL = (
@@ -365,6 +366,141 @@ function getPantryErrorMessage(error) {
   return message || "Pantry request failed.";
 }
 
+function getStoreErrorMessage(error) {
+  const message = error?.message || "";
+  if (message.includes("user_stores") && message.includes("schema cache")) {
+    return "Store setup is missing. Run the user_stores SQL table setup in Supabase, then refresh.";
+  }
+
+  if (message.includes("permission denied")) {
+    return "Store permissions are missing. Run the user_stores grant and policy SQL in Supabase, then refresh.";
+  }
+
+  return message || "Store request failed.";
+}
+
+function getStoreKey(store) {
+  return [
+    store.name || "store",
+    store.address || "address",
+    store.latitude ?? "lat",
+    store.longitude ?? "lon",
+  ].join("|");
+}
+
+function normalizeSavedStore(store) {
+  return {
+    id: store.store_key || getStoreKey(store),
+    store_key: store.store_key || getStoreKey(store),
+    name: store.name,
+    address: store.address,
+    latitude: store.latitude,
+    longitude: store.longitude,
+    website: store.website,
+    distance_miles: store.distance_miles,
+  };
+}
+
+function storeRecordForSave(store) {
+  return {
+    user_id: currentUser.id,
+    store_key: store.id || getStoreKey(store),
+    name: store.name,
+    address: store.address,
+    latitude: store.latitude != null ? Number(store.latitude) : null,
+    longitude: store.longitude != null ? Number(store.longitude) : null,
+    website: store.website || null,
+    distance_miles:
+      store.distance_miles != null ? Number(store.distance_miles) : null,
+  };
+}
+
+function upsertSavedStoreState(store) {
+  const savedStore = normalizeSavedStore(store);
+  savedMyStores = [
+    savedStore,
+    ...savedMyStores.filter((existing) => existing.store_key !== savedStore.store_key),
+  ];
+  selectedMyStoreIds.add(savedStore.store_key);
+}
+
+function syncVisibleStoreSelection(storeKey, isSelected) {
+  myStoreResults.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+    if (checkbox.value !== storeKey) return;
+    checkbox.checked = isSelected;
+    checkbox.closest("li")?.classList.toggle("selected", isSelected);
+  });
+}
+
+async function loadSavedStores() {
+  selectedMyStoreIds.clear();
+
+  if (!supabaseClient || !currentUser) {
+    savedMyStores = [];
+    renderSelectedMyStores();
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("user_stores")
+    .select("store_key,name,address,latitude,longitude,website,distance_miles,created_at")
+    .eq("user_id", currentUser.id)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    savedMyStores = [];
+    renderSelectedMyStores();
+    myStoreStatus.textContent = getStoreErrorMessage(error);
+    return;
+  }
+
+  savedMyStores = (data || []).map(normalizeSavedStore);
+  savedMyStores.forEach((store) => selectedMyStoreIds.add(store.store_key));
+  renderSelectedMyStores();
+}
+
+async function saveMyStore(store) {
+  if (!supabaseClient || !currentUser) return false;
+
+  const { data, error } = await supabaseClient
+    .from("user_stores")
+    .upsert(storeRecordForSave(store), { onConflict: "user_id,store_key" })
+    .select("store_key,name,address,latitude,longitude,website,distance_miles,created_at")
+    .single();
+
+  if (error) {
+    myStoreStatus.textContent = getStoreErrorMessage(error);
+    return false;
+  }
+
+  upsertSavedStoreState(data);
+  renderSelectedMyStores();
+  myStoreStatus.textContent = `${data.name} saved to My stores.`;
+  return true;
+}
+
+async function deleteMyStore(storeKey) {
+  if (!supabaseClient || !currentUser) return false;
+
+  const { error } = await supabaseClient
+    .from("user_stores")
+    .delete()
+    .eq("user_id", currentUser.id)
+    .eq("store_key", storeKey);
+
+  if (error) {
+    myStoreStatus.textContent = getStoreErrorMessage(error);
+    return false;
+  }
+
+  savedMyStores = savedMyStores.filter((store) => store.store_key !== storeKey);
+  selectedMyStoreIds.delete(storeKey);
+  syncVisibleStoreSelection(storeKey, false);
+  renderSelectedMyStores();
+  myStoreStatus.textContent = "Store removed from My stores.";
+  return true;
+}
+
 function renderPantryItems() {
   pantryList.replaceChildren();
 
@@ -490,6 +626,7 @@ async function renderAuthState(user) {
 
   accountUsername.textContent = getDisplayUsername(user);
   syncSettingsFromUserInfo(user, currentUserInfo);
+  await loadSavedStores();
   await loadPantryItems();
 
   if (user) {
@@ -673,14 +810,8 @@ async function fetchStores(zipCode, options = {}) {
   throw new Error(lastError);
 }
 
-function getStoreId(store, index) {
-  return [
-    store.name || "store",
-    store.address || "address",
-    store.latitude ?? "lat",
-    store.longitude ?? "lon",
-    index,
-  ].join("|");
+function getStoreId(store) {
+  return getStoreKey(store);
 }
 
 function clearMyStoreMap() {
@@ -710,31 +841,37 @@ function ensureMyStoreMap(center) {
   return myStoreMap;
 }
 
-function renderSelectedMyStores(stores) {
+function renderSelectedMyStores() {
   selectedStoreList.replaceChildren();
-  const selectedStores = stores.filter((store) => selectedMyStoreIds.has(store.id));
 
-  if (!selectedStores.length) {
+  if (!savedMyStores.length) {
     const emptyItem = document.createElement("li");
     emptyItem.textContent = "No stores selected.";
     selectedStoreList.appendChild(emptyItem);
     return;
   }
 
-  selectedStores.forEach((store) => {
+  savedMyStores.forEach((store) => {
     const item = document.createElement("li");
-    item.textContent = store.name;
+    const itemText = document.createElement("span");
+    const removeButton = document.createElement("button");
+
+    itemText.textContent = store.name;
+    removeButton.type = "button";
+    removeButton.textContent = "Remove";
+    removeButton.addEventListener("click", () => deleteMyStore(store.store_key));
+
+    item.append(itemText, removeButton);
     selectedStoreList.appendChild(item);
   });
 }
 
 function renderMyStores(data) {
-  const stores = (data.stores || []).map((store, index) => ({
+  const stores = (data.stores || []).map((store) => ({
     ...store,
-    id: getStoreId(store, index),
+    id: getStoreId(store),
   }));
   myStoreResults.replaceChildren();
-  selectedMyStoreIds.clear();
   clearMyStoreMap();
 
   const map = ensureMyStoreMap(data.center);
@@ -762,18 +899,26 @@ function renderMyStores(data) {
         ? window.L.marker([Number(store.latitude), Number(store.longitude)]).addTo(map)
         : null;
 
-    function setSelected(isSelected) {
+    async function setSelected(isSelected) {
+      const previousSelected = selectedMyStoreIds.has(store.id);
+      checkbox.disabled = true;
+
+      const didPersist = isSelected
+        ? await saveMyStore(store)
+        : await deleteMyStore(store.id);
+
+      checkbox.disabled = false;
+      if (!didPersist) {
+        checkbox.checked = previousSelected;
+        item.classList.toggle("selected", previousSelected);
+        return;
+      }
+
       checkbox.checked = isSelected;
       item.classList.toggle("selected", isSelected);
-      if (isSelected) {
-        selectedMyStoreIds.add(store.id);
-      } else {
-        selectedMyStoreIds.delete(store.id);
-      }
       if (marker) {
         marker.setOpacity(isSelected ? 1 : 0.72);
       }
-      renderSelectedMyStores(stores);
     }
 
     checkbox.addEventListener("change", () => setSelected(checkbox.checked));
@@ -790,6 +935,13 @@ function renderMyStores(data) {
         .on("click", () => setSelected(!selectedMyStoreIds.has(store.id)));
       myStoreMarkers.push(marker);
     }
+
+    const isSelected = selectedMyStoreIds.has(store.id);
+    checkbox.checked = isSelected;
+    item.classList.toggle("selected", isSelected);
+    if (marker) {
+      marker.setOpacity(isSelected ? 1 : 0.72);
+    }
   });
 
   if (map && myStoreMarkers.length) {
@@ -797,7 +949,7 @@ function renderMyStores(data) {
     map.fitBounds(group.getBounds().pad(0.22));
   }
 
-  renderSelectedMyStores(stores);
+  renderSelectedMyStores();
   myStoreSource.hidden = false;
 }
 

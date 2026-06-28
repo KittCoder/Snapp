@@ -47,6 +47,8 @@ The frontend currently uses a temporary username/password flow backed by Supabas
 
 Pantry items are stored in `public.user_pantry_items` and sent to the dish generator so meal ideas can account for food the user already has.
 
+Selected stores are stored per user in `public.user_stores`.
+
 In the Supabase dashboard, enable Email auth and disable email confirmation while this username prototype is active. Password reset emails will not work until the app moves to real email addresses.
 
 ## Local Backend
