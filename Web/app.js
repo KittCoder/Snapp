@@ -28,6 +28,7 @@ const remainingBudget = document.getElementById("remaining-budget");
 const budgetMealCount = document.getElementById("budget-meal-count");
 const scheduledMealCost = document.getElementById("scheduled-meal-cost");
 const settingsStatus = document.getElementById("settings-status");
+const accountStatus = document.querySelector(".account-status");
 const accountUsername = document.getElementById("account-username");
 const signOutButton = document.getElementById("sign-out-button");
 const authStatus = document.getElementById("auth-status");
@@ -79,19 +80,80 @@ function getApiEndpoints(path) {
 }
 
 const CHAT_ENDPOINTS = getApiEndpoints("/chat");
+const SIGNED_OUT_PANEL_IDS = new Set(["home", "account"]);
+const SIGNED_IN_DEFAULT_PANEL_ID = "dishes";
+const SIGNED_OUT_DEFAULT_PANEL_ID = "home";
 const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
 });
+const RESTRICTION_WARNING_RULES = [
+  {
+    restrictionPattern: /\b(lactose|dairy|milk|cheese|cream|yogurt|butter)\b/i,
+    ingredientPattern: /\b(milk|cheese|cheddar|mozzarella|feta|parmesan|cream|yogurt|butter|whey|lactose|dairy)\b/i,
+    message: "Warning: contains lactose or dairy.",
+  },
+  {
+    restrictionPattern: /\b(gluten|wheat|celiac|coeliac)\b/i,
+    ingredientPattern: /\b(wheat|flour|bread|pasta|noodle|noodles|tortilla|breadcrumbs|gluten)\b/i,
+    message: "Warning: contains gluten or wheat.",
+  },
+  {
+    restrictionPattern: /\b(peanut|peanuts)\b/i,
+    ingredientPattern: /\b(peanut|peanuts|peanut butter)\b/i,
+    message: "Warning: contains peanuts.",
+  },
+  {
+    restrictionPattern: /\b(tree nuts?|nuts?|almond|cashew|walnut|pecan)\b/i,
+    ingredientPattern: /\b(almond|cashew|walnut|pecan|pistachio|hazelnut|nut butter|nuts?)\b/i,
+    message: "Warning: contains tree nuts.",
+  },
+  {
+    restrictionPattern: /\b(shellfish|shrimp|crab|lobster)\b/i,
+    ingredientPattern: /\b(shellfish|shrimp|crab|lobster)\b/i,
+    message: "Warning: contains shellfish.",
+  },
+  {
+    restrictionPattern: /\b(egg|eggs)\b/i,
+    ingredientPattern: /\b(egg|eggs|mayonnaise|mayo)\b/i,
+    message: "Warning: contains egg.",
+  },
+  {
+    restrictionPattern: /\b(soy|soya)\b/i,
+    ingredientPattern: /\b(soy|soya|tofu|tempeh|edamame|soy sauce)\b/i,
+    message: "Warning: contains soy.",
+  },
+];
 
 function showPanel(id) {
-  const targetId = currentUser || id === "account" ? id : "account";
+  const isSignedIn = Boolean(currentUser);
+  let targetId = id;
+
+  if (isSignedIn && SIGNED_OUT_PANEL_IDS.has(targetId)) {
+    targetId = SIGNED_IN_DEFAULT_PANEL_ID;
+  }
+
+  if (!isSignedIn && !SIGNED_OUT_PANEL_IDS.has(targetId)) {
+    targetId = SIGNED_OUT_DEFAULT_PANEL_ID;
+  }
+
   panels.forEach((panel) =>
     panel.classList.toggle("visible", panel.id === targetId)
   );
   navButtons.forEach((button) =>
     button.classList.toggle("active", button.dataset.target === targetId)
   );
+}
+
+function renderNavigationForAuthState() {
+  const isSignedIn = Boolean(currentUser);
+  navButtons.forEach((button) => {
+    const authView = button.dataset.authView;
+    button.hidden =
+      (authView === "signed-in" && !isSignedIn) ||
+      (authView === "signed-out" && isSignedIn);
+  });
+  accountStatus.hidden = !isSignedIn;
 }
 
 function setAuthStatus(message, type = "neutral") {
@@ -278,6 +340,7 @@ async function renderAuthState(user) {
   currentUser = user;
   currentUserInfo = null;
   document.body.classList.toggle("signed-in", Boolean(user));
+  renderNavigationForAuthState();
   accountUsername.textContent = getDisplayUsername(user);
   signOutButton.hidden = !user;
 
@@ -293,8 +356,8 @@ async function renderAuthState(user) {
     signInForm.hidden = true;
     signUpForm.hidden = true;
     setAuthStatus(`Signed in as ${getDisplayUsername(user)}.`, "success");
-    if (document.querySelector(".panel.visible")?.id === "account") {
-      showPanel("home");
+    if (SIGNED_OUT_PANEL_IDS.has(document.querySelector(".panel.visible")?.id)) {
+      showPanel(SIGNED_IN_DEFAULT_PANEL_ID);
     }
     return;
   }
@@ -303,7 +366,7 @@ async function renderAuthState(user) {
     showAuthMode("sign-in");
     setAuthStatus("Signed out.", "success");
   }
-  showPanel("account");
+  showPanel(SIGNED_OUT_DEFAULT_PANEL_ID);
 }
 
 function getScheduledMealTotal() {
@@ -369,6 +432,34 @@ function appendMessage(type, text) {
   chatLog.appendChild(li);
   chatLog.scrollTop = chatLog.scrollHeight;
   return li;
+}
+
+function dishIngredientText(dish) {
+  const ingredients = dish.ingredients_to_buy || dish.ingredients || [];
+  return ingredients
+    .map((ingredient) =>
+      [
+        ingredient.product_name,
+        ingredient.name,
+        ingredient.ingredient,
+        ingredient.package_size,
+      ]
+        .filter(Boolean)
+        .join(" ")
+    )
+    .join(" ");
+}
+
+function getRestrictionWarnings(dish) {
+  const restrictions = dietaryRestrictionsInput.value.trim();
+  if (!restrictions) return [];
+
+  const dishText = `${dish.name || ""} ${dishIngredientText(dish)}`;
+  return RESTRICTION_WARNING_RULES.filter(
+    (rule) =>
+      rule.restrictionPattern.test(restrictions) &&
+      rule.ingredientPattern.test(dishText)
+  ).map((rule) => rule.message);
 }
 
 async function fetchBotReply(message) {
@@ -517,6 +608,7 @@ function renderDishes(data) {
     const method = document.createElement("p");
     const totalNutrition = document.createElement("div");
     const perPersonNutrition = document.createElement("div");
+    const restrictionWarnings = getRestrictionWarnings(dish);
     const ingredientsHeading = document.createElement("h4");
     const ingredientList = document.createElement("ul");
     const scheduleButton = document.createElement("button");
@@ -564,7 +656,17 @@ function renderDishes(data) {
       price,
       totalNutrition,
       perPersonNutrition,
-      method,
+      method
+    );
+
+    restrictionWarnings.forEach((warning) => {
+      const warningMessage = document.createElement("p");
+      warningMessage.className = "dish-warning";
+      warningMessage.textContent = warning;
+      item.appendChild(warningMessage);
+    });
+
+    item.append(
       ingredientsHeading,
       ingredientList,
       scheduleButton

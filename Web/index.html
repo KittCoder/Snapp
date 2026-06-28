@@ -16,23 +16,23 @@
         <span class="brand-name">SNAPP</span>
       </div>
       <nav class="nav-buttons">
-        <button data-target="account" class="nav-button active">Account</button>
-        <button data-target="home" class="nav-button">Home</button>
-        <button data-target="chat" class="nav-button">Chat</button>
-        <button data-target="dishes" class="nav-button">Dishes</button>
-        <button data-target="schedule" class="nav-button">Schedule</button>
-        <button data-target="budget" class="nav-button">Budget</button>
-        <button data-target="information" class="nav-button">Information</button>
-        <button data-target="settings" class="nav-button">Settings</button>
+        <button data-target="home" data-auth-view="signed-out" class="nav-button active">Home</button>
+        <button data-target="account" data-auth-view="signed-out" class="nav-button">Account</button>
+        <button data-target="chat" data-auth-view="signed-in" class="nav-button" hidden>Chat</button>
+        <button data-target="dishes" data-auth-view="signed-in" class="nav-button" hidden>Dishes</button>
+        <button data-target="schedule" data-auth-view="signed-in" class="nav-button" hidden>Schedule</button>
+        <button data-target="budget" data-auth-view="signed-in" class="nav-button" hidden>Budget</button>
+        <button data-target="information" data-auth-view="signed-in" class="nav-button" hidden>Information</button>
+        <button data-target="settings" data-auth-view="signed-in" class="nav-button" hidden>Settings</button>
       </nav>
-      <div class="account-status">
+      <div class="account-status" hidden>
         <span id="account-username">Signed out</span>
         <button id="sign-out-button" type="button" hidden>Sign out</button>
       </div>
     </header>
 
     <main>
-      <section id="account" class="panel visible">
+      <section id="account" class="panel">
         <div class="auth-layout">
           <div class="auth-copy">
             <p class="eyebrow">SNAPP Account</p>
@@ -96,7 +96,7 @@
         </div>
       </section>
 
-      <section id="home" class="panel">
+      <section id="home" class="panel visible">
         <div class="home-hero">
           <div>
             <p class="eyebrow">Nourishment Made Practical</p>

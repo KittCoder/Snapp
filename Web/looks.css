@@ -638,6 +638,15 @@ main {
   font-weight: 700;
 }
 
+.dish-warning {
+  border: 1px solid color-mix(in srgb, #b91c1c 35%, transparent);
+  border-radius: 0.75rem;
+  padding: 0.58rem 0.7rem;
+  background: color-mix(in srgb, #b91c1c 10%, var(--color-panel-strong));
+  color: #b91c1c !important;
+  font-weight: 700;
+}
+
 .dish-nutrition {
   margin-top: 0.55rem;
   color: var(--color-text);
