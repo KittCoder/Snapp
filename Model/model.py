@@ -279,10 +279,11 @@ PRICE_PER_100G_RULES = (
 DEFAULT_CORS_ORIGINS = (
     "http://localhost:5173,"
     "http://127.0.0.1:5173,"
-    "https://snapp-1d5j.vercel.app"
+    "https://snapp-1d5j.vercel.app,"
+    "https://snapp.vercel.app"
 )
 VERCEL_DEPLOYMENT_ORIGIN_PATTERN = re.compile(
-    r"^https://snapp-1d5j-[a-z0-9-]+\.vercel\.app$"
+    r"^https://snapp(?:-[a-z0-9-]+)?\.vercel\.app$"
 )
 CORS_ORIGINS = {
     origin.strip().rstrip("/")
