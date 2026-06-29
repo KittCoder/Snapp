@@ -153,14 +153,57 @@ MEALDB_INGREDIENT_ALIASES = {
 }
 MEALDB_AREA_ALIASES = {
     "american": "United States",
+    "chinese": "Chinese",
+    "croatian": "Croatian",
+    "dutch": "Dutch",
+    "egyptian": "Egyptian",
+    "filipino": "Filipino",
+    "french": "French",
+    "greek": "Greek",
+    "indian": "Indian",
+    "irish": "Irish",
+    "italian": "Italian",
+    "jamaican": "Jamaican",
+    "japanese": "Japanese",
+    "kenyan": "Kenyan",
+    "malaysian": "Malaysian",
+    "mexican": "Mexican",
+    "moroccan": "Moroccan",
+    "polish": "Polish",
+    "portuguese": "Portuguese",
+    "russian": "Russian",
+    "spanish": "Spanish",
+    "thai": "Thai",
+    "tunisian": "Tunisian",
+    "turkish": "Turkish",
+    "ukrainian": "Ukrainian",
     "usa": "United States",
     "u s": "United States",
     "u s a": "United States",
     "us": "United States",
+    "vietnamese": "Vietnamese",
     "uk": "British",
     "u k": "British",
     "united kingdom": "British",
 }
+MEALDB_DIVERSE_AREA_ORDER = (
+    "Mexican",
+    "Italian",
+    "Indian",
+    "Chinese",
+    "Japanese",
+    "Thai",
+    "Moroccan",
+    "Greek",
+    "Spanish",
+    "Vietnamese",
+    "Jamaican",
+    "Turkish",
+    "Canadian",
+    "United States",
+    "British",
+    "French",
+)
 DEFAULT_PRICE_PER_100G = 0.55
 PRICE_PER_100G_RULES = (
     (r"\b(lamb)\b", 1.75),
@@ -1220,12 +1263,15 @@ def normalize_cuisine_text(value):
 
 def detect_requested_mealdb_area(meal_prompt):
     prompt_text = f" {normalize_cuisine_text(meal_prompt)} "
-    for alias, area in MEALDB_AREA_ALIASES.items():
-        if f" {alias} " in prompt_text:
+    for alias, area in sorted(
+        MEALDB_AREA_ALIASES.items(), key=lambda item: len(item[0]), reverse=True
+    ):
+        if re.search(rf"\b{re.escape(alias)}\b", prompt_text):
             return area
 
     for area in list_mealdb_areas():
-        if f" {normalize_cuisine_text(area)} " in prompt_text:
+        normalized_area = normalize_cuisine_text(area)
+        if re.search(rf"\b{re.escape(normalized_area)}\b", prompt_text):
             return area
     return None
 
@@ -1265,6 +1311,27 @@ def mealdb_candidates_for_area(area, meal_prompt):
     )
 
 
+def mealdb_diverse_area_candidates(meal_prompt, already_seen_ids):
+    candidates = []
+    for area in MEALDB_DIVERSE_AREA_ORDER:
+        best_meal = None
+        best_score = -1
+        for summary in filter_mealdb_meals_by_area(area):
+            meal_id = summary.get("idMeal")
+            if not meal_id or meal_id in already_seen_ids:
+                continue
+            meal = lookup_mealdb_meal(meal_id)
+            if not meal:
+                continue
+            score = mealdb_prompt_score(meal, meal_prompt)
+            if score > best_score:
+                best_meal = meal
+                best_score = score
+        if best_meal:
+            candidates.append(best_meal)
+    return candidates
+
+
 def normalized_food_words(value):
     text = re.sub(r"[^a-z0-9\s]", " ", value or "").casefold()
     words = {
@@ -1273,6 +1340,10 @@ def normalized_food_words(value):
         if len(word) > 2
     }
     return words
+
+
+def normalized_recipe_name(value):
+    return re.sub(r"[^a-z0-9]+", " ", value or "").strip().casefold()
 
 
 def product_matches_recipe_ingredient(product, recipe_ingredient):
@@ -1398,12 +1469,16 @@ def build_mealdb_demo_grocery_dishes(
     dishes = []
     used_ids = set()
     used_areas = set()
+    used_recipe_names = set()
     requested_area = detect_requested_mealdb_area(meal_prompt)
 
     def try_add_meal(meal, minimum_matches, require_new_area=False):
         meal_id = meal.get("idMeal")
         meal_area = meal.get("strArea") or ""
+        recipe_name = normalized_recipe_name(meal.get("strMeal"))
         if not meal_id or meal_id in used_ids:
+            return False
+        if recipe_name in used_recipe_names:
             return False
         if requested_area and meal_area != requested_area:
             return False
@@ -1418,6 +1493,7 @@ def build_mealdb_demo_grocery_dishes(
             return False
         dishes.append(mealdb_meal_to_demo_dish(meal, matches, stores, household_size))
         used_ids.add(meal_id)
+        used_recipe_names.add(recipe_name)
         if meal_area:
             used_areas.add(meal_area)
         return True
@@ -1431,7 +1507,7 @@ def build_mealdb_demo_grocery_dishes(
     candidate_passes = (
         [(2, False), (1, False), (0, False)]
         if requested_area
-        else [(2, True), (1, True), (2, False), (1, False)]
+        else [(2, True), (1, True), (0, True)]
     )
     for minimum_matches, require_new_area in candidate_passes:
         for meal in candidates:
@@ -1446,13 +1522,17 @@ def build_mealdb_demo_grocery_dishes(
             )
         return dishes
 
+    diverse_candidates = mealdb_diverse_area_candidates(meal_prompt, used_ids)
+    for minimum_matches in (2, 1, 0):
+        for meal in diverse_candidates:
+            if len(dishes) == 3:
+                return dishes
+            try_add_meal(meal, minimum_matches, True)
+
     for minimum_matches, require_new_area in (
         (2, True),
         (1, True),
         (0, True),
-        (2, False),
-        (1, False),
-        (0, False),
     ):
         for _ in range(36):
             if len(dishes) == 3:
