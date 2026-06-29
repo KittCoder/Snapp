@@ -714,13 +714,16 @@ function appendMessage(type, text) {
 
 function dishIngredientText(dish) {
   const ingredients = dish.ingredients_to_buy || dish.ingredients || [];
-  return ingredients
+  const recipeIngredients = dish.recipe?.ingredients || [];
+  return [...ingredients, ...recipeIngredients]
     .map((ingredient) =>
       [
         ingredient.product_name,
         ingredient.name,
         ingredient.ingredient,
         ingredient.package_size,
+        ingredient.display,
+        ingredient.measure,
       ]
         .filter(Boolean)
         .join(" ")
@@ -1040,14 +1043,23 @@ function renderDishes(data) {
     const restrictionWarnings = getRestrictionWarnings(dish);
     const ingredientsHeading = document.createElement("h4");
     const ingredientList = document.createElement("ul");
+    const recipeIngredientsHeading = document.createElement("h4");
+    const recipeIngredientList = document.createElement("ul");
+    const recipeLinks = document.createElement("p");
     const scheduleButton = document.createElement("button");
+    const recipe = dish.recipe || {};
 
     title.textContent = dish.name;
     calories.className = "dish-calories";
-    calories.textContent = `${dish.calories_total || dish.calories_per_person} total calories | ${dish.calories_per_person} per person`;
+    calories.textContent = dish.calories_total
+      ? `${dish.calories_total} matched grocery calories | ${dish.calories_per_person} per person`
+      : "No demo grocery calorie match";
     price.className = "dish-price";
-    price.textContent = `${currencyFormatter.format(dish.estimated_price_total)} total | ${currencyFormatter.format(dish.estimated_price_per_serving)} per person`;
-    method.textContent = dish.method;
+    price.textContent = dish.estimated_price_total
+      ? `${currencyFormatter.format(dish.estimated_price_total)} matched grocery total | ${currencyFormatter.format(dish.estimated_price_per_serving)} per person`
+      : "No demo grocery price match";
+    method.className = "dish-method";
+    method.textContent = recipe.instructions || dish.method;
     totalNutrition.className = "dish-nutrition";
     totalNutrition.textContent = [
       "Total nutrition:",
@@ -1067,6 +1079,10 @@ function renderDishes(data) {
     ingredientsHeading.className = "dish-ingredients-heading";
     ingredientsHeading.textContent = "Ingredients to buy";
     ingredientList.className = "dish-ingredients";
+    recipeIngredientsHeading.className = "dish-ingredients-heading";
+    recipeIngredientsHeading.textContent = "MealDB recipe ingredients";
+    recipeIngredientList.className = "dish-ingredients";
+    recipeLinks.className = "dish-recipe-links";
     scheduleButton.type = "button";
     scheduleButton.className = "add-to-schedule-button";
     scheduleButton.textContent = "Add to schedule";
@@ -1078,9 +1094,53 @@ function renderDishes(data) {
       ingredientItem.textContent = `${ingredient.product_name || ingredient.name} (${ingredient.package_size})${storeText} - ${currencyFormatter.format(ingredient.estimated_price_total)}`;
       ingredientList.appendChild(ingredientItem);
     });
+    if (!ingredientsToBuy.length) {
+      const ingredientItem = document.createElement("li");
+      ingredientItem.textContent = "No matching item in the SNAPP demo grocery database.";
+      ingredientList.appendChild(ingredientItem);
+    }
+
+    (recipe.ingredients || []).forEach((ingredient) => {
+      const ingredientItem = document.createElement("li");
+      ingredientItem.textContent = ingredient.display || ingredient.name;
+      recipeIngredientList.appendChild(ingredientItem);
+    });
+
+    if (recipe.source || recipe.youtube) {
+      const links = [];
+      if (recipe.source) {
+        const sourceLink = document.createElement("a");
+        sourceLink.href = recipe.source;
+        sourceLink.target = "_blank";
+        sourceLink.rel = "noopener noreferrer";
+        sourceLink.textContent = "Recipe source";
+        links.push(sourceLink);
+      }
+      if (recipe.youtube) {
+        const youtubeLink = document.createElement("a");
+        youtubeLink.href = recipe.youtube;
+        youtubeLink.target = "_blank";
+        youtubeLink.rel = "noopener noreferrer";
+        youtubeLink.textContent = "Video";
+        links.push(youtubeLink);
+      }
+      links.forEach((link, index) => {
+        if (index) recipeLinks.append(" | ");
+        recipeLinks.appendChild(link);
+      });
+    }
+
+    item.appendChild(title);
+
+    if (recipe.thumbnail) {
+      const image = document.createElement("img");
+      image.className = "dish-recipe-image";
+      image.src = recipe.thumbnail;
+      image.alt = `${dish.name} recipe photo`;
+      item.appendChild(image);
+    }
 
     item.append(
-      title,
       calories,
       price,
       totalNutrition,
@@ -1096,6 +1156,9 @@ function renderDishes(data) {
     });
 
     item.append(
+      recipeIngredientsHeading,
+      recipeIngredientList,
+      recipeLinks,
       ingredientsHeading,
       ingredientList,
       scheduleButton

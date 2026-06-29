@@ -31,6 +31,10 @@ MAX_STORE_RADIUS_MILES = 25
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 ZIPPOPOTAM_URL = "https://api.zippopotam.us/us"
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+MEALDB_API_KEY = os.getenv("MEALDB_API_KEY", "1")
+MEALDB_BASE_URL = os.getenv(
+    "MEALDB_BASE_URL", f"https://www.themealdb.com/api/json/v1/{MEALDB_API_KEY}"
+).rstrip("/")
 HTTP_TIMEOUT_SECONDS = 20
 HTTP_RETRY_ATTEMPTS = 2
 USER_AGENT = "SNAPP/1.0 (https://github.com/KittCoder/Snapp)"
@@ -39,6 +43,10 @@ FOOD_CACHE_TTL_SECONDS = 60 * 60
 DEMO_GROCERY_DB_FILENAME = "snapp_demo_grocery_db.json"
 store_search_cache = {}
 food_search_cache = {}
+mealdb_search_cache = {}
+mealdb_lookup_cache = {}
+mealdb_area_cache = None
+mealdb_area_meals_cache = {}
 FDC_SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
 FDC_API_KEY = os.getenv("FDC_API_KEY") or os.getenv("FOODDATA_CENTRAL_API_KEY") or "DEMO_KEY"
 NUTRIENT_ALIASES = {
@@ -74,6 +82,85 @@ FOOD_MATCH_PENALTY_TERMS = (
     "soup",
     "syrup",
 )
+RESTRICTION_RULES = (
+    (
+        re.compile(r"\b(lactose|dairy|milk|cheese|cream|yogurt|butter)\b", re.I),
+        re.compile(r"\b(milk|cheese|cheddar|mozzarella|feta|parmesan|cream|yogurt|butter|whey|lactose|dairy)\b", re.I),
+    ),
+    (
+        re.compile(r"\b(gluten|wheat|celiac|coeliac)\b", re.I),
+        re.compile(r"\b(wheat|flour|bread|pasta|noodle|noodles|tortilla|breadcrumbs|gluten)\b", re.I),
+    ),
+    (
+        re.compile(r"\b(peanut|peanuts)\b", re.I),
+        re.compile(r"\b(peanut|peanuts|peanut butter)\b", re.I),
+    ),
+    (
+        re.compile(r"\b(tree nuts?|nuts?|almond|cashew|walnut|pecan)\b", re.I),
+        re.compile(r"\b(almond|cashew|walnut|pecan|pistachio|hazelnut|nut butter|nuts?)\b", re.I),
+    ),
+    (
+        re.compile(r"\b(shellfish|shrimp|crab|lobster)\b", re.I),
+        re.compile(r"\b(shellfish|shrimp|crab|lobster)\b", re.I),
+    ),
+    (
+        re.compile(r"\b(egg|eggs)\b", re.I),
+        re.compile(r"\b(egg|eggs|mayonnaise|mayo)\b", re.I),
+    ),
+    (
+        re.compile(r"\b(soy|soya)\b", re.I),
+        re.compile(r"\b(soy|soya|tofu|tempeh|edamame|soy sauce)\b", re.I),
+    ),
+)
+MEALDB_SEARCH_STOPWORDS = {
+    "a",
+    "an",
+    "and",
+    "cheap",
+    "dinner",
+    "easy",
+    "for",
+    "healthy",
+    "lunch",
+    "meal",
+    "meals",
+    "quick",
+    "recipe",
+    "recipes",
+    "the",
+    "with",
+}
+MEALDB_INGREDIENT_ALIASES = {
+    "chicken": {"chicken thighs"},
+    "chicken breast": {"chicken thighs"},
+    "tomato": {"canned tomatoes"},
+    "tomatoes": {"canned tomatoes"},
+    "pasta": {"pasta"},
+    "spaghetti": {"pasta"},
+    "noodles": {"pasta"},
+    "noodle": {"pasta"},
+    "potato": {"potatoes"},
+    "beans": {"black beans"},
+    "bean": {"black beans"},
+    "sweetcorn": {"frozen corn"},
+    "corn": {"frozen corn"},
+    "broccoli": {"frozen broccoli"},
+    "tortilla": {"tortillas"},
+    "flour tortillas": {"tortillas"},
+    "cheddar": {"cheese"},
+    "mozzarella": {"cheese"},
+    "parmesan": {"cheese"},
+}
+MEALDB_AREA_ALIASES = {
+    "american": "United States",
+    "usa": "United States",
+    "u s": "United States",
+    "u s a": "United States",
+    "us": "United States",
+    "uk": "British",
+    "u k": "British",
+    "united kingdom": "British",
+}
 DEFAULT_PRICE_PER_100G = 0.55
 PRICE_PER_100G_RULES = (
     (r"\b(lamb)\b", 1.75),
@@ -184,6 +271,15 @@ def fetch_fooddata_json(url, json_data):
         return fetch_json(url, json_data=json_data, service_name="FoodData Central")
     except RuntimeError as exc:
         raise RuntimeError("The USDA FoodData Central service is unavailable.") from exc
+
+
+def fetch_mealdb_json(path, params=None):
+    query = f"?{urlencode(params)}" if params else ""
+    url = f"{MEALDB_BASE_URL}/{path}{query}"
+    try:
+        return fetch_json(url, service_name="TheMealDB")
+    except RuntimeError as exc:
+        raise RuntimeError("TheMealDB recipe service is unavailable.") from exc
 
 
 def normalize_ingredient_name(value):
@@ -992,6 +1088,399 @@ def build_demo_grocery_dishes(dish_candidates, products_by_id, stores):
     return dishes
 
 
+def mealdb_ingredients(meal):
+    ingredients = []
+    for index in range(1, 21):
+        ingredient = re.sub(r"\s+", " ", meal.get(f"strIngredient{index}") or "").strip()
+        measure = re.sub(r"\s+", " ", meal.get(f"strMeasure{index}") or "").strip()
+        if not ingredient:
+            continue
+        ingredients.append(
+            {
+                "name": ingredient,
+                "measure": measure,
+                "display": f"{measure} {ingredient}".strip(),
+            }
+        )
+    return ingredients
+
+
+def mealdb_text_for_restrictions(meal):
+    return " ".join(
+        [
+            meal.get("strMeal") or "",
+            meal.get("strCategory") or "",
+            meal.get("strArea") or "",
+            " ".join(ingredient["display"] for ingredient in mealdb_ingredients(meal)),
+        ]
+    )
+
+
+def mealdb_respects_restrictions(meal, dietary_restrictions):
+    if not dietary_restrictions:
+        return True
+    meal_text = mealdb_text_for_restrictions(meal)
+    return not any(
+        restriction_pattern.search(dietary_restrictions)
+        and ingredient_pattern.search(meal_text)
+        for restriction_pattern, ingredient_pattern in RESTRICTION_RULES
+    )
+
+
+def search_mealdb_meals(query):
+    normalized_query = re.sub(r"\s+", " ", query or "").strip()
+    if not normalized_query:
+        return []
+
+    cache_key = normalized_query.casefold()
+    cached = mealdb_search_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    data = fetch_mealdb_json("search.php", {"s": normalized_query})
+    meals = data.get("meals") or []
+    mealdb_search_cache[cache_key] = meals
+    return meals
+
+
+def lookup_mealdb_meal(meal_id):
+    if not meal_id:
+        return None
+    cached = mealdb_lookup_cache.get(meal_id)
+    if cached is not None:
+        return cached
+
+    data = fetch_mealdb_json("lookup.php", {"i": meal_id})
+    meals = data.get("meals") or []
+    meal = meals[0] if meals else None
+    mealdb_lookup_cache[meal_id] = meal
+    return meal
+
+
+def list_mealdb_areas():
+    global mealdb_area_cache
+    if mealdb_area_cache is not None:
+        return mealdb_area_cache
+
+    data = fetch_mealdb_json("list.php", {"a": "list"})
+    mealdb_area_cache = [
+        area.get("strArea")
+        for area in data.get("meals") or []
+        if area.get("strArea")
+    ]
+    return mealdb_area_cache
+
+
+def filter_mealdb_meals_by_area(area):
+    if not area:
+        return []
+    cached = mealdb_area_meals_cache.get(area)
+    if cached is not None:
+        return cached
+
+    data = fetch_mealdb_json("filter.php", {"a": area})
+    meals = data.get("meals") or []
+    mealdb_area_meals_cache[area] = meals
+    return meals
+
+
+def fetch_random_mealdb_meal(dietary_restrictions, used_ids):
+    for _ in range(18):
+        data = fetch_mealdb_json("random.php")
+        meals = data.get("meals") or []
+        if not meals:
+            continue
+        meal = meals[0]
+        meal_id = meal.get("idMeal")
+        if (
+            meal_id
+            and meal_id not in used_ids
+            and mealdb_ingredients(meal)
+            and mealdb_respects_restrictions(meal, dietary_restrictions)
+        ):
+            return meal
+    return None
+
+
+def mealdb_prompt_terms(meal_prompt):
+    prompt = re.sub(r"[^a-zA-Z0-9\s]", " ", meal_prompt or "")
+    words = [
+        word.casefold()
+        for word in prompt.split()
+        if len(word) > 2 and word.casefold() not in MEALDB_SEARCH_STOPWORDS
+    ]
+    terms = [meal_prompt]
+    terms.extend(words[:5])
+    return list(dict.fromkeys(term.strip() for term in terms if term and term.strip()))
+
+
+def normalize_cuisine_text(value):
+    return re.sub(r"[^a-z0-9]+", " ", value or "").strip().casefold()
+
+
+def detect_requested_mealdb_area(meal_prompt):
+    prompt_text = f" {normalize_cuisine_text(meal_prompt)} "
+    for alias, area in MEALDB_AREA_ALIASES.items():
+        if f" {alias} " in prompt_text:
+            return area
+
+    for area in list_mealdb_areas():
+        if f" {normalize_cuisine_text(area)} " in prompt_text:
+            return area
+    return None
+
+
+def mealdb_prompt_score(meal, meal_prompt):
+    meal_words = normalized_food_words(meal.get("strMeal"))
+    prompt_words = {
+        word
+        for word in normalized_food_words(meal_prompt)
+        if word not in MEALDB_SEARCH_STOPWORDS
+    }
+    return len(meal_words & prompt_words)
+
+
+def mealdb_candidates_for_prompt(meal_prompt):
+    candidates = []
+    seen_ids = set()
+    for term in mealdb_prompt_terms(meal_prompt):
+        for meal in search_mealdb_meals(term):
+            meal_id = meal.get("idMeal")
+            if meal_id and meal_id not in seen_ids:
+                candidates.append(meal)
+                seen_ids.add(meal_id)
+    return candidates
+
+
+def mealdb_candidates_for_area(area, meal_prompt):
+    candidates = []
+    for summary in filter_mealdb_meals_by_area(area):
+        meal = lookup_mealdb_meal(summary.get("idMeal"))
+        if meal:
+            candidates.append(meal)
+    return sorted(
+        candidates,
+        key=lambda meal: mealdb_prompt_score(meal, meal_prompt),
+        reverse=True,
+    )
+
+
+def normalized_food_words(value):
+    text = re.sub(r"[^a-z0-9\s]", " ", value or "").casefold()
+    words = {
+        word[:-1] if word.endswith("s") and len(word) > 3 else word
+        for word in text.split()
+        if len(word) > 2
+    }
+    return words
+
+
+def product_matches_recipe_ingredient(product, recipe_ingredient):
+    product_ingredient = product.get("ingredient") or ""
+    product_terms = {product_ingredient.casefold()}
+    product_terms.update(MEALDB_INGREDIENT_ALIASES.get(product_ingredient.casefold(), set()))
+
+    recipe_text = recipe_ingredient.casefold()
+    recipe_terms = {recipe_text}
+    recipe_terms.update(MEALDB_INGREDIENT_ALIASES.get(recipe_text, set()))
+
+    if any(
+        product_term in recipe_text or recipe_term in product_ingredient.casefold()
+        for product_term in product_terms
+        for recipe_term in recipe_terms
+    ):
+        return True
+
+    return bool(
+        normalized_food_words(product_ingredient)
+        & normalized_food_words(recipe_ingredient)
+    )
+
+
+def match_recipe_ingredients_to_products(meal, products):
+    matches = []
+    used_product_ids = set()
+    for ingredient in mealdb_ingredients(meal):
+        eligible_products = [
+            product
+            for product in products
+            if product.get("id") not in used_product_ids
+            and product_matches_recipe_ingredient(product, ingredient["name"])
+        ]
+        if not eligible_products:
+            continue
+        product = sorted(eligible_products, key=product_effective_price)[0]
+        used_product_ids.add(product["id"])
+        matches.append((ingredient, product))
+    return matches
+
+
+def mealdb_meal_to_demo_dish(meal, matched_products, stores, household_size):
+    ingredient_lines = []
+    total_calories = 0
+    total_price = 0
+    total_nutrients = {
+        "protein_g": 0,
+        "carbohydrates_g": 0,
+        "fat_g": 0,
+        "fiber_g": 0,
+        "sugars_g": 0,
+        "sodium_mg": 0,
+    }
+
+    for recipe_ingredient, product in matched_products[:6]:
+        package_grams = int(product.get("package_grams") or 0)
+        grams_total = min(package_grams, max(80, household_size * 125))
+        if grams_total < 1:
+            continue
+
+        package_price = product_effective_price(product)
+        calories_total = (float(product.get("calories_per_100g") or 0) * grams_total) / 100
+        total_calories += calories_total
+        total_price += package_price
+        add_nutrients(
+            total_nutrients,
+            nutrition_from_calories(
+                calories_total, grams_total, product.get("food_group")
+            ),
+        )
+        store = stores.get(product.get("store_id"), {})
+        ingredient_lines.append(
+            {
+                "product_id": product.get("id"),
+                "name": product.get("ingredient"),
+                "recipe_ingredient": recipe_ingredient["name"],
+                "recipe_measure": recipe_ingredient["measure"],
+                "product_name": product.get("product_name"),
+                "matched_food": product.get("product_name"),
+                "food_group": product.get("food_group"),
+                "store_name": store.get("name", product.get("store_id")),
+                "package_size": product.get("package_size"),
+                "package_grams": product.get("package_grams"),
+                "grams_total": grams_total,
+                "grams_per_person": round(grams_total / household_size),
+                "calories_total": round(calories_total),
+                "calories_per_person": round(calories_total / household_size),
+                "estimated_price_total": package_price,
+                "estimated_price_per_serving": round(package_price / household_size, 2),
+            }
+        )
+
+    recipe = mealdb_recipe_from_meal(meal)
+    return {
+        "name": recipe["name"],
+        "servings": household_size,
+        "calories_total": round(total_calories),
+        "calories_per_person": round(total_calories / household_size),
+        "estimated_price_total": round(total_price, 2),
+        "estimated_price_per_serving": round(total_price / household_size, 2),
+        "nutrition_total": {
+            key: round(value, 1)
+            for key, value in total_nutrients.items()
+        },
+        "nutrition_per_person": {
+            key: round(value / household_size, 1)
+            for key, value in total_nutrients.items()
+        },
+        "ingredients": ingredient_lines,
+        "ingredients_to_buy": ingredient_lines,
+        "portion_note": f"Recipe from TheMealDB. Grocery matches are from the SNAPP demo grocery database.",
+        "method": recipe["instructions"],
+        "recipe": recipe,
+        "mealdb_id": recipe["id"],
+        "mealdb_source": recipe["source"],
+    }
+
+
+def build_mealdb_demo_grocery_dishes(
+    meal_prompt, household_size, dietary_restrictions, products, stores
+):
+    dishes = []
+    used_ids = set()
+    used_areas = set()
+    requested_area = detect_requested_mealdb_area(meal_prompt)
+
+    def try_add_meal(meal, minimum_matches, require_new_area=False):
+        meal_id = meal.get("idMeal")
+        meal_area = meal.get("strArea") or ""
+        if not meal_id or meal_id in used_ids:
+            return False
+        if requested_area and meal_area != requested_area:
+            return False
+        if require_new_area and meal_area in used_areas:
+            return False
+        if not mealdb_ingredients(meal):
+            return False
+        if not mealdb_respects_restrictions(meal, dietary_restrictions):
+            return False
+        matches = match_recipe_ingredients_to_products(meal, products)
+        if len(matches) < minimum_matches:
+            return False
+        dishes.append(mealdb_meal_to_demo_dish(meal, matches, stores, household_size))
+        used_ids.add(meal_id)
+        if meal_area:
+            used_areas.add(meal_area)
+        return True
+
+    candidates = (
+        mealdb_candidates_for_area(requested_area, meal_prompt)
+        if requested_area
+        else mealdb_candidates_for_prompt(meal_prompt)
+    )
+
+    candidate_passes = (
+        [(2, False), (1, False), (0, False)]
+        if requested_area
+        else [(2, True), (1, True), (2, False), (1, False)]
+    )
+    for minimum_matches, require_new_area in candidate_passes:
+        for meal in candidates:
+            if len(dishes) == 3:
+                return dishes
+            try_add_meal(meal, minimum_matches, require_new_area)
+
+    if requested_area:
+        if len(dishes) != 3:
+            raise RuntimeError(
+                f"TheMealDB could not provide 3 {requested_area} recipe-backed dishes."
+            )
+        return dishes
+
+    for minimum_matches, require_new_area in (
+        (2, True),
+        (1, True),
+        (0, True),
+        (2, False),
+        (1, False),
+        (0, False),
+    ):
+        for _ in range(36):
+            if len(dishes) == 3:
+                return dishes
+            meal = fetch_random_mealdb_meal(dietary_restrictions, used_ids)
+            if meal:
+                try_add_meal(meal, minimum_matches, require_new_area)
+
+    if len(dishes) != 3:
+        raise RuntimeError("TheMealDB could not provide 3 recipe-backed dishes.")
+    return dishes
+
+
+def mealdb_recipe_from_meal(meal):
+    instructions = re.sub(r"\s+", " ", meal.get("strInstructions") or "").strip()
+    return {
+        "id": meal.get("idMeal"),
+        "name": meal.get("strMeal"),
+        "category": meal.get("strCategory"),
+        "area": meal.get("strArea"),
+        "instructions": instructions,
+        "ingredients": mealdb_ingredients(meal),
+        "thumbnail": meal.get("strMealThumb"),
+        "youtube": meal.get("strYoutube"),
+        "source": meal.get("strSource") or f"https://www.themealdb.com/meal/{meal.get('idMeal')}",
+    }
+
+
 def normalize_website(value):
     if not value:
         return None
@@ -1334,16 +1823,9 @@ def dishes():
         grocery_db = load_demo_grocery_db()
         stores = demo_store_lookup(grocery_db)
         products = available_demo_products(grocery_db)
-        products_by_id = {
-            product["id"]: product
-            for product in products
-            if product.get("id")
-        }
-        catalog = demo_catalog_for_prompt(products, stores)
-        dish_candidates = generate_demo_grocery_dish_candidates(
-            meal_prompt, household_size, catalog, dietary_restrictions, pantry_items
+        dishes = build_mealdb_demo_grocery_dishes(
+            meal_prompt, household_size, dietary_restrictions, products, stores
         )
-        dishes = build_demo_grocery_dishes(dish_candidates, products_by_id, stores)
     except RuntimeError as exc:
         return jsonify({"error": str(exc)}), 503
     except Exception as exc:
@@ -1362,7 +1844,7 @@ def dishes():
             ],
             "missing_ingredients": [],
             "dishes": dishes,
-            "source": "SNAPP demo grocery database",
+            "source": "SNAPP demo grocery database and TheMealDB",
         }
     )
 

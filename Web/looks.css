@@ -638,6 +638,30 @@ main {
   font-weight: 700;
 }
 
+.dish-recipe-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin-top: 0.75rem;
+  border-radius: 0.65rem;
+  object-fit: cover;
+}
+
+.dish-method {
+  max-height: 11rem;
+  overflow: auto;
+  line-height: 1.55;
+}
+
+.dish-recipe-links {
+  font-size: 0.84rem;
+}
+
+.dish-recipe-links a {
+  color: var(--color-primary-strong);
+  font-weight: 700;
+}
+
 .dish-warning {
   border: 1px solid color-mix(in srgb, #b91c1c 35%, transparent);
   border-radius: 0.75rem;
