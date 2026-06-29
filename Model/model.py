@@ -2,6 +2,7 @@
 import os
 import json
 import math
+import random
 import re
 import time
 from pathlib import Path
@@ -129,6 +130,15 @@ MEALDB_SEARCH_STOPWORDS = {
     "recipes",
     "the",
     "with",
+}
+MEALDB_GENERIC_PROMPT_WORDS = MEALDB_SEARCH_STOPWORDS | {
+    "breakfast",
+    "brunch",
+    "dinner",
+    "food",
+    "lunch",
+    "snack",
+    "supper",
 }
 MEALDB_INGREDIENT_ALIASES = {
     "beef": {"beef", "brisket", "steak", "ground beef", "minced beef", "short ribs"},
@@ -1353,6 +1363,11 @@ def requested_mealdb_ingredient_groups(meal_prompt):
     return requested
 
 
+def is_generic_mealdb_prompt(meal_prompt):
+    prompt_words = normalized_food_words(meal_prompt)
+    return bool(prompt_words) and prompt_words <= MEALDB_GENERIC_PROMPT_WORDS
+
+
 def mealdb_normalized_search_text(meal):
     return normalize_cuisine_text(
         " ".join(
@@ -1406,7 +1421,7 @@ def mealdb_matches_meal_type(meal, meal_prompt):
         return True
     meal_text = mealdb_normalized_search_text(meal)
     category = normalize_cuisine_text(meal.get("strCategory"))
-    if category in {"breakfast", "dessert"}:
+    if category in {"breakfast", "dessert", "side", "starter"}:
         return False
     return not any(
         re.search(rf"\b{re.escape(term)}\b", meal_text)
@@ -1432,6 +1447,7 @@ def mealdb_candidates_for_area(area, meal_prompt):
         meal = lookup_mealdb_meal(summary.get("idMeal"))
         if meal:
             candidates.append(meal)
+    random.shuffle(candidates)
     return sorted(
         candidates,
         key=lambda meal: mealdb_prompt_score(meal, meal_prompt),
@@ -1439,24 +1455,38 @@ def mealdb_candidates_for_area(area, meal_prompt):
     )
 
 
-def mealdb_diverse_area_candidates(meal_prompt, already_seen_ids):
+def mealdb_diverse_area_candidates(meal_prompt, already_seen_ids, max_candidates=8):
     candidates = []
-    for area in MEALDB_DIVERSE_AREA_ORDER:
-        best_meal = None
-        best_score = -1
-        for summary in filter_mealdb_meals_by_area(area):
+    areas = list(MEALDB_DIVERSE_AREA_ORDER)
+    random.shuffle(areas)
+    for area in areas:
+        if len(candidates) >= max_candidates:
+            break
+        area_candidates = []
+        summaries = filter_mealdb_meals_by_area(area)
+        random.shuffle(summaries)
+        for summary in summaries[:6]:
             meal_id = summary.get("idMeal")
             if not meal_id or meal_id in already_seen_ids:
                 continue
             meal = lookup_mealdb_meal(meal_id)
             if not meal:
                 continue
-            score = mealdb_prompt_score(meal, meal_prompt)
-            if score > best_score:
-                best_meal = meal
-                best_score = score
-        if best_meal:
-            candidates.append(best_meal)
+            area_candidates.append(meal)
+        viable_meals = [
+            meal
+            for meal in area_candidates
+            if mealdb_matches_meal_type(meal, meal_prompt)
+        ] or area_candidates
+        if viable_meals:
+            random.shuffle(viable_meals)
+            candidates.append(
+                sorted(
+                    viable_meals[:8],
+                    key=lambda meal: mealdb_prompt_score(meal, meal_prompt),
+                    reverse=True,
+                )[0]
+            )
     return candidates
 
 
@@ -1600,6 +1630,11 @@ def build_mealdb_demo_grocery_dishes(
     used_recipe_names = set()
     requested_area = detect_requested_mealdb_area(meal_prompt)
     requested_ingredient_groups = requested_mealdb_ingredient_groups(meal_prompt)
+    is_generic_prompt = (
+        not requested_area
+        and not requested_ingredient_groups
+        and is_generic_mealdb_prompt(meal_prompt)
+    )
 
     def try_add_meal(meal, minimum_matches, require_new_area=False):
         meal_id = meal.get("idMeal")
@@ -1610,6 +1645,8 @@ def build_mealdb_demo_grocery_dishes(
         if recipe_name in used_recipe_names:
             return False
         if requested_area and meal_area != requested_area:
+            return False
+        if require_new_area and not meal_area:
             return False
         if require_new_area and meal_area in used_areas:
             return False
@@ -1636,7 +1673,7 @@ def build_mealdb_demo_grocery_dishes(
     candidates = (
         mealdb_candidates_for_area(requested_area, meal_prompt)
         if requested_area
-        else mealdb_candidates_for_prompt(meal_prompt)
+        else [] if is_generic_prompt else mealdb_candidates_for_prompt(meal_prompt)
     )
 
     candidate_passes = (
@@ -1656,6 +1693,15 @@ def build_mealdb_demo_grocery_dishes(
                 f"TheMealDB could not provide 3 {requested_area} recipe-backed dishes."
             )
         return dishes
+
+    if is_generic_prompt:
+        for minimum_matches in (1, 0):
+            for _ in range(24):
+                if len(dishes) == 3:
+                    return dishes
+                meal = fetch_random_mealdb_meal(dietary_restrictions, used_ids)
+                if meal:
+                    try_add_meal(meal, minimum_matches, True)
 
     diverse_candidates = mealdb_diverse_area_candidates(meal_prompt, used_ids)
     for minimum_matches in (2, 1, 0):
