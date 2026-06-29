@@ -131,8 +131,12 @@ MEALDB_SEARCH_STOPWORDS = {
     "with",
 }
 MEALDB_INGREDIENT_ALIASES = {
+    "beef": {"beef", "brisket", "steak", "ground beef", "minced beef", "short ribs"},
     "chicken": {"chicken thighs"},
     "chicken breast": {"chicken thighs"},
+    "fish": {"fish", "cod", "salmon", "tuna"},
+    "pork": {"pork", "bacon", "ham", "sausage"},
+    "shrimp": {"shrimp", "prawn", "prawns"},
     "tomato": {"canned tomatoes"},
     "tomatoes": {"canned tomatoes"},
     "pasta": {"pasta"},
@@ -150,6 +154,51 @@ MEALDB_INGREDIENT_ALIASES = {
     "cheddar": {"cheese"},
     "mozzarella": {"cheese"},
     "parmesan": {"cheese"},
+}
+MEALDB_REQUEST_INGREDIENTS = {
+    "beef": {"beef", "brisket", "steak", "ground beef", "minced beef", "short ribs"},
+    "chicken": {"chicken"},
+    "fish": {"fish", "cod", "salmon", "tuna"},
+    "pork": {"pork", "bacon", "ham", "sausage"},
+    "shrimp": {"shrimp", "prawn", "prawns"},
+    "tuna": {"tuna"},
+    "salmon": {"salmon"},
+    "egg": {"egg", "eggs"},
+    "eggs": {"egg", "eggs"},
+    "beans": {"bean", "beans", "black beans", "kidney beans", "chickpeas"},
+    "lentils": {"lentil", "lentils"},
+    "tofu": {"tofu"},
+    "rice": {"rice"},
+    "pasta": {"pasta", "spaghetti", "penne", "linguine", "macaroni"},
+    "potatoes": {"potato", "potatoes"},
+    "potato": {"potato", "potatoes"},
+}
+MEALDB_MEAL_TYPE_HINTS = {
+    "breakfast": {"breakfast", "pancake", "pancakes", "egg", "eggs", "omelette", "toast"},
+    "lunch": {"sandwich", "salad", "soup", "wrap"},
+    "dinner": {
+        "beef",
+        "brisket",
+        "chicken",
+        "casserole",
+        "curry",
+        "fish",
+        "meat",
+        "pork",
+        "pot roast",
+        "roast",
+        "stew",
+        "steak",
+    },
+}
+MEALDB_NON_DINNER_TERMS = {
+    "breakfast",
+    "pancake",
+    "pancakes",
+    "cookie",
+    "cookies",
+    "cake",
+    "dessert",
 }
 MEALDB_AREA_ALIASES = {
     "american": "United States",
@@ -1258,7 +1307,7 @@ def mealdb_prompt_terms(meal_prompt):
 
 
 def normalize_cuisine_text(value):
-    return re.sub(r"[^a-z0-9]+", " ", value or "").strip().casefold()
+    return re.sub(r"[^a-z0-9]+", " ", (value or "").casefold()).strip()
 
 
 def detect_requested_mealdb_area(meal_prompt):
@@ -1283,7 +1332,85 @@ def mealdb_prompt_score(meal, meal_prompt):
         for word in normalized_food_words(meal_prompt)
         if word not in MEALDB_SEARCH_STOPWORDS
     }
-    return len(meal_words & prompt_words)
+    score = len(meal_words & prompt_words)
+    meal_text = mealdb_normalized_search_text(meal)
+    for meal_type, terms in MEALDB_MEAL_TYPE_HINTS.items():
+        if re.search(rf"\b{meal_type}\b", meal_prompt, re.I):
+            score += sum(2 for term in terms if term in meal_text)
+    if re.search(r"\bdinner\b", meal_prompt, re.I):
+        score -= sum(3 for term in MEALDB_NON_DINNER_TERMS if term in meal_text)
+    return score
+
+
+def requested_mealdb_ingredient_groups(meal_prompt):
+    prompt_words = normalized_food_words(meal_prompt)
+    requested = []
+    for ingredient, aliases in MEALDB_REQUEST_INGREDIENTS.items():
+        ingredient_words = normalized_food_words(ingredient)
+        if prompt_words & ingredient_words:
+            requested.append((ingredient, aliases))
+    return requested
+
+
+def mealdb_normalized_search_text(meal):
+    return normalize_cuisine_text(
+        " ".join(
+            [
+                meal.get("strMeal") or "",
+                meal.get("strCategory") or "",
+                meal.get("strArea") or "",
+                " ".join(ingredient["name"] for ingredient in mealdb_ingredients(meal)),
+            ]
+        )
+    )
+
+
+def mealdb_matches_requested_ingredients(meal, requested_ingredient_groups):
+    if not requested_ingredient_groups:
+        return True
+    meal_text = f" {mealdb_normalized_search_text(meal)} "
+    return all(
+        mealdb_matches_requested_ingredient(meal, ingredient, aliases, meal_text)
+        for ingredient, aliases in requested_ingredient_groups
+    )
+
+
+def mealdb_matches_requested_ingredient(meal, ingredient, aliases, meal_text):
+    if ingredient in {"beef", "chicken", "fish", "pork", "shrimp", "tuna", "salmon"}:
+        primary_text = f" {normalize_cuisine_text(meal.get('strMeal'))} {normalize_cuisine_text(meal.get('strCategory'))} "
+        if any(
+            re.search(rf"\b{re.escape(normalize_cuisine_text(alias))}\b", primary_text)
+            for alias in aliases
+        ):
+            return True
+        for recipe_ingredient in mealdb_ingredients(meal)[:5]:
+            ingredient_name = normalize_cuisine_text(recipe_ingredient["name"])
+            if re.search(r"\b(stock|broth|bouillon|extract|flavouring|flavoring)\b", ingredient_name):
+                continue
+            if any(
+                re.search(rf"\b{re.escape(normalize_cuisine_text(alias))}\b", ingredient_name)
+                for alias in aliases
+            ):
+                return True
+        return False
+
+    return any(
+        re.search(rf"\b{re.escape(normalize_cuisine_text(alias))}\b", meal_text)
+        for alias in aliases
+    )
+
+
+def mealdb_matches_meal_type(meal, meal_prompt):
+    if not re.search(r"\bdinner\b", meal_prompt or "", re.I):
+        return True
+    meal_text = mealdb_normalized_search_text(meal)
+    category = normalize_cuisine_text(meal.get("strCategory"))
+    if category in {"breakfast", "dessert"}:
+        return False
+    return not any(
+        re.search(rf"\b{re.escape(term)}\b", meal_text)
+        for term in MEALDB_NON_DINNER_TERMS
+    )
 
 
 def mealdb_candidates_for_prompt(meal_prompt):
@@ -1471,6 +1598,7 @@ def build_mealdb_demo_grocery_dishes(
     used_areas = set()
     used_recipe_names = set()
     requested_area = detect_requested_mealdb_area(meal_prompt)
+    requested_ingredient_groups = requested_mealdb_ingredient_groups(meal_prompt)
 
     def try_add_meal(meal, minimum_matches, require_new_area=False):
         meal_id = meal.get("idMeal")
@@ -1485,6 +1613,12 @@ def build_mealdb_demo_grocery_dishes(
         if require_new_area and meal_area in used_areas:
             return False
         if not mealdb_ingredients(meal):
+            return False
+        if not mealdb_matches_requested_ingredients(
+            meal, requested_ingredient_groups
+        ):
+            return False
+        if not mealdb_matches_meal_type(meal, meal_prompt):
             return False
         if not mealdb_respects_restrictions(meal, dietary_restrictions):
             return False

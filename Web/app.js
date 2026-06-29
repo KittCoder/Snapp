@@ -983,7 +983,10 @@ async function fetchDishes(mealPrompt, householdSize, dietaryRestrictions) {
       }
       return data;
     } catch (error) {
-      lastError = error.message || "Network error while finding dishes.";
+      lastError =
+        error instanceof TypeError && /fetch/i.test(error.message || "")
+          ? "Unable to reach the dishes API. The backend may still be starting or temporarily unavailable."
+          : error.message || "Network error while finding dishes.";
     }
   }
 
