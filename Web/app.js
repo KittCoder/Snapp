@@ -1083,7 +1083,7 @@ function renderDishes(data) {
     ingredientsHeading.textContent = "Ingredients to buy";
     ingredientList.className = "dish-ingredients";
     recipeIngredientsHeading.className = "dish-ingredients-heading";
-    recipeIngredientsHeading.textContent = "MealDB recipe ingredients";
+    recipeIngredientsHeading.textContent = "Spoonacular recipe ingredients";
     recipeIngredientList.className = "dish-ingredients";
     recipeLinks.className = "dish-recipe-links";
     scheduleButton.type = "button";

@@ -17,6 +17,7 @@ The backend is configured for Render with [render.yaml](/Users/2027kstarkie/Desk
 4. Set these environment variables in Render:
    - `OPENAI_API_KEY`: your OpenAI API key
    - `FDC_API_KEY`: your USDA FoodData Central API key
+   - `SPOONACULAR_API_KEY`: your Spoonacular API key
    - `CORS_ORIGINS`: `https://snapp-1d5j.vercel.app`
  
 Render injects `PORT` automatically. Gunicorn handles the hosted service process.
@@ -56,7 +57,7 @@ In the Supabase dashboard, enable Email auth and disable email confirmation whil
 ```sh
 cd Model
 pip install -r requirements.txt
-OPENAI_API_KEY=your_key_here FDC_API_KEY=your_fdc_key_here python model.py
+OPENAI_API_KEY=your_key_here FDC_API_KEY=your_fdc_key_here SPOONACULAR_API_KEY=your_spoonacular_key_here python model.py
 ```
 
 The API runs on `http://localhost:5000` locally.

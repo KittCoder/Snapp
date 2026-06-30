@@ -5,6 +5,7 @@ import math
 import random
 import re
 import time
+from html import unescape
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlparse
@@ -32,9 +33,9 @@ MAX_STORE_RADIUS_MILES = 25
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 ZIPPOPOTAM_URL = "https://api.zippopotam.us/us"
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
-MEALDB_API_KEY = os.getenv("MEALDB_API_KEY", "1")
-MEALDB_BASE_URL = os.getenv(
-    "MEALDB_BASE_URL", f"https://www.themealdb.com/api/json/v1/{MEALDB_API_KEY}"
+SPOONACULAR_API_KEY = os.getenv("SPOONACULAR_API_KEY", "")
+SPOONACULAR_BASE_URL = os.getenv(
+    "SPOONACULAR_BASE_URL", "https://api.spoonacular.com"
 ).rstrip("/")
 HTTP_TIMEOUT_SECONDS = 20
 HTTP_RETRY_ATTEMPTS = 2
@@ -44,10 +45,8 @@ FOOD_CACHE_TTL_SECONDS = 60 * 60
 DEMO_GROCERY_DB_FILENAME = "snapp_demo_grocery_db.json"
 store_search_cache = {}
 food_search_cache = {}
-mealdb_search_cache = {}
-mealdb_lookup_cache = {}
-mealdb_area_cache = None
-mealdb_area_meals_cache = {}
+spoonacular_search_cache = {}
+spoonacular_lookup_cache = {}
 FDC_SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
 FDC_API_KEY = os.getenv("FDC_API_KEY") or os.getenv("FOODDATA_CENTRAL_API_KEY") or "DEMO_KEY"
 NUTRIENT_ALIASES = {
@@ -113,7 +112,7 @@ RESTRICTION_RULES = (
         re.compile(r"\b(soy|soya|tofu|tempeh|edamame|soy sauce)\b", re.I),
     ),
 )
-MEALDB_SEARCH_STOPWORDS = {
+RECIPE_SEARCH_STOPWORDS = {
     "a",
     "an",
     "and",
@@ -131,7 +130,7 @@ MEALDB_SEARCH_STOPWORDS = {
     "the",
     "with",
 }
-MEALDB_GENERIC_PROMPT_WORDS = MEALDB_SEARCH_STOPWORDS | {
+RECIPE_GENERIC_PROMPT_WORDS = RECIPE_SEARCH_STOPWORDS | {
     "breakfast",
     "brunch",
     "dinner",
@@ -140,7 +139,7 @@ MEALDB_GENERIC_PROMPT_WORDS = MEALDB_SEARCH_STOPWORDS | {
     "snack",
     "supper",
 }
-MEALDB_INGREDIENT_ALIASES = {
+RECIPE_INGREDIENT_ALIASES = {
     "beef": {"beef", "brisket", "steak", "ground beef", "minced beef", "short ribs"},
     "chicken": {"chicken thighs"},
     "chicken breast": {"chicken thighs"},
@@ -165,7 +164,7 @@ MEALDB_INGREDIENT_ALIASES = {
     "mozzarella": {"cheese"},
     "parmesan": {"cheese"},
 }
-MEALDB_REQUEST_INGREDIENTS = {
+RECIPE_REQUEST_INGREDIENTS = {
     "beef": {"beef", "brisket", "steak", "ground beef", "minced beef", "short ribs"},
     "chicken": {"chicken"},
     "fish": {"fish", "cod", "salmon", "tuna"},
@@ -183,7 +182,7 @@ MEALDB_REQUEST_INGREDIENTS = {
     "potatoes": {"potato", "potatoes"},
     "potato": {"potato", "potatoes"},
 }
-MEALDB_MEAL_TYPE_HINTS = {
+RECIPE_MEAL_TYPE_HINTS = {
     "breakfast": {"breakfast", "pancake", "pancakes", "egg", "eggs", "omelette", "toast"},
     "lunch": {"sandwich", "salad", "soup", "wrap"},
     "dinner": {
@@ -201,7 +200,7 @@ MEALDB_MEAL_TYPE_HINTS = {
         "steak",
     },
 }
-MEALDB_NON_DINNER_TERMS = {
+RECIPE_NON_DINNER_TERMS = {
     "breakfast",
     "pancake",
     "pancakes",
@@ -210,7 +209,7 @@ MEALDB_NON_DINNER_TERMS = {
     "cake",
     "dessert",
 }
-MEALDB_AREA_ALIASES = {
+RECIPE_CUISINE_ALIASES = {
     "american": "United States",
     "chinese": "Chinese",
     "croatian": "Croatian",
@@ -245,7 +244,7 @@ MEALDB_AREA_ALIASES = {
     "u k": "British",
     "united kingdom": "British",
 }
-MEALDB_DIVERSE_AREA_ORDER = (
+RECIPE_DIVERSE_CUISINE_ORDER = (
     "Mexican",
     "Italian",
     "Indian",
@@ -376,13 +375,18 @@ def fetch_fooddata_json(url, json_data):
         raise RuntimeError("The USDA FoodData Central service is unavailable.") from exc
 
 
-def fetch_mealdb_json(path, params=None):
-    query = f"?{urlencode(params)}" if params else ""
-    url = f"{MEALDB_BASE_URL}/{path}{query}"
+def fetch_spoonacular_json(path, params=None):
+    if not SPOONACULAR_API_KEY:
+        raise RuntimeError("SPOONACULAR_API_KEY is not set.")
+
+    query_params = dict(params or {})
+    query_params["apiKey"] = SPOONACULAR_API_KEY
+    query = f"?{urlencode(query_params)}"
+    url = f"{SPOONACULAR_BASE_URL}/{path.lstrip('/')}{query}"
     try:
-        return fetch_json(url, service_name="TheMealDB")
+        return fetch_json(url, service_name="Spoonacular")
     except RuntimeError as exc:
-        raise RuntimeError("TheMealDB recipe service is unavailable.") from exc
+        raise RuntimeError("Spoonacular recipe service is unavailable.") from exc
 
 
 def normalize_ingredient_name(value):
@@ -1191,38 +1195,71 @@ def build_demo_grocery_dishes(dish_candidates, products_by_id, stores):
     return dishes
 
 
-def mealdb_ingredients(meal):
+def spoonacular_ingredients(recipe):
     ingredients = []
-    for index in range(1, 21):
-        ingredient = re.sub(r"\s+", " ", meal.get(f"strIngredient{index}") or "").strip()
-        measure = re.sub(r"\s+", " ", meal.get(f"strMeasure{index}") or "").strip()
-        if not ingredient:
+    seen = set()
+    for ingredient in recipe.get("extendedIngredients") or []:
+        name = re.sub(
+            r"\s+",
+            " ",
+            ingredient.get("nameClean")
+            or ingredient.get("name")
+            or ingredient.get("originalName")
+            or "",
+        ).strip()
+        if not name:
             continue
+        measure = re.sub(r"\s+", " ", ingredient.get("original") or "").strip()
+        display = measure or name
+        identity = name.casefold()
+        if identity in seen:
+            continue
+        seen.add(identity)
         ingredients.append(
             {
-                "name": ingredient,
+                "name": name,
                 "measure": measure,
-                "display": f"{measure} {ingredient}".strip(),
+                "display": display,
             }
         )
     return ingredients
 
 
-def mealdb_text_for_restrictions(meal):
+def spoonacular_recipe_text(value):
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", unescape(value or ""))).strip()
+
+
+def spoonacular_cuisines(recipe):
+    cuisines = recipe.get("cuisines") or []
+    if isinstance(cuisines, str):
+        cuisines = [cuisines]
+    return [cuisine for cuisine in cuisines if cuisine]
+
+
+def spoonacular_cuisine_label(recipe):
+    return (spoonacular_cuisines(recipe) or [recipe.get("_snapp_requested_cuisine") or ""])[0]
+
+
+def spoonacular_recipe_id(recipe):
+    recipe_id = recipe.get("id")
+    return str(recipe_id) if recipe_id else ""
+
+
+def spoonacular_text_for_restrictions(recipe):
     return " ".join(
         [
-            meal.get("strMeal") or "",
-            meal.get("strCategory") or "",
-            meal.get("strArea") or "",
-            " ".join(ingredient["display"] for ingredient in mealdb_ingredients(meal)),
+            recipe.get("title") or "",
+            " ".join(recipe.get("dishTypes") or []),
+            " ".join(spoonacular_cuisines(recipe)),
+            " ".join(ingredient["display"] for ingredient in spoonacular_ingredients(recipe)),
         ]
     )
 
 
-def mealdb_respects_restrictions(meal, dietary_restrictions):
+def spoonacular_respects_restrictions(recipe, dietary_restrictions):
     if not dietary_restrictions:
         return True
-    meal_text = mealdb_text_for_restrictions(meal)
+    meal_text = spoonacular_text_for_restrictions(recipe)
     return not any(
         restriction_pattern.search(dietary_restrictions)
         and ingredient_pattern.search(meal_text)
@@ -1230,87 +1267,83 @@ def mealdb_respects_restrictions(meal, dietary_restrictions):
     )
 
 
-def search_mealdb_meals(query):
+def search_spoonacular_recipes(query, cuisine=None, dietary_restrictions=""):
     normalized_query = re.sub(r"\s+", " ", query or "").strip()
-    if not normalized_query:
+    if not normalized_query and not cuisine:
         return []
 
-    cache_key = normalized_query.casefold()
-    cached = mealdb_search_cache.get(cache_key)
+    cache_key = (
+        normalized_query.casefold(),
+        (cuisine or "").casefold(),
+        normalize_cuisine_text(dietary_restrictions),
+    )
+    cached = spoonacular_search_cache.get(cache_key)
     if cached is not None:
         return cached
 
-    data = fetch_mealdb_json("search.php", {"s": normalized_query})
-    meals = data.get("meals") or []
-    mealdb_search_cache[cache_key] = meals
-    return meals
+    params = {
+        "query": normalized_query,
+        "number": 12,
+        "addRecipeInformation": "true",
+        "fillIngredients": "true",
+        "instructionsRequired": "true",
+    }
+    if cuisine:
+        params["cuisine"] = cuisine
+    intolerances = spoonacular_intolerances_from_restrictions(dietary_restrictions)
+    if intolerances:
+        params["intolerances"] = intolerances
+
+    data = fetch_spoonacular_json("recipes/complexSearch", params)
+    recipes = data.get("results") or []
+    spoonacular_search_cache[cache_key] = recipes
+    return recipes
 
 
-def lookup_mealdb_meal(meal_id):
-    if not meal_id:
+def lookup_spoonacular_recipe(recipe_id):
+    recipe_id = str(recipe_id or "")
+    if not recipe_id:
         return None
-    cached = mealdb_lookup_cache.get(meal_id)
+    cached = spoonacular_lookup_cache.get(recipe_id)
     if cached is not None:
         return cached
 
-    data = fetch_mealdb_json("lookup.php", {"i": meal_id})
-    meals = data.get("meals") or []
-    meal = meals[0] if meals else None
-    mealdb_lookup_cache[meal_id] = meal
-    return meal
+    recipe = fetch_spoonacular_json(
+        f"recipes/{recipe_id}/information",
+        {"includeNutrition": "false"},
+    )
+    spoonacular_lookup_cache[recipe_id] = recipe
+    return recipe
 
 
-def list_mealdb_areas():
-    global mealdb_area_cache
-    if mealdb_area_cache is not None:
-        return mealdb_area_cache
-
-    data = fetch_mealdb_json("list.php", {"a": "list"})
-    mealdb_area_cache = [
-        area.get("strArea")
-        for area in data.get("meals") or []
-        if area.get("strArea")
-    ]
-    return mealdb_area_cache
-
-
-def filter_mealdb_meals_by_area(area):
-    if not area:
-        return []
-    cached = mealdb_area_meals_cache.get(area)
-    if cached is not None:
-        return cached
-
-    data = fetch_mealdb_json("filter.php", {"a": area})
-    meals = data.get("meals") or []
-    mealdb_area_meals_cache[area] = meals
-    return meals
-
-
-def fetch_random_mealdb_meal(dietary_restrictions, used_ids):
+def fetch_random_spoonacular_recipe(dietary_restrictions, used_ids):
+    params = {"number": 1, "include-tags": "main course"}
+    intolerances = spoonacular_intolerances_from_restrictions(dietary_restrictions)
+    if intolerances:
+        params["intolerances"] = intolerances
     for _ in range(18):
-        data = fetch_mealdb_json("random.php")
-        meals = data.get("meals") or []
-        if not meals:
+        data = fetch_spoonacular_json("recipes/random", params)
+        recipes = data.get("recipes") or []
+        if not recipes:
             continue
-        meal = meals[0]
-        meal_id = meal.get("idMeal")
+        recipe = recipes[0]
+        recipe_id = spoonacular_recipe_id(recipe)
         if (
-            meal_id
-            and meal_id not in used_ids
-            and mealdb_ingredients(meal)
-            and mealdb_respects_restrictions(meal, dietary_restrictions)
+            recipe_id
+            and recipe_id not in used_ids
+            and spoonacular_ingredients(recipe)
+            and spoonacular_respects_restrictions(recipe, dietary_restrictions)
         ):
-            return meal
+            return recipe
     return None
 
 
-def mealdb_prompt_terms(meal_prompt):
+def spoonacular_prompt_terms(meal_prompt):
     prompt = re.sub(r"[^a-zA-Z0-9\s]", " ", meal_prompt or "")
     words = [
         word.casefold()
         for word in prompt.split()
-        if len(word) > 2 and word.casefold() not in MEALDB_SEARCH_STOPWORDS
+        if len(word) > 2 and word.casefold() not in RECIPE_SEARCH_STOPWORDS
     ]
     terms = [meal_prompt]
     terms.extend(words[:5])
@@ -1321,85 +1354,83 @@ def normalize_cuisine_text(value):
     return re.sub(r"[^a-z0-9]+", " ", (value or "").casefold()).strip()
 
 
-def detect_requested_mealdb_area(meal_prompt):
+def detect_requested_spoonacular_cuisine(meal_prompt):
     prompt_text = f" {normalize_cuisine_text(meal_prompt)} "
     for alias, area in sorted(
-        MEALDB_AREA_ALIASES.items(), key=lambda item: len(item[0]), reverse=True
+        RECIPE_CUISINE_ALIASES.items(), key=lambda item: len(item[0]), reverse=True
     ):
         if re.search(rf"\b{re.escape(alias)}\b", prompt_text):
-            return area
-
-    for area in list_mealdb_areas():
-        normalized_area = normalize_cuisine_text(area)
-        if re.search(rf"\b{re.escape(normalized_area)}\b", prompt_text):
-            return area
+            return "American" if area == "United States" else area
     return None
 
 
-def mealdb_prompt_score(meal, meal_prompt):
-    meal_words = normalized_food_words(meal.get("strMeal"))
+def spoonacular_prompt_score(recipe, meal_prompt):
+    recipe_words = normalized_food_words(recipe.get("title"))
     prompt_words = {
         word
         for word in normalized_food_words(meal_prompt)
-        if word not in MEALDB_SEARCH_STOPWORDS
+        if word not in RECIPE_SEARCH_STOPWORDS
     }
-    score = len(meal_words & prompt_words)
-    meal_text = mealdb_normalized_search_text(meal)
-    for meal_type, terms in MEALDB_MEAL_TYPE_HINTS.items():
+    score = len(recipe_words & prompt_words)
+    meal_text = spoonacular_normalized_search_text(recipe)
+    for meal_type, terms in RECIPE_MEAL_TYPE_HINTS.items():
         if re.search(rf"\b{meal_type}\b", meal_prompt, re.I):
             score += sum(2 for term in terms if term in meal_text)
     if re.search(r"\bdinner\b", meal_prompt, re.I):
-        score -= sum(3 for term in MEALDB_NON_DINNER_TERMS if term in meal_text)
+        score -= sum(3 for term in RECIPE_NON_DINNER_TERMS if term in meal_text)
     return score
 
 
-def requested_mealdb_ingredient_groups(meal_prompt):
+def requested_spoonacular_ingredient_groups(meal_prompt):
     prompt_words = normalized_food_words(meal_prompt)
     requested = []
-    for ingredient, aliases in MEALDB_REQUEST_INGREDIENTS.items():
+    for ingredient, aliases in RECIPE_REQUEST_INGREDIENTS.items():
         ingredient_words = normalized_food_words(ingredient)
         if prompt_words & ingredient_words:
             requested.append((ingredient, aliases))
     return requested
 
 
-def is_generic_mealdb_prompt(meal_prompt):
+def is_generic_spoonacular_prompt(meal_prompt):
     prompt_words = normalized_food_words(meal_prompt)
-    return bool(prompt_words) and prompt_words <= MEALDB_GENERIC_PROMPT_WORDS
+    return bool(prompt_words) and prompt_words <= RECIPE_GENERIC_PROMPT_WORDS
 
 
-def mealdb_normalized_search_text(meal):
+def spoonacular_normalized_search_text(recipe):
     return normalize_cuisine_text(
         " ".join(
             [
-                meal.get("strMeal") or "",
-                meal.get("strCategory") or "",
-                meal.get("strArea") or "",
-                " ".join(ingredient["name"] for ingredient in mealdb_ingredients(meal)),
+                recipe.get("title") or "",
+                " ".join(recipe.get("dishTypes") or []),
+                " ".join(spoonacular_cuisines(recipe)),
+                " ".join(ingredient["name"] for ingredient in spoonacular_ingredients(recipe)),
             ]
         )
     )
 
 
-def mealdb_matches_requested_ingredients(meal, requested_ingredient_groups):
+def spoonacular_matches_requested_ingredients(recipe, requested_ingredient_groups):
     if not requested_ingredient_groups:
         return True
-    meal_text = f" {mealdb_normalized_search_text(meal)} "
+    meal_text = f" {spoonacular_normalized_search_text(recipe)} "
     return all(
-        mealdb_matches_requested_ingredient(meal, ingredient, aliases, meal_text)
+        spoonacular_matches_requested_ingredient(recipe, ingredient, aliases, meal_text)
         for ingredient, aliases in requested_ingredient_groups
     )
 
 
-def mealdb_matches_requested_ingredient(meal, ingredient, aliases, meal_text):
+def spoonacular_matches_requested_ingredient(recipe, ingredient, aliases, meal_text):
     if ingredient in {"beef", "chicken", "fish", "pork", "shrimp", "tuna", "salmon"}:
-        primary_text = f" {normalize_cuisine_text(meal.get('strMeal'))} {normalize_cuisine_text(meal.get('strCategory'))} "
+        primary_text = (
+            f" {normalize_cuisine_text(recipe.get('title'))} "
+            f"{normalize_cuisine_text(' '.join(recipe.get('dishTypes') or []))} "
+        )
         if any(
             re.search(rf"\b{re.escape(normalize_cuisine_text(alias))}\b", primary_text)
             for alias in aliases
         ):
             return True
-        for recipe_ingredient in mealdb_ingredients(meal)[:5]:
+        for recipe_ingredient in spoonacular_ingredients(recipe)[:5]:
             ingredient_name = normalize_cuisine_text(recipe_ingredient["name"])
             if re.search(r"\b(stock|broth|bouillon|extract|flavouring|flavoring)\b", ingredient_name):
                 continue
@@ -1416,74 +1447,80 @@ def mealdb_matches_requested_ingredient(meal, ingredient, aliases, meal_text):
     )
 
 
-def mealdb_matches_meal_type(meal, meal_prompt):
+def spoonacular_matches_meal_type(recipe, meal_prompt):
     if not re.search(r"\bdinner\b", meal_prompt or "", re.I):
         return True
-    meal_text = mealdb_normalized_search_text(meal)
-    category = normalize_cuisine_text(meal.get("strCategory"))
-    if category in {"breakfast", "dessert", "side", "starter"}:
+    meal_text = spoonacular_normalized_search_text(recipe)
+    dish_types = {normalize_cuisine_text(value) for value in recipe.get("dishTypes") or []}
+    if dish_types & {"breakfast", "dessert", "side dish", "starter", "appetizer"}:
         return False
     return not any(
         re.search(rf"\b{re.escape(term)}\b", meal_text)
-        for term in MEALDB_NON_DINNER_TERMS
+        for term in RECIPE_NON_DINNER_TERMS
     )
 
 
-def mealdb_candidates_for_prompt(meal_prompt):
+def spoonacular_candidates_for_prompt(meal_prompt, dietary_restrictions):
     candidates = []
     seen_ids = set()
-    for term in mealdb_prompt_terms(meal_prompt):
-        for meal in search_mealdb_meals(term):
-            meal_id = meal.get("idMeal")
-            if meal_id and meal_id not in seen_ids:
-                candidates.append(meal)
-                seen_ids.add(meal_id)
+    for term in spoonacular_prompt_terms(meal_prompt):
+        for recipe in search_spoonacular_recipes(term, dietary_restrictions=dietary_restrictions):
+            recipe_id = spoonacular_recipe_id(recipe)
+            if recipe_id and recipe_id not in seen_ids:
+                candidates.append(recipe)
+                seen_ids.add(recipe_id)
     return candidates
 
 
-def mealdb_candidates_for_area(area, meal_prompt):
-    candidates = []
-    for summary in filter_mealdb_meals_by_area(area):
-        meal = lookup_mealdb_meal(summary.get("idMeal"))
-        if meal:
-            candidates.append(meal)
+def spoonacular_candidates_for_cuisine(cuisine, meal_prompt, dietary_restrictions):
+    candidates = search_spoonacular_recipes(
+        meal_prompt,
+        cuisine=cuisine,
+        dietary_restrictions=dietary_restrictions,
+    )
+    for recipe in candidates:
+        recipe.setdefault("_snapp_requested_cuisine", cuisine)
     random.shuffle(candidates)
     return sorted(
         candidates,
-        key=lambda meal: mealdb_prompt_score(meal, meal_prompt),
+        key=lambda recipe: spoonacular_prompt_score(recipe, meal_prompt),
         reverse=True,
     )
 
 
-def mealdb_diverse_area_candidates(meal_prompt, already_seen_ids, max_candidates=8):
+def spoonacular_diverse_cuisine_candidates(meal_prompt, dietary_restrictions, already_seen_ids, max_candidates=8):
     candidates = []
-    areas = list(MEALDB_DIVERSE_AREA_ORDER)
+    areas = list(RECIPE_DIVERSE_CUISINE_ORDER)
     random.shuffle(areas)
     for area in areas:
         if len(candidates) >= max_candidates:
             break
-        area_candidates = []
-        summaries = filter_mealdb_meals_by_area(area)
-        random.shuffle(summaries)
-        for summary in summaries[:6]:
-            meal_id = summary.get("idMeal")
-            if not meal_id or meal_id in already_seen_ids:
+        cuisine = "American" if area == "United States" else area
+        area_candidates = search_spoonacular_recipes(
+            meal_prompt,
+            cuisine=cuisine,
+            dietary_restrictions=dietary_restrictions,
+        )
+        for recipe in area_candidates:
+            recipe.setdefault("_snapp_requested_cuisine", cuisine)
+        random.shuffle(area_candidates)
+        viable_recipes = []
+        for recipe in area_candidates[:8]:
+            recipe_id = spoonacular_recipe_id(recipe)
+            if not recipe_id or recipe_id in already_seen_ids:
                 continue
-            meal = lookup_mealdb_meal(meal_id)
-            if not meal:
-                continue
-            area_candidates.append(meal)
-        viable_meals = [
-            meal
-            for meal in area_candidates
-            if mealdb_matches_meal_type(meal, meal_prompt)
-        ] or area_candidates
-        if viable_meals:
-            random.shuffle(viable_meals)
+            viable_recipes.append(recipe)
+        viable_recipes = [
+            recipe
+            for recipe in viable_recipes
+            if spoonacular_matches_meal_type(recipe, meal_prompt)
+        ] or viable_recipes
+        if viable_recipes:
+            random.shuffle(viable_recipes)
             candidates.append(
                 sorted(
-                    viable_meals[:8],
-                    key=lambda meal: mealdb_prompt_score(meal, meal_prompt),
+                    viable_recipes[:8],
+                    key=lambda recipe: spoonacular_prompt_score(recipe, meal_prompt),
                     reverse=True,
                 )[0]
             )
@@ -1507,11 +1544,11 @@ def normalized_recipe_name(value):
 def product_matches_recipe_ingredient(product, recipe_ingredient):
     product_ingredient = product.get("ingredient") or ""
     product_terms = {product_ingredient.casefold()}
-    product_terms.update(MEALDB_INGREDIENT_ALIASES.get(product_ingredient.casefold(), set()))
+    product_terms.update(RECIPE_INGREDIENT_ALIASES.get(product_ingredient.casefold(), set()))
 
     recipe_text = recipe_ingredient.casefold()
     recipe_terms = {recipe_text}
-    recipe_terms.update(MEALDB_INGREDIENT_ALIASES.get(recipe_text, set()))
+    recipe_terms.update(RECIPE_INGREDIENT_ALIASES.get(recipe_text, set()))
 
     if any(
         product_term in recipe_text or recipe_term in product_ingredient.casefold()
@@ -1526,10 +1563,10 @@ def product_matches_recipe_ingredient(product, recipe_ingredient):
     )
 
 
-def match_recipe_ingredients_to_products(meal, products):
+def match_recipe_ingredients_to_products(recipe, products):
     matches = []
     used_product_ids = set()
-    for ingredient in mealdb_ingredients(meal):
+    for ingredient in spoonacular_ingredients(recipe):
         eligible_products = [
             product
             for product in products
@@ -1544,7 +1581,7 @@ def match_recipe_ingredients_to_products(meal, products):
     return matches
 
 
-def mealdb_meal_to_demo_dish(meal, matched_products, stores, household_size):
+def spoonacular_recipe_to_demo_dish(recipe, matched_products, stores, household_size):
     ingredient_lines = []
     total_calories = 0
     total_price = 0
@@ -1595,7 +1632,7 @@ def mealdb_meal_to_demo_dish(meal, matched_products, stores, household_size):
             }
         )
 
-    recipe = mealdb_recipe_from_meal(meal)
+    recipe = spoonacular_recipe_from_recipe(recipe)
     return {
         "name": recipe["name"],
         "servings": household_size,
@@ -1613,67 +1650,69 @@ def mealdb_meal_to_demo_dish(meal, matched_products, stores, household_size):
         },
         "ingredients": ingredient_lines,
         "ingredients_to_buy": ingredient_lines,
-        "portion_note": f"Recipe from TheMealDB. Grocery matches are from the SNAPP demo grocery database.",
+        "portion_note": f"Recipe from Spoonacular. Grocery matches are from the SNAPP demo grocery database.",
         "method": recipe["instructions"],
         "recipe": recipe,
-        "mealdb_id": recipe["id"],
-        "mealdb_source": recipe["source"],
+        "recipe_id": recipe["id"],
+        "recipe_source": recipe["source"],
+        "spoonacular_id": recipe["id"],
+        "spoonacular_source": recipe["source"],
     }
 
 
-def build_mealdb_demo_grocery_dishes(
+def build_spoonacular_demo_grocery_dishes(
     meal_prompt, household_size, dietary_restrictions, products, stores
 ):
     dishes = []
     used_ids = set()
     used_areas = set()
     used_recipe_names = set()
-    requested_area = detect_requested_mealdb_area(meal_prompt)
-    requested_ingredient_groups = requested_mealdb_ingredient_groups(meal_prompt)
+    requested_area = detect_requested_spoonacular_cuisine(meal_prompt)
+    requested_ingredient_groups = requested_spoonacular_ingredient_groups(meal_prompt)
     is_generic_prompt = (
         not requested_area
         and not requested_ingredient_groups
-        and is_generic_mealdb_prompt(meal_prompt)
+        and is_generic_spoonacular_prompt(meal_prompt)
     )
 
-    def try_add_meal(meal, minimum_matches, require_new_area=False):
-        meal_id = meal.get("idMeal")
-        meal_area = meal.get("strArea") or ""
-        recipe_name = normalized_recipe_name(meal.get("strMeal"))
-        if not meal_id or meal_id in used_ids:
+    def try_add_recipe(recipe, minimum_matches, require_new_area=False):
+        recipe_id = spoonacular_recipe_id(recipe)
+        meal_area = spoonacular_cuisine_label(recipe)
+        recipe_name = normalized_recipe_name(recipe.get("title"))
+        if not recipe_id or recipe_id in used_ids:
             return False
         if recipe_name in used_recipe_names:
             return False
-        if requested_area and meal_area != requested_area:
+        if requested_area and meal_area and meal_area != requested_area:
             return False
         if require_new_area and not meal_area:
             return False
         if require_new_area and meal_area in used_areas:
             return False
-        if not mealdb_ingredients(meal):
+        if not spoonacular_ingredients(recipe):
             return False
-        if not mealdb_matches_requested_ingredients(
-            meal, requested_ingredient_groups
+        if not spoonacular_matches_requested_ingredients(
+            recipe, requested_ingredient_groups
         ):
             return False
-        if not mealdb_matches_meal_type(meal, meal_prompt):
+        if not spoonacular_matches_meal_type(recipe, meal_prompt):
             return False
-        if not mealdb_respects_restrictions(meal, dietary_restrictions):
+        if not spoonacular_respects_restrictions(recipe, dietary_restrictions):
             return False
-        matches = match_recipe_ingredients_to_products(meal, products)
+        matches = match_recipe_ingredients_to_products(recipe, products)
         if len(matches) < minimum_matches:
             return False
-        dishes.append(mealdb_meal_to_demo_dish(meal, matches, stores, household_size))
-        used_ids.add(meal_id)
+        dishes.append(spoonacular_recipe_to_demo_dish(recipe, matches, stores, household_size))
+        used_ids.add(recipe_id)
         used_recipe_names.add(recipe_name)
         if meal_area:
             used_areas.add(meal_area)
         return True
 
     candidates = (
-        mealdb_candidates_for_area(requested_area, meal_prompt)
+        spoonacular_candidates_for_cuisine(requested_area, meal_prompt, dietary_restrictions)
         if requested_area
-        else [] if is_generic_prompt else mealdb_candidates_for_prompt(meal_prompt)
+        else [] if is_generic_prompt else spoonacular_candidates_for_prompt(meal_prompt, dietary_restrictions)
     )
 
     candidate_passes = (
@@ -1682,15 +1721,15 @@ def build_mealdb_demo_grocery_dishes(
         else [(2, True), (1, True), (0, True)]
     )
     for minimum_matches, require_new_area in candidate_passes:
-        for meal in candidates:
+        for recipe in candidates:
             if len(dishes) == 3:
                 return dishes
-            try_add_meal(meal, minimum_matches, require_new_area)
+            try_add_recipe(recipe, minimum_matches, require_new_area)
 
     if requested_area:
         if len(dishes) != 3:
             raise RuntimeError(
-                f"TheMealDB could not provide 3 {requested_area} recipe-backed dishes."
+                f"Spoonacular could not provide 3 {requested_area} recipe-backed dishes."
             )
         return dishes
 
@@ -1699,16 +1738,16 @@ def build_mealdb_demo_grocery_dishes(
             for _ in range(24):
                 if len(dishes) == 3:
                     return dishes
-                meal = fetch_random_mealdb_meal(dietary_restrictions, used_ids)
-                if meal:
-                    try_add_meal(meal, minimum_matches, True)
+                recipe = fetch_random_spoonacular_recipe(dietary_restrictions, used_ids)
+                if recipe:
+                    try_add_recipe(recipe, minimum_matches, True)
 
-    diverse_candidates = mealdb_diverse_area_candidates(meal_prompt, used_ids)
+    diverse_candidates = spoonacular_diverse_cuisine_candidates(meal_prompt, dietary_restrictions, used_ids)
     for minimum_matches in (2, 1, 0):
-        for meal in diverse_candidates:
+        for recipe in diverse_candidates:
             if len(dishes) == 3:
                 return dishes
-            try_add_meal(meal, minimum_matches, True)
+            try_add_recipe(recipe, minimum_matches, True)
 
     for minimum_matches, require_new_area in (
         (2, True),
@@ -1718,27 +1757,58 @@ def build_mealdb_demo_grocery_dishes(
         for _ in range(36):
             if len(dishes) == 3:
                 return dishes
-            meal = fetch_random_mealdb_meal(dietary_restrictions, used_ids)
-            if meal:
-                try_add_meal(meal, minimum_matches, require_new_area)
+            recipe = fetch_random_spoonacular_recipe(dietary_restrictions, used_ids)
+            if recipe:
+                try_add_recipe(recipe, minimum_matches, require_new_area)
 
     if len(dishes) != 3:
-        raise RuntimeError("TheMealDB could not provide 3 recipe-backed dishes.")
+        raise RuntimeError("Spoonacular could not provide 3 recipe-backed dishes.")
     return dishes
 
 
-def mealdb_recipe_from_meal(meal):
-    instructions = re.sub(r"\s+", " ", meal.get("strInstructions") or "").strip()
+def spoonacular_intolerances_from_restrictions(dietary_restrictions):
+    restriction_text = dietary_restrictions or ""
+    intolerances = []
+    if re.search(r"\b(dairy|milk|lactose)\b", restriction_text, re.I):
+        intolerances.append("dairy")
+    if re.search(r"\b(gluten|wheat|celiac|coeliac)\b", restriction_text, re.I):
+        intolerances.append("gluten")
+    if re.search(r"\b(peanut|peanuts)\b", restriction_text, re.I):
+        intolerances.append("peanut")
+    if re.search(r"\b(tree nuts?|nuts?|almond|cashew|walnut|pecan)\b", restriction_text, re.I):
+        intolerances.append("tree nut")
+    if re.search(r"\b(shellfish|shrimp|crab|lobster)\b", restriction_text, re.I):
+        intolerances.append("shellfish")
+    if re.search(r"\b(egg|eggs)\b", restriction_text, re.I):
+        intolerances.append("egg")
+    if re.search(r"\b(soy|soya)\b", restriction_text, re.I):
+        intolerances.append("soy")
+    return ",".join(dict.fromkeys(intolerances))
+
+
+def spoonacular_instructions(recipe):
+    steps = []
+    for instruction_group in recipe.get("analyzedInstructions") or []:
+        for step in instruction_group.get("steps") or []:
+            text = spoonacular_recipe_text(step.get("step"))
+            if text:
+                steps.append(text)
+    if steps:
+        return " ".join(f"{index}. {step}" for index, step in enumerate(steps, start=1))
+    return spoonacular_recipe_text(recipe.get("instructions") or recipe.get("summary"))
+
+
+def spoonacular_recipe_from_recipe(recipe):
     return {
-        "id": meal.get("idMeal"),
-        "name": meal.get("strMeal"),
-        "category": meal.get("strCategory"),
-        "area": meal.get("strArea"),
-        "instructions": instructions,
-        "ingredients": mealdb_ingredients(meal),
-        "thumbnail": meal.get("strMealThumb"),
-        "youtube": meal.get("strYoutube"),
-        "source": meal.get("strSource") or f"https://www.themealdb.com/meal/{meal.get('idMeal')}",
+        "id": spoonacular_recipe_id(recipe),
+        "name": recipe.get("title"),
+        "category": (recipe.get("dishTypes") or [None])[0],
+        "area": spoonacular_cuisine_label(recipe) or None,
+        "instructions": spoonacular_instructions(recipe),
+        "ingredients": spoonacular_ingredients(recipe),
+        "thumbnail": recipe.get("image"),
+        "youtube": None,
+        "source": recipe.get("sourceUrl") or recipe.get("spoonacularSourceUrl"),
     }
 
 
@@ -2084,7 +2154,7 @@ def dishes():
         grocery_db = load_demo_grocery_db()
         stores = demo_store_lookup(grocery_db)
         products = available_demo_products(grocery_db)
-        dishes = build_mealdb_demo_grocery_dishes(
+        dishes = build_spoonacular_demo_grocery_dishes(
             meal_prompt, household_size, dietary_restrictions, products, stores
         )
     except RuntimeError as exc:
@@ -2105,7 +2175,7 @@ def dishes():
             ],
             "missing_ingredients": [],
             "dishes": dishes,
-            "source": "SNAPP demo grocery database and TheMealDB",
+            "source": "SNAPP demo grocery database and Spoonacular",
         }
     )
 
