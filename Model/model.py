@@ -37,6 +37,8 @@ SPOONACULAR_API_KEY = os.getenv("SPOONACULAR_API_KEY", "")
 SPOONACULAR_BASE_URL = os.getenv(
     "SPOONACULAR_BASE_URL", "https://api.spoonacular.com"
 ).rstrip("/")
+SPOONACULAR_SEARCH_RESULT_COUNT = 24
+SPOONACULAR_RANDOM_RESULT_COUNT = 24
 HTTP_TIMEOUT_SECONDS = 20
 HTTP_RETRY_ATTEMPTS = 2
 USER_AGENT = "SNAPP/1.0 (https://github.com/KittCoder/Snapp)"
@@ -244,24 +246,6 @@ RECIPE_CUISINE_ALIASES = {
     "u k": "British",
     "united kingdom": "British",
 }
-RECIPE_DIVERSE_CUISINE_ORDER = (
-    "Mexican",
-    "Italian",
-    "Indian",
-    "Chinese",
-    "Japanese",
-    "Thai",
-    "Moroccan",
-    "Greek",
-    "Spanish",
-    "Vietnamese",
-    "Jamaican",
-    "Turkish",
-    "Canadian",
-    "United States",
-    "British",
-    "French",
-)
 DEFAULT_PRICE_PER_100G = 0.55
 PRICE_PER_100G_RULES = (
     (r"\b(lamb)\b", 1.75),
@@ -1240,6 +1224,22 @@ def spoonacular_cuisine_label(recipe):
     return (spoonacular_cuisines(recipe) or [recipe.get("_snapp_requested_cuisine") or ""])[0]
 
 
+def normalized_spoonacular_cuisine(value):
+    normalized = normalize_cuisine_text(value)
+    return "american" if normalized == "united states" else normalized
+
+
+def spoonacular_matches_requested_cuisine(recipe, requested_cuisine):
+    if not requested_cuisine:
+        return True
+
+    requested = normalized_spoonacular_cuisine(requested_cuisine)
+    return any(
+        normalized_spoonacular_cuisine(cuisine) == requested
+        for cuisine in spoonacular_cuisines(recipe)
+    )
+
+
 def spoonacular_recipe_id(recipe):
     recipe_id = recipe.get("id")
     return str(recipe_id) if recipe_id else ""
@@ -1267,7 +1267,13 @@ def spoonacular_respects_restrictions(recipe, dietary_restrictions):
     )
 
 
-def search_spoonacular_recipes(query, cuisine=None, dietary_restrictions=""):
+def search_spoonacular_recipes(
+    query,
+    cuisine=None,
+    dietary_restrictions="",
+    number=SPOONACULAR_SEARCH_RESULT_COUNT,
+    sort=None,
+):
     normalized_query = re.sub(r"\s+", " ", query or "").strip()
     if not normalized_query and not cuisine:
         return []
@@ -1276,6 +1282,8 @@ def search_spoonacular_recipes(query, cuisine=None, dietary_restrictions=""):
         normalized_query.casefold(),
         (cuisine or "").casefold(),
         normalize_cuisine_text(dietary_restrictions),
+        int(number),
+        sort or "",
     )
     cached = spoonacular_search_cache.get(cache_key)
     if cached is not None:
@@ -1283,19 +1291,24 @@ def search_spoonacular_recipes(query, cuisine=None, dietary_restrictions=""):
 
     params = {
         "query": normalized_query,
-        "number": 12,
+        "number": number,
         "addRecipeInformation": "true",
         "fillIngredients": "true",
         "instructionsRequired": "true",
     }
     if cuisine:
         params["cuisine"] = cuisine
+    if sort:
+        params["sort"] = sort
     intolerances = spoonacular_intolerances_from_restrictions(dietary_restrictions)
     if intolerances:
         params["intolerances"] = intolerances
 
     data = fetch_spoonacular_json("recipes/complexSearch", params)
     recipes = data.get("results") or []
+    if cuisine:
+        for recipe in recipes:
+            recipe.setdefault("_snapp_requested_cuisine", cuisine)
     spoonacular_search_cache[cache_key] = recipes
     return recipes
 
@@ -1316,38 +1329,36 @@ def lookup_spoonacular_recipe(recipe_id):
     return recipe
 
 
-def fetch_random_spoonacular_recipe(dietary_restrictions, used_ids):
-    params = {"number": 1, "include-tags": "main course"}
+def fetch_random_spoonacular_recipes(
+    dietary_restrictions,
+    used_ids=None,
+    cuisine=None,
+    number=SPOONACULAR_RANDOM_RESULT_COUNT,
+):
+    include_tags = ["main course"]
+    if cuisine:
+        include_tags.append(cuisine)
+    params = {"number": number, "include-tags": ",".join(include_tags)}
     intolerances = spoonacular_intolerances_from_restrictions(dietary_restrictions)
     if intolerances:
         params["intolerances"] = intolerances
-    for _ in range(18):
-        data = fetch_spoonacular_json("recipes/random", params)
-        recipes = data.get("recipes") or []
-        if not recipes:
-            continue
-        recipe = recipes[0]
+    data = fetch_spoonacular_json("recipes/random", params)
+    recipes = data.get("recipes") or []
+    filtered_recipes = []
+    seen_ids = set(used_ids or set())
+    for recipe in recipes:
         recipe_id = spoonacular_recipe_id(recipe)
+        if cuisine:
+            recipe.setdefault("_snapp_requested_cuisine", cuisine)
         if (
             recipe_id
-            and recipe_id not in used_ids
+            and recipe_id not in seen_ids
             and spoonacular_ingredients(recipe)
             and spoonacular_respects_restrictions(recipe, dietary_restrictions)
         ):
-            return recipe
-    return None
-
-
-def spoonacular_prompt_terms(meal_prompt):
-    prompt = re.sub(r"[^a-zA-Z0-9\s]", " ", meal_prompt or "")
-    words = [
-        word.casefold()
-        for word in prompt.split()
-        if len(word) > 2 and word.casefold() not in RECIPE_SEARCH_STOPWORDS
-    ]
-    terms = [meal_prompt]
-    terms.extend(words[:5])
-    return list(dict.fromkeys(term.strip() for term in terms if term and term.strip()))
+            filtered_recipes.append(recipe)
+            seen_ids.add(recipe_id)
+    return filtered_recipes
 
 
 def normalize_cuisine_text(value):
@@ -1460,15 +1471,60 @@ def spoonacular_matches_meal_type(recipe, meal_prompt):
     )
 
 
+def spoonacular_diversity_key(recipe):
+    cuisine = spoonacular_cuisine_label(recipe)
+    if cuisine:
+        return f"cuisine:{normalized_spoonacular_cuisine(cuisine)}"
+
+    title = normalize_cuisine_text(recipe.get("title"))
+    for term in (
+        "bowl",
+        "soup",
+        "stew",
+        "salad",
+        "sandwich",
+        "wrap",
+        "taco",
+        "tacos",
+        "pasta",
+        "curry",
+        "casserole",
+        "stir fry",
+        "skillet",
+        "roast",
+        "burger",
+        "pizza",
+    ):
+        if re.search(rf"\b{re.escape(term)}\b", title):
+            return f"style:{term}"
+
+    dish_types = [
+        normalize_cuisine_text(value)
+        for value in recipe.get("dishTypes") or []
+        if normalize_cuisine_text(value)
+    ]
+    if dish_types:
+        return f"type:{dish_types[0]}"
+
+    title_words = [
+        word
+        for word in title.split()
+        if word not in RECIPE_SEARCH_STOPWORDS
+    ]
+    return f"title:{' '.join(title_words[:2])}" if title_words else ""
+
+
 def spoonacular_candidates_for_prompt(meal_prompt, dietary_restrictions):
     candidates = []
     seen_ids = set()
-    for term in spoonacular_prompt_terms(meal_prompt):
-        for recipe in search_spoonacular_recipes(term, dietary_restrictions=dietary_restrictions):
-            recipe_id = spoonacular_recipe_id(recipe)
-            if recipe_id and recipe_id not in seen_ids:
-                candidates.append(recipe)
-                seen_ids.add(recipe_id)
+    for recipe in search_spoonacular_recipes(
+        meal_prompt,
+        dietary_restrictions=dietary_restrictions,
+    ):
+        recipe_id = spoonacular_recipe_id(recipe)
+        if recipe_id and recipe_id not in seen_ids:
+            candidates.append(recipe)
+            seen_ids.add(recipe_id)
     return candidates
 
 
@@ -1488,28 +1544,26 @@ def spoonacular_candidates_for_cuisine(cuisine, meal_prompt, dietary_restriction
     )
 
 
-def spoonacular_diverse_cuisine_candidates(meal_prompt, dietary_restrictions, already_seen_ids, max_candidates=8):
+def spoonacular_diverse_cuisine_candidates(meal_prompt, source_candidates, already_seen_ids, max_candidates=8):
     candidates = []
-    areas = list(RECIPE_DIVERSE_CUISINE_ORDER)
-    random.shuffle(areas)
-    for area in areas:
+    recipes_by_cuisine = {}
+    uncategorized = []
+    for recipe in source_candidates:
+        recipe_id = spoonacular_recipe_id(recipe)
+        if not recipe_id or recipe_id in already_seen_ids:
+            continue
+        cuisine = spoonacular_cuisine_label(recipe)
+        if cuisine:
+            recipes_by_cuisine.setdefault(cuisine, []).append(recipe)
+        else:
+            uncategorized.append(recipe)
+
+    cuisine_order = list(recipes_by_cuisine)
+    random.shuffle(cuisine_order)
+    for cuisine in cuisine_order:
         if len(candidates) >= max_candidates:
             break
-        cuisine = "American" if area == "United States" else area
-        area_candidates = search_spoonacular_recipes(
-            meal_prompt,
-            cuisine=cuisine,
-            dietary_restrictions=dietary_restrictions,
-        )
-        for recipe in area_candidates:
-            recipe.setdefault("_snapp_requested_cuisine", cuisine)
-        random.shuffle(area_candidates)
-        viable_recipes = []
-        for recipe in area_candidates[:8]:
-            recipe_id = spoonacular_recipe_id(recipe)
-            if not recipe_id or recipe_id in already_seen_ids:
-                continue
-            viable_recipes.append(recipe)
+        viable_recipes = list(recipes_by_cuisine[cuisine])
         viable_recipes = [
             recipe
             for recipe in viable_recipes
@@ -1524,6 +1578,10 @@ def spoonacular_diverse_cuisine_candidates(meal_prompt, dietary_restrictions, al
                     reverse=True,
                 )[0]
             )
+
+    if len(candidates) < max_candidates and uncategorized:
+        random.shuffle(uncategorized)
+        candidates.extend(uncategorized[: max_candidates - len(candidates)])
     return candidates
 
 
@@ -1666,6 +1724,7 @@ def build_spoonacular_demo_grocery_dishes(
     dishes = []
     used_ids = set()
     used_areas = set()
+    used_diversity_keys = set()
     used_recipe_names = set()
     requested_area = detect_requested_spoonacular_cuisine(meal_prompt)
     requested_ingredient_groups = requested_spoonacular_ingredient_groups(meal_prompt)
@@ -1678,16 +1737,22 @@ def build_spoonacular_demo_grocery_dishes(
     def try_add_recipe(recipe, minimum_matches, require_new_area=False):
         recipe_id = spoonacular_recipe_id(recipe)
         meal_area = spoonacular_cuisine_label(recipe)
+        diversity_key = spoonacular_diversity_key(recipe)
         recipe_name = normalized_recipe_name(recipe.get("title"))
         if not recipe_id or recipe_id in used_ids:
             return False
         if recipe_name in used_recipe_names:
             return False
-        if requested_area and meal_area and meal_area != requested_area:
+        if requested_area and not spoonacular_matches_requested_cuisine(
+            recipe, requested_area
+        ):
             return False
         if require_new_area and not meal_area:
-            return False
+            if not diversity_key:
+                return False
         if require_new_area and meal_area in used_areas:
+            return False
+        if require_new_area and diversity_key in used_diversity_keys:
             return False
         if not spoonacular_ingredients(recipe):
             return False
@@ -1707,6 +1772,8 @@ def build_spoonacular_demo_grocery_dishes(
         used_recipe_names.add(recipe_name)
         if meal_area:
             used_areas.add(meal_area)
+        if diversity_key:
+            used_diversity_keys.add(diversity_key)
         return True
 
     candidates = (
@@ -1714,6 +1781,7 @@ def build_spoonacular_demo_grocery_dishes(
         if requested_area
         else [] if is_generic_prompt else spoonacular_candidates_for_prompt(meal_prompt, dietary_restrictions)
     )
+    fallback_candidates = []
 
     candidate_passes = (
         [(2, False), (1, False), (0, False)]
@@ -1728,38 +1796,67 @@ def build_spoonacular_demo_grocery_dishes(
 
     if requested_area:
         if len(dishes) != 3:
+            fallback_candidates = fetch_random_spoonacular_recipes(
+                dietary_restrictions,
+                used_ids,
+                cuisine=requested_area,
+            )
+            for minimum_matches in (1, 0):
+                for recipe in fallback_candidates:
+                    if len(dishes) == 3:
+                        return dishes
+                    try_add_recipe(recipe, minimum_matches, False)
+        if len(dishes) != 3:
             raise RuntimeError(
                 f"Spoonacular could not provide 3 {requested_area} recipe-backed dishes."
             )
         return dishes
 
     if is_generic_prompt:
-        for minimum_matches in (1, 0):
-            for _ in range(24):
+        fallback_candidates = fetch_random_spoonacular_recipes(
+            dietary_restrictions,
+            used_ids,
+        )
+        for minimum_matches, require_new_area in (
+            (2, True),
+            (1, True),
+            (0, True),
+            (1, False),
+            (0, False),
+        ):
+            for recipe in fallback_candidates:
                 if len(dishes) == 3:
                     return dishes
-                recipe = fetch_random_spoonacular_recipe(dietary_restrictions, used_ids)
-                if recipe:
-                    try_add_recipe(recipe, minimum_matches, True)
+                try_add_recipe(recipe, minimum_matches, require_new_area)
 
-    diverse_candidates = spoonacular_diverse_cuisine_candidates(meal_prompt, dietary_restrictions, used_ids)
+    diverse_candidates = spoonacular_diverse_cuisine_candidates(
+        meal_prompt,
+        candidates + fallback_candidates,
+        used_ids,
+    )
     for minimum_matches in (2, 1, 0):
         for recipe in diverse_candidates:
             if len(dishes) == 3:
                 return dishes
             try_add_recipe(recipe, minimum_matches, True)
 
+    if not fallback_candidates:
+        fallback_candidates = fetch_random_spoonacular_recipes(
+            dietary_restrictions,
+            used_ids,
+        )
+
     for minimum_matches, require_new_area in (
         (2, True),
         (1, True),
         (0, True),
+        (1, False),
+        (0, False),
     ):
-        for _ in range(36):
+        for recipe in fallback_candidates:
             if len(dishes) == 3:
                 return dishes
-            recipe = fetch_random_spoonacular_recipe(dietary_restrictions, used_ids)
-            if recipe:
-                try_add_recipe(recipe, minimum_matches, require_new_area)
+            try_add_recipe(recipe, minimum_matches, require_new_area)
 
     if len(dishes) != 3:
         raise RuntimeError("Spoonacular could not provide 3 recipe-backed dishes.")
