@@ -65,4 +65,17 @@ OPENAI_API_KEY=your_key_here FDC_API_KEY=your_fdc_key_here python model.py
 The API runs on `http://localhost:5000` locally.
 
 Recipe generation uses OpenAI to suggest searchable dish ideas, checks no-key structured web recipe sources first, and only uses Spoonacular as an optional final fallback when `SPOONACULAR_API_KEY` is set. The web extractor only searches a small allowlist of recipe sites, respects `robots.txt`, parses `schema.org/Recipe` JSON-LD metadata, and links to the source for full instructions.
+
+## Morton Williams Price Data
+
+The backend loads [Model/data.json](/Users/2027kstarkie/Desktop/SNAPP/Model/data.json:1) first for grocery products and prices. If that file has no products, it falls back to the demo grocery database.
+
+Refresh Morton Williams pricing once or twice a week:
+
+```sh
+cd Model
+python scraper.py
+```
+
+The scraper reads Morton Williams' public online storefront, respects `robots.txt`, and writes product names, prices, sale prices, `on_sale`, package sizes, stock flags, and source URLs to `data.json`.
  

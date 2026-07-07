@@ -51,6 +51,7 @@ HTTP_RETRY_ATTEMPTS = 2
 USER_AGENT = "SNAPP/1.0 (https://github.com/KittCoder/Snapp)"
 STORE_CACHE_TTL_SECONDS = 15 * 60
 FOOD_CACHE_TTL_SECONDS = 60 * 60
+SCRAPED_GROCERY_DB_FILENAME = "data.json"
 DEMO_GROCERY_DB_FILENAME = "snapp_demo_grocery_db.json"
 store_search_cache = {}
 food_search_cache = {}
@@ -763,13 +764,19 @@ def distance_miles(lat1, lon1, lat2, lon2):
 
 def load_demo_grocery_db():
     search_paths = (
+        Path(__file__).with_name(SCRAPED_GROCERY_DB_FILENAME),
+        Path(__file__).resolve().parent.parent / SCRAPED_GROCERY_DB_FILENAME,
         Path(__file__).with_name(DEMO_GROCERY_DB_FILENAME),
         Path(__file__).resolve().parent.parent / DEMO_GROCERY_DB_FILENAME,
     )
     for path in search_paths:
-        if path.exists():
-            with path.open(encoding="utf-8") as file:
-                return json.load(file)
+        if not path.exists():
+            continue
+        with path.open(encoding="utf-8") as file:
+            grocery_db = json.load(file)
+        if path.name == SCRAPED_GROCERY_DB_FILENAME and not grocery_db.get("products"):
+            continue
+        return grocery_db
     raise RuntimeError("The SNAPP demo grocery database is missing.")
 
 
