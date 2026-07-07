@@ -1,14 +1,17 @@
 
 import os
 import json
+import hashlib
 import math
 import random
 import re
 import time
 from html import unescape
+from html.parser import HTMLParser
 from pathlib import Path
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode, urlparse
+from urllib.parse import urlencode, urljoin, urlparse
+from urllib.robotparser import RobotFileParser
 from urllib.request import Request, urlopen
 
 from flask import Flask, jsonify, request
@@ -39,6 +42,10 @@ SPOONACULAR_BASE_URL = os.getenv(
 ).rstrip("/")
 SPOONACULAR_SEARCH_RESULT_COUNT = 24
 SPOONACULAR_RANDOM_RESULT_COUNT = 24
+RECIPE_IDEA_COUNT = 8
+SPOONACULAR_IDEA_SEARCH_LIMIT = 4
+WEB_RECIPE_SEARCH_RESULT_COUNT = 8
+WEB_RECIPE_FETCH_LIMIT = 5
 HTTP_TIMEOUT_SECONDS = 20
 HTTP_RETRY_ATTEMPTS = 2
 USER_AGENT = "SNAPP/1.0 (https://github.com/KittCoder/Snapp)"
@@ -49,6 +56,7 @@ store_search_cache = {}
 food_search_cache = {}
 spoonacular_search_cache = {}
 spoonacular_lookup_cache = {}
+robots_cache = {}
 FDC_SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
 FDC_API_KEY = os.getenv("FDC_API_KEY") or os.getenv("FOODDATA_CENTRAL_API_KEY") or "DEMO_KEY"
 NUTRIENT_ALIASES = {
@@ -246,6 +254,38 @@ RECIPE_CUISINE_ALIASES = {
     "u k": "British",
     "united kingdom": "British",
 }
+WEB_RECIPE_SOURCES = (
+    {
+        "name": "Budget Bytes",
+        "base_url": "https://www.budgetbytes.com",
+        "search_path": "/",
+        "query_param": "s",
+    },
+    {
+        "name": "Simply Recipes",
+        "base_url": "https://www.simplyrecipes.com",
+        "search_path": "/search",
+        "query_param": "q",
+    },
+    {
+        "name": "Love and Lemons",
+        "base_url": "https://www.loveandlemons.com",
+        "search_path": "/",
+        "query_param": "s",
+    },
+    {
+        "name": "RecipeTin Eats",
+        "base_url": "https://www.recipetineats.com",
+        "search_path": "/",
+        "query_param": "s",
+    },
+    {
+        "name": "EatingWell",
+        "base_url": "https://www.eatingwell.com",
+        "search_path": "/search",
+        "query_param": "q",
+    },
+)
 DEFAULT_PRICE_PER_100G = 0.55
 PRICE_PER_100G_RULES = (
     (r"\b(lamb)\b", 1.75),
@@ -371,6 +411,262 @@ def fetch_spoonacular_json(path, params=None):
         return fetch_json(url, service_name="Spoonacular")
     except RuntimeError as exc:
         raise RuntimeError("Spoonacular recipe service is unavailable.") from exc
+
+
+def fetch_text(url, service_name="web page"):
+    headers = {
+        "Accept": "text/html,application/xhtml+xml",
+        "User-Agent": USER_AGENT,
+    }
+    request_object = Request(url, headers=headers)
+    try:
+        with urlopen(request_object, timeout=HTTP_TIMEOUT_SECONDS) as response:
+            content_type = response.headers.get("Content-Type", "")
+            if "text/html" not in content_type and "application/xhtml" not in content_type:
+                return ""
+            charset = response.headers.get_content_charset() or "utf-8"
+            return response.read(1_500_000).decode(charset, errors="replace")
+    except (HTTPError, URLError, TimeoutError, UnicodeDecodeError) as exc:
+        print(f"{service_name} fetch failed: {exc}", flush=True)
+        return ""
+
+
+class RecipeLinkParser(HTMLParser):
+    def __init__(self, base_url):
+        super().__init__()
+        self.base_url = base_url
+        self.links = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag != "a":
+            return
+        attributes = dict(attrs)
+        href = attributes.get("href")
+        if not href:
+            return
+        self.links.append(urljoin(self.base_url, href))
+
+
+class JsonLdParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.in_json_ld = False
+        self.current = []
+        self.blocks = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag != "script":
+            return
+        attributes = {
+            (key or "").casefold(): value or ""
+            for key, value in attrs
+        }
+        if attributes.get("type", "").casefold() == "application/ld+json":
+            self.in_json_ld = True
+            self.current = []
+
+    def handle_data(self, data):
+        if self.in_json_ld:
+            self.current.append(data)
+
+    def handle_endtag(self, tag):
+        if tag == "script" and self.in_json_ld:
+            self.blocks.append("".join(self.current))
+            self.in_json_ld = False
+            self.current = []
+
+
+def robots_allows(url):
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return False
+    origin = f"{parsed.scheme}://{parsed.netloc}"
+    cached = robots_cache.get(origin)
+    if cached is None:
+        parser = RobotFileParser()
+        parser.set_url(f"{origin}/robots.txt")
+        try:
+            parser.read()
+            cached = parser
+        except Exception as exc:
+            print(f"robots.txt check failed for {origin}: {exc}", flush=True)
+            cached = False
+        robots_cache[origin] = cached
+    if cached is False:
+        return False
+    return cached.can_fetch(USER_AGENT, url)
+
+
+def web_recipe_search_url(source, query):
+    params = urlencode({source["query_param"]: f"{query} recipe"})
+    return urljoin(source["base_url"], f"{source['search_path']}?{params}")
+
+
+def recipe_link_score(url, query):
+    parsed = urlparse(url)
+    path = normalize_cuisine_text(parsed.path)
+    query_words = normalized_food_words(query)
+    score = len(query_words & set(path.split()))
+    if re.search(r"\b(recipe|recipes|dinner|meal)\b", path):
+        score += 2
+    if re.search(r"\b(category|tag|author|about|privacy|search|shop|video|news)\b", path):
+        score -= 4
+    return score
+
+
+def discover_recipe_urls(recipe_ideas):
+    urls = []
+    seen = set()
+    for idea in recipe_ideas[:3]:
+        query = idea.get("query") or idea.get("name") or ""
+        if not query:
+            continue
+        for source in WEB_RECIPE_SOURCES:
+            if len(urls) >= WEB_RECIPE_SEARCH_RESULT_COUNT:
+                return urls
+            search_url = web_recipe_search_url(source, query)
+            if not robots_allows(search_url):
+                continue
+            html = fetch_text(search_url, service_name=f"{source['name']} search")
+            if not html:
+                continue
+            parser = RecipeLinkParser(source["base_url"])
+            parser.feed(html)
+            source_netloc = urlparse(source["base_url"]).netloc
+            ranked_links = sorted(
+                {
+                    link.split("#", 1)[0]
+                    for link in parser.links
+                    if urlparse(link).netloc == source_netloc
+                    and recipe_link_score(link, query) > 0
+                },
+                key=lambda link: recipe_link_score(link, query),
+                reverse=True,
+            )
+            for link in ranked_links[:3]:
+                if link not in seen:
+                    urls.append(link)
+                    seen.add(link)
+                if len(urls) >= WEB_RECIPE_SEARCH_RESULT_COUNT:
+                    return urls
+    return urls
+
+
+def jsonld_items(value):
+    if isinstance(value, list):
+        for item in value:
+            yield from jsonld_items(item)
+    elif isinstance(value, dict):
+        graph = value.get("@graph")
+        if graph:
+            yield from jsonld_items(graph)
+        yield value
+
+
+def jsonld_is_recipe(item):
+    item_type = item.get("@type")
+    if isinstance(item_type, list):
+        types = {str(value).casefold() for value in item_type}
+    else:
+        types = {str(item_type).casefold()}
+    return "recipe" in types
+
+
+def text_from_schema_value(value):
+    if isinstance(value, str):
+        return spoonacular_recipe_text(value)
+    if isinstance(value, dict):
+        return spoonacular_recipe_text(
+            value.get("text") or value.get("name") or value.get("url") or ""
+        )
+    return ""
+
+
+def schema_image_url(value):
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list):
+        for item in value:
+            image = schema_image_url(item)
+            if image:
+                return image
+    if isinstance(value, dict):
+        return value.get("url") or value.get("contentUrl")
+    return None
+
+
+def schema_list_values(value):
+    if isinstance(value, list):
+        return [text_from_schema_value(item) for item in value if text_from_schema_value(item)]
+    if isinstance(value, str):
+        return [line.strip() for line in value.splitlines() if line.strip()]
+    return []
+
+
+def schema_recipe_to_recipe(recipe_schema, source_url):
+    name = spoonacular_recipe_text(
+        recipe_schema.get("name") or recipe_schema.get("headline") or ""
+    )
+    ingredients = schema_list_values(recipe_schema.get("recipeIngredient"))
+    if not name or len(ingredients) < 2:
+        return None
+    cuisines = schema_list_values(recipe_schema.get("recipeCuisine"))
+    categories = schema_list_values(recipe_schema.get("recipeCategory"))
+    source = recipe_schema.get("url") or source_url
+    stable_id = hashlib.sha256(source.encode("utf-8")).hexdigest()[:16]
+    return {
+        "id": f"web:{stable_id}",
+        "title": name,
+        "cuisines": cuisines,
+        "dishTypes": categories or ["main course"],
+        "extendedIngredients": [
+            {
+                "name": normalize_ingredient_name(ingredient),
+                "original": ingredient,
+            }
+            for ingredient in ingredients
+            if normalize_ingredient_name(ingredient)
+        ],
+        "instructions": "Open the source recipe for the full cooking method.",
+        "image": schema_image_url(recipe_schema.get("image")),
+        "sourceUrl": source_url,
+        "_snapp_recipe_provider": "web",
+    }
+
+
+def extract_schema_recipe(html, source_url):
+    parser = JsonLdParser()
+    parser.feed(html)
+    for block in parser.blocks:
+        try:
+            data = json.loads(unescape(block))
+        except json.JSONDecodeError:
+            continue
+        for item in jsonld_items(data):
+            if jsonld_is_recipe(item):
+                recipe = schema_recipe_to_recipe(item, source_url)
+                if recipe:
+                    return recipe
+    return None
+
+
+def fetch_web_recipe_candidates(recipe_ideas):
+    recipes = []
+    seen_ids = set()
+    for url in discover_recipe_urls(recipe_ideas):
+        if len(recipes) >= WEB_RECIPE_FETCH_LIMIT:
+            break
+        if not robots_allows(url):
+            continue
+        html = fetch_text(url, service_name="recipe page")
+        if not html:
+            continue
+        recipe = extract_schema_recipe(html, url)
+        recipe_id = spoonacular_recipe_id(recipe or {})
+        if recipe and recipe_id not in seen_ids:
+            recipes.append(recipe)
+            seen_ids.add(recipe_id)
+    return recipes
 
 
 def normalize_ingredient_name(value):
@@ -1010,6 +1306,75 @@ Return this JSON shape only:
     return dishes
 
 
+def generate_recipe_search_ideas(
+    meal_prompt, household_size, dietary_restrictions="", pantry_items=None
+):
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY is not set.")
+
+    requested_cuisine = detect_requested_spoonacular_cuisine(meal_prompt)
+    client = OpenAI(api_key=api_key)
+    user_prompt = f"""
+User meal request: {meal_prompt}
+Household size: {household_size} people
+Dietary restrictions: {dietary_restrictions or "none"}
+User pantry items: {pantry_items_text(pantry_items or [])}
+Detected cuisine, if any: {requested_cuisine or "none"}
+
+Generate {RECIPE_IDEA_COUNT} normal, recognizable recipe ideas that a real recipe site is likely to have.
+These are search targets, not recipes.
+
+Rules:
+- Make each idea a specific dish name, not a vague category.
+- Keep ideas realistic, familiar, and searchable.
+- If a cuisine was detected, every idea must strictly belong to that cuisine.
+- If no cuisine was detected, make the ideas intentionally diverse across cuisines and formats.
+- Respect dietary restrictions; do not include restricted ingredients or allergens.
+- Prefer ideas compatible with pantry items when that feels natural.
+- Return no ingredients, no cooking steps, and no prose outside JSON.
+
+Return this JSON shape only:
+{{
+  "ideas": [
+    {{"name": "specific dish name", "query": "specific recipe search query", "cuisine": "Cuisine or empty string"}}
+  ]
+}}
+""".strip()
+    response = client.responses.create(
+        model=OPENAI_DISH_MODEL,
+        input=[
+            {"role": "system", "content": DISH_SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt},
+        ],
+        store=False,
+    )
+    data = extract_json_object(response.output_text)
+    ideas = []
+    seen = set()
+    for idea in data.get("ideas", []):
+        name = clean_dish_name(idea.get("name"))
+        query = re.sub(r"\s+", " ", idea.get("query") or name or "").strip()
+        cuisine = re.sub(r"\s+", " ", idea.get("cuisine") or "").strip()
+        if not query:
+            continue
+        identity = query.casefold()
+        if identity in seen:
+            continue
+        seen.add(identity)
+        ideas.append(
+            {
+                "name": name or query,
+                "query": query,
+                "cuisine": cuisine,
+            }
+        )
+
+    if not ideas:
+        raise RuntimeError("The recipe idea generator returned an invalid response.")
+    return ideas[:RECIPE_IDEA_COUNT]
+
+
 def build_dishes(dish_candidates):
     dishes = []
     missing_ingredients = []
@@ -1528,6 +1893,31 @@ def spoonacular_candidates_for_prompt(meal_prompt, dietary_restrictions):
     return candidates
 
 
+def spoonacular_candidates_for_ideas(recipe_ideas, dietary_restrictions, cuisine=None):
+    candidates = []
+    seen_ids = set()
+    for idea in recipe_ideas[:SPOONACULAR_IDEA_SEARCH_LIMIT]:
+        idea_cuisine = cuisine or idea.get("cuisine") or None
+        for recipe in search_spoonacular_recipes(
+            idea["query"],
+            cuisine=idea_cuisine,
+            dietary_restrictions=dietary_restrictions,
+            number=max(6, SPOONACULAR_SEARCH_RESULT_COUNT // 2),
+        ):
+            recipe_id = spoonacular_recipe_id(recipe)
+            if recipe_id and recipe_id not in seen_ids:
+                candidates.append(recipe)
+                seen_ids.add(recipe_id)
+    return sorted(
+        candidates,
+        key=lambda recipe: max(
+            spoonacular_prompt_score(recipe, idea["query"])
+            for idea in recipe_ideas
+        ),
+        reverse=True,
+    )
+
+
 def spoonacular_candidates_for_cuisine(cuisine, meal_prompt, dietary_restrictions):
     candidates = search_spoonacular_recipes(
         meal_prompt,
@@ -1690,6 +2080,8 @@ def spoonacular_recipe_to_demo_dish(recipe, matched_products, stores, household_
             }
         )
 
+    provider = recipe.get("_snapp_recipe_provider") or "spoonacular"
+    provider_name = "web recipe source" if provider == "web" else "Spoonacular"
     recipe = spoonacular_recipe_from_recipe(recipe)
     return {
         "name": recipe["name"],
@@ -1708,18 +2100,24 @@ def spoonacular_recipe_to_demo_dish(recipe, matched_products, stores, household_
         },
         "ingredients": ingredient_lines,
         "ingredients_to_buy": ingredient_lines,
-        "portion_note": f"Recipe from Spoonacular. Grocery matches are from the SNAPP demo grocery database.",
+        "portion_note": f"Recipe from {provider_name}. Grocery matches are from the SNAPP demo grocery database.",
         "method": recipe["instructions"],
         "recipe": recipe,
         "recipe_id": recipe["id"],
         "recipe_source": recipe["source"],
         "spoonacular_id": recipe["id"],
         "spoonacular_source": recipe["source"],
+        "recipe_provider": provider,
     }
 
 
 def build_spoonacular_demo_grocery_dishes(
-    meal_prompt, household_size, dietary_restrictions, products, stores
+    meal_prompt,
+    household_size,
+    dietary_restrictions,
+    products,
+    stores,
+    recipe_ideas=None,
 ):
     dishes = []
     used_ids = set()
@@ -1733,6 +2131,9 @@ def build_spoonacular_demo_grocery_dishes(
         and not requested_ingredient_groups
         and is_generic_spoonacular_prompt(meal_prompt)
     )
+    effective_recipe_ideas = recipe_ideas or [
+        {"name": meal_prompt, "query": meal_prompt, "cuisine": requested_area or ""}
+    ]
 
     def try_add_recipe(recipe, minimum_matches, require_new_area=False):
         recipe_id = spoonacular_recipe_id(recipe)
@@ -1776,17 +2177,43 @@ def build_spoonacular_demo_grocery_dishes(
             used_diversity_keys.add(diversity_key)
         return True
 
-    candidates = (
-        spoonacular_candidates_for_cuisine(requested_area, meal_prompt, dietary_restrictions)
-        if requested_area
-        else [] if is_generic_prompt else spoonacular_candidates_for_prompt(meal_prompt, dietary_restrictions)
-    )
+    web_candidates = fetch_web_recipe_candidates(effective_recipe_ideas)
+    candidates = []
     fallback_candidates = []
+
+    web_passes = (
+        [(2, False), (1, False), (0, False)]
+        if requested_area
+        else [(2, True), (1, True), (0, True), (1, False), (0, False)]
+    )
+    for minimum_matches, require_new_area in web_passes:
+        for recipe in web_candidates:
+            if len(dishes) == 3:
+                return dishes
+            try_add_recipe(recipe, minimum_matches, require_new_area)
+
+    if not SPOONACULAR_API_KEY:
+        if len(dishes) != 3:
+            raise RuntimeError("Recipe sources could not provide 3 recipe-backed dishes.")
+        return dishes
+
+    if recipe_ideas:
+        candidates = spoonacular_candidates_for_ideas(
+            effective_recipe_ideas,
+            dietary_restrictions,
+            cuisine=requested_area,
+        )
+    else:
+        candidates = (
+            spoonacular_candidates_for_cuisine(requested_area, meal_prompt, dietary_restrictions)
+            if requested_area
+            else [] if is_generic_prompt else spoonacular_candidates_for_prompt(meal_prompt, dietary_restrictions)
+        )
 
     candidate_passes = (
         [(2, False), (1, False), (0, False)]
         if requested_area
-        else [(2, True), (1, True), (0, True)]
+        else [(2, True), (1, True), (0, True), (1, False), (0, False)]
     )
     for minimum_matches, require_new_area in candidate_passes:
         for recipe in candidates:
@@ -1808,26 +2235,38 @@ def build_spoonacular_demo_grocery_dishes(
                     try_add_recipe(recipe, minimum_matches, False)
         if len(dishes) != 3:
             raise RuntimeError(
-                f"Spoonacular could not provide 3 {requested_area} recipe-backed dishes."
+                f"Recipe sources could not provide 3 {requested_area} recipe-backed dishes."
             )
         return dishes
 
     if is_generic_prompt:
-        fallback_candidates = fetch_random_spoonacular_recipes(
-            dietary_restrictions,
-            used_ids,
-        )
-        for minimum_matches, require_new_area in (
-            (2, True),
-            (1, True),
-            (0, True),
-            (1, False),
-            (0, False),
-        ):
-            for recipe in fallback_candidates:
-                if len(dishes) == 3:
-                    return dishes
-                try_add_recipe(recipe, minimum_matches, require_new_area)
+        if recipe_ideas:
+            diverse_candidates = spoonacular_diverse_cuisine_candidates(
+                meal_prompt,
+                candidates,
+                used_ids,
+            )
+            for minimum_matches in (2, 1, 0):
+                for recipe in diverse_candidates:
+                    if len(dishes) == 3:
+                        return dishes
+                    try_add_recipe(recipe, minimum_matches, True)
+        if len(dishes) != 3:
+            fallback_candidates = fetch_random_spoonacular_recipes(
+                dietary_restrictions,
+                used_ids,
+            )
+            for minimum_matches, require_new_area in (
+                (2, True),
+                (1, True),
+                (0, True),
+                (1, False),
+                (0, False),
+            ):
+                for recipe in fallback_candidates:
+                    if len(dishes) == 3:
+                        return dishes
+                    try_add_recipe(recipe, minimum_matches, require_new_area)
 
     diverse_candidates = spoonacular_diverse_cuisine_candidates(
         meal_prompt,
@@ -1859,7 +2298,7 @@ def build_spoonacular_demo_grocery_dishes(
             try_add_recipe(recipe, minimum_matches, require_new_area)
 
     if len(dishes) != 3:
-        raise RuntimeError("Spoonacular could not provide 3 recipe-backed dishes.")
+        raise RuntimeError("Recipe sources could not provide 3 recipe-backed dishes.")
     return dishes
 
 
@@ -2251,8 +2690,19 @@ def dishes():
         grocery_db = load_demo_grocery_db()
         stores = demo_store_lookup(grocery_db)
         products = available_demo_products(grocery_db)
+        recipe_ideas = generate_recipe_search_ideas(
+            meal_prompt,
+            household_size,
+            dietary_restrictions,
+            pantry_items,
+        )
         dishes = build_spoonacular_demo_grocery_dishes(
-            meal_prompt, household_size, dietary_restrictions, products, stores
+            meal_prompt,
+            household_size,
+            dietary_restrictions,
+            products,
+            stores,
+            recipe_ideas,
         )
     except RuntimeError as exc:
         return jsonify({"error": str(exc)}), 503
@@ -2272,7 +2722,8 @@ def dishes():
             ],
             "missing_ingredients": [],
             "dishes": dishes,
-            "source": "SNAPP demo grocery database and Spoonacular",
+            "recipe_ideas": recipe_ideas,
+            "source": "SNAPP demo grocery database, OpenAI recipe ideas, structured web recipe sources, and optional Spoonacular fallback",
         }
     )
 
