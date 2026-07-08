@@ -2048,13 +2048,18 @@ def mealdb_candidates_for_ideas(recipe_ideas, meal_prompt):
     candidates = []
     seen_ids = set()
     search_terms = []
+    seen_terms = set()
     for idea in recipe_ideas:
-        search_terms.extend(
-            value
-            for value in (idea.get("query"), idea.get("name"))
-            if value
-        )
-    search_terms.append(meal_prompt)
+        for value in (idea.get("query"), idea.get("name")):
+            term = re.sub(r"\s+", " ", value or "").strip()
+            identity = term.casefold()
+            if term and identity not in seen_terms:
+                search_terms.append(term)
+                seen_terms.add(identity)
+    prompt_term = re.sub(r"\s+", " ", meal_prompt or "").strip()
+    if prompt_term and prompt_term.casefold() not in seen_terms:
+        search_terms.append(prompt_term)
+    search_terms = search_terms[:6]
 
     def add_recipe(meal):
         recipe = mealdb_recipe_to_recipe(meal)
