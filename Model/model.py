@@ -70,6 +70,7 @@ spoonacular_search_cache = {}
 spoonacular_lookup_cache = {}
 mealdb_search_cache = {}
 mealdb_lookup_cache = {}
+ingredient_generalization_cache = {}
 robots_cache = {}
 FDC_SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
 FDC_API_KEY = os.getenv("FDC_API_KEY") or os.getenv("FOODDATA_CENTRAL_API_KEY") or "DEMO_KEY"
@@ -217,29 +218,39 @@ RECIPE_GENERIC_PROMPT_WORDS = RECIPE_SEARCH_STOPWORDS | {
     "supper",
 }
 RECIPE_INGREDIENT_ALIASES = {
-    "beef": {"beef", "brisket", "steak", "ground beef", "minced beef", "short ribs"},
-    "chicken": {"chicken thighs"},
-    "chicken breast": {"chicken thighs"},
-    "fish": {"fish", "cod", "salmon", "tuna"},
+    "beef": {"beef", "brisket", "steak", "ground beef", "minced beef", "short ribs", "sirloin", "sirloin steak", "ribeye", "rib eye", "flank steak", "stewing beef"},
+    "chicken": {"chicken", "chicken thighs", "chicken breast", "poultry"},
+    "chicken breast": {"chicken", "chicken thighs", "poultry"},
+    "fish": {"fish", "cod", "salmon", "tuna", "white fish"},
     "pork": {"pork", "bacon", "ham", "sausage"},
     "shrimp": {"shrimp", "prawn", "prawns"},
-    "tomato": {"canned tomatoes"},
-    "tomatoes": {"canned tomatoes"},
-    "pasta": {"pasta"},
-    "spaghetti": {"pasta"},
-    "noodles": {"pasta"},
-    "noodle": {"pasta"},
+    "tomato": {"tomato", "tomatoes", "canned tomatoes", "diced tomatoes", "crushed tomatoes", "tomato sauce", "tomato paste"},
+    "tomatoes": {"tomato", "canned tomatoes", "diced tomatoes", "crushed tomatoes", "tomato sauce", "tomato paste"},
+    "pasta": {"pasta", "spaghetti", "penne", "linguine", "macaroni", "noodles", "noodle"},
+    "spaghetti": {"pasta", "noodles"},
+    "noodles": {"pasta", "noodle", "rice noodles", "flat rice noodles", "egg noodles"},
+    "noodle": {"pasta", "noodles", "rice noodles", "flat rice noodles", "egg noodles"},
+    "rice": {"rice", "rice noodles", "flat rice noodles", "jasmine rice", "basmati rice", "brown rice", "white rice"},
     "potato": {"potatoes"},
     "beans": {"black beans"},
     "bean": {"black beans"},
     "sweetcorn": {"frozen corn"},
     "corn": {"frozen corn"},
-    "broccoli": {"frozen broccoli"},
+    "broccoli": {"broccoli", "frozen broccoli"},
     "tortilla": {"tortillas"},
     "flour tortillas": {"tortillas"},
     "cheddar": {"cheese"},
     "mozzarella": {"cheese"},
     "parmesan": {"cheese"},
+    "chilli": {"chile", "chili", "pepper", "peppers", "jalapeno", "serrano", "thai chile", "birds eye chilli", "birds-eye chillies"},
+    "chillies": {"chile", "chili", "pepper", "peppers", "jalapeno", "serrano", "thai chile", "birds eye chilli", "birds-eye chillies"},
+    "chiles": {"chile", "chili", "pepper", "peppers", "jalapeno", "serrano", "thai chile"},
+    "garlic": {"garlic", "garlic cloves", "minced garlic"},
+    "basil": {"basil", "basil leaves", "fresh basil"},
+    "soy sauce": {"soy sauce", "tamari"},
+    "fish sauce": {"fish sauce"},
+    "oyster sauce": {"oyster sauce"},
+    "vegetable oil": {"oil", "vegetable oil", "canola oil", "olive oil"},
 }
 RECIPE_REQUEST_INGREDIENTS = {
     "beef": {"beef", "brisket", "steak", "ground beef", "minced beef", "short ribs"},
@@ -2452,42 +2463,200 @@ def normalized_recipe_name(value):
     return re.sub(r"[^a-z0-9]+", " ", value or "").strip().casefold()
 
 
-def product_matches_recipe_ingredient(product, recipe_ingredient):
-    product_ingredient = product.get("ingredient") or ""
-    product_terms = {product_ingredient.casefold()}
-    product_terms.update(RECIPE_INGREDIENT_ALIASES.get(product_ingredient.casefold(), set()))
+INGREDIENT_CANONICAL_PATTERNS = (
+    (r"\b(sirloin|ribeye|rib eye|brisket|steak|short ribs?|ground beef|minced beef|beef)\b", "beef"),
+    (r"\b(chicken|poultry)\b", "chicken"),
+    (r"\b(pork|bacon|ham|sausage)\b", "pork"),
+    (r"\b(shrimp|prawns?)\b", "shrimp"),
+    (r"\b(salmon|tuna|cod|fish)\b", "fish"),
+    (r"\b(flat rice noodles?|rice noodles?|egg noodles?|noodles?|spaghetti|pasta|penne|linguine|macaroni)\b", "noodles"),
+    (r"\b(jasmine rice|basmati rice|brown rice|white rice|rice)\b", "rice"),
+    (r"\b(birds eye chilli(?:es)?|birds eye chile(?:s)?|bird'?s eye|chill(?:i|y|ies)|chiles?|jalapenos?|serranos?|peppers?)\b", "pepper"),
+    (r"\b(tomatoes?|diced tomatoes|canned tomatoes|crushed tomatoes|tomato sauce|tomato paste)\b", "tomato"),
+    (r"\b(garlic|garlic cloves?|minced garlic)\b", "garlic"),
+    (r"\b(onions?|shallots?)\b", "onion"),
+    (r"\b(basil|basil leaves|fresh basil)\b", "basil"),
+    (r"\b(cilantro|coriander|parsley|mint|thyme|oregano|rosemary)\b", "herbs"),
+    (r"\b(broccoli|broccolini)\b", "broccoli"),
+    (r"\b(carrots?)\b", "carrot"),
+    (r"\b(potatoes?)\b", "potato"),
+    (r"\b(beans?|black beans|kidney beans|pinto beans)\b", "beans"),
+    (r"\b(cheddar|mozzarella|parmesan|pecorino|feta|cheese)\b", "cheese"),
+    (r"\b(soy sauce|tamari)\b", "soy sauce"),
+    (r"\b(fish sauce)\b", "fish sauce"),
+    (r"\b(oyster sauce)\b", "oyster sauce"),
+    (r"\b(vegetable oil|canola oil|olive oil|oil)\b", "oil"),
+    (r"\b(sugar|caster sugar|brown sugar)\b", "sugar"),
+)
 
-    recipe_text = recipe_ingredient.casefold()
-    recipe_terms = {recipe_text}
-    recipe_terms.update(RECIPE_INGREDIENT_ALIASES.get(recipe_text, set()))
 
-    if any(
-        product_term in recipe_text or recipe_term in product_ingredient.casefold()
-        for product_term in product_terms
-        for recipe_term in recipe_terms
-    ):
-        return True
+def ingredient_match_terms(value):
+    text = normalize_cuisine_text(value)
+    terms = set(normalized_food_words(text))
+    for phrase, aliases in RECIPE_INGREDIENT_ALIASES.items():
+        phrase_text = normalize_cuisine_text(phrase)
+        if phrase_text and re.search(rf"\b{re.escape(phrase_text)}\b", text):
+            terms.add(phrase_text)
+            terms.update(normalize_cuisine_text(alias) for alias in aliases)
+    for pattern, canonical in INGREDIENT_CANONICAL_PATTERNS:
+        if re.search(pattern, text):
+            terms.add(canonical)
+    return {term for term in terms if term}
 
-    return bool(
-        normalized_food_words(product_ingredient)
-        & normalized_food_words(recipe_ingredient)
+
+def generate_general_ingredient_search_terms(recipe_ingredients):
+    ingredient_names = [
+        re.sub(r"\s+", " ", ingredient.get("name") or "").strip()
+        for ingredient in recipe_ingredients
+        if ingredient.get("name")
+    ]
+    if not ingredient_names:
+        return {}
+
+    cache_key = tuple(name.casefold() for name in ingredient_names)
+    cached = ingredient_generalization_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return {}
+
+    client = OpenAI(api_key=api_key)
+    user_prompt = f"""
+Recipe ingredients JSON:
+{json.dumps(ingredient_names, separators=(",", ":"))}
+
+Convert each recipe ingredient into broad grocery-store search terms for matching against product
+names. This is ingredient normalization, not recipe writing.
+
+Rules:
+- Return the original ingredient name exactly as provided in "name".
+- Generate 2 to 6 lowercase search_terms per ingredient.
+- Terms should move from specific to general grocery concepts.
+- Keep the same food role. Do not turn sauces into meat, meat into sauce, or garnish into a main ingredient.
+- Include broad equivalents and common grocery labels, such as:
+  sirloin steak -> sirloin steak, steak, beef
+  birds-eye chillies -> chillies, chile peppers, peppers
+  flat rice noodles -> rice noodles, noodles
+  basil leaves -> basil, fresh herbs
+  vegetable oil -> vegetable oil, cooking oil, oil
+- Do not include cooking instructions, quantities, or brand names.
+
+Return only this JSON shape:
+{{
+  "ingredients": [
+    {{"name": "original ingredient", "search_terms": ["term", "term"]}}
+  ]
+}}
+""".strip()
+    try:
+        response = client.responses.create(
+            model=OPENAI_DISH_MODEL,
+            input=[
+                {"role": "system", "content": DISH_SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt},
+            ],
+            store=False,
+        )
+        data = extract_json_object(response.output_text)
+    except Exception as exc:
+        print(f"Ingredient generalization failed: {exc}", flush=True)
+        ingredient_generalization_cache[cache_key] = {}
+        return {}
+
+    by_name = {}
+    expected_names = {name.casefold(): name for name in ingredient_names}
+    for item in data.get("ingredients", []):
+        name = re.sub(r"\s+", " ", str(item.get("name") or "")).strip()
+        canonical_name = expected_names.get(name.casefold())
+        if not canonical_name:
+            continue
+        terms = []
+        seen = set()
+        for term in item.get("search_terms") or []:
+            cleaned = normalize_cuisine_text(str(term or ""))
+            if not cleaned or cleaned in seen:
+                continue
+            terms.append(cleaned)
+            seen.add(cleaned)
+        if terms:
+            by_name[canonical_name.casefold()] = terms[:6]
+
+    ingredient_generalization_cache[cache_key] = by_name
+    return by_name
+
+
+def product_recipe_match_score(product, recipe_ingredient, recipe_search_terms=None):
+    product_text = " ".join(
+        str(value or "")
+        for value in (
+            product.get("ingredient"),
+            product.get("product_name"),
+            product.get("food_group"),
+            product.get("package_size"),
+        )
     )
+    recipe_text = recipe_ingredient or ""
+    product_terms = ingredient_match_terms(product_text)
+    recipe_terms = ingredient_match_terms(recipe_text)
+    for term in recipe_search_terms or []:
+        recipe_terms.update(ingredient_match_terms(term))
+        normalized_term = normalize_cuisine_text(term)
+        if normalized_term:
+            recipe_terms.add(normalized_term)
+    if not product_terms or not recipe_terms:
+        return 0
+
+    score = len(product_terms & recipe_terms) * 10
+    product_normalized = normalize_cuisine_text(product_text)
+    recipe_normalized = normalize_cuisine_text(recipe_text)
+    for term in recipe_terms:
+        if re.search(rf"\b{re.escape(term)}\b", product_normalized):
+            score += 4
+    for term in product_terms:
+        if re.search(rf"\b{re.escape(term)}\b", recipe_normalized):
+            score += 2
+    if normalize_cuisine_text(product.get("ingredient")) in recipe_terms:
+        score += 8
+    return score
+
+
+def product_matches_recipe_ingredient(product, recipe_ingredient, recipe_search_terms=None):
+    return product_recipe_match_score(product, recipe_ingredient, recipe_search_terms) > 0
 
 
 def match_recipe_ingredients_to_products(recipe, products):
     matches = []
     used_product_ids = set()
-    for ingredient in spoonacular_ingredients(recipe):
+    recipe_ingredients = spoonacular_ingredients(recipe)
+    generalized_terms = generate_general_ingredient_search_terms(recipe_ingredients)
+    for ingredient in recipe_ingredients:
+        ingredient_terms = generalized_terms.get(ingredient["name"].casefold(), [])
         eligible_products = [
             product
             for product in products
             if product.get("id") not in used_product_ids
-            and product_matches_recipe_ingredient(product, ingredient["name"])
+            and product_matches_recipe_ingredient(
+                product,
+                ingredient["name"],
+                ingredient_terms,
+            )
         ]
         if not eligible_products:
             matches.append((ingredient, None))
             continue
-        product = sorted(eligible_products, key=product_effective_price)[0]
+        product = sorted(
+            eligible_products,
+            key=lambda item: (
+                -product_recipe_match_score(
+                    item,
+                    ingredient["name"],
+                    ingredient_terms,
+                ),
+                product_effective_price(item),
+            ),
+        )[0]
         used_product_ids.add(product["id"])
         matches.append((ingredient, product))
     return matches
