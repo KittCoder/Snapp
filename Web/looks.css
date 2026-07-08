@@ -447,8 +447,10 @@ main {
 
 .dish-chat-window {
   border: 1px solid var(--color-border);
-  border-radius: 1.1rem;
+  border-radius: 0.85rem;
   min-height: 330px;
+  max-height: 640px;
+  overflow: auto;
   padding: 1rem;
   background: color-mix(in srgb, var(--color-panel-strong) 90%, transparent);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
@@ -585,23 +587,9 @@ main {
 }
 
 .dish-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-}
-
-.dish-filter-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.7rem;
-}
-
-.dish-filter-grid label {
-  display: grid;
-  gap: 0.35rem;
-  color: var(--color-muted);
-  font-size: 0.88rem;
-  font-weight: 700;
 }
 
 .dish-form button:disabled {
@@ -619,26 +607,67 @@ main {
   list-style: none;
   padding: 0;
   margin: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
 }
 
-.dish-results > li {
+.dish-message {
+  max-width: min(100%, 860px);
+  padding: 0.8rem 0.9rem;
+  border-radius: 0.85rem;
+  line-height: 1.42;
+}
+
+.dish-message.user {
+  align-self: flex-end;
+  max-width: min(78%, 560px);
+  background: linear-gradient(135deg, var(--color-primary), #10b981);
+  color: #ffffff;
+  border-bottom-right-radius: 0.25rem;
+}
+
+.dish-message.bot {
+  align-self: flex-start;
+  width: min(100%, 900px);
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-panel-strong));
+  border: 1px solid color-mix(in srgb, var(--color-accent-soft) 28%, transparent);
+  border-bottom-left-radius: 0.25rem;
+}
+
+.dish-message p {
+  margin: 0;
+}
+
+.dish-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 0.8rem;
+}
+
+.dish-card {
   border: 1px solid var(--color-border);
-  border-radius: 1rem;
-  padding: 1rem;
+  border-radius: 0.65rem;
+  padding: 0.85rem;
   background: color-mix(in srgb, var(--color-panel-strong) 92%, transparent);
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+  cursor: pointer;
+  min-width: 0;
 }
 
-.dish-results h3 {
+.dish-card:focus {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.dish-card h3 {
   margin: 0;
   font-family: "Fraunces", Georgia, serif;
   font-size: 1.05rem;
 }
 
-.dish-results p {
+.dish-card p {
   margin: 0.65rem 0 0;
   color: var(--color-muted);
 }
@@ -709,8 +738,8 @@ main {
 }
 
 .dish-missing {
-  grid-column: 1 / -1;
   color: var(--color-muted);
+  margin-top: 0.7rem !important;
 }
 
 .dish-source {
@@ -722,6 +751,127 @@ main {
 .dish-source a {
   color: var(--color-primary-strong);
   font-weight: 600;
+}
+
+.schedule-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(135px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.schedule-day {
+  min-height: 220px;
+  border: 1px solid var(--color-border);
+  border-radius: 0.85rem;
+  padding: 0.85rem;
+  background: color-mix(in srgb, var(--color-panel-strong) 92%, transparent);
+}
+
+.schedule-day h3 {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+}
+
+.schedule-day-meals {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.schedule-empty {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.86rem;
+}
+
+.schedule-meal {
+  display: grid;
+  gap: 0.35rem;
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
+  border-radius: 0.65rem;
+  padding: 0.65rem;
+  background: color-mix(in srgb, var(--color-primary) 9%, var(--color-panel-strong));
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.schedule-meal span {
+  color: var(--color-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.dish-modal {
+  width: min(760px, calc(100vw - 2rem));
+  max-height: min(780px, calc(100vh - 2rem));
+  border: 1px solid var(--color-border);
+  border-radius: 0.85rem;
+  padding: 0;
+  background: var(--color-panel);
+  color: var(--color-text);
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.28);
+}
+
+.dish-modal::backdrop {
+  background: rgba(15, 23, 42, 0.42);
+}
+
+.dish-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dish-modal-header h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.dish-modal-header button {
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-panel-strong);
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.dish-modal-content {
+  max-height: calc(min(780px, 100vh - 2rem) - 4.5rem);
+  overflow: auto;
+  padding: 1rem;
+}
+
+.dish-modal-image {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 0.65rem;
+}
+
+.dish-modal-summary {
+  color: var(--color-muted);
+}
+
+.dish-modal-content h4 {
+  margin: 1rem 0 0.4rem;
+}
+
+.dish-modal-list {
+  margin: 0;
+  padding-left: 1.15rem;
+  color: var(--color-muted);
 }
 
 .store-search-form {
@@ -1140,7 +1290,16 @@ tbody tr:last-child td {
   }
 
   .dish-form {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+  }
+
+  .dish-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-calendar {
+    grid-template-columns: 1fr;
+    overflow-x: visible;
   }
 
   .store-search-controls {

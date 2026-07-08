@@ -56,6 +56,36 @@ Pantry items are stored in `public.user_pantry_items` and sent to the dish gener
 
 Selected stores are stored per user in `public.user_stores`.
 
+Selected dishes are stored per user in `public.user_scheduled_meals`. The frontend stores the chosen recipe, recipe ingredients, and matched grocery ingredients in `meal_data` so the weekly calendar can reopen the full recipe without regenerating it.
+
+```sql
+create table if not exists public.user_scheduled_meals (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  meal_name text not null,
+  scheduled_day text not null,
+  meal_data jsonb not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.user_scheduled_meals enable row level security;
+
+create policy "Users can read their scheduled meals"
+  on public.user_scheduled_meals
+  for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert their scheduled meals"
+  on public.user_scheduled_meals
+  for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can delete their scheduled meals"
+  on public.user_scheduled_meals
+  for delete
+  using (auth.uid() = user_id);
+```
+
 The nearest Trader Joe's store number is resolved from the ZIP code a user enters in My stores and stored on `public.user_info.store_number`. Add these columns to `public.user_info` before using the Trader Joe's scraper flow:
 
 ```sql

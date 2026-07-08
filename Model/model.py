@@ -2948,7 +2948,7 @@ def recipe_result_from_recipe(recipe, matched_products, stores, filters, relevan
     return dish
 
 
-def build_real_recipe_results(meal_prompt, filters, products, stores, result_limit=8, recipe_ideas=None):
+def build_real_recipe_results(meal_prompt, filters, products, stores, result_limit=3, recipe_ideas=None):
     candidates = collect_recipe_candidates(
         meal_prompt,
         filters["dietary_restrictions"],

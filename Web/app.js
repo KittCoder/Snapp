@@ -3,7 +3,7 @@ const navButtons = document.querySelectorAll(".nav-button");
 const chatForm = document.getElementById("chat-form");
 const chatInput = document.getElementById("chat-input");
 const chatLog = document.getElementById("chat-log");
-const scheduleTableBody = document.querySelector("#schedule-table tbody");
+const scheduleCalendar = document.getElementById("schedule-calendar");
 const themeSelect = document.getElementById("theme-select");
 const notificationsToggle = document.getElementById("notifications-toggle");
 const dietSelect = document.getElementById("diet-select");
@@ -26,16 +26,14 @@ const pantryStatus = document.getElementById("pantry-status");
 const pantryList = document.getElementById("pantry-list");
 const dishForm = document.getElementById("dish-form");
 const dishInput = document.getElementById("dish-input");
-const dishMaxBudgetInput = document.getElementById("dish-max-budget");
-const dishServingsInput = document.getElementById("dish-servings");
-const dishDietaryPreferenceInput = document.getElementById("dish-dietary-preference");
-const dishIncludeIngredientsInput = document.getElementById("dish-include-ingredients");
-const dishAvoidIngredientsInput = document.getElementById("dish-avoid-ingredients");
-const dishMaxCookTimeInput = document.getElementById("dish-max-cook-time");
 const dishStatus = document.getElementById("dish-status");
 const dishResults = document.getElementById("dish-results");
 const dishSource = document.getElementById("dish-source");
 const dishEmptyState = document.getElementById("dish-empty-state");
+const dishModal = document.getElementById("dish-modal");
+const dishModalTitle = document.getElementById("dish-modal-title");
+const dishModalContent = document.getElementById("dish-modal-content");
+const dishModalClose = document.getElementById("dish-modal-close");
 const profileNameInput = document.getElementById("profile-name");
 const householdSizeInput = document.getElementById("household-size");
 const profileZipCodeInput = document.getElementById("profile-zip-code");
@@ -69,6 +67,15 @@ let myStoreMarkers = [];
 let pantryItems = [];
 let savedMyStores = [];
 const selectedMyStoreIds = new Set();
+const SCHEDULE_DAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
 
 const API_BASE_URL = (
   document.querySelector('meta[name="snapp-api-base-url"]')?.content || ""
@@ -656,6 +663,7 @@ async function renderAuthState(user) {
   syncSettingsFromUserInfo(user, currentUserInfo);
   await loadSavedStores();
   await loadPantryItems();
+  await loadScheduledMeals();
 
   if (user) {
     authTabs.hidden = true;
@@ -699,36 +707,258 @@ function renderBudget() {
   scheduledMealCost.textContent = currencyFormatter.format(scheduledTotal);
 }
 
+function scheduledMealStorageKey() {
+  return `snapp:scheduled-meals:${currentUser?.id || "guest"}`;
+}
+
+function loadScheduledMealsFromStorage() {
+  try {
+    const storedMeals = JSON.parse(
+      window.localStorage.getItem(scheduledMealStorageKey()) || "[]"
+    );
+    scheduledMeals.splice(0, scheduledMeals.length, ...storedMeals);
+  } catch {
+    scheduledMeals.splice(0, scheduledMeals.length);
+  }
+}
+
+function saveScheduledMealsToStorage() {
+  window.localStorage.setItem(
+    scheduledMealStorageKey(),
+    JSON.stringify(scheduledMeals)
+  );
+}
+
+function normalizeScheduledMeal(record) {
+  const mealData = record.meal_data || record.dish || record;
+  return {
+    ...mealData,
+    schedule_id: record.id || mealData.schedule_id || mealData.recipe_id || mealData.name,
+    scheduled_day: record.scheduled_day || mealData.scheduled_day || nextScheduleDay(),
+  };
+}
+
+function nextScheduleDay() {
+  const dayCounts = new Map(SCHEDULE_DAYS.map((day) => [day, 0]));
+  scheduledMeals.forEach((meal) => {
+    if (dayCounts.has(meal.scheduled_day)) {
+      dayCounts.set(meal.scheduled_day, dayCounts.get(meal.scheduled_day) + 1);
+    }
+  });
+  return [...dayCounts.entries()].sort((a, b) => a[1] - b[1])[0][0];
+}
+
+async function loadScheduledMeals() {
+  scheduledMeals.splice(0, scheduledMeals.length);
+
+  if (!currentUser) {
+    renderSchedule();
+    return;
+  }
+
+  if (!supabaseClient) {
+    loadScheduledMealsFromStorage();
+    renderSchedule();
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("user_scheduled_meals")
+    .select("id,scheduled_day,meal_data,created_at")
+    .eq("user_id", currentUser.id)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    loadScheduledMealsFromStorage();
+    renderSchedule();
+    return;
+  }
+
+  scheduledMeals.splice(
+    0,
+    scheduledMeals.length,
+    ...(data || []).map(normalizeScheduledMeal)
+  );
+  saveScheduledMealsToStorage();
+  renderSchedule();
+}
+
 function renderSchedule() {
-  scheduleTableBody.replaceChildren();
+  scheduleCalendar.replaceChildren();
 
-  scheduledMeals.forEach((meal, index) => {
-    const row = document.createElement("tr");
-    const orderCell = document.createElement("td");
-    const mealCell = document.createElement("td");
-    const caloriesCell = document.createElement("td");
-    const priceCell = document.createElement("td");
+  SCHEDULE_DAYS.forEach((day) => {
+    const dayColumn = document.createElement("section");
+    const title = document.createElement("h3");
+    const mealList = document.createElement("div");
+    const dayMeals = scheduledMeals.filter((meal) => meal.scheduled_day === day);
 
-    orderCell.textContent = index + 1;
-    mealCell.textContent = meal.name;
-    caloriesCell.textContent = `${meal.calories_total || meal.calories_per_person} total`;
-    priceCell.textContent = currencyFormatter.format(meal.estimated_price_total);
+    dayColumn.className = "schedule-day";
+    title.textContent = day;
+    mealList.className = "schedule-day-meals";
 
-    row.append(orderCell, mealCell, caloriesCell, priceCell);
-    scheduleTableBody.appendChild(row);
+    if (!dayMeals.length) {
+      const empty = document.createElement("p");
+      empty.className = "schedule-empty";
+      empty.textContent = "No meal selected";
+      mealList.appendChild(empty);
+    }
+
+    dayMeals.forEach((meal) => {
+      mealList.appendChild(createScheduleMealButton(meal));
+    });
+
+    dayColumn.append(title, mealList);
+    scheduleCalendar.appendChild(dayColumn);
   });
 
   renderBudget();
 }
 
-function addMealToSchedule(dish) {
-  const isAlreadyScheduled = scheduledMeals.some((meal) => meal.name === dish.name);
-  if (!isAlreadyScheduled) {
-    scheduledMeals.push(dish);
-    renderSchedule();
+function createScheduleMealButton(meal) {
+  const button = document.createElement("button");
+  const price = document.createElement("span");
+  button.type = "button";
+  button.className = "schedule-meal";
+  button.textContent = meal.name;
+  price.textContent = currencyFormatter.format(meal.estimated_price_total || 0);
+  button.appendChild(price);
+  button.addEventListener("click", () => openDishModal(meal));
+  return button;
+}
+
+async function addMealToSchedule(dish) {
+  const identity = dish.recipe_id || dish.name;
+  const isAlreadyScheduled = scheduledMeals.some(
+    (meal) => (meal.recipe_id || meal.name) === identity
+  );
+  if (isAlreadyScheduled) {
+    showPanel("schedule");
+    return;
   }
 
+  const scheduledMeal = {
+    ...dish,
+    scheduled_day: nextScheduleDay(),
+  };
+
+  if (supabaseClient && currentUser) {
+    const { data, error } = await supabaseClient
+      .from("user_scheduled_meals")
+      .insert({
+        user_id: currentUser.id,
+        meal_name: dish.name,
+        scheduled_day: scheduledMeal.scheduled_day,
+        meal_data: scheduledMeal,
+      })
+      .select("id,scheduled_day,meal_data,created_at")
+      .single();
+
+    if (!error && data) {
+      scheduledMeals.push(normalizeScheduledMeal(data));
+      saveScheduledMealsToStorage();
+      renderSchedule();
+      showPanel("schedule");
+      return;
+    }
+  }
+
+  scheduledMeals.push({
+    ...scheduledMeal,
+    schedule_id: scheduledMeal.recipe_id || scheduledMeal.name,
+  });
+  saveScheduledMealsToStorage();
+  renderSchedule();
   showPanel("schedule");
+}
+
+function openDishModal(dish) {
+  const recipe = dish.recipe || {};
+  dishModalTitle.textContent = dish.name || "Recipe";
+  dishModalContent.replaceChildren();
+
+  if (recipe.thumbnail) {
+    const image = document.createElement("img");
+    image.className = "dish-modal-image";
+    image.src = recipe.thumbnail;
+    image.alt = `${dish.name} recipe photo`;
+    dishModalContent.appendChild(image);
+  }
+
+  const summary = document.createElement("p");
+  summary.className = "dish-modal-summary";
+  summary.textContent = [
+    dish.servings ? `${dish.servings} serving${dish.servings === 1 ? "" : "s"}` : "",
+    dish.estimated_price_total
+      ? `${currencyFormatter.format(dish.estimated_price_total)} estimated groceries`
+      : "",
+    dish.calories_total ? `${dish.calories_total} matched grocery calories` : "",
+  ].filter(Boolean).join(" | ");
+  dishModalContent.appendChild(summary);
+
+  appendModalSection("Recipe ingredients", recipe.ingredients || [], (ingredient) =>
+    ingredient.display || ingredient.measure || ingredient.name
+  );
+  appendModalSection("Ingredients to buy", dish.ingredients_to_buy || dish.ingredients || [], (ingredient) => {
+    const storeText = ingredient.store_name ? ` at ${ingredient.store_name}` : "";
+    const priceText = ingredient.estimated_price_total
+      ? ` - ${currencyFormatter.format(ingredient.estimated_price_total)}`
+      : "";
+    return `${ingredient.product_name || ingredient.name}${ingredient.package_size ? ` (${ingredient.package_size})` : ""}${storeText}${priceText}`;
+  });
+
+  const instructionsHeading = document.createElement("h4");
+  const instructions = document.createElement("p");
+  instructionsHeading.textContent = "Instructions";
+  instructions.textContent =
+    recipe.instructions || dish.method || "Open the source recipe for cooking instructions.";
+  dishModalContent.append(instructionsHeading, instructions);
+
+  if (recipe.source || recipe.youtube) {
+    const links = document.createElement("p");
+    links.className = "dish-recipe-links";
+    if (recipe.source) {
+      const sourceLink = document.createElement("a");
+      sourceLink.href = recipe.source;
+      sourceLink.target = "_blank";
+      sourceLink.rel = "noopener noreferrer";
+      sourceLink.textContent = "Recipe source";
+      links.appendChild(sourceLink);
+    }
+    if (recipe.youtube) {
+      if (links.childNodes.length) links.append(" | ");
+      const youtubeLink = document.createElement("a");
+      youtubeLink.href = recipe.youtube;
+      youtubeLink.target = "_blank";
+      youtubeLink.rel = "noopener noreferrer";
+      youtubeLink.textContent = "Video";
+      links.appendChild(youtubeLink);
+    }
+    dishModalContent.appendChild(links);
+  }
+
+  if (typeof dishModal.showModal === "function") {
+    dishModal.showModal();
+  } else {
+    dishModal.setAttribute("open", "");
+  }
+}
+
+function appendModalSection(title, items, formatter) {
+  const heading = document.createElement("h4");
+  const list = document.createElement("ul");
+  heading.textContent = title;
+  list.className = "dish-modal-list";
+  if (!items.length) {
+    const item = document.createElement("li");
+    item.textContent = "None available.";
+    list.appendChild(item);
+  }
+  items.forEach((value) => {
+    const item = document.createElement("li");
+    item.textContent = formatter(value);
+    list.appendChild(item);
+  });
+  dishModalContent.append(heading, list);
 }
 
 function appendMessage(type, text) {
@@ -1034,10 +1264,20 @@ function renderMyStores(data) {
   myStoreSource.hidden = false;
 }
 
-async function fetchDishes(mealPrompt, householdSize, dietaryRestrictions, filters = {}) {
+async function fetchDishes(mealPrompt) {
   let lastError = API_BASE_URL
     ? "Unable to reach the dishes backend."
     : "Backend URL is not configured.";
+  const householdSize = getHouseholdSize();
+  const dietaryRestrictions =
+    currentUserInfo?.dietary_restrictions ?? dietaryRestrictionsInput.value.trim();
+  const maxBudget =
+    currentUserInfo?.budget != null
+      ? Number(currentUserInfo.budget)
+      : budgetInput.value
+        ? Number(budgetInput.value)
+        : null;
+  const dietaryPreference = currentUserInfo?.dietary_preference || dietSelect.value;
 
   for (const endpoint of getApiEndpoints("/dishes")) {
     try {
@@ -1048,12 +1288,12 @@ async function fetchDishes(mealPrompt, householdSize, dietaryRestrictions, filte
           meal_prompt: mealPrompt,
           household_size: householdSize,
           dietary_restrictions: dietaryRestrictions,
-          max_budget: filters.maxBudget,
-          servings: filters.servings,
-          dietary_preference: filters.dietaryPreference,
-          include_ingredients: filters.includeIngredients,
-          avoid_ingredients: filters.avoidIngredients,
-          max_cook_time: filters.maxCookTime,
+          max_budget: maxBudget,
+          servings: householdSize,
+          dietary_preference: dietaryPreference,
+          include_ingredients: "",
+          avoid_ingredients: dietaryRestrictions,
+          max_cook_time: null,
           pantry_items: pantryItems.map((item) => ({
             name: item.name,
             quantity: item.quantity,
@@ -1113,42 +1353,71 @@ function renderStores(stores) {
   });
 }
 
-function getDishFilters(householdSize) {
-  return {
-    maxBudget: dishMaxBudgetInput.value ? Number(dishMaxBudgetInput.value) : null,
-    servings: dishServingsInput.value ? Number(dishServingsInput.value) : householdSize,
-    dietaryPreference: dishDietaryPreferenceInput.value,
-    includeIngredients: dishIncludeIngredientsInput.value.trim(),
-    avoidIngredients: dishAvoidIngredientsInput.value.trim(),
-    maxCookTime: dishMaxCookTimeInput.value ? Number(dishMaxCookTimeInput.value) : null,
-  };
+function renderDishes(data) {
+  dishEmptyState.hidden = true;
+  const botMessage = document.createElement("li");
+  const intro = document.createElement("p");
+  const cards = document.createElement("div");
+  botMessage.className = "dish-message bot";
+  intro.textContent = data.dishes.length
+    ? "Here are the three best recipe matches I found."
+    : "I could not find recipe matches for that request.";
+  cards.className = "dish-card-grid";
+  botMessage.append(intro, cards);
+
+  data.dishes.slice(0, 3).forEach((dish) => {
+    cards.appendChild(createDishCard(dish));
+  });
+
+  if (data.used_relaxed_matches) {
+    const relaxed = document.createElement("p");
+    relaxed.className = "dish-missing";
+    relaxed.textContent = "No exact match was found, so SNAPP is showing the closest affordable real recipes.";
+    botMessage.appendChild(relaxed);
+  }
+
+  if (data.missing_ingredients?.length) {
+    const missing = document.createElement("p");
+    missing.className = "dish-missing";
+    missing.textContent = `No USDA match found for: ${data.missing_ingredients.join(", ")}.`;
+    botMessage.appendChild(missing);
+  }
+
+  dishResults.appendChild(botMessage);
+  dishResults.scrollTop = dishResults.scrollHeight;
 }
 
-function renderDishes(data) {
-  dishResults.replaceChildren();
+function appendDishMessage(type, text) {
+  const item = document.createElement("li");
+  item.className = `dish-message ${type}`;
+  item.textContent = text;
+  dishResults.appendChild(item);
+  dishResults.scrollTop = dishResults.scrollHeight;
   dishEmptyState.hidden = true;
+  return item;
+}
 
-  data.dishes.forEach((dish) => {
+function createDishCard(dish) {
     const nutritionTotal = dish.nutrition_total || {};
-    const nutritionPerPerson = dish.nutrition_per_person || {};
-    const ingredientsToBuy = dish.ingredients_to_buy || dish.ingredients || [];
-    const item = document.createElement("li");
+    const card = document.createElement("article");
     const title = document.createElement("h3");
     const calories = document.createElement("p");
     const price = document.createElement("p");
     const metadata = document.createElement("p");
-    const method = document.createElement("p");
     const totalNutrition = document.createElement("div");
-    const perPersonNutrition = document.createElement("div");
     const restrictionWarnings = getRestrictionWarnings(dish);
-    const ingredientsHeading = document.createElement("h4");
-    const ingredientList = document.createElement("ul");
-    const recipeIngredientsHeading = document.createElement("h4");
-    const recipeIngredientList = document.createElement("ul");
-    const recipeLinks = document.createElement("p");
     const scheduleButton = document.createElement("button");
     const recipe = dish.recipe || {};
 
+    card.className = "dish-card";
+    card.tabIndex = 0;
+    card.addEventListener("click", () => openDishModal(dish));
+    card.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openDishModal(dish);
+      }
+    });
     title.textContent = dish.name;
     calories.className = "dish-calories";
     calories.textContent = dish.calories_total
@@ -1164,135 +1433,54 @@ function renderDishes(data) {
       dish.cook_time_minutes ? `${dish.cook_time_minutes} min` : "",
       ...(dish.dietary_tags || []),
     ].filter(Boolean).join(" | ");
-    method.className = "dish-method";
-    method.textContent = recipe.instructions || dish.method || "Open the source recipe for cooking instructions.";
     totalNutrition.className = "dish-nutrition";
     totalNutrition.textContent = [
-      "Total nutrition:",
       `${nutritionTotal.protein_g || 0}g protein`,
       `${nutritionTotal.carbohydrates_g || 0}g carbs`,
       `${nutritionTotal.fat_g || 0}g fat`,
       `${nutritionTotal.fiber_g || 0}g fiber`,
     ].join(" | ");
-    perPersonNutrition.className = "dish-nutrition";
-    perPersonNutrition.textContent = [
-      "Per person:",
-      `${nutritionPerPerson.protein_g || 0}g protein`,
-      `${nutritionPerPerson.carbohydrates_g || 0}g carbs`,
-      `${nutritionPerPerson.fat_g || 0}g fat`,
-      `${nutritionPerPerson.fiber_g || 0}g fiber`,
-    ].join(" | ");
-    ingredientsHeading.className = "dish-ingredients-heading";
-    ingredientsHeading.textContent = "Ingredients to buy";
-    ingredientList.className = "dish-ingredients";
-    recipeIngredientsHeading.className = "dish-ingredients-heading";
-    recipeIngredientsHeading.textContent = "Recipe ingredients";
-    recipeIngredientList.className = "dish-ingredients";
-    recipeLinks.className = "dish-recipe-links";
     scheduleButton.type = "button";
     scheduleButton.className = "add-to-schedule-button";
-    scheduleButton.textContent = "Add to schedule";
-    scheduleButton.addEventListener("click", () => addMealToSchedule(dish));
-
-    ingredientsToBuy.forEach((ingredient) => {
-      const ingredientItem = document.createElement("li");
-      const storeText = ingredient.store_name ? ` at ${ingredient.store_name}` : "";
-      ingredientItem.textContent = `${ingredient.product_name || ingredient.name} (${ingredient.package_size})${storeText} - ${currencyFormatter.format(ingredient.estimated_price_total)}`;
-      ingredientList.appendChild(ingredientItem);
-    });
-    if (!ingredientsToBuy.length) {
-      const ingredientItem = document.createElement("li");
-      ingredientItem.textContent = "No matching item in the grocery pricing database.";
-      ingredientList.appendChild(ingredientItem);
-    }
-
-    (recipe.ingredients || []).forEach((ingredient) => {
-      const ingredientItem = document.createElement("li");
-      ingredientItem.textContent = ingredient.display || ingredient.name;
-      recipeIngredientList.appendChild(ingredientItem);
+    scheduleButton.textContent = "Add to calendar";
+    scheduleButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      addMealToSchedule(dish);
     });
 
-    if (recipe.source || recipe.youtube) {
-      const links = [];
-      if (recipe.source) {
-        const sourceLink = document.createElement("a");
-        sourceLink.href = recipe.source;
-        sourceLink.target = "_blank";
-        sourceLink.rel = "noopener noreferrer";
-        sourceLink.textContent = "Recipe source";
-        links.push(sourceLink);
-      }
-      if (recipe.youtube) {
-        const youtubeLink = document.createElement("a");
-        youtubeLink.href = recipe.youtube;
-        youtubeLink.target = "_blank";
-        youtubeLink.rel = "noopener noreferrer";
-        youtubeLink.textContent = "Video";
-        links.push(youtubeLink);
-      }
-      links.forEach((link, index) => {
-        if (index) recipeLinks.append(" | ");
-        recipeLinks.appendChild(link);
-      });
-    }
-
-    item.appendChild(title);
+    card.appendChild(title);
 
     if (recipe.thumbnail) {
       const image = document.createElement("img");
       image.className = "dish-recipe-image";
       image.src = recipe.thumbnail;
       image.alt = `${dish.name} recipe photo`;
-      item.appendChild(image);
+      card.appendChild(image);
     }
 
-    item.append(
+    card.append(
       calories,
       price,
       metadata,
       totalNutrition,
-      perPersonNutrition,
-      method
+      scheduleButton
     );
 
     if (dish.exact_match === false) {
       const relaxedMessage = document.createElement("p");
       relaxedMessage.className = "dish-warning";
       relaxedMessage.textContent = "Closest affordable match; some filters were relaxed.";
-      item.appendChild(relaxedMessage);
+      card.appendChild(relaxedMessage);
     }
 
     restrictionWarnings.forEach((warning) => {
       const warningMessage = document.createElement("p");
       warningMessage.className = "dish-warning";
       warningMessage.textContent = warning;
-      item.appendChild(warningMessage);
+      card.appendChild(warningMessage);
     });
 
-    item.append(
-      recipeIngredientsHeading,
-      recipeIngredientList,
-      recipeLinks,
-      ingredientsHeading,
-      ingredientList,
-      scheduleButton
-    );
-    dishResults.appendChild(item);
-  });
-
-  if (data.used_relaxed_matches) {
-    const relaxed = document.createElement("li");
-    relaxed.className = "dish-missing";
-    relaxed.textContent = "No exact match was found, so SNAPP is showing the closest affordable real recipes.";
-    dishResults.appendChild(relaxed);
-  }
-
-  if (data.missing_ingredients.length) {
-    const missing = document.createElement("li");
-    missing.className = "dish-missing";
-    missing.textContent = `No USDA match found for: ${data.missing_ingredients.join(", ")}.`;
-    dishResults.appendChild(missing);
-  }
+  return card;
 }
 
 async function initializeAuth() {
@@ -1521,27 +1709,29 @@ dishForm.addEventListener("submit", async (event) => {
 
   const submitButton = dishForm.querySelector("button");
   submitButton.disabled = true;
-  dishStatus.textContent = "Searching real recipes and matching grocery prices...";
-  dishResults.replaceChildren();
+  appendDishMessage("user", mealPrompt);
+  dishInput.value = "";
+  dishStatus.textContent = "Searching your saved profile, pantry, recipes, and grocery prices...";
   dishSource.hidden = true;
-  dishEmptyState.hidden = false;
 
   try {
-    const householdSize = getHouseholdSize();
-    const dietaryRestrictions = dietaryRestrictionsInput.value.trim();
-    const data = await fetchDishes(
-      mealPrompt,
-      householdSize,
-      dietaryRestrictions,
-      getDishFilters(householdSize)
-    );
+    const data = await fetchDishes(mealPrompt);
     renderDishes(data);
-    dishStatus.textContent = `Found ${data.dishes.length} real recipe ${data.dishes.length === 1 ? "match" : "matches"} with grocery price estimates.`;
+    dishStatus.textContent = `Found ${Math.min(data.dishes.length, 3)} best recipe ${data.dishes.length === 1 ? "match" : "matches"} with grocery price estimates.`;
     dishSource.hidden = false;
   } catch (error) {
+    appendDishMessage("bot", `Dish search error: ${error.message}`);
     dishStatus.textContent = `Dish search error: ${error.message}`;
   } finally {
     submitButton.disabled = false;
+    dishInput.focus();
+  }
+});
+
+dishModalClose.addEventListener("click", () => dishModal.close());
+dishModal.addEventListener("click", (event) => {
+  if (event.target === dishModal) {
+    dishModal.close();
   }
 });
 

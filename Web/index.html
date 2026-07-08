@@ -289,10 +289,10 @@
 
       <section id="dishes" class="panel">
         <h2>Dishes</h2>
-        <p>Describe the kind of real recipe you want, then filter by budget, servings, ingredients, diet, and cook time.</p>
+        <p>Ask for a meal idea. SNAPP uses your saved profile, pantry, budget, diet, and store settings automatically.</p>
         <div class="dish-chat-window">
           <div id="dish-empty-state" class="dish-empty-state">
-            Try cheap high-protein dinners, vegetarian meals with rice, or breakfast under $3.
+            Try "cheap high-protein dinners", "vegetarian meals with rice", or "breakfast for this week".
           </div>
           <ul id="dish-results" class="dish-results"></ul>
         </div>
@@ -304,68 +304,7 @@
             autocomplete="off"
             required
           />
-          <div class="dish-filter-grid">
-            <label>
-              Max budget
-              <input
-                type="number"
-                id="dish-max-budget"
-                min="0"
-                step="0.01"
-                placeholder="e.g. 12"
-              />
-            </label>
-            <label>
-              Servings
-              <input
-                type="number"
-                id="dish-servings"
-                min="1"
-                max="12"
-                step="1"
-                placeholder="Household"
-              />
-            </label>
-            <label>
-              Dietary preference
-              <select id="dish-dietary-preference">
-                <option value="">Any</option>
-                <option value="balanced">Balanced</option>
-                <option value="vegetarian">Vegetarian</option>
-                <option value="vegan">Vegan</option>
-                <option value="gluten free">Gluten-free</option>
-                <option value="dairy free">Dairy-free</option>
-              </select>
-            </label>
-            <label>
-              Max cook time
-              <input
-                type="number"
-                id="dish-max-cook-time"
-                min="1"
-                max="600"
-                step="1"
-                placeholder="Minutes"
-              />
-            </label>
-            <label>
-              Include ingredients
-              <input
-                type="text"
-                id="dish-include-ingredients"
-                placeholder="rice, chicken"
-              />
-            </label>
-            <label>
-              Avoid ingredients
-              <input
-                type="text"
-                id="dish-avoid-ingredients"
-                placeholder="peanuts, dairy"
-              />
-            </label>
-          </div>
-          <button type="submit">Find dishes</button>
+          <button type="submit">Send</button>
         </form>
         <div id="dish-status" class="dish-status" role="status" aria-live="polite"></div>
         <p id="dish-source" class="dish-source" hidden>
@@ -375,20 +314,8 @@
 
       <section id="schedule" class="panel">
         <h2>Weekly Meal Schedule</h2>
-        <p>Meals you add from the Dishes tab appear here.</p>
-        <div class="table-wrapper">
-          <table id="schedule-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Meal</th>
-                <th>Total calories</th>
-                <th>Total price</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
+        <p>Meals you select from the Dishes chat appear here. Click a meal to view its recipe and ingredients.</p>
+        <div id="schedule-calendar" class="schedule-calendar"></div>
       </section>
 
       <section id="my" class="panel">
@@ -579,6 +506,14 @@
         </section>
       </section>
     </main>
+
+    <dialog id="dish-modal" class="dish-modal">
+      <div class="dish-modal-header">
+        <h3 id="dish-modal-title"></h3>
+        <button type="button" id="dish-modal-close" aria-label="Close recipe">&times;</button>
+      </div>
+      <div id="dish-modal-content" class="dish-modal-content"></div>
+    </dialog>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
