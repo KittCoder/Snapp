@@ -899,6 +899,9 @@ function openDishModal(dish) {
     ingredient.display || ingredient.measure || ingredient.name
   );
   appendModalSection("Ingredients to buy", dish.ingredients_to_buy || dish.ingredients || [], (ingredient) => {
+    if (ingredient.unavailable || ingredient.availability_status === "unavailable") {
+      return `${ingredient.recipe_ingredient || ingredient.name} - ${ingredient.package_size || "Unavailable"}`;
+    }
     const storeText = ingredient.store_name ? ` at ${ingredient.store_name}` : "";
     const priceText = ingredient.estimated_price_total
       ? ` - ${currencyFormatter.format(ingredient.estimated_price_total)}`
@@ -1399,6 +1402,9 @@ function appendDishMessage(type, text) {
 
 function createDishCard(dish) {
     const nutritionTotal = dish.nutrition_total || {};
+    const unavailableCount = (dish.ingredients_to_buy || dish.ingredients || []).filter(
+      (ingredient) => ingredient.unavailable || ingredient.availability_status === "unavailable"
+    ).length;
     const card = document.createElement("article");
     const title = document.createElement("h3");
     const calories = document.createElement("p");
@@ -1471,6 +1477,13 @@ function createDishCard(dish) {
       relaxedMessage.className = "dish-warning";
       relaxedMessage.textContent = "Closest affordable match; some filters were relaxed.";
       card.appendChild(relaxedMessage);
+    }
+
+    if (unavailableCount) {
+      const unavailableMessage = document.createElement("p");
+      unavailableMessage.className = "dish-warning";
+      unavailableMessage.textContent = `${unavailableCount} ingredient${unavailableCount === 1 ? "" : "s"} unavailable at Trader Joe's.`;
+      card.appendChild(unavailableMessage);
     }
 
     restrictionWarnings.forEach((warning) => {

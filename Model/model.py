@@ -1027,10 +1027,25 @@ def load_trader_joes_grocery_db(store_number):
 
 
 def grocery_db_for_store(store_number=None):
-    trader_joes_db = load_trader_joes_grocery_db(store_number)
-    if trader_joes_db:
-        return trader_joes_db
-    return load_demo_grocery_db()
+    if store_number:
+        trader_joes_db = load_trader_joes_grocery_db(store_number)
+        if trader_joes_db:
+            trader_joes_db["pricing_source"] = "trader_joes"
+            return trader_joes_db
+        return {
+            "stores": [
+                {
+                    "id": f"trader-joes-{store_number}",
+                    "name": f"Trader Joe's #{store_number}",
+                }
+            ],
+            "products": [],
+            "pricing_source": "trader_joes",
+            "pricing_unavailable": True,
+        }
+    demo_db = load_demo_grocery_db()
+    demo_db["pricing_source"] = "demo"
+    return demo_db
 
 
 def product_effective_price(product):
@@ -2469,6 +2484,7 @@ def match_recipe_ingredients_to_products(recipe, products):
             and product_matches_recipe_ingredient(product, ingredient["name"])
         ]
         if not eligible_products:
+            matches.append((ingredient, None))
             continue
         product = sorted(eligible_products, key=product_effective_price)[0]
         used_product_ids.add(product["id"])
@@ -2476,7 +2492,17 @@ def match_recipe_ingredients_to_products(recipe, products):
     return matches
 
 
-def spoonacular_recipe_to_demo_dish(recipe, matched_products, stores, household_size):
+def matched_product_count(matched_products):
+    return sum(1 for _ingredient, product in matched_products if product)
+
+
+def spoonacular_recipe_to_demo_dish(
+    recipe,
+    matched_products,
+    stores,
+    household_size,
+    grocery_label="grocery database",
+):
     ingredient_lines = []
     total_calories = 0
     total_price = 0
@@ -2489,7 +2515,31 @@ def spoonacular_recipe_to_demo_dish(recipe, matched_products, stores, household_
         "sodium_mg": 0,
     }
 
-    for recipe_ingredient, product in matched_products[:6]:
+    for recipe_ingredient, product in matched_products[:10]:
+        if not product:
+            ingredient_lines.append(
+                {
+                    "product_id": None,
+                    "name": recipe_ingredient["name"],
+                    "recipe_ingredient": recipe_ingredient["name"],
+                    "recipe_measure": recipe_ingredient["measure"],
+                    "product_name": f"{recipe_ingredient['name']} unavailable",
+                    "matched_food": None,
+                    "food_group": None,
+                    "store_name": grocery_label,
+                    "package_size": f"Unavailable at {grocery_label}",
+                    "package_grams": None,
+                    "grams_total": 0,
+                    "grams_per_person": 0,
+                    "calories_total": 0,
+                    "calories_per_person": 0,
+                    "estimated_price_total": 0,
+                    "estimated_price_per_serving": 0,
+                    "availability_status": "unavailable",
+                    "unavailable": True,
+                }
+            )
+            continue
         package_grams = int(product.get("package_grams") or 0)
         grams_total = min(package_grams, max(80, household_size * 125))
         if grams_total < 1:
@@ -2549,7 +2599,7 @@ def spoonacular_recipe_to_demo_dish(recipe, matched_products, stores, household_
         },
         "ingredients": ingredient_lines,
         "ingredients_to_buy": ingredient_lines,
-        "portion_note": f"Recipe from {provider_name}. Grocery matches are from the SNAPP grocery pricing database.",
+        "portion_note": f"Recipe from {provider_name}. Grocery matches are from {grocery_label}.",
         "method": recipe["instructions"],
         "recipe": recipe,
         "recipe_id": recipe["id"],
@@ -2615,7 +2665,7 @@ def build_spoonacular_demo_grocery_dishes(
         if not spoonacular_respects_restrictions(recipe, dietary_restrictions):
             return False
         matches = match_recipe_ingredients_to_products(recipe, products)
-        if len(matches) < minimum_matches:
+        if matched_product_count(matches) < minimum_matches:
             return False
         dishes.append(spoonacular_recipe_to_demo_dish(recipe, matches, stores, household_size))
         used_ids.add(recipe_id)
@@ -2918,9 +2968,23 @@ def collect_recipe_candidates(meal_prompt, dietary_restrictions, recipe_ideas=No
     return mealdb_candidates_for_ideas(effective_ideas, meal_prompt)
 
 
-def recipe_result_from_recipe(recipe, matched_products, stores, filters, relevance_score, exact_match):
+def recipe_result_from_recipe(
+    recipe,
+    matched_products,
+    stores,
+    filters,
+    relevance_score,
+    exact_match,
+    grocery_label="grocery database",
+):
     servings = filters["servings"]
-    dish = spoonacular_recipe_to_demo_dish(recipe, matched_products, stores, servings)
+    dish = spoonacular_recipe_to_demo_dish(
+        recipe,
+        matched_products,
+        stores,
+        servings,
+        grocery_label=grocery_label,
+    )
     recipe_details = dish.get("recipe") or {}
     recipe_details["servings"] = recipe_servings(recipe, servings)
     recipe_details["cook_time_minutes"] = recipe_ready_minutes(recipe)
@@ -2948,7 +3012,15 @@ def recipe_result_from_recipe(recipe, matched_products, stores, filters, relevan
     return dish
 
 
-def build_real_recipe_results(meal_prompt, filters, products, stores, result_limit=3, recipe_ideas=None):
+def build_real_recipe_results(
+    meal_prompt,
+    filters,
+    products,
+    stores,
+    result_limit=3,
+    recipe_ideas=None,
+    grocery_label="grocery database",
+):
     candidates = collect_recipe_candidates(
         meal_prompt,
         filters["dietary_restrictions"],
@@ -2971,6 +3043,7 @@ def build_real_recipe_results(meal_prompt, filters, products, stores, result_lim
             filters,
             relevance_score,
             exact_match,
+            grocery_label=grocery_label,
         )
         if filters["max_budget"] is not None and result["estimated_price_total"] > filters["max_budget"]:
             closest_results.append(result)
@@ -3536,6 +3609,7 @@ def dishes():
         grocery_db = grocery_db_for_store(store_number)
         stores = demo_store_lookup(grocery_db)
         products = available_demo_products(grocery_db)
+        grocery_label = "Trader Joe's" if store_number else "SNAPP demo grocery database"
         recipe_ideas = generate_recipe_search_ideas(
             meal_prompt,
             filters["servings"],
@@ -3548,6 +3622,7 @@ def dishes():
             products,
             stores,
             recipe_ideas=recipe_ideas,
+            grocery_label=grocery_label,
         )
     except RuntimeError as exc:
         return jsonify({"error": str(exc)}), 503
@@ -3571,6 +3646,8 @@ def dishes():
             "recipe_ideas": recipe_ideas,
             "used_relaxed_matches": used_relaxed_matches,
             "store_number": store_number,
+            "pricing_source": grocery_db.get("pricing_source"),
+            "pricing_unavailable": bool(grocery_db.get("pricing_unavailable")),
             "source": "TheMealDB recipes selected from AI-generated meal ideas and current grocery pricing database",
         }
     )
