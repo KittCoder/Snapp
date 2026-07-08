@@ -1,20 +1,22 @@
 {
   "metadata": {
+    "actor_id": "merry_arctic~trader-joes-scraper",
     "notes": [
-      "Run `python scraper.py` from the Model directory to populate this file with Morton Williams pricing.",
+      "Run `python scraper.py` from the Model directory to populate this file with Trader Joe's pricing.",
       "The backend falls back to snapp_demo_grocery_db.json while this file has no products."
     ],
     "product_count": 0,
-    "source": "Morton Williams public online storefront",
-    "source_url": "https://shop.mortonwilliams.com/store/morton-williams-supermarket/storefront"
+    "source": "Apify Trader Joe's Scraper",
+    "source_url": "https://apify.com/merry_arctic/trader-joes-scraper",
+    "store_number": "613"
   },
   "products": [],
   "stores": [
     {
       "accepts_snap": true,
-      "id": "morton_williams_online",
-      "name": "Morton Williams Supermarket",
-      "website": "https://shop.mortonwilliams.com/store/morton-williams-supermarket/storefront"
+      "id": "trader_joes_613",
+      "name": "Trader Joe's Store 613",
+      "website": "https://www.traderjoes.com/home"
     }
   ]
 }

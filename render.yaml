@@ -10,5 +10,9 @@ services:
     envVars:
       - key: OPENAI_API_KEY
         sync: false
+      - key: APIFY_API_TOKEN
+        sync: false
+      - key: APIFY_TRADER_JOES_ACTOR_ID
+        value: merry_arctic~trader-joes-scraper
       - key: CORS_ORIGINS
         value: https://snapp-1d5j.vercel.app

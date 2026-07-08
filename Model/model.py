@@ -36,7 +36,9 @@ MAX_STORE_RADIUS_MILES = 25
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 ZIPPOPOTAM_URL = "https://api.zippopotam.us/us"
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
-SPOONACULAR_API_KEY = os.getenv("SPOONACULAR_API_KEY", "")
+TRADER_JOES_LOCATIONS_BASE_URL = "https://locations.traderjoes.com"
+ENABLE_SPOONACULAR = os.getenv("ENABLE_SPOONACULAR", "false").casefold() == "true"
+SPOONACULAR_API_KEY = os.getenv("SPOONACULAR_API_KEY", "") if ENABLE_SPOONACULAR else ""
 SPOONACULAR_BASE_URL = os.getenv(
     "SPOONACULAR_BASE_URL", "https://api.spoonacular.com"
 ).rstrip("/")
@@ -51,15 +53,72 @@ HTTP_RETRY_ATTEMPTS = 2
 USER_AGENT = "SNAPP/1.0 (https://github.com/KittCoder/Snapp)"
 STORE_CACHE_TTL_SECONDS = 15 * 60
 FOOD_CACHE_TTL_SECONDS = 60 * 60
+TRADER_JOES_STORE_CACHE_TTL_SECONDS = 24 * 60 * 60
+TRADER_JOES_PRODUCT_CACHE_TTL_SECONDS = 12 * 60 * 60
 SCRAPED_GROCERY_DB_FILENAME = "data.json"
 DEMO_GROCERY_DB_FILENAME = "snapp_demo_grocery_db.json"
 store_search_cache = {}
+trader_joes_store_cache = {}
+trader_joes_product_cache = {}
 food_search_cache = {}
 spoonacular_search_cache = {}
 spoonacular_lookup_cache = {}
 robots_cache = {}
 FDC_SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
 FDC_API_KEY = os.getenv("FDC_API_KEY") or os.getenv("FOODDATA_CENTRAL_API_KEY") or "DEMO_KEY"
+US_STATE_CODES = {
+    "alabama": "al",
+    "alaska": "ak",
+    "arizona": "az",
+    "arkansas": "ar",
+    "california": "ca",
+    "colorado": "co",
+    "connecticut": "ct",
+    "delaware": "de",
+    "district of columbia": "dc",
+    "florida": "fl",
+    "georgia": "ga",
+    "hawaii": "hi",
+    "idaho": "id",
+    "illinois": "il",
+    "indiana": "in",
+    "iowa": "ia",
+    "kansas": "ks",
+    "kentucky": "ky",
+    "louisiana": "la",
+    "maine": "me",
+    "maryland": "md",
+    "massachusetts": "ma",
+    "michigan": "mi",
+    "minnesota": "mn",
+    "mississippi": "ms",
+    "missouri": "mo",
+    "montana": "mt",
+    "nebraska": "ne",
+    "nevada": "nv",
+    "new hampshire": "nh",
+    "new jersey": "nj",
+    "new mexico": "nm",
+    "new york": "ny",
+    "north carolina": "nc",
+    "north dakota": "nd",
+    "ohio": "oh",
+    "oklahoma": "ok",
+    "oregon": "or",
+    "pennsylvania": "pa",
+    "rhode island": "ri",
+    "south carolina": "sc",
+    "south dakota": "sd",
+    "tennessee": "tn",
+    "texas": "tx",
+    "utah": "ut",
+    "vermont": "vt",
+    "virginia": "va",
+    "washington": "wa",
+    "west virginia": "wv",
+    "wisconsin": "wi",
+    "wyoming": "wy",
+}
 NUTRIENT_ALIASES = {
     "calories": {"energy"},
     "protein_g": {"protein"},
@@ -448,6 +507,69 @@ class RecipeLinkParser(HTMLParser):
         self.links.append(urljoin(self.base_url, href))
 
 
+class AnchorTextParser(HTMLParser):
+    def __init__(self, base_url):
+        super().__init__()
+        self.base_url = base_url
+        self.links = []
+        self.current_href = None
+        self.current_text = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag != "a":
+            return
+        attributes = dict(attrs)
+        href = attributes.get("href")
+        if not href:
+            return
+        self.current_href = urljoin(self.base_url, href)
+        self.current_text = []
+
+    def handle_data(self, data):
+        if self.current_href:
+            self.current_text.append(data)
+
+    def handle_endtag(self, tag):
+        if tag != "a" or not self.current_href:
+            return
+        text = re.sub(r"\s+", " ", " ".join(self.current_text)).strip()
+        self.links.append({"url": self.current_href, "text": text})
+        self.current_href = None
+        self.current_text = []
+
+
+class TraderJoesStorePageParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.in_title = False
+        self.title_parts = []
+        self.meta = {}
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "title":
+            self.in_title = True
+            return
+        if tag != "meta":
+            return
+        attributes = dict(attrs)
+        key = attributes.get("property") or attributes.get("name")
+        content = attributes.get("content")
+        if key and content:
+            self.meta[key] = content
+
+    def handle_data(self, data):
+        if self.in_title:
+            self.title_parts.append(data)
+
+    def handle_endtag(self, tag):
+        if tag == "title":
+            self.in_title = False
+
+    @property
+    def title(self):
+        return re.sub(r"\s+", " ", " ".join(self.title_parts)).strip()
+
+
 class JsonLdParser(HTMLParser):
     def __init__(self):
         super().__init__()
@@ -739,6 +861,74 @@ def parse_pantry_items(value):
     return pantry_items[:25]
 
 
+def parse_optional_float(value, minimum=None):
+    if value in (None, ""):
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if minimum is not None and number < minimum:
+        return None
+    return number
+
+
+def parse_optional_int(value, minimum=None, maximum=None):
+    if value in (None, ""):
+        return None
+    try:
+        number = int(value)
+    except (TypeError, ValueError):
+        return None
+    if minimum is not None:
+        number = max(minimum, number)
+    if maximum is not None:
+        number = min(maximum, number)
+    return number
+
+
+def parse_filter_terms(value):
+    if isinstance(value, list):
+        raw_terms = value
+    else:
+        raw_terms = re.split(r",|\n|;", str(value or ""))
+    terms = []
+    seen = set()
+    for term in raw_terms:
+        cleaned = normalize_ingredient_name(str(term))
+        if not cleaned:
+            continue
+        identity = cleaned.casefold()
+        if identity in seen:
+            continue
+        terms.append(cleaned)
+        seen.add(identity)
+    return terms[:12]
+
+
+def parse_recipe_filters(data, household_size, dietary_restrictions):
+    return {
+        "max_budget": parse_optional_float(data.get("max_budget"), minimum=0),
+        "servings": parse_optional_int(
+            data.get("servings"),
+            minimum=MIN_HOUSEHOLD_SIZE,
+            maximum=MAX_HOUSEHOLD_SIZE,
+        )
+        or household_size,
+        "dietary_preference": re.sub(
+            r"\s+", " ", str(data.get("dietary_preference") or "").strip()
+        )[:80],
+        "dietary_restrictions": dietary_restrictions,
+        "include_ingredients": parse_filter_terms(data.get("include_ingredients")),
+        "avoid_ingredients": parse_filter_terms(data.get("avoid_ingredients")),
+        "max_cook_time": parse_optional_int(
+            data.get("max_cook_time"),
+            minimum=1,
+            maximum=600,
+        ),
+    }
+
+
 def pantry_items_text(pantry_items):
     if not pantry_items:
         return "none"
@@ -778,6 +968,54 @@ def load_demo_grocery_db():
             continue
         return grocery_db
     raise RuntimeError("The SNAPP demo grocery database is missing.")
+
+
+def load_trader_joes_grocery_db(store_number):
+    store_number = re.sub(r"\D+", "", str(store_number or ""))[:10]
+    if not store_number:
+        return None
+
+    cached_result = trader_joes_product_cache.get(store_number)
+    now = time.time()
+    if (
+        cached_result
+        and now - cached_result["cached_at"] < TRADER_JOES_PRODUCT_CACHE_TTL_SECONDS
+    ):
+        return cached_result["grocery_db"]
+
+    try:
+        from scraper import (
+            DEFAULT_MAX_PRODUCTS,
+            build_database,
+            fetch_apify_trader_joes_items,
+            normalize_apify_products,
+        )
+
+        raw_items = fetch_apify_trader_joes_items(store_number)
+        products = normalize_apify_products(
+            raw_items,
+            store_number,
+            max_products=DEFAULT_MAX_PRODUCTS,
+        )
+    except Exception as exc:
+        print(f"Trader Joe's product refresh failed: {exc}", flush=True)
+        return None
+
+    if not products:
+        return None
+    grocery_db = build_database(products, store_number)
+    trader_joes_product_cache[store_number] = {
+        "cached_at": now,
+        "grocery_db": grocery_db,
+    }
+    return grocery_db
+
+
+def grocery_db_for_store(store_number=None):
+    trader_joes_db = load_trader_joes_grocery_db(store_number)
+    if trader_joes_db:
+        return trader_joes_db
+    return load_demo_grocery_db()
 
 
 def product_effective_price(product):
@@ -2087,8 +2325,8 @@ def spoonacular_recipe_to_demo_dish(recipe, matched_products, stores, household_
             }
         )
 
-    provider = recipe.get("_snapp_recipe_provider") or "spoonacular"
-    provider_name = "web recipe source" if provider == "web" else "Spoonacular"
+    provider = recipe.get("_snapp_recipe_provider") or "web"
+    provider_name = "web recipe source" if provider == "web" else "recipe database"
     recipe = spoonacular_recipe_from_recipe(recipe)
     return {
         "name": recipe["name"],
@@ -2107,7 +2345,7 @@ def spoonacular_recipe_to_demo_dish(recipe, matched_products, stores, household_
         },
         "ingredients": ingredient_lines,
         "ingredients_to_buy": ingredient_lines,
-        "portion_note": f"Recipe from {provider_name}. Grocery matches are from the SNAPP demo grocery database.",
+        "portion_note": f"Recipe from {provider_name}. Grocery matches are from the SNAPP grocery pricing database.",
         "method": recipe["instructions"],
         "recipe": recipe,
         "recipe_id": recipe["id"],
@@ -2355,6 +2593,232 @@ def spoonacular_recipe_from_recipe(recipe):
     }
 
 
+def recipe_ready_minutes(recipe):
+    for key in ("readyInMinutes", "cookingMinutes", "preparationMinutes"):
+        try:
+            minutes = int(recipe.get(key))
+        except (TypeError, ValueError):
+            continue
+        if minutes > 0:
+            return minutes
+    return None
+
+
+def recipe_servings(recipe, fallback_servings):
+    try:
+        servings = int(recipe.get("servings"))
+    except (TypeError, ValueError):
+        servings = fallback_servings
+    return max(MIN_HOUSEHOLD_SIZE, min(servings, MAX_HOUSEHOLD_SIZE))
+
+
+def recipe_dietary_tags(recipe):
+    tags = []
+    for key, label in (
+        ("vegetarian", "vegetarian"),
+        ("vegan", "vegan"),
+        ("glutenFree", "gluten-free"),
+        ("dairyFree", "dairy-free"),
+        ("veryHealthy", "healthy"),
+        ("cheap", "cheap"),
+        ("sustainable", "sustainable"),
+    ):
+        if recipe.get(key):
+            tags.append(label)
+    existing = {tag.casefold() for tag in tags}
+    for value in (recipe.get("diets") or []) + (recipe.get("dishTypes") or []):
+        normalized = re.sub(r"\s+", " ", str(value or "").strip())
+        if normalized and normalized.casefold() not in existing:
+            tags.append(normalized)
+            existing.add(normalized.casefold())
+    return tags[:10]
+
+
+def recipe_filter_text(recipe):
+    return normalize_cuisine_text(
+        " ".join(
+            [
+                recipe.get("title") or "",
+                " ".join(recipe.get("dishTypes") or []),
+                " ".join(spoonacular_cuisines(recipe)),
+                " ".join(recipe_dietary_tags(recipe)),
+                " ".join(ingredient["name"] for ingredient in spoonacular_ingredients(recipe)),
+            ]
+        )
+    )
+
+
+def recipe_matches_filter_terms(recipe, terms, require_all=True):
+    if not terms:
+        return True
+    text = f" {recipe_filter_text(recipe)} "
+    matches = [
+        bool(re.search(rf"\b{re.escape(normalize_cuisine_text(term))}\b", text))
+        for term in terms
+    ]
+    return all(matches) if require_all else any(matches)
+
+
+def recipe_violates_avoid_terms(recipe, terms):
+    return bool(terms and recipe_matches_filter_terms(recipe, terms, require_all=False))
+
+
+def recipe_matches_dietary_preference(recipe, dietary_preference):
+    preference = normalize_cuisine_text(dietary_preference)
+    if not preference or preference in {"balanced", "none", "any"}:
+        return True
+    text = f" {recipe_filter_text(recipe)} "
+    if preference == "vegetarian":
+        return bool(recipe.get("vegetarian") or re.search(r"\bvegetarian\b", text))
+    if preference == "vegan":
+        return bool(recipe.get("vegan") or re.search(r"\bvegan\b", text))
+    if preference in {"gluten free", "glutenfree"}:
+        return bool(recipe.get("glutenFree") or re.search(r"\bgluten free\b", text))
+    if preference in {"dairy free", "dairyfree"}:
+        return bool(recipe.get("dairyFree") or re.search(r"\bdairy free\b", text))
+    return preference in text
+
+
+def recipe_passes_hard_filters(recipe, filters):
+    if not spoonacular_respects_restrictions(recipe, filters["dietary_restrictions"]):
+        return False
+    if recipe_violates_avoid_terms(recipe, filters["avoid_ingredients"]):
+        return False
+    if not recipe_matches_filter_terms(recipe, filters["include_ingredients"], require_all=True):
+        return False
+    if not recipe_matches_dietary_preference(recipe, filters["dietary_preference"]):
+        return False
+    minutes = recipe_ready_minutes(recipe)
+    if filters["max_cook_time"] and minutes and minutes > filters["max_cook_time"]:
+        return False
+    return True
+
+
+def recipe_constraint_score(recipe, meal_prompt, filters):
+    score = spoonacular_prompt_score(recipe, meal_prompt) * 10
+    if recipe_matches_filter_terms(recipe, filters["include_ingredients"], require_all=True):
+        score += 20 * len(filters["include_ingredients"])
+    if recipe_matches_dietary_preference(recipe, filters["dietary_preference"]):
+        score += 20
+    minutes = recipe_ready_minutes(recipe)
+    if filters["max_cook_time"] and minutes and minutes <= filters["max_cook_time"]:
+        score += 10
+    return score
+
+
+def collect_recipe_candidates(meal_prompt, dietary_restrictions):
+    recipe_ideas = [{"name": meal_prompt, "query": meal_prompt, "cuisine": ""}]
+    candidates = []
+    seen_ids = set()
+    for recipe in fetch_web_recipe_candidates(recipe_ideas):
+        recipe_id = spoonacular_recipe_id(recipe)
+        if recipe_id and recipe_id not in seen_ids:
+            candidates.append(recipe)
+            seen_ids.add(recipe_id)
+    if SPOONACULAR_API_KEY:
+        for recipe in search_spoonacular_recipes(
+            meal_prompt,
+            dietary_restrictions=dietary_restrictions,
+            number=SPOONACULAR_SEARCH_RESULT_COUNT,
+        ):
+            recipe_id = spoonacular_recipe_id(recipe)
+            if recipe_id and recipe_id not in seen_ids:
+                candidates.append(recipe)
+                seen_ids.add(recipe_id)
+    return candidates
+
+
+def recipe_result_from_recipe(recipe, matched_products, stores, filters, relevance_score, exact_match):
+    servings = filters["servings"]
+    dish = spoonacular_recipe_to_demo_dish(recipe, matched_products, stores, servings)
+    recipe_details = dish.get("recipe") or {}
+    recipe_details["servings"] = recipe_servings(recipe, servings)
+    recipe_details["cook_time_minutes"] = recipe_ready_minutes(recipe)
+    recipe_details["dietary_tags"] = recipe_dietary_tags(recipe)
+    recipe_details["source_link"] = recipe_details.get("source")
+    dish["servings"] = recipe_details["servings"]
+    dish["estimated_price_per_serving"] = round(
+        dish["estimated_price_total"] / max(1, dish["servings"]), 2
+    )
+    dish["calories_per_person"] = (
+        round(dish["calories_total"] / max(1, dish["servings"]))
+        if dish.get("calories_total")
+        else 0
+    )
+    dish["recipe"] = recipe_details
+    dish["cook_time_minutes"] = recipe_details["cook_time_minutes"]
+    dish["dietary_tags"] = recipe_details["dietary_tags"]
+    dish["relevance_score"] = relevance_score
+    dish["exact_match"] = exact_match
+    dish["portion_note"] = (
+        "Real recipe result matched against current Trader Joe's grocery prices."
+        if exact_match
+        else "Closest affordable real recipe match; at least one requested filter was relaxed."
+    )
+    return dish
+
+
+def build_real_recipe_results(meal_prompt, filters, products, stores, result_limit=8):
+    candidates = collect_recipe_candidates(meal_prompt, filters["dietary_restrictions"])
+    exact_results = []
+    closest_results = []
+    for recipe in candidates:
+        if not spoonacular_ingredients(recipe):
+            continue
+        matches = match_recipe_ingredients_to_products(recipe, products)
+        if not matches:
+            continue
+        relevance_score = recipe_constraint_score(recipe, meal_prompt, filters)
+        exact_match = recipe_passes_hard_filters(recipe, filters)
+        result = recipe_result_from_recipe(
+            recipe,
+            matches,
+            stores,
+            filters,
+            relevance_score,
+            exact_match,
+        )
+        if filters["max_budget"] is not None and result["estimated_price_total"] > filters["max_budget"]:
+            closest_results.append(result)
+            continue
+        if exact_match:
+            exact_results.append(result)
+        else:
+            closest_results.append(result)
+
+    exact_results.sort(
+        key=lambda result: (
+            -result["relevance_score"],
+            result["estimated_price_total"],
+            result["name"].casefold(),
+        )
+    )
+    if len(exact_results) >= result_limit:
+        return exact_results[:result_limit], False
+
+    target_budget = filters["max_budget"]
+    closest_results.sort(
+        key=lambda result: (
+            0 if target_budget is None or result["estimated_price_total"] <= target_budget else 1,
+            -result["relevance_score"],
+            result["estimated_price_total"],
+            result["name"].casefold(),
+        )
+    )
+    seen = {result["recipe_id"] for result in exact_results}
+    combined = list(exact_results)
+    for result in closest_results:
+        if result["recipe_id"] in seen:
+            continue
+        combined.append(result)
+        seen.add(result["recipe_id"])
+        if len(combined) >= result_limit:
+            break
+    if not combined:
+        raise RuntimeError("Recipe sources could not provide real recipe matches.")
+    return combined, not exact_results
+
+
 def normalize_website(value):
     if not value:
         return None
@@ -2460,6 +2924,160 @@ def find_stores_with_nominatim(zip_code, boundingbox):
     return stores[:30]
 
 
+def normalized_location_text(value):
+    return re.sub(r"[^a-z0-9]+", " ", str(value or "").casefold()).strip()
+
+
+def state_code_from_location(location):
+    address = location.get("address") or {}
+    state_code = address.get("state_code")
+    if state_code:
+        return state_code.casefold()
+    state_name = normalized_location_text(address.get("state"))
+    if state_name in US_STATE_CODES:
+        return US_STATE_CODES[state_name]
+    display_name = location.get("display_name", "")
+    match = re.search(r"\b([A-Z]{2})\b(?:\s+\d{5})?", display_name)
+    if match:
+        return match.group(1).casefold()
+    normalized_display = normalized_location_text(display_name)
+    for name, code in US_STATE_CODES.items():
+        if re.search(rf"\b{re.escape(name)}\b", normalized_display):
+            return code
+    return None
+
+
+def parse_directory_links(url, html):
+    parser = AnchorTextParser(url)
+    parser.feed(html)
+    return parser.links
+
+
+def trader_joes_state_city_urls(state_code):
+    state_url = f"{TRADER_JOES_LOCATIONS_BASE_URL}/{state_code}/"
+    html = fetch_text(state_url, service_name="Trader Joe's state directory")
+    if not html:
+        return []
+    urls = []
+    seen = set()
+    pattern = re.compile(
+        rf"^https://locations\.traderjoes\.com/{re.escape(state_code)}/[^/]+/$"
+    )
+    for link in parse_directory_links(state_url, html):
+        url = link["url"]
+        if not pattern.match(url) or url in seen:
+            continue
+        urls.append(url)
+        seen.add(url)
+    return urls
+
+
+def trader_joes_store_urls_for_city(city_url, state_code):
+    html = fetch_text(city_url, service_name="Trader Joe's city directory")
+    if not html:
+        return []
+    urls = []
+    seen = set()
+    pattern = re.compile(
+        rf"^https://locations\.traderjoes\.com/{re.escape(state_code)}/[^/]+/\d+/$"
+    )
+    for link in parse_directory_links(city_url, html):
+        url = link["url"]
+        if not pattern.match(url) or url in seen:
+            continue
+        urls.append(url)
+        seen.add(url)
+    return urls
+
+
+def parse_trader_joes_store_page(url):
+    html = fetch_text(url, service_name="Trader Joe's store page")
+    if not html:
+        return None
+    parser = TraderJoesStorePageParser()
+    parser.feed(html)
+    store_number_match = re.search(r"/(\d+)/?$", urlparse(url).path)
+    title_match = re.search(r"^(.+?)\s*\((\d+)\)", parser.title)
+    store_number = store_number_match.group(1) if store_number_match else None
+    if not store_number and title_match:
+        store_number = title_match.group(2)
+    if not store_number:
+        return None
+
+    meta = parser.meta
+    try:
+        latitude = float(meta["place:location:latitude"])
+        longitude = float(meta["place:location:longitude"])
+    except (KeyError, TypeError, ValueError):
+        return None
+
+    city = meta.get("business:contact_data:locality")
+    region = meta.get("business:contact_data:region")
+    postal_code = meta.get("business:contact_data:postal_code")
+    street = meta.get("business:contact_data:street_address")
+    name = title_match.group(1).strip() if title_match else f"Trader Joe's Store {store_number}"
+    return {
+        "store_number": store_number,
+        "name": f"Trader Joe's {name}",
+        "address": ", ".join(
+            value for value in (street, city, region, postal_code) if value
+        ),
+        "latitude": latitude,
+        "longitude": longitude,
+        "website": url,
+    }
+
+
+def find_trader_joes_store(zip_code):
+    cached_result = trader_joes_store_cache.get(zip_code)
+    now = time.time()
+    if cached_result and now - cached_result["cached_at"] < TRADER_JOES_STORE_CACHE_TTL_SECONDS:
+        return cached_result["result"]
+
+    location = find_zip_location(zip_code)
+    if not location:
+        return None
+    state_code = state_code_from_location(location)
+    if not state_code:
+        raise RuntimeError("Could not identify the state for that ZIP code.")
+    try:
+        center = {
+            "latitude": float(location["lat"]),
+            "longitude": float(location["lon"]),
+        }
+    except (KeyError, TypeError, ValueError) as exc:
+        raise RuntimeError("The location data service returned invalid coordinates.") from exc
+
+    stores = []
+    for city_url in trader_joes_state_city_urls(state_code):
+        for store_url in trader_joes_store_urls_for_city(city_url, state_code):
+            store = parse_trader_joes_store_page(store_url)
+            if store:
+                stores.append(
+                    store_with_distance(
+                        store,
+                        center["latitude"],
+                        center["longitude"],
+                    )
+                )
+
+    stores.sort(
+        key=lambda store: (
+            store.get("distance_miles", float("inf")),
+            store["name"].casefold(),
+        )
+    )
+    result = {
+        "zip_code": zip_code,
+        "location": location.get("display_name", zip_code),
+        "center": center,
+        "store": stores[0] if stores else None,
+        "source": "Trader Joe's official store directory",
+    }
+    trader_joes_store_cache[zip_code] = {"cached_at": now, "result": result}
+    return result
+
+
 def find_zip_location(zip_code):
     location_params = urlencode(
         {
@@ -2468,6 +3086,7 @@ def find_zip_location(zip_code):
             "countrycodes": "us",
             "format": "jsonv2",
             "limit": 1,
+            "addressdetails": 1,
         }
     )
     try:
@@ -2502,6 +3121,7 @@ def find_zip_location(zip_code):
         "display_name": ", ".join(value for value in (place_name, state, zip_code) if value),
         "lat": latitude,
         "lon": longitude,
+        "address": {"state_code": place.get("state abbreviation")},
         "boundingbox": [
             str(latitude - radius_degrees),
             str(latitude + radius_degrees),
@@ -2681,35 +3301,52 @@ def grocery_stores_options():
     return ("", 204)
 
 
+@app.get("/trader-joes-store")
+def trader_joes_store():
+    zip_code = request.args.get("zip", "").strip()
+    if not ZIP_CODE_PATTERN.fullmatch(zip_code):
+        return jsonify({"error": "Enter a valid 5-digit US ZIP code."}), 400
+
+    try:
+        result = find_trader_joes_store(zip_code)
+    except RuntimeError as exc:
+        return jsonify({"error": str(exc)}), 503
+
+    if not result:
+        return jsonify({"error": "ZIP code not found."}), 404
+    if not result.get("store"):
+        return jsonify({"error": "No Trader Joe's store found for that location."}), 404
+    return jsonify(result)
+
+
+@app.route("/trader-joes-store", methods=["OPTIONS"])
+def trader_joes_store_options():
+    return ("", 204)
+
+
 @app.post("/dishes")
 def dishes():
     data = request.get_json(silent=True) or {}
     meal_prompt = (data.get("meal_prompt") or data.get("ingredients") or data.get("message") or "").strip()
     household_size = parse_household_size(data.get("household_size"))
+    store_number = re.sub(r"\D+", "", str(data.get("store_number") or ""))[:10] or None
     dietary_restrictions = re.sub(
         r"\s+", " ", (data.get("dietary_restrictions") or "").strip()
     )[:500]
     pantry_items = parse_pantry_items(data.get("pantry_items"))
+    filters = parse_recipe_filters(data, household_size, dietary_restrictions)
     if not meal_prompt:
         return jsonify({"error": "Describe the meal you want."}), 400
 
     try:
-        grocery_db = load_demo_grocery_db()
+        grocery_db = grocery_db_for_store(store_number)
         stores = demo_store_lookup(grocery_db)
         products = available_demo_products(grocery_db)
-        recipe_ideas = generate_recipe_search_ideas(
+        dishes, used_relaxed_matches = build_real_recipe_results(
             meal_prompt,
-            household_size,
-            dietary_restrictions,
-            pantry_items,
-        )
-        dishes = build_spoonacular_demo_grocery_dishes(
-            meal_prompt,
-            household_size,
-            dietary_restrictions,
+            filters,
             products,
             stores,
-            recipe_ideas,
         )
     except RuntimeError as exc:
         return jsonify({"error": str(exc)}), 503
@@ -2722,6 +3359,7 @@ def dishes():
             "household_size": household_size,
             "dietary_restrictions": dietary_restrictions,
             "pantry_items": pantry_items,
+            "filters": filters,
             "matched_ingredients": [
                 ingredient
                 for dish in dishes
@@ -2729,8 +3367,10 @@ def dishes():
             ],
             "missing_ingredients": [],
             "dishes": dishes,
-            "recipe_ideas": recipe_ideas,
-            "source": "SNAPP demo grocery database, OpenAI recipe ideas, structured web recipe sources, and optional Spoonacular fallback",
+            "recipe_ideas": [],
+            "used_relaxed_matches": used_relaxed_matches,
+            "store_number": store_number,
+            "source": "Real web recipe search and current grocery pricing database",
         }
     )
 

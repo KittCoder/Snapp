@@ -26,6 +26,12 @@ const pantryStatus = document.getElementById("pantry-status");
 const pantryList = document.getElementById("pantry-list");
 const dishForm = document.getElementById("dish-form");
 const dishInput = document.getElementById("dish-input");
+const dishMaxBudgetInput = document.getElementById("dish-max-budget");
+const dishServingsInput = document.getElementById("dish-servings");
+const dishDietaryPreferenceInput = document.getElementById("dish-dietary-preference");
+const dishIncludeIngredientsInput = document.getElementById("dish-include-ingredients");
+const dishAvoidIngredientsInput = document.getElementById("dish-avoid-ingredients");
+const dishMaxCookTimeInput = document.getElementById("dish-max-cook-time");
 const dishStatus = document.getElementById("dish-status");
 const dishResults = document.getElementById("dish-results");
 const dishSource = document.getElementById("dish-source");
@@ -223,6 +229,11 @@ function getDefaultUserInfo(user) {
     dietary_preference: "balanced",
     dietary_restrictions: "",
     notifications_enabled: true,
+    store_number: null,
+    store_name: "",
+    store_address: "",
+    store_website: "",
+    store_distance_miles: null,
   };
 }
 
@@ -377,6 +388,23 @@ function getStoreErrorMessage(error) {
   }
 
   return message || "Store request failed.";
+}
+
+function getStoreNumberErrorMessage(error) {
+  const message = error?.message || "";
+  if (message.includes("user_info") && message.includes("schema cache")) {
+    return "Store number setup is missing. Add the store_number columns to user_info in Supabase, then refresh.";
+  }
+
+  if (message.includes("store_number") && message.includes("schema cache")) {
+    return "Store number setup is missing. Add the store_number columns to user_info in Supabase, then refresh.";
+  }
+
+  if (message.includes("permission denied")) {
+    return "Store number permissions are missing for user_info in Supabase.";
+  }
+
+  return message || "Store number request failed.";
 }
 
 function getStoreKey(store) {
@@ -813,6 +841,56 @@ async function fetchStores(zipCode, options = {}) {
   throw new Error(lastError);
 }
 
+async function fetchTraderJoesStore(zipCode) {
+  let lastError = API_BASE_URL
+    ? "Unable to reach the Trader Joe's store backend."
+    : "Backend URL is not configured.";
+
+  for (const endpoint of getApiEndpoints("/trader-joes-store")) {
+    try {
+      const params = new URLSearchParams({ zip: zipCode });
+      const response = await fetch(`${endpoint}?${params.toString()}`);
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        lastError = data.error || `Trader Joe's store lookup failed (${response.status}).`;
+        continue;
+      }
+      return data;
+    } catch (error) {
+      lastError = error.message || "Network error while finding Trader Joe's store.";
+    }
+  }
+
+  throw new Error(lastError);
+}
+
+async function saveTraderJoesStoreNumber(storeLookup) {
+  if (!supabaseClient || !currentUser || !storeLookup?.store) return false;
+
+  const store = storeLookup.store;
+  const { data, error } = await supabaseClient
+    .from("user_info")
+    .update({
+      store_number: store.store_number,
+      store_name: store.name,
+      store_address: store.address,
+      store_website: store.website,
+      store_distance_miles:
+        store.distance_miles != null ? Number(store.distance_miles) : null,
+    })
+    .eq("id", currentUser.id)
+    .select()
+    .single();
+
+  if (error) {
+    myStoreStatus.textContent = getStoreNumberErrorMessage(error);
+    return false;
+  }
+
+  currentUserInfo = data;
+  return true;
+}
+
 function getStoreId(store) {
   return getStoreKey(store);
 }
@@ -956,7 +1034,7 @@ function renderMyStores(data) {
   myStoreSource.hidden = false;
 }
 
-async function fetchDishes(mealPrompt, householdSize, dietaryRestrictions) {
+async function fetchDishes(mealPrompt, householdSize, dietaryRestrictions, filters = {}) {
   let lastError = API_BASE_URL
     ? "Unable to reach the dishes backend."
     : "Backend URL is not configured.";
@@ -970,10 +1048,17 @@ async function fetchDishes(mealPrompt, householdSize, dietaryRestrictions) {
           meal_prompt: mealPrompt,
           household_size: householdSize,
           dietary_restrictions: dietaryRestrictions,
+          max_budget: filters.maxBudget,
+          servings: filters.servings,
+          dietary_preference: filters.dietaryPreference,
+          include_ingredients: filters.includeIngredients,
+          avoid_ingredients: filters.avoidIngredients,
+          max_cook_time: filters.maxCookTime,
           pantry_items: pantryItems.map((item) => ({
             name: item.name,
             quantity: item.quantity,
           })),
+          store_number: currentUserInfo?.store_number || null,
         }),
       });
       const data = await response.json().catch(() => ({}));
@@ -1028,6 +1113,17 @@ function renderStores(stores) {
   });
 }
 
+function getDishFilters(householdSize) {
+  return {
+    maxBudget: dishMaxBudgetInput.value ? Number(dishMaxBudgetInput.value) : null,
+    servings: dishServingsInput.value ? Number(dishServingsInput.value) : householdSize,
+    dietaryPreference: dishDietaryPreferenceInput.value,
+    includeIngredients: dishIncludeIngredientsInput.value.trim(),
+    avoidIngredients: dishAvoidIngredientsInput.value.trim(),
+    maxCookTime: dishMaxCookTimeInput.value ? Number(dishMaxCookTimeInput.value) : null,
+  };
+}
+
 function renderDishes(data) {
   dishResults.replaceChildren();
   dishEmptyState.hidden = true;
@@ -1040,6 +1136,7 @@ function renderDishes(data) {
     const title = document.createElement("h3");
     const calories = document.createElement("p");
     const price = document.createElement("p");
+    const metadata = document.createElement("p");
     const method = document.createElement("p");
     const totalNutrition = document.createElement("div");
     const perPersonNutrition = document.createElement("div");
@@ -1059,10 +1156,16 @@ function renderDishes(data) {
       : "No demo grocery calorie match";
     price.className = "dish-price";
     price.textContent = dish.estimated_price_total
-      ? `${currencyFormatter.format(dish.estimated_price_total)} matched grocery total | ${currencyFormatter.format(dish.estimated_price_per_serving)} per person`
-      : "No demo grocery price match";
+      ? `${currencyFormatter.format(dish.estimated_price_total)} estimated grocery total | ${currencyFormatter.format(dish.estimated_price_per_serving)} per serving`
+      : "No grocery price match";
+    metadata.className = "dish-metadata";
+    metadata.textContent = [
+      `${dish.servings} serving${dish.servings === 1 ? "" : "s"}`,
+      dish.cook_time_minutes ? `${dish.cook_time_minutes} min` : "",
+      ...(dish.dietary_tags || []),
+    ].filter(Boolean).join(" | ");
     method.className = "dish-method";
-    method.textContent = recipe.instructions || dish.method;
+    method.textContent = recipe.instructions || dish.method || "Open the source recipe for cooking instructions.";
     totalNutrition.className = "dish-nutrition";
     totalNutrition.textContent = [
       "Total nutrition:",
@@ -1083,7 +1186,7 @@ function renderDishes(data) {
     ingredientsHeading.textContent = "Ingredients to buy";
     ingredientList.className = "dish-ingredients";
     recipeIngredientsHeading.className = "dish-ingredients-heading";
-    recipeIngredientsHeading.textContent = "Spoonacular recipe ingredients";
+    recipeIngredientsHeading.textContent = "Recipe ingredients";
     recipeIngredientList.className = "dish-ingredients";
     recipeLinks.className = "dish-recipe-links";
     scheduleButton.type = "button";
@@ -1099,7 +1202,7 @@ function renderDishes(data) {
     });
     if (!ingredientsToBuy.length) {
       const ingredientItem = document.createElement("li");
-      ingredientItem.textContent = "No matching item in the SNAPP demo grocery database.";
+      ingredientItem.textContent = "No matching item in the grocery pricing database.";
       ingredientList.appendChild(ingredientItem);
     }
 
@@ -1146,10 +1249,18 @@ function renderDishes(data) {
     item.append(
       calories,
       price,
+      metadata,
       totalNutrition,
       perPersonNutrition,
       method
     );
+
+    if (dish.exact_match === false) {
+      const relaxedMessage = document.createElement("p");
+      relaxedMessage.className = "dish-warning";
+      relaxedMessage.textContent = "Closest affordable match; some filters were relaxed.";
+      item.appendChild(relaxedMessage);
+    }
 
     restrictionWarnings.forEach((warning) => {
       const warningMessage = document.createElement("p");
@@ -1168,6 +1279,13 @@ function renderDishes(data) {
     );
     dishResults.appendChild(item);
   });
+
+  if (data.used_relaxed_matches) {
+    const relaxed = document.createElement("li");
+    relaxed.className = "dish-missing";
+    relaxed.textContent = "No exact match was found, so SNAPP is showing the closest affordable real recipes.";
+    dishResults.appendChild(relaxed);
+  }
 
   if (data.missing_ingredients.length) {
     const missing = document.createElement("li");
@@ -1352,9 +1470,20 @@ myStoreForm.addEventListener("submit", async (event) => {
   try {
     const data = await fetchStores(zipCode, { radiusMiles: "1" });
     renderMyStores(data);
-    myStoreStatus.textContent = data.stores.length
+    let statusMessage = data.stores.length
       ? `${data.stores.length} grocery store${data.stores.length === 1 ? "" : "s"} found within 1 mile of ${data.location}.`
       : `No grocery stores were found within 1 mile of ${data.location}.`;
+    try {
+      const traderJoesData = await fetchTraderJoesStore(zipCode);
+      const store = traderJoesData.store;
+      const didSaveStoreNumber = await saveTraderJoesStoreNumber(traderJoesData);
+      if (store && didSaveStoreNumber) {
+        statusMessage += ` Trader Joe's store number ${store.store_number} saved for ${store.name}.`;
+      }
+    } catch (error) {
+      statusMessage += ` Trader Joe's store number could not be resolved: ${error.message}`;
+    }
+    myStoreStatus.textContent = statusMessage;
   } catch (error) {
     myStoreStatus.textContent = `Store search error: ${error.message}`;
   } finally {
@@ -1392,7 +1521,7 @@ dishForm.addEventListener("submit", async (event) => {
 
   const submitButton = dishForm.querySelector("button");
   submitButton.disabled = true;
-  dishStatus.textContent = "Building grocery-backed meal ideas...";
+  dishStatus.textContent = "Searching real recipes and matching grocery prices...";
   dishResults.replaceChildren();
   dishSource.hidden = true;
   dishEmptyState.hidden = false;
@@ -1400,9 +1529,14 @@ dishForm.addEventListener("submit", async (event) => {
   try {
     const householdSize = getHouseholdSize();
     const dietaryRestrictions = dietaryRestrictionsInput.value.trim();
-    const data = await fetchDishes(mealPrompt, householdSize, dietaryRestrictions);
+    const data = await fetchDishes(
+      mealPrompt,
+      householdSize,
+      dietaryRestrictions,
+      getDishFilters(householdSize)
+    );
     renderDishes(data);
-    dishStatus.textContent = `Built 3 grocery-backed ideas for ${data.household_size} ${data.household_size === 1 ? "person" : "people"}.`;
+    dishStatus.textContent = `Found ${data.dishes.length} real recipe ${data.dishes.length === 1 ? "match" : "matches"} with grocery price estimates.`;
     dishSource.hidden = false;
   } catch (error) {
     dishStatus.textContent = `Dish search error: ${error.message}`;

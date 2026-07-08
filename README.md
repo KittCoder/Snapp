@@ -17,10 +17,14 @@ The backend is configured for Render with [render.yaml](/Users/2027kstarkie/Desk
 4. Set these environment variables in Render:
    - `OPENAI_API_KEY`: your OpenAI API key
    - `FDC_API_KEY`: your USDA FoodData Central API key
+   - `APIFY_API_TOKEN`: your Apify API token for running the Trader Joe's scraper
    - `CORS_ORIGINS`: `https://snapp-1d5j.vercel.app`
 
 Optional:
-   - `SPOONACULAR_API_KEY`: enables Spoonacular as a final fallback after structured web recipe sources
+   - `APIFY_TRADER_JOES_ACTOR_ID`: defaults to `merry_arctic~trader-joes-scraper`
+   - `APIFY_TRADER_JOES_STORE_NUMBER`: local/manual scraper fallback only; app users store their selected number in Supabase
+   - `APIFY_TRADER_JOES_CRAWL_URL`: optional Trader Joe's category URL for a narrower manual scrape
+   - `APIFY_TRADER_JOES_MAX_PRODUCTS`: defaults to `500`
  
 Render injects `PORT` automatically. Gunicorn handles the hosted service process.
 
@@ -52,6 +56,17 @@ Pantry items are stored in `public.user_pantry_items` and sent to the dish gener
 
 Selected stores are stored per user in `public.user_stores`.
 
+The nearest Trader Joe's store number is resolved from the ZIP code a user enters in My stores and stored on `public.user_info.store_number`. Add these columns to `public.user_info` before using the Trader Joe's scraper flow:
+
+```sql
+alter table public.user_info
+  add column if not exists store_number text,
+  add column if not exists store_name text,
+  add column if not exists store_address text,
+  add column if not exists store_website text,
+  add column if not exists store_distance_miles numeric;
+```
+
 In the Supabase dashboard, enable Email auth and disable email confirmation while this username prototype is active. Password reset emails will not work until the app moves to real email addresses.
 
 ## Local Backend
@@ -64,18 +79,18 @@ OPENAI_API_KEY=your_key_here FDC_API_KEY=your_fdc_key_here python model.py
 
 The API runs on `http://localhost:5000` locally.
 
-Recipe generation uses OpenAI to suggest searchable dish ideas, checks no-key structured web recipe sources first, and only uses Spoonacular as an optional final fallback when `SPOONACULAR_API_KEY` is set. The web extractor only searches a small allowlist of recipe sites, respects `robots.txt`, parses `schema.org/Recipe` JSON-LD metadata, and links to the source for full instructions.
+Recipe search uses the user's query against a small allowlist of real web recipe sites, respects `robots.txt`, parses `schema.org/Recipe` JSON-LD metadata, and links to the source for full instructions. Spoonacular is disabled by default.
 
-## Morton Williams Price Data
+## Trader Joe's Price Data
 
 The backend loads [Model/data.json](/Users/2027kstarkie/Desktop/SNAPP/Model/data.json:1) first for grocery products and prices. If that file has no products, it falls back to the demo grocery database.
 
-Refresh Morton Williams pricing once or twice a week:
+Refresh Trader Joe's pricing once or twice a week:
 
 ```sh
 cd Model
 python scraper.py
 ```
 
-The scraper reads Morton Williams' public online storefront, respects `robots.txt`, and writes product names, prices, sale prices, `on_sale`, package sizes, stock flags, and source URLs to `data.json`.
+The scraper runs the Apify Trader Joe's actor, normalizes the returned dataset into SNAPP's grocery product format, and writes product names, prices, sale prices when present, `on_sale`, package sizes, stock flags, tags, SKUs, and source URLs to `data.json`. If Apify returns no usable products, the scraper exits without replacing the existing pricing file with an empty dataset.
  

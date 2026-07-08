@@ -586,7 +586,22 @@ main {
 
 .dish-form {
   display: flex;
+  flex-direction: column;
   gap: 0.7rem;
+}
+
+.dish-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.7rem;
+}
+
+.dish-filter-grid label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--color-muted);
+  font-size: 0.88rem;
+  font-weight: 700;
 }
 
 .dish-form button:disabled {
