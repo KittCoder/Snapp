@@ -397,6 +397,9 @@ DEFAULT_CORS_ORIGINS = (
 VERCEL_DEPLOYMENT_ORIGIN_PATTERN = re.compile(
     r"^https://snapp(?:-[a-z0-9-]+)?\.vercel\.app$"
 )
+LOCAL_DEVELOPMENT_ORIGIN_PATTERN = re.compile(
+    r"^http://(?:localhost|127\.0\.0\.1):\d+$"
+)
 CORS_ORIGINS = {
     origin.strip().rstrip("/")
     for origin in os.getenv("CORS_ORIGINS", DEFAULT_CORS_ORIGINS).split(",")
@@ -410,7 +413,15 @@ def add_cors_headers(response):
     is_allowed_vercel_deployment = bool(
         origin and VERCEL_DEPLOYMENT_ORIGIN_PATTERN.fullmatch(origin)
     )
-    if "*" in CORS_ORIGINS or origin in CORS_ORIGINS or is_allowed_vercel_deployment:
+    is_allowed_local_development = bool(
+        origin and LOCAL_DEVELOPMENT_ORIGIN_PATTERN.fullmatch(origin)
+    )
+    if (
+        "*" in CORS_ORIGINS
+        or origin in CORS_ORIGINS
+        or is_allowed_vercel_deployment
+        or is_allowed_local_development
+    ):
         response.headers["Access-Control-Allow-Origin"] = (
             "*" if "*" in CORS_ORIGINS else origin
         )
