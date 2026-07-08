@@ -434,18 +434,7 @@ main {
   font-weight: 700;
 }
 
-.chat-window {
-  border: 1px solid var(--color-border);
-  border-radius: 1.1rem;
-  height: 300px;
-  overflow-y: auto;
-  padding: 1rem;
-  background: color-mix(in srgb, var(--color-panel-strong) 90%, transparent);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  margin-bottom: 1rem;
-}
-
-.dish-chat-window {
+.dish-window {
   border: 1px solid var(--color-border);
   border-radius: 0.85rem;
   min-height: 330px;
@@ -465,43 +454,6 @@ main {
   text-align: center;
 }
 
-#chat-log {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-}
-
-#chat-log li {
-  max-width: min(82%, 520px);
-  padding: 0.74rem 1rem;
-  border-radius: 1rem;
-  line-height: 1.38;
-}
-
-#chat-log li.user {
-  align-self: flex-end;
-  background: linear-gradient(135deg, var(--color-primary), #10b981);
-  color: #ffffff;
-  border-bottom-right-radius: 0.24rem;
-}
-
-#chat-log li.bot {
-  align-self: flex-start;
-  background: color-mix(in srgb, var(--color-accent) 16%, var(--color-panel-strong));
-  color: var(--color-text);
-  border: 1px solid color-mix(in srgb, var(--color-accent-soft) 30%, transparent);
-  border-bottom-left-radius: 0.24rem;
-}
-
-#chat-form {
-  display: flex;
-  gap: 0.7rem;
-}
-
-#chat-input,
 #dish-input,
 #zip-code,
 #budget-input,
@@ -519,7 +471,6 @@ main {
   font-size: 0.95rem;
 }
 
-#chat-input:focus,
 #dish-input:focus,
 #zip-code:focus,
 #budget-input:focus,
@@ -531,7 +482,6 @@ main {
   outline-offset: 1px;
 }
 
-#chat-form button,
 .auth-form button[type="submit"],
 .dish-form button,
 .add-to-schedule-button,
@@ -548,7 +498,6 @@ main {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-#chat-form button:hover,
 .auth-form button[type="submit"]:hover,
 .dish-form button:hover,
 .add-to-schedule-button:hover,
@@ -753,17 +702,24 @@ main {
   font-weight: 600;
 }
 
+.schedule-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+  gap: 1rem;
+  margin-top: 1rem;
+  align-items: start;
+}
+
 .schedule-calendar {
   display: grid;
-  grid-template-columns: repeat(7, minmax(135px, 1fr));
+  grid-template-columns: repeat(7, minmax(150px, 1fr));
   gap: 0.75rem;
-  margin-top: 1rem;
   overflow-x: auto;
   padding-bottom: 0.25rem;
 }
 
 .schedule-day {
-  min-height: 220px;
+  min-height: 420px;
   border: 1px solid var(--color-border);
   border-radius: 0.85rem;
   padding: 0.85rem;
@@ -775,15 +731,67 @@ main {
   font-size: 0.95rem;
 }
 
-.schedule-day-meals {
+.schedule-day-slots {
   display: grid;
-  gap: 0.55rem;
+  gap: 0.65rem;
+}
+
+.schedule-slot {
+  min-height: 112px;
+  display: grid;
+  align-content: start;
+  gap: 0.5rem;
+  border: 1px dashed color-mix(in srgb, var(--color-primary) 34%, var(--color-border));
+  border-radius: 0.7rem;
+  padding: 0.65rem;
+  background: color-mix(in srgb, var(--color-primary) 4%, var(--color-panel-strong));
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.schedule-slot.drag-over,
+.schedule-recipe-tray.drag-over {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-panel-strong));
+}
+
+.schedule-slot-label {
+  color: var(--color-muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .schedule-empty {
   margin: 0;
   color: var(--color-muted);
   font-size: 0.86rem;
+}
+
+.schedule-recipe-tray {
+  position: sticky;
+  top: 6rem;
+  min-height: 360px;
+  border: 1px solid var(--color-border);
+  border-radius: 0.85rem;
+  padding: 0.9rem;
+  background: color-mix(in srgb, var(--color-panel-strong) 92%, transparent);
+}
+
+.schedule-recipe-tray h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.schedule-recipe-tray > p {
+  margin: 0.35rem 0 0.85rem;
+  color: var(--color-muted);
+  font-size: 0.84rem;
+}
+
+.schedule-recipe-list {
+  display: grid;
+  gap: 0.6rem;
 }
 
 .schedule-meal {
@@ -798,7 +806,15 @@ main {
   font: inherit;
   font-weight: 700;
   text-align: left;
-  cursor: pointer;
+  cursor: grab;
+}
+
+.schedule-meal:active {
+  cursor: grabbing;
+}
+
+.schedule-meal.dragging {
+  opacity: 0.55;
 }
 
 .schedule-meal span {
@@ -1285,16 +1301,22 @@ tbody tr:last-child td {
     margin-top: 1.2rem;
   }
 
-  #chat-form {
-    flex-direction: column;
-  }
-
   .dish-form {
     grid-template-columns: 1fr;
   }
 
   .dish-card-grid {
     grid-template-columns: 1fr;
+  }
+
+  .schedule-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-recipe-tray {
+    position: static;
+    order: -1;
+    min-height: 0;
   }
 
   .schedule-calendar {
@@ -1314,7 +1336,6 @@ tbody tr:last-child td {
     grid-template-columns: 1fr;
   }
 
-  #chat-form button,
   .dish-form button,
   .add-to-schedule-button,
   .store-search-form button {

@@ -1003,6 +1003,21 @@ def load_demo_grocery_db():
     raise RuntimeError("The SNAPP demo grocery database is missing.")
 
 
+def load_snapp_demo_grocery_db():
+    search_paths = (
+        Path(__file__).with_name(DEMO_GROCERY_DB_FILENAME),
+        Path(__file__).resolve().parent.parent / DEMO_GROCERY_DB_FILENAME,
+    )
+    for path in search_paths:
+        if not path.exists():
+            continue
+        with path.open(encoding="utf-8") as file:
+            grocery_db = json.load(file)
+        grocery_db["pricing_source"] = "demo"
+        return grocery_db
+    raise RuntimeError("The SNAPP demo grocery database is missing.")
+
+
 def load_trader_joes_grocery_db(store_number):
     store_number = re.sub(r"\D+", "", str(store_number or ""))[:10]
     if not store_number:
@@ -3181,7 +3196,7 @@ def recipe_result_from_recipe(
     dish["relevance_score"] = relevance_score
     dish["exact_match"] = exact_match
     dish["portion_note"] = (
-        "Real recipe result matched against current Trader Joe's grocery prices."
+        f"Real recipe result matched against {grocery_label} prices."
         if exact_match
         else "Closest affordable real recipe match; at least one requested filter was relaxed."
     )
@@ -3772,14 +3787,6 @@ def dishes():
     data = request.get_json(silent=True) or {}
     meal_prompt = (data.get("meal_prompt") or data.get("ingredients") or data.get("message") or "").strip()
     household_size = parse_household_size(data.get("household_size"))
-    store_number = (
-        re.sub(
-            r"\D+",
-            "",
-            str(data.get("store_number") or DEFAULT_TRADER_JOES_STORE_NUMBER),
-        )[:10]
-        or None
-    )
     dietary_restrictions = re.sub(
         r"\s+", " ", (data.get("dietary_restrictions") or "").strip()
     )[:500]
@@ -3789,10 +3796,10 @@ def dishes():
         return jsonify({"error": "Describe the meal you want."}), 400
 
     try:
-        grocery_db = grocery_db_for_store(store_number)
+        grocery_db = load_snapp_demo_grocery_db()
         stores = demo_store_lookup(grocery_db)
         products = available_demo_products(grocery_db)
-        grocery_label = "Trader Joe's" if store_number else "SNAPP demo grocery database"
+        grocery_label = "SNAPP demo grocery database"
         recipe_ideas = generate_recipe_search_ideas(
             meal_prompt,
             filters["servings"],
@@ -3823,10 +3830,10 @@ def dishes():
                 "dishes": dishes,
                 "recipe_ideas": recipe_ideas,
                 "used_relaxed_matches": used_relaxed_matches,
-                "store_number": store_number,
+                "store_number": None,
                 "pricing_source": grocery_db.get("pricing_source"),
                 "pricing_unavailable": bool(grocery_db.get("pricing_unavailable")),
-                "source": "TheMealDB recipes selected from AI-generated meal ideas and current grocery pricing database",
+                "source": "TheMealDB recipes selected from AI-generated meal ideas and SNAPP demo grocery database pricing",
             }
         )
     except RuntimeError as exc:

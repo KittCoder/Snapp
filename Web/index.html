@@ -22,7 +22,6 @@
       <nav class="nav-buttons">
         <button data-target="home" data-auth-view="signed-out" class="nav-button active">Home</button>
         <button data-target="account" data-auth-view="signed-out" class="nav-button">Account</button>
-        <button data-target="chat" data-auth-view="signed-in" class="nav-button" hidden>Chat</button>
         <button data-target="dishes" data-auth-view="signed-in" class="nav-button" hidden>Dishes</button>
         <button data-target="my" data-auth-view="signed-in" class="nav-button" hidden>My stores</button>
         <button data-target="pantry" data-auth-view="signed-in" class="nav-button" hidden>My pantry</button>
@@ -134,10 +133,10 @@
             </p>
           </article>
           <article>
-            <h3>Smart Chatbot</h3>
+            <h3>Dishes</h3>
             <p>
-              Ask for portion ideas, ingredient swaps, grocery alternatives, and
-              easy meal-prep adjustments in seconds.
+              Ask for recipe ideas, ingredient swaps, grocery alternatives, and
+              easy meal-prep adjustments in one place.
             </p>
           </article>
           <article>
@@ -270,27 +269,10 @@
         </section>
       </section>
 
-      <section id="chat" class="panel">
-        <h2>Chatbot</h2>
-        <div class="chat-window">
-          <ul id="chat-log"></ul>
-        </div>
-        <form id="chat-form">
-          <input
-            type="text"
-            id="chat-input"
-            placeholder="Ask SNAPP about meals, ingredients, or schedules..."
-            autocomplete="off"
-            required
-          />
-          <button type="submit">Send</button>
-        </form>
-      </section>
-
       <section id="dishes" class="panel">
         <h2>Dishes</h2>
         <p>Ask for a meal idea. SNAPP uses your saved profile, pantry, budget, diet, and store settings automatically.</p>
-        <div class="dish-chat-window">
+        <div class="dish-window">
           <div id="dish-empty-state" class="dish-empty-state">
             Try "cheap high-protein dinners", "vegetarian meals with rice", or "breakfast for this week".
           </div>
@@ -308,14 +290,21 @@
         </form>
         <div id="dish-status" class="dish-status" role="status" aria-live="polite"></div>
         <p id="dish-source" class="dish-source" hidden>
-          Grocery data: Trader Joe's pricing when available. Recipes: TheMealDB.
+          Grocery data: SNAPP demo grocery database. Recipes: TheMealDB.
         </p>
       </section>
 
       <section id="schedule" class="panel">
         <h2>Weekly Meal Schedule</h2>
-        <p>Meals you select from the Dishes chat appear here. Click a meal to view its recipe and ingredients.</p>
-        <div id="schedule-calendar" class="schedule-calendar"></div>
+        <p>Meals you select from Dishes appear here. Click a meal to view its recipe and ingredients.</p>
+        <div class="schedule-layout">
+          <div id="schedule-calendar" class="schedule-calendar"></div>
+          <aside id="schedule-recipe-tray" class="schedule-recipe-tray" aria-label="Recipes to schedule">
+            <h3>Recipes</h3>
+            <p>Drag recipes into a breakfast, lunch, or dinner slot.</p>
+            <div id="schedule-recipe-list" class="schedule-recipe-list"></div>
+          </aside>
+        </div>
       </section>
 
       <section id="my" class="panel">

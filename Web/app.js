@@ -1,9 +1,8 @@
 const panels = document.querySelectorAll(".panel");
 const navButtons = document.querySelectorAll(".nav-button");
-const chatForm = document.getElementById("chat-form");
-const chatInput = document.getElementById("chat-input");
-const chatLog = document.getElementById("chat-log");
 const scheduleCalendar = document.getElementById("schedule-calendar");
+const scheduleRecipeTray = document.getElementById("schedule-recipe-tray");
+const scheduleRecipeList = document.getElementById("schedule-recipe-list");
 const themeSelect = document.getElementById("theme-select");
 const notificationsToggle = document.getElementById("notifications-toggle");
 const dietSelect = document.getElementById("diet-select");
@@ -76,6 +75,7 @@ const SCHEDULE_DAYS = [
   "Saturday",
   "Sunday",
 ];
+const MEAL_SLOTS = ["Breakfast", "Lunch", "Dinner"];
 const DEFAULT_TRADER_JOES_STORE_NUMBER = "544";
 
 const API_BASE_URL = (
@@ -110,7 +110,6 @@ function getApiEndpoints(path) {
   return [];
 }
 
-const CHAT_ENDPOINTS = getApiEndpoints("/chat");
 const SIGNED_OUT_PANEL_IDS = new Set(["home", "account"]);
 const SIGNED_IN_DEFAULT_PANEL_ID = "dishes";
 const SIGNED_OUT_DEFAULT_PANEL_ID = "home";
@@ -717,7 +716,11 @@ function loadScheduledMealsFromStorage() {
     const storedMeals = JSON.parse(
       window.localStorage.getItem(scheduledMealStorageKey()) || "[]"
     );
-    scheduledMeals.splice(0, scheduledMeals.length, ...storedMeals);
+    scheduledMeals.splice(
+      0,
+      scheduledMeals.length,
+      ...storedMeals.map(normalizeScheduledMeal)
+    );
   } catch {
     scheduledMeals.splice(0, scheduledMeals.length);
   }
@@ -732,21 +735,18 @@ function saveScheduledMealsToStorage() {
 
 function normalizeScheduledMeal(record) {
   const mealData = record.meal_data || record.dish || record;
+  const scheduledDay = record.scheduled_day || mealData.scheduled_day || "";
+  const scheduledSlot = mealData.scheduled_slot || mealData.meal_slot || "";
   return {
     ...mealData,
-    schedule_id: record.id || mealData.schedule_id || mealData.recipe_id || mealData.name,
-    scheduled_day: record.scheduled_day || mealData.scheduled_day || nextScheduleDay(),
+    schedule_id: String(record.id || mealData.schedule_id || mealData.recipe_id || mealData.name),
+    scheduled_day: SCHEDULE_DAYS.includes(scheduledDay) ? scheduledDay : null,
+    scheduled_slot: MEAL_SLOTS.includes(scheduledSlot)
+      ? scheduledSlot
+      : SCHEDULE_DAYS.includes(scheduledDay)
+        ? "Dinner"
+        : null,
   };
-}
-
-function nextScheduleDay() {
-  const dayCounts = new Map(SCHEDULE_DAYS.map((day) => [day, 0]));
-  scheduledMeals.forEach((meal) => {
-    if (dayCounts.has(meal.scheduled_day)) {
-      dayCounts.set(meal.scheduled_day, dayCounts.get(meal.scheduled_day) + 1);
-    }
-  });
-  return [...dayCounts.entries()].sort((a, b) => a[1] - b[1])[0][0];
 }
 
 async function loadScheduledMeals() {
@@ -786,45 +786,176 @@ async function loadScheduledMeals() {
 
 function renderSchedule() {
   scheduleCalendar.replaceChildren();
+  scheduleRecipeList.replaceChildren();
+
+  renderScheduleRecipeTray();
 
   SCHEDULE_DAYS.forEach((day) => {
     const dayColumn = document.createElement("section");
     const title = document.createElement("h3");
-    const mealList = document.createElement("div");
-    const dayMeals = scheduledMeals.filter((meal) => meal.scheduled_day === day);
+    const slots = document.createElement("div");
 
     dayColumn.className = "schedule-day";
     title.textContent = day;
-    mealList.className = "schedule-day-meals";
+    slots.className = "schedule-day-slots";
 
-    if (!dayMeals.length) {
-      const empty = document.createElement("p");
-      empty.className = "schedule-empty";
-      empty.textContent = "No meal selected";
-      mealList.appendChild(empty);
-    }
-
-    dayMeals.forEach((meal) => {
-      mealList.appendChild(createScheduleMealButton(meal));
+    MEAL_SLOTS.forEach((slot) => {
+      const slotElement = createScheduleSlot(day, slot);
+      slots.appendChild(slotElement);
     });
 
-    dayColumn.append(title, mealList);
+    dayColumn.append(title, slots);
     scheduleCalendar.appendChild(dayColumn);
   });
 
   renderBudget();
 }
 
-function createScheduleMealButton(meal) {
+function renderScheduleRecipeTray() {
+  const unplacedMeals = scheduledMeals.filter(
+    (meal) => !meal.scheduled_day || !meal.scheduled_slot
+  );
+
+  if (!unplacedMeals.length) {
+    const empty = document.createElement("p");
+    empty.className = "schedule-empty";
+    empty.textContent = "Added recipes will appear here.";
+    scheduleRecipeList.appendChild(empty);
+    return;
+  }
+
+  unplacedMeals.forEach((meal) => {
+    scheduleRecipeList.appendChild(createScheduleMealCard(meal));
+  });
+}
+
+function createScheduleSlot(day, slot) {
+  const slotElement = document.createElement("div");
+  const label = document.createElement("span");
+  const assignedMeal = scheduledMeals.find(
+    (meal) => meal.scheduled_day === day && meal.scheduled_slot === slot
+  );
+
+  slotElement.className = "schedule-slot";
+  slotElement.dataset.day = day;
+  slotElement.dataset.slot = slot;
+  label.className = "schedule-slot-label";
+  label.textContent = slot;
+  slotElement.appendChild(label);
+
+  if (assignedMeal) {
+    slotElement.appendChild(createScheduleMealCard(assignedMeal));
+  } else {
+    const empty = document.createElement("p");
+    empty.className = "schedule-empty";
+    empty.textContent = "Drop recipe";
+    slotElement.appendChild(empty);
+  }
+
+  slotElement.addEventListener("dragover", handleScheduleDragOver);
+  slotElement.addEventListener("dragleave", handleScheduleDragLeave);
+  slotElement.addEventListener("drop", handleScheduleSlotDrop);
+  return slotElement;
+}
+
+function createScheduleMealCard(meal) {
   const button = document.createElement("button");
   const price = document.createElement("span");
   button.type = "button";
   button.className = "schedule-meal";
+  button.draggable = true;
+  button.dataset.scheduleId = meal.schedule_id;
   button.textContent = meal.name;
   price.textContent = currencyFormatter.format(meal.estimated_price_total || 0);
   button.appendChild(price);
   button.addEventListener("click", () => openDishModal(meal));
+  button.addEventListener("dragstart", (event) => {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", meal.schedule_id);
+    button.classList.add("dragging");
+  });
+  button.addEventListener("dragend", () => {
+    button.classList.remove("dragging");
+  });
   return button;
+}
+
+function handleScheduleDragOver(event) {
+  event.preventDefault();
+  event.currentTarget.classList.add("drag-over");
+}
+
+function handleScheduleDragLeave(event) {
+  event.currentTarget.classList.remove("drag-over");
+}
+
+function handleScheduleSlotDrop(event) {
+  event.preventDefault();
+  event.currentTarget.classList.remove("drag-over");
+  const scheduleId = event.dataTransfer.getData("text/plain");
+  updateScheduledMealPlacement(
+    scheduleId,
+    event.currentTarget.dataset.day,
+    event.currentTarget.dataset.slot
+  );
+}
+
+function handleScheduleTrayDrop(event) {
+  event.preventDefault();
+  scheduleRecipeTray.classList.remove("drag-over");
+  const scheduleId = event.dataTransfer.getData("text/plain");
+  updateScheduledMealPlacement(scheduleId, null, null);
+}
+
+scheduleRecipeTray.addEventListener("dragover", handleScheduleDragOver);
+scheduleRecipeTray.addEventListener("dragleave", handleScheduleDragLeave);
+scheduleRecipeTray.addEventListener("drop", handleScheduleTrayDrop);
+
+async function updateScheduledMealPlacement(scheduleId, day, slot) {
+  const meal = scheduledMeals.find((item) => String(item.schedule_id) === scheduleId);
+  if (!meal) return;
+
+  const replacedMeal = scheduledMeals.find(
+    (item) =>
+      String(item.schedule_id) !== scheduleId &&
+      item.scheduled_day === day &&
+      item.scheduled_slot === slot
+  );
+
+  meal.scheduled_day = day;
+  meal.scheduled_slot = slot;
+
+  if (replacedMeal && day && slot) {
+    replacedMeal.scheduled_day = null;
+    replacedMeal.scheduled_slot = null;
+  }
+
+  saveScheduledMealsToStorage();
+  renderSchedule();
+
+  if (supabaseClient && currentUser && scheduleId) {
+    const payload = { ...meal };
+    const { error } = await supabaseClient
+      .from("user_scheduled_meals")
+      .update({
+        scheduled_day: day || "Unscheduled",
+        meal_data: payload,
+      })
+      .eq("id", scheduleId);
+    if (error) {
+      console.warn("Schedule placement sync failed:", error.message);
+    }
+
+    if (replacedMeal?.schedule_id) {
+      await supabaseClient
+        .from("user_scheduled_meals")
+        .update({
+          scheduled_day: "Unscheduled",
+          meal_data: { ...replacedMeal },
+        })
+        .eq("id", replacedMeal.schedule_id);
+    }
+  }
 }
 
 async function addMealToSchedule(dish) {
@@ -839,7 +970,9 @@ async function addMealToSchedule(dish) {
 
   const scheduledMeal = {
     ...dish,
-    scheduled_day: nextScheduleDay(),
+    schedule_id: String(dish.recipe_id || dish.name),
+    scheduled_day: null,
+    scheduled_slot: null,
   };
 
   if (supabaseClient && currentUser) {
@@ -848,7 +981,7 @@ async function addMealToSchedule(dish) {
       .insert({
         user_id: currentUser.id,
         meal_name: dish.name,
-        scheduled_day: scheduledMeal.scheduled_day,
+        scheduled_day: "Unscheduled",
         meal_data: scheduledMeal,
       })
       .select("id,scheduled_day,meal_data,created_at")
@@ -863,10 +996,7 @@ async function addMealToSchedule(dish) {
     }
   }
 
-  scheduledMeals.push({
-    ...scheduledMeal,
-    schedule_id: scheduledMeal.recipe_id || scheduledMeal.name,
-  });
+  scheduledMeals.push(scheduledMeal);
   saveScheduledMealsToStorage();
   renderSchedule();
   showPanel("schedule");
@@ -965,15 +1095,6 @@ function appendModalSection(title, items, formatter) {
   dishModalContent.append(heading, list);
 }
 
-function appendMessage(type, text) {
-  const li = document.createElement("li");
-  li.className = type;
-  li.textContent = text;
-  chatLog.appendChild(li);
-  chatLog.scrollTop = chatLog.scrollHeight;
-  return li;
-}
-
 function dishIngredientText(dish) {
   const ingredients = dish.ingredients_to_buy || dish.ingredients || [];
   const recipeIngredients = dish.recipe?.ingredients || [];
@@ -1003,46 +1124,6 @@ function getRestrictionWarnings(dish) {
       rule.restrictionPattern.test(restrictions) &&
       rule.ingredientPattern.test(dishText)
   ).map((rule) => rule.message);
-}
-
-async function fetchBotReply(message) {
-  let lastError = API_BASE_URL
-    ? "Unable to reach chat backend."
-    : "Backend URL is not configured.";
-
-  for (const endpoint of CHAT_ENDPOINTS) {
-    try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message }),
-      });
-
-      let data = {};
-      try {
-        data = await response.json();
-      } catch {
-        data = {};
-      }
-
-      if (!response.ok) {
-        lastError =
-          data.details || data.error || `Chat request failed (${response.status}).`;
-        continue;
-      }
-
-      if (!data.reply) {
-        lastError = "Chat backend returned an invalid response.";
-        continue;
-      }
-
-      return data.reply;
-    } catch (error) {
-      lastError = error.message || "Network error while contacting chat backend.";
-    }
-  }
-
-  throw new Error(lastError);
 }
 
 async function fetchStores(zipCode, options = {}) {
@@ -1458,7 +1539,7 @@ function createDishCard(dish) {
     ].join(" | ");
     scheduleButton.type = "button";
     scheduleButton.className = "add-to-schedule-button";
-    scheduleButton.textContent = "Add to calendar";
+    scheduleButton.textContent = "Add to schedule";
     scheduleButton.addEventListener("click", (event) => {
       event.stopPropagation();
       addMealToSchedule(dish);
@@ -1613,21 +1694,6 @@ signOutButton.addEventListener("click", async () => {
   signOutButton.disabled = false;
 });
 
-chatForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const message = chatInput.value.trim();
-  if (!message) return;
-  appendMessage("user", message);
-  const pendingMessage = appendMessage("bot", "Thinking...");
-  try {
-    const reply = await fetchBotReply(message);
-    pendingMessage.textContent = reply;
-  } catch (error) {
-    pendingMessage.textContent = `Chat backend error: ${error.message}`;
-  }
-  chatInput.value = "";
-});
-
 storeSearchForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const zipCode = zipCodeInput.value.trim();
@@ -1778,12 +1844,12 @@ themeSelect.addEventListener("change", () => {
 
 notificationsToggle.addEventListener("change", () => {
   const status = notificationsToggle.checked ? "enabled" : "disabled";
-  appendMessage("bot", `Daily reminders ${status}.`);
+  setSettingsStatus(`Daily reminders ${status}.`);
   queueSettingsSave();
 });
 
 dietSelect.addEventListener("change", () => {
-  appendMessage("bot", `Dietary preference set to ${dietSelect.value}.`);
+  setSettingsStatus(`Dietary preference set to ${dietSelect.value}.`);
   queueSettingsSave();
 });
 
