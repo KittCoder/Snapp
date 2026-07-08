@@ -46,6 +46,10 @@ SPOONACULAR_SEARCH_RESULT_COUNT = 24
 SPOONACULAR_RANDOM_RESULT_COUNT = 24
 RECIPE_IDEA_COUNT = 8
 SPOONACULAR_IDEA_SEARCH_LIMIT = 4
+THEMEALDB_BASE_URL = os.getenv(
+    "THEMEALDB_BASE_URL", "https://www.themealdb.com/api/json/v1/1"
+).rstrip("/")
+THEMEALDB_SEARCH_LIMIT = 24
 WEB_RECIPE_SEARCH_RESULT_COUNT = 8
 WEB_RECIPE_FETCH_LIMIT = 5
 HTTP_TIMEOUT_SECONDS = 20
@@ -63,6 +67,8 @@ trader_joes_product_cache = {}
 food_search_cache = {}
 spoonacular_search_cache = {}
 spoonacular_lookup_cache = {}
+mealdb_search_cache = {}
+mealdb_lookup_cache = {}
 robots_cache = {}
 FDC_SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
 FDC_API_KEY = os.getenv("FDC_API_KEY") or os.getenv("FOODDATA_CENTRAL_API_KEY") or "DEMO_KEY"
@@ -471,6 +477,15 @@ def fetch_spoonacular_json(path, params=None):
         return fetch_json(url, service_name="Spoonacular")
     except RuntimeError as exc:
         raise RuntimeError("Spoonacular recipe service is unavailable.") from exc
+
+
+def fetch_mealdb_json(path, params=None):
+    query = f"?{urlencode(params or {})}" if params else ""
+    url = f"{THEMEALDB_BASE_URL}/{path.lstrip('/')}{query}"
+    try:
+        return fetch_json(url, service_name="TheMealDB")
+    except RuntimeError as exc:
+        raise RuntimeError("TheMealDB recipe service is unavailable.") from exc
 
 
 def fetch_text(url, service_name="web page"):
@@ -1819,6 +1834,193 @@ def spoonacular_ingredients(recipe):
     return ingredients
 
 
+def mealdb_recipe_ingredients(meal):
+    ingredients = []
+    seen = set()
+    for index in range(1, 21):
+        raw_name = meal.get(f"strIngredient{index}") or ""
+        raw_measure = meal.get(f"strMeasure{index}") or ""
+        name = normalize_ingredient_name(raw_name)
+        measure = re.sub(r"\s+", " ", raw_measure).strip()
+        if not name:
+            continue
+        identity = name.casefold()
+        if identity in seen:
+            continue
+        seen.add(identity)
+        display = f"{measure} {name}".strip() if measure else name
+        ingredients.append(
+            {
+                "name": name,
+                "measure": display,
+                "display": display,
+            }
+        )
+    return ingredients
+
+
+def mealdb_recipe_id(meal):
+    meal_id = str((meal or {}).get("idMeal") or "").strip()
+    return f"mealdb:{meal_id}" if meal_id else ""
+
+
+def mealdb_recipe_to_recipe(meal):
+    meal_id = str((meal or {}).get("idMeal") or "").strip()
+    name = re.sub(r"\s+", " ", (meal or {}).get("strMeal") or "").strip()
+    if not meal_id or not name:
+        return None
+    source = (
+        meal.get("strSource")
+        or f"https://www.themealdb.com/meal/{meal_id}"
+    )
+    return {
+        "id": mealdb_recipe_id(meal),
+        "title": name,
+        "cuisines": [meal.get("strArea")] if meal.get("strArea") else [],
+        "dishTypes": [meal.get("strCategory")] if meal.get("strCategory") else ["main course"],
+        "extendedIngredients": mealdb_recipe_ingredients(meal),
+        "instructions": spoonacular_recipe_text(meal.get("strInstructions") or ""),
+        "image": meal.get("strMealThumb"),
+        "sourceUrl": source,
+        "spoonacularSourceUrl": source,
+        "_snapp_recipe_provider": "TheMealDB",
+        "_snapp_youtube": meal.get("strYoutube"),
+    }
+
+
+def search_mealdb_meals(query):
+    normalized_query = re.sub(r"\s+", " ", query or "").strip()
+    if not normalized_query:
+        return []
+    cache_key = normalized_query.casefold()
+    cached = mealdb_search_cache.get(cache_key)
+    if cached is not None:
+        return cached
+    data = fetch_mealdb_json("search.php", {"s": normalized_query})
+    meals = data.get("meals") or []
+    mealdb_search_cache[cache_key] = meals
+    return meals
+
+
+def lookup_mealdb_meal(meal_id):
+    meal_id = str(meal_id or "").strip()
+    if not meal_id:
+        return None
+    cached = mealdb_lookup_cache.get(meal_id)
+    if cached is not None:
+        return cached
+    data = fetch_mealdb_json("lookup.php", {"i": meal_id})
+    meals = data.get("meals") or []
+    meal = meals[0] if meals else None
+    mealdb_lookup_cache[meal_id] = meal
+    return meal
+
+
+def mealdb_filter_meals(filter_key, value):
+    value = re.sub(r"\s+", " ", value or "").strip()
+    if not value:
+        return []
+    data = fetch_mealdb_json("filter.php", {filter_key: value})
+    summaries = data.get("meals") or []
+    meals = []
+    for summary in summaries[:THEMEALDB_SEARCH_LIMIT]:
+        meal = lookup_mealdb_meal(summary.get("idMeal"))
+        if meal:
+            meals.append(meal)
+    return meals
+
+
+def mealdb_categories_for_text(value):
+    text = f" {normalize_cuisine_text(value)} "
+    categories = []
+    category_rules = (
+        (r"\b(breakfast|brunch|morning|egg|eggs)\b", "Breakfast"),
+        (r"\b(vegetarian|veggie|meatless|plant based)\b", "Vegetarian"),
+        (r"\b(vegan)\b", "Vegan"),
+        (r"\b(chicken|poultry|high protein|protein)\b", "Chicken"),
+        (r"\b(beef|steak|burger|high protein|protein)\b", "Beef"),
+        (r"\b(pork|ham|bacon|sausage)\b", "Pork"),
+        (r"\b(fish|seafood|salmon|tuna|shrimp|prawn|high protein|protein)\b", "Seafood"),
+        (r"\b(pasta|spaghetti|noodle|noodles)\b", "Pasta"),
+        (r"\b(dessert|sweet|cake|cookie|cookies)\b", "Dessert"),
+    )
+    for pattern, category in category_rules:
+        if re.search(pattern, text) and category not in categories:
+            categories.append(category)
+    if not categories and re.search(r"\b(dinner|lunch|meal|cheap|healthy|easy|quick)\b", text):
+        categories.extend(["Chicken", "Vegetarian", "Pasta", "Seafood"])
+    return categories
+
+
+def mealdb_candidates_for_ideas(recipe_ideas, meal_prompt):
+    candidates = []
+    seen_ids = set()
+    search_terms = []
+    for idea in recipe_ideas:
+        search_terms.extend(
+            value
+            for value in (idea.get("query"), idea.get("name"))
+            if value
+        )
+    search_terms.append(meal_prompt)
+
+    for query in search_terms:
+        for meal in search_mealdb_meals(query):
+            recipe = mealdb_recipe_to_recipe(meal)
+            recipe_id = spoonacular_recipe_id(recipe or {})
+            if recipe and recipe_id not in seen_ids:
+                candidates.append(recipe)
+                seen_ids.add(recipe_id)
+            if len(candidates) >= THEMEALDB_SEARCH_LIMIT:
+                return candidates
+
+    requested_area = detect_requested_spoonacular_cuisine(meal_prompt)
+    idea_areas = [
+        idea.get("cuisine")
+        for idea in recipe_ideas
+        if idea.get("cuisine")
+    ]
+    for area in [requested_area, *idea_areas]:
+        for meal in mealdb_filter_meals("a", "American" if area == "United States" else area):
+            recipe = mealdb_recipe_to_recipe(meal)
+            recipe_id = spoonacular_recipe_id(recipe or {})
+            if recipe and recipe_id not in seen_ids:
+                candidates.append(recipe)
+                seen_ids.add(recipe_id)
+            if len(candidates) >= THEMEALDB_SEARCH_LIMIT:
+                return candidates
+
+    requested_ingredients = requested_spoonacular_ingredient_groups(meal_prompt)
+    for ingredient, _aliases in requested_ingredients:
+        for meal in mealdb_filter_meals("i", ingredient):
+            recipe = mealdb_recipe_to_recipe(meal)
+            recipe_id = spoonacular_recipe_id(recipe or {})
+            if recipe and recipe_id not in seen_ids:
+                candidates.append(recipe)
+                seen_ids.add(recipe_id)
+            if len(candidates) >= THEMEALDB_SEARCH_LIMIT:
+                return candidates
+
+    category_text = " ".join(
+        [meal_prompt]
+        + [
+            " ".join([idea.get("name") or "", idea.get("query") or ""])
+            for idea in recipe_ideas
+        ]
+    )
+    for category in mealdb_categories_for_text(category_text):
+        for meal in mealdb_filter_meals("c", category):
+            recipe = mealdb_recipe_to_recipe(meal)
+            recipe_id = spoonacular_recipe_id(recipe or {})
+            if recipe and recipe_id not in seen_ids:
+                candidates.append(recipe)
+                seen_ids.add(recipe_id)
+            if len(candidates) >= THEMEALDB_SEARCH_LIMIT:
+                return candidates
+
+    return candidates
+
+
 def spoonacular_recipe_text(value):
     return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", unescape(value or ""))).strip()
 
@@ -2326,7 +2528,9 @@ def spoonacular_recipe_to_demo_dish(recipe, matched_products, stores, household_
         )
 
     provider = recipe.get("_snapp_recipe_provider") or "web"
-    provider_name = "web recipe source" if provider == "web" else "recipe database"
+    provider_name = provider if provider == "TheMealDB" else (
+        "web recipe source" if provider == "web" else "recipe database"
+    )
     recipe = spoonacular_recipe_from_recipe(recipe)
     return {
         "name": recipe["name"],
@@ -2588,7 +2792,7 @@ def spoonacular_recipe_from_recipe(recipe):
         "instructions": spoonacular_instructions(recipe),
         "ingredients": spoonacular_ingredients(recipe),
         "thumbnail": recipe.get("image"),
-        "youtube": None,
+        "youtube": recipe.get("_snapp_youtube"),
         "source": recipe.get("sourceUrl") or recipe.get("spoonacularSourceUrl"),
     }
 
@@ -2706,26 +2910,12 @@ def recipe_constraint_score(recipe, meal_prompt, filters):
     return score
 
 
-def collect_recipe_candidates(meal_prompt, dietary_restrictions):
-    recipe_ideas = [{"name": meal_prompt, "query": meal_prompt, "cuisine": ""}]
-    candidates = []
-    seen_ids = set()
-    for recipe in fetch_web_recipe_candidates(recipe_ideas):
-        recipe_id = spoonacular_recipe_id(recipe)
-        if recipe_id and recipe_id not in seen_ids:
-            candidates.append(recipe)
-            seen_ids.add(recipe_id)
-    if SPOONACULAR_API_KEY:
-        for recipe in search_spoonacular_recipes(
-            meal_prompt,
-            dietary_restrictions=dietary_restrictions,
-            number=SPOONACULAR_SEARCH_RESULT_COUNT,
-        ):
-            recipe_id = spoonacular_recipe_id(recipe)
-            if recipe_id and recipe_id not in seen_ids:
-                candidates.append(recipe)
-                seen_ids.add(recipe_id)
-    return candidates
+def collect_recipe_candidates(meal_prompt, dietary_restrictions, recipe_ideas=None):
+    del dietary_restrictions
+    effective_ideas = recipe_ideas or [
+        {"name": meal_prompt, "query": meal_prompt, "cuisine": ""}
+    ]
+    return mealdb_candidates_for_ideas(effective_ideas, meal_prompt)
 
 
 def recipe_result_from_recipe(recipe, matched_products, stores, filters, relevance_score, exact_match):
@@ -2758,8 +2948,12 @@ def recipe_result_from_recipe(recipe, matched_products, stores, filters, relevan
     return dish
 
 
-def build_real_recipe_results(meal_prompt, filters, products, stores, result_limit=8):
-    candidates = collect_recipe_candidates(meal_prompt, filters["dietary_restrictions"])
+def build_real_recipe_results(meal_prompt, filters, products, stores, result_limit=8, recipe_ideas=None):
+    candidates = collect_recipe_candidates(
+        meal_prompt,
+        filters["dietary_restrictions"],
+        recipe_ideas=recipe_ideas,
+    )
     exact_results = []
     closest_results = []
     for recipe in candidates:
@@ -3342,11 +3536,18 @@ def dishes():
         grocery_db = grocery_db_for_store(store_number)
         stores = demo_store_lookup(grocery_db)
         products = available_demo_products(grocery_db)
+        recipe_ideas = generate_recipe_search_ideas(
+            meal_prompt,
+            filters["servings"],
+            dietary_restrictions,
+            pantry_items,
+        )
         dishes, used_relaxed_matches = build_real_recipe_results(
             meal_prompt,
             filters,
             products,
             stores,
+            recipe_ideas=recipe_ideas,
         )
     except RuntimeError as exc:
         return jsonify({"error": str(exc)}), 503
@@ -3367,10 +3568,10 @@ def dishes():
             ],
             "missing_ingredients": [],
             "dishes": dishes,
-            "recipe_ideas": [],
+            "recipe_ideas": recipe_ideas,
             "used_relaxed_matches": used_relaxed_matches,
             "store_number": store_number,
-            "source": "Real web recipe search and current grocery pricing database",
+            "source": "TheMealDB recipes selected from AI-generated meal ideas and current grocery pricing database",
         }
     )
 
