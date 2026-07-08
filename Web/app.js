@@ -76,6 +76,7 @@ const SCHEDULE_DAYS = [
   "Saturday",
   "Sunday",
 ];
+const DEFAULT_TRADER_JOES_STORE_NUMBER = "544";
 
 const API_BASE_URL = (
   document.querySelector('meta[name="snapp-api-base-url"]')?.content || ""
@@ -1301,7 +1302,7 @@ async function fetchDishes(mealPrompt) {
             name: item.name,
             quantity: item.quantity,
           })),
-          store_number: currentUserInfo?.store_number || null,
+          store_number: currentUserInfo?.store_number || DEFAULT_TRADER_JOES_STORE_NUMBER,
         }),
       });
       const data = await response.json().catch(() => ({}));

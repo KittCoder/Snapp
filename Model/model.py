@@ -37,6 +37,7 @@ NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 ZIPPOPOTAM_URL = "https://api.zippopotam.us/us"
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 TRADER_JOES_LOCATIONS_BASE_URL = "https://locations.traderjoes.com"
+DEFAULT_TRADER_JOES_STORE_NUMBER = os.getenv("DEFAULT_TRADER_JOES_STORE_NUMBER", "544")
 ENABLE_SPOONACULAR = os.getenv("ENABLE_SPOONACULAR", "false").casefold() == "true"
 SPOONACULAR_API_KEY = os.getenv("SPOONACULAR_API_KEY", "") if ENABLE_SPOONACULAR else ""
 SPOONACULAR_BASE_URL = os.getenv(
@@ -3596,7 +3597,14 @@ def dishes():
     data = request.get_json(silent=True) or {}
     meal_prompt = (data.get("meal_prompt") or data.get("ingredients") or data.get("message") or "").strip()
     household_size = parse_household_size(data.get("household_size"))
-    store_number = re.sub(r"\D+", "", str(data.get("store_number") or ""))[:10] or None
+    store_number = (
+        re.sub(
+            r"\D+",
+            "",
+            str(data.get("store_number") or DEFAULT_TRADER_JOES_STORE_NUMBER),
+        )[:10]
+        or None
+    )
     dietary_restrictions = re.sub(
         r"\s+", " ", (data.get("dietary_restrictions") or "").strip()
     )[:500]
