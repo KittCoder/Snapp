@@ -50,10 +50,11 @@ SPOONACULAR_IDEA_SEARCH_LIMIT = 4
 THEMEALDB_BASE_URL = os.getenv(
     "THEMEALDB_BASE_URL", "https://www.themealdb.com/api/json/v1/1"
 ).rstrip("/")
-THEMEALDB_SEARCH_LIMIT = 24
+THEMEALDB_SEARCH_LIMIT = 12
+THEMEALDB_FILTER_LOOKUP_LIMIT = 6
 WEB_RECIPE_SEARCH_RESULT_COUNT = 8
 WEB_RECIPE_FETCH_LIMIT = 5
-HTTP_TIMEOUT_SECONDS = 20
+HTTP_TIMEOUT_SECONDS = 10
 HTTP_RETRY_ATTEMPTS = 2
 USER_AGENT = "SNAPP/1.0 (https://github.com/KittCoder/Snapp)"
 STORE_CACHE_TTL_SECONDS = 15 * 60
@@ -1619,7 +1620,7 @@ def generate_recipe_search_ideas(
 ):
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
-        raise RuntimeError("OPENAI_API_KEY is not set.")
+        return fallback_recipe_search_ideas(meal_prompt)
 
     requested_cuisine = detect_requested_spoonacular_cuisine(meal_prompt)
     client = OpenAI(api_key=api_key)
@@ -1649,15 +1650,19 @@ Return this JSON shape only:
   ]
 }}
 """.strip()
-    response = client.responses.create(
-        model=OPENAI_DISH_MODEL,
-        input=[
-            {"role": "system", "content": DISH_SYSTEM_PROMPT},
-            {"role": "user", "content": user_prompt},
-        ],
-        store=False,
-    )
-    data = extract_json_object(response.output_text)
+    try:
+        response = client.responses.create(
+            model=OPENAI_DISH_MODEL,
+            input=[
+                {"role": "system", "content": DISH_SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt},
+            ],
+            store=False,
+        )
+        data = extract_json_object(response.output_text)
+    except Exception as exc:
+        print(f"Recipe idea generation failed: {exc}", flush=True)
+        return fallback_recipe_search_ideas(meal_prompt)
     ideas = []
     seen = set()
     for idea in data.get("ideas", []):
@@ -1679,8 +1684,47 @@ Return this JSON shape only:
         )
 
     if not ideas:
-        raise RuntimeError("The recipe idea generator returned an invalid response.")
+        return fallback_recipe_search_ideas(meal_prompt)
     return ideas[:RECIPE_IDEA_COUNT]
+
+
+def fallback_recipe_search_ideas(meal_prompt):
+    prompt = re.sub(r"\s+", " ", meal_prompt or "").strip()
+    requested_area = detect_requested_spoonacular_cuisine(prompt)
+    requested_ingredients = [
+        ingredient
+        for ingredient, _aliases in requested_spoonacular_ingredient_groups(prompt)
+    ]
+    category_names = mealdb_categories_for_text(prompt)
+    base_terms = [prompt, *requested_ingredients, *category_names]
+    generic_terms = [
+        "Chicken",
+        "Pasta",
+        "Vegetarian",
+        "Seafood",
+        "Beef",
+        "Rice",
+    ]
+    ideas = []
+    seen = set()
+    for term in [*base_terms, *generic_terms]:
+        term = re.sub(r"\s+", " ", term or "").strip()
+        if not term:
+            continue
+        identity = term.casefold()
+        if identity in seen:
+            continue
+        seen.add(identity)
+        ideas.append(
+            {
+                "name": term,
+                "query": term,
+                "cuisine": requested_area or "",
+            }
+        )
+        if len(ideas) >= RECIPE_IDEA_COUNT:
+            break
+    return ideas
 
 
 def build_dishes(dish_candidates):
@@ -1971,7 +2015,7 @@ def mealdb_filter_meals(filter_key, value):
     data = fetch_mealdb_json("filter.php", {filter_key: value})
     summaries = data.get("meals") or []
     meals = []
-    for summary in summaries[:THEMEALDB_SEARCH_LIMIT]:
+    for summary in summaries[:THEMEALDB_FILTER_LOOKUP_LIMIT]:
         meal = lookup_mealdb_meal(summary.get("idMeal"))
         if meal:
             meals.append(meal)
@@ -2012,14 +2056,17 @@ def mealdb_candidates_for_ideas(recipe_ideas, meal_prompt):
         )
     search_terms.append(meal_prompt)
 
+    def add_recipe(meal):
+        recipe = mealdb_recipe_to_recipe(meal)
+        recipe_id = spoonacular_recipe_id(recipe or {})
+        if recipe and recipe_id not in seen_ids:
+            candidates.append(recipe)
+            seen_ids.add(recipe_id)
+        return len(candidates) >= THEMEALDB_SEARCH_LIMIT
+
     for query in search_terms:
         for meal in search_mealdb_meals(query):
-            recipe = mealdb_recipe_to_recipe(meal)
-            recipe_id = spoonacular_recipe_id(recipe or {})
-            if recipe and recipe_id not in seen_ids:
-                candidates.append(recipe)
-                seen_ids.add(recipe_id)
-            if len(candidates) >= THEMEALDB_SEARCH_LIMIT:
+            if add_recipe(meal):
                 return candidates
 
     requested_area = detect_requested_spoonacular_cuisine(meal_prompt)
@@ -2029,24 +2076,16 @@ def mealdb_candidates_for_ideas(recipe_ideas, meal_prompt):
         if idea.get("cuisine")
     ]
     for area in [requested_area, *idea_areas]:
+        if not area:
+            continue
         for meal in mealdb_filter_meals("a", "American" if area == "United States" else area):
-            recipe = mealdb_recipe_to_recipe(meal)
-            recipe_id = spoonacular_recipe_id(recipe or {})
-            if recipe and recipe_id not in seen_ids:
-                candidates.append(recipe)
-                seen_ids.add(recipe_id)
-            if len(candidates) >= THEMEALDB_SEARCH_LIMIT:
+            if add_recipe(meal):
                 return candidates
 
     requested_ingredients = requested_spoonacular_ingredient_groups(meal_prompt)
     for ingredient, _aliases in requested_ingredients:
         for meal in mealdb_filter_meals("i", ingredient):
-            recipe = mealdb_recipe_to_recipe(meal)
-            recipe_id = spoonacular_recipe_id(recipe or {})
-            if recipe and recipe_id not in seen_ids:
-                candidates.append(recipe)
-                seen_ids.add(recipe_id)
-            if len(candidates) >= THEMEALDB_SEARCH_LIMIT:
+            if add_recipe(meal):
                 return candidates
 
     category_text = " ".join(
@@ -2058,12 +2097,7 @@ def mealdb_candidates_for_ideas(recipe_ideas, meal_prompt):
     )
     for category in mealdb_categories_for_text(category_text):
         for meal in mealdb_filter_meals("c", category):
-            recipe = mealdb_recipe_to_recipe(meal)
-            recipe_id = spoonacular_recipe_id(recipe or {})
-            if recipe and recipe_id not in seen_ids:
-                candidates.append(recipe)
-                seen_ids.add(recipe_id)
-            if len(candidates) >= THEMEALDB_SEARCH_LIMIT:
+            if add_recipe(meal):
                 return candidates
 
     return candidates
