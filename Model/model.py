@@ -3807,33 +3807,34 @@ def dishes():
             recipe_ideas=recipe_ideas,
             grocery_label=grocery_label,
         )
+        return jsonify(
+            {
+                "meal_prompt": meal_prompt,
+                "household_size": household_size,
+                "dietary_restrictions": dietary_restrictions,
+                "pantry_items": pantry_items,
+                "filters": filters,
+                "matched_ingredients": [
+                    ingredient
+                    for dish in dishes
+                    for ingredient in dish["ingredients"]
+                ],
+                "missing_ingredients": [],
+                "dishes": dishes,
+                "recipe_ideas": recipe_ideas,
+                "used_relaxed_matches": used_relaxed_matches,
+                "store_number": store_number,
+                "pricing_source": grocery_db.get("pricing_source"),
+                "pricing_unavailable": bool(grocery_db.get("pricing_unavailable")),
+                "source": "TheMealDB recipes selected from AI-generated meal ideas and current grocery pricing database",
+            }
+        )
     except RuntimeError as exc:
+        print(f"Dish generation runtime error: {exc}", flush=True)
         return jsonify({"error": str(exc)}), 503
     except Exception as exc:
+        print(f"Dish generation failed: {exc}", flush=True)
         return jsonify({"error": "Dish generation failed.", "details": str(exc)}), 503
-
-    return jsonify(
-        {
-            "meal_prompt": meal_prompt,
-            "household_size": household_size,
-            "dietary_restrictions": dietary_restrictions,
-            "pantry_items": pantry_items,
-            "filters": filters,
-            "matched_ingredients": [
-                ingredient
-                for dish in dishes
-                for ingredient in dish["ingredients"]
-            ],
-            "missing_ingredients": [],
-            "dishes": dishes,
-            "recipe_ideas": recipe_ideas,
-            "used_relaxed_matches": used_relaxed_matches,
-            "store_number": store_number,
-            "pricing_source": grocery_db.get("pricing_source"),
-            "pricing_unavailable": bool(grocery_db.get("pricing_unavailable")),
-            "source": "TheMealDB recipes selected from AI-generated meal ideas and current grocery pricing database",
-        }
-    )
 
 
 @app.route("/dishes", methods=["OPTIONS"])
