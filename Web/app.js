@@ -1305,9 +1305,18 @@ async function fetchDishes(mealPrompt) {
           store_number: currentUserInfo?.store_number || DEFAULT_TRADER_JOES_STORE_NUMBER,
         }),
       });
-      const data = await response.json().catch(() => ({}));
+      const responseText = await response.text();
+      let data = {};
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch {
+        data = {};
+      }
       if (!response.ok) {
-        lastError = data.error || `Dish request failed (${response.status}).`;
+        lastError =
+          data.details ||
+          data.error ||
+          `Dish request failed (${response.status}${response.statusText ? ` ${response.statusText}` : ""}).`;
         continue;
       }
       return data;

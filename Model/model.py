@@ -419,6 +419,12 @@ def add_cors_headers(response):
     return response
 
 
+@app.errorhandler(Exception)
+def handle_unexpected_error(exc):
+    print(f"Unhandled backend error: {exc}", flush=True)
+    return jsonify({"error": "Backend request failed.", "details": str(exc)}), 500
+
+
 def generate_reply(message):
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
