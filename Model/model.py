@@ -431,7 +431,7 @@ def generate_reply(message):
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY is not set.")
 
-    client = OpenAI(api_key=api_key)
+    client = OpenAI(api_key=api_key, timeout=8, max_retries=0)
     history = conversation_history[-MAX_TURNS * 2 :]
     prompt = [{"role": "system", "content": SYSTEM_PROMPT}]
     prompt.extend(history)
@@ -2573,70 +2573,11 @@ def generate_general_ingredient_search_terms(recipe_ingredients):
     if cached is not None:
         return cached
 
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        return {}
-
-    client = OpenAI(api_key=api_key)
-    user_prompt = f"""
-Recipe ingredients JSON:
-{json.dumps(ingredient_names, separators=(",", ":"))}
-
-Convert each recipe ingredient into broad grocery-store search terms for matching against product
-names. This is ingredient normalization, not recipe writing.
-
-Rules:
-- Return the original ingredient name exactly as provided in "name".
-- Generate 2 to 6 lowercase search_terms per ingredient.
-- Terms should move from specific to general grocery concepts.
-- Keep the same food role. Do not turn sauces into meat, meat into sauce, or garnish into a main ingredient.
-- Include broad equivalents and common grocery labels, such as:
-  sirloin steak -> sirloin steak, steak, beef
-  birds-eye chillies -> chillies, chile peppers, peppers
-  flat rice noodles -> rice noodles, noodles
-  basil leaves -> basil, fresh herbs
-  vegetable oil -> vegetable oil, cooking oil, oil
-- Do not include cooking instructions, quantities, or brand names.
-
-Return only this JSON shape:
-{{
-  "ingredients": [
-    {{"name": "original ingredient", "search_terms": ["term", "term"]}}
-  ]
-}}
-""".strip()
-    try:
-        response = client.responses.create(
-            model=OPENAI_DISH_MODEL,
-            input=[
-                {"role": "system", "content": DISH_SYSTEM_PROMPT},
-                {"role": "user", "content": user_prompt},
-            ],
-            store=False,
-        )
-        data = extract_json_object(response.output_text)
-    except Exception as exc:
-        print(f"Ingredient generalization failed: {exc}", flush=True)
-        ingredient_generalization_cache[cache_key] = {}
-        return {}
-
     by_name = {}
-    expected_names = {name.casefold(): name for name in ingredient_names}
-    for item in data.get("ingredients", []):
-        name = re.sub(r"\s+", " ", str(item.get("name") or "")).strip()
-        canonical_name = expected_names.get(name.casefold())
-        if not canonical_name:
-            continue
-        terms = []
-        seen = set()
-        for term in item.get("search_terms") or []:
-            cleaned = normalize_cuisine_text(str(term or ""))
-            if not cleaned or cleaned in seen:
-                continue
-            terms.append(cleaned)
-            seen.add(cleaned)
+    for name in ingredient_names:
+        terms = sorted(ingredient_match_terms(name))
         if terms:
-            by_name[canonical_name.casefold()] = terms[:6]
+            by_name[name.casefold()] = terms[:6]
 
     ingredient_generalization_cache[cache_key] = by_name
     return by_name
