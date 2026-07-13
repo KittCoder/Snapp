@@ -1,0 +1,4196 @@
+{
+  "metadata": {
+    "notes": [
+      "Recipes are historical public domain recipes from publicdomainrecipes.org.",
+      "Ingredient quantity, unit, and name are parsed from each source ingredient line; raw preserves the original text.",
+      "These recipes are historical and should be reviewed for modern food safety before use."
+    ],
+    "recipe_count": 50,
+    "scraped_at": "2026-07-13T00:51:58.008920+00:00",
+    "source": "Public Domain Recipes",
+    "source_url": "https://publicdomainrecipes.org/recipes/"
+  },
+  "recipes": [
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat",
+        "Main Dish"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "knife",
+        "rolling pin",
+        "stove"
+      ],
+      "id": "37dc7f41a3eebed9",
+      "image": "https://publicdomainrecipes.org/recipes/beef-stew/Beef%20Stew_hu_d3226a33247be22c.png",
+      "ingredients": [
+        {
+          "name": "beef",
+          "note": "stew meat",
+          "quantity": "2",
+          "raw": "2 pound beef, stew meat",
+          "unit": "pound"
+        },
+        {
+          "name": "tomato puree",
+          "note": "or canned tomatoes",
+          "quantity": "2",
+          "raw": "2 cup tomato puree, (or canned tomatoes)",
+          "unit": "cup"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 teaspoon salt",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": "1/4",
+          "raw": "1/4 teaspoon pepper",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "flour",
+          "note": "for dredging",
+          "quantity": null,
+          "raw": "flour, for dredging",
+          "unit": null
+        },
+        {
+          "name": "onion",
+          "note": "minced",
+          "quantity": "1",
+          "raw": "1 onion, minced",
+          "unit": null
+        },
+        {
+          "name": "lard",
+          "note": "for browning",
+          "quantity": null,
+          "raw": "lard, for browning",
+          "unit": null
+        },
+        {
+          "name": "celery",
+          "note": "cut in 1-in. pieces",
+          "quantity": "4",
+          "raw": "4 stalks celery, (cut in 1-in. pieces)",
+          "unit": "stalks"
+        },
+        {
+          "name": "onions",
+          "note": "chopped",
+          "quantity": "2",
+          "raw": "2 onions, chopped",
+          "unit": null
+        },
+        {
+          "name": "boiling water",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 cup boiling water",
+          "unit": "cup"
+        },
+        {
+          "name": "green pepper",
+          "note": "diced",
+          "quantity": "1",
+          "raw": "1 green pepper, diced",
+          "unit": null
+        },
+        {
+          "name": "bay leaves",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 bay leaves",
+          "unit": null
+        },
+        {
+          "name": "carrots",
+          "note": "sliced",
+          "quantity": "3",
+          "raw": "3 carrots, sliced",
+          "unit": null
+        },
+        {
+          "name": "potatoes",
+          "note": "quartered",
+          "quantity": "4",
+          "raw": "4 potatoes, quartered",
+          "unit": null
+        }
+      ],
+      "instructions": [
+        "Have meat cut into small cubes.",
+        "Roll in flour, aeasoned with salt and pepper, and brown in a little hot lard.",
+        "Brown the chopped onions in lard.",
+        "Mix the tomato puree with boiling water, heat and pour over meat and onion.",
+        "Add bay leaves and simmer 1 hour.",
+        "Add minced onion, celery, grcen pepper, carrots and potatoes.",
+        "Simmer until all ingredients are done\u2014about 1 hour.",
+        "Liquid may be thickened with flour for gravy."
+      ],
+      "name": "Beef Stew",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/beef-stew/",
+      "yield": "6-8 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat",
+        "Main Dish"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "knife",
+        "oven",
+        "strainer",
+        "stove"
+      ],
+      "id": "86c5a5b5f47e80ee",
+      "image": "https://publicdomainrecipes.org/recipes/beefsteak-and-kidney-pie/Beefsteak%20and%20Kidney%20Pie_hu_9c499991c988dd10.png",
+      "ingredients": [
+        {
+          "name": "beef chuck",
+          "note": "or round steak",
+          "quantity": "1",
+          "raw": "1 pound beef chuck, or round steak",
+          "unit": "pound"
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": "1/8",
+          "raw": "1/8 teaspoon pepper",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "Worcestershire sauce",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 tablespoon Worcestershire sauce",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "veal kidney",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 veal kidney",
+          "unit": null
+        },
+        {
+          "name": "large onion",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 large onion",
+          "unit": null
+        },
+        {
+          "name": "lard or butter",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 tablespoon lard or butter",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "flour",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 tablespoon flour",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "boiling water",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 cup boiling water",
+          "unit": "cup"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "1 1/2",
+          "raw": "1 1/2 teaspoon salt",
+          "unit": "teaspoon"
+        }
+      ],
+      "instructions": [
+        "Soak kidney in cold salted water for 30 minutes.",
+        "Cut meat in 1-inch cubes.",
+        "Drain kidney and cut into even smaller cubes.",
+        "Let sliced onion brown slowly in lard or butter, then add meats and brown well on all sides.",
+        "Add salt, pepper and worcestershire sauce and 1/2 cup boiling water.",
+        "Simmer slowly for 2 hours or until very tender.",
+        "Mix the flour with 1/4 cup cold water and stir into the meat to thicken it.",
+        "Transfer to baking dish or individual casseroles and cover top with thin pastry with hole in center for escape of steam.",
+        "Bake 30 minutes in a 375\u00b0 f oven."
+      ],
+      "name": "Beefsteak and Kidney Pie",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/beefsteak-and-kidney-pie/",
+      "yield": "4 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat",
+        "Main Dish"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "knife",
+        "grater",
+        "stove"
+      ],
+      "id": "1a01d0bace0ffe26",
+      "image": "https://publicdomainrecipes.org/recipes/savory-beef-liver-and-spaghetti/Savory%20Beef%20Liver%20and%20Spaghetti_hu_5e7765e6457f65d2.png",
+      "ingredients": [
+        {
+          "name": "beef liver",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 pound beef liver",
+          "unit": "pound"
+        },
+        {
+          "name": "butter or cooking oil",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon butter or cooking oil",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "flour",
+          "note": null,
+          "quantity": "1 1/2",
+          "raw": "1 1/2 tablespoon flour",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "No. 2 can tomatoes",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 No. 2 can tomatoes",
+          "unit": null
+        },
+        {
+          "name": "onion",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 onion",
+          "unit": null
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 teaspoon salt",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "green pepper",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 green pepper",
+          "unit": null
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": "1/8",
+          "raw": "1/8 teaspoon pepper",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "mushroom",
+          "note": "if desired",
+          "quantity": "1/2",
+          "raw": "1/2 cup mushroom, stems and pieces (if desired)",
+          "unit": "cup"
+        },
+        {
+          "name": "garlic clove",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 garlic clove",
+          "unit": null
+        },
+        {
+          "name": "cooked spaghetti",
+          "note": null,
+          "quantity": "3",
+          "raw": "3 cup cooked spaghetti",
+          "unit": "cup"
+        }
+      ],
+      "instructions": [
+        "Dip liver in boiling water for 1 to 2 minutes, then cut in fine cubes and dredge with flour.",
+        "Chop onion, green pepper and mushrooms and let fry in butter or oil with the chopped liver until liver is lightly browned (about 10 minutes).",
+        "Add tomatoes, seasonings and garlic, and cover.",
+        "Cook slowly for 20-25 minutes.",
+        "Serve over boiled spaghetti with a sprinkling of grated dry cheese over the top."
+      ],
+      "name": "Savory Beef Liver and Spaghetti",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/savory-beef-liver-and-spaghetti/",
+      "yield": "4 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat",
+        "Main Dish"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring spoons",
+        "knife",
+        "egg beater",
+        "strainer"
+      ],
+      "id": "beae13cea6315c3a",
+      "image": "https://publicdomainrecipes.org/recipes/tripe-oysters/Tripe%20Oysters_hu_21dc1105ff685bdc.png",
+      "ingredients": [
+        {
+          "name": "fresh beef tripe",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 pound fresh beef tripe",
+          "unit": "pound"
+        },
+        {
+          "name": "fine bread or cracker crumbs",
+          "note": null,
+          "quantity": null,
+          "raw": "fine bread or cracker crumbs",
+          "unit": null
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": null,
+          "raw": "salt",
+          "unit": null
+        },
+        {
+          "name": "egg",
+          "note": "beaten",
+          "quantity": "1",
+          "raw": "1 egg, beaten",
+          "unit": null
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": null,
+          "raw": "pepper",
+          "unit": null
+        },
+        {
+          "name": "cold water",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon cold water",
+          "unit": "tablespoon"
+        }
+      ],
+      "instructions": [
+        "Clean tripe carefully and simmer 1 hours in water to cover, until tender.",
+        "Drain.",
+        "Sprinkle with salt and pepper and cut into oblong pieces the size of an oyster.",
+        "Dip in bread crumbs, then in beaten egg to which has been added cold water, then dip in crumbs again.",
+        "Fry in hot lard 350\u00b0 f for 2 minutes on each side."
+      ],
+      "name": "Tripe Oysters",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/tripe-oysters/",
+      "yield": "4-5 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat",
+        "Main Dish"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "knife",
+        "rolling pin",
+        "stove"
+      ],
+      "id": "19c04cbe10fb6f12",
+      "image": "https://publicdomainrecipes.org/recipes/baked-stuffed-beef-heart/Baked%20Stuffed%20Beef%20Heart_hu_7449a11c317be9c0.png",
+      "ingredients": [
+        {
+          "name": "-4 pound of beef",
+          "note": "heart",
+          "quantity": "3",
+          "raw": "3 -4 pound of beef, heart",
+          "unit": null
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": null,
+          "raw": "salt",
+          "unit": null
+        },
+        {
+          "name": "bacon",
+          "note": null,
+          "quantity": "3",
+          "raw": "3 slices bacon",
+          "unit": "slices"
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": null,
+          "raw": "pepper",
+          "unit": null
+        },
+        {
+          "name": "fine bread crumbs",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 cup fine bread crumbs",
+          "unit": "cup"
+        },
+        {
+          "name": "flour",
+          "note": "for dredging",
+          "quantity": null,
+          "raw": "flour, for dredging",
+          "unit": null
+        },
+        {
+          "name": "small onion",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 small onion",
+          "unit": null
+        },
+        {
+          "name": "lard",
+          "note": "for browning",
+          "quantity": null,
+          "raw": "lard, for browning",
+          "unit": null
+        }
+      ],
+      "instructions": [
+        "Wash hearts and remove enough of center portion to permit addition of the dressing or stuffing.",
+        "Dice bacon and fry until crisp.",
+        "Combine with bread crumbs.",
+        "Season with finely minced onion.",
+        "Season cavity in hearts, fill with stuffing, and fasten with skewers.",
+        "Roll in flour and brown quickly in hot lard, in a heavy kettle.",
+        "Add a small amount of water.",
+        "Cover and cook slowly in a moderate oven (350\u00b0 f) until the hearts are done\u2014 2 to 2-1/2 hours.",
+        "Thicken the liquid for gravy if desired."
+      ],
+      "name": "Baked Stuffed Beef Heart",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/baked-stuffed-beef-heart/",
+      "yield": "6 servings"
+    },
+    {
+      "author": [],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-15",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "knife",
+        "rolling pin",
+        "stove"
+      ],
+      "id": "ba77970d668ce86d",
+      "image": "https://publicdomainrecipes.org/recipes/oxtail-soup/Oxtail%20Soup_hu_99e2ba3135a048a3.png",
+      "ingredients": [
+        {
+          "name": "oxtails",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 pound oxtails",
+          "unit": "pound"
+        },
+        {
+          "name": "diced carrots",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 cup diced carrots",
+          "unit": "cup"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": null,
+          "raw": "salt",
+          "unit": null
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": null,
+          "raw": "pepper",
+          "unit": null
+        },
+        {
+          "name": "flour",
+          "note": null,
+          "quantity": null,
+          "raw": "flour",
+          "unit": null
+        },
+        {
+          "name": "shredded cabbage",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 cup shredded cabbage",
+          "unit": "cup"
+        },
+        {
+          "name": "lard",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon lard",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "water",
+          "note": null,
+          "quantity": "4",
+          "raw": "4 cup water",
+          "unit": "cup"
+        },
+        {
+          "name": "minced onion",
+          "note": null,
+          "quantity": "1/4",
+          "raw": "1/4 cup minced onion",
+          "unit": "cup"
+        },
+        {
+          "name": "allspice berries",
+          "note": null,
+          "quantity": "3",
+          "raw": "3 allspice berries",
+          "unit": null
+        }
+      ],
+      "instructions": [
+        "Cut oxtails into small pieces, season and roll in flour.",
+        "Brown in hot lard in a deep heavy kettle.",
+        "Add water and allspice.",
+        "Cover.",
+        "Simmer 2 to 3 hours or until meat drops from bones.",
+        "Strain.",
+        "Remove all meat from bones.",
+        "To broth, add meat, vegetables and more water if needed.",
+        "Simmer 20 minutes or until vegetables are tender.",
+        "Serve very hot.",
+        "For a thicker soup, cook 1/2 cup rice in the broth with the vegetables."
+      ],
+      "name": "Oxtail Soup",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/oxtail-soup/",
+      "yield": "6 servings"
+    },
+    {
+      "author": [],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-15",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "knife",
+        "oven",
+        "stove"
+      ],
+      "id": "add53d90e37f5e08",
+      "image": "https://publicdomainrecipes.org/recipes/barbecued-short-ribs/Barbecued%20Short%20Ribs_hu_706a9e177daec746.png",
+      "ingredients": [
+        {
+          "name": "short ribs",
+          "note": null,
+          "quantity": "3",
+          "raw": "3 pound short ribs",
+          "unit": "pound"
+        },
+        {
+          "name": "water",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 cup water",
+          "unit": "cup"
+        },
+        {
+          "name": "lard",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon lard",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "Worcestershire sauce",
+          "note": "optional",
+          "quantity": "3",
+          "raw": "3 tablespoon Worcestershire sauce, (optional)",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "medium onion",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 medium onion",
+          "unit": null
+        },
+        {
+          "name": "vinegar",
+          "note": null,
+          "quantity": "1/4",
+          "raw": "1/4 cup vinegar",
+          "unit": "cup"
+        },
+        {
+          "name": "prepared mustard",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 teaspoon prepared mustard",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "brown sugar",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon brown sugar",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "diced celery",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 cup diced celery",
+          "unit": "cup"
+        },
+        {
+          "name": "ketchup",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 cup ketchup",
+          "unit": "cup"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 teaspoon salt",
+          "unit": "teaspoon"
+        }
+      ],
+      "instructions": [
+        "Have ribs cut into sections two to three inches long.",
+        "Brown in lard.",
+        "Brown minced onion.",
+        "Add all remaining ingredients to short ribs.",
+        "Cover and cook slowly or bake in a moderate oven (350\u00b0 f) 1 1/2 to 2 hours or until tender."
+      ],
+      "name": "Barbecued Short Ribs",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/barbecued-short-ribs/",
+      "yield": "4-5 servings"
+    },
+    {
+      "author": [],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-15",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "knife",
+        "oven"
+      ],
+      "id": "6e55784881bb4683",
+      "image": "https://publicdomainrecipes.org/recipes/steak-with-spanish-sauce/Steak%20with%20Spanish%20Sauce_hu_f74283ddfc21e089.png",
+      "ingredients": [
+        {
+          "name": "round or flank steak",
+          "note": null,
+          "quantity": "1 1/2",
+          "raw": "1 1/2 pound round or flank steak",
+          "unit": "pound"
+        },
+        {
+          "name": "minced celery leaves",
+          "note": "or celery",
+          "quantity": "1",
+          "raw": "1 tablespoon minced celery leaves, or celery",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "vinegar",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon vinegar",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "1 1/2",
+          "raw": "1 1/2 teaspoon salt",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "small green pepper",
+          "note": "minced",
+          "quantity": "1",
+          "raw": "1 small green pepper, minced",
+          "unit": null
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": "1/4",
+          "raw": "1/4 teaspoon pepper",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "onion",
+          "note": "chopped",
+          "quantity": "1",
+          "raw": "1 onion, chopped",
+          "unit": null
+        },
+        {
+          "name": "lard or meat drippings",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon lard or meat drippings",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "minced parsley",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 tablespoon minced parsley",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "tomato soup or tomato puree",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 cup tomato soup or tomato puree",
+          "unit": "cup"
+        }
+      ],
+      "instructions": [
+        "Score steak on both aides.",
+        "Cover with mixture of vinegar, salt, pepper, onion and other minced vegetables and let stand for an hour or more.",
+        "Sear meat in drippings or lard.",
+        "Place in shallow baking dish with mixture in which meat has soaked.",
+        "Pour tomato soup or puree over meat and bake for 2 hours at 325\u00b0f, or until meat is tender."
+      ],
+      "name": "Steak with Spanish Sauce",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/steak-with-spanish-sauce/",
+      "yield": "4 servings"
+    },
+    {
+      "author": [],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-15",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "grater",
+        "rolling pin",
+        "stove"
+      ],
+      "id": "3627460272bc1055",
+      "image": "https://publicdomainrecipes.org/recipes/meat-balls-with-spaghetti-sauce/Meat%20Balls%20with%20Spaghetti%20Sauce_hu_f8fc540e076224ae.png",
+      "ingredients": [
+        {
+          "name": "ground beef",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 pound ground beef",
+          "unit": "pound"
+        },
+        {
+          "name": "ground pork",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 pound ground pork",
+          "unit": "pound"
+        },
+        {
+          "name": "tomatoes",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 cup tomatoes",
+          "unit": "cup"
+        },
+        {
+          "name": "breadcrumbs",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 cup breadcrumbs",
+          "unit": "cup"
+        },
+        {
+          "name": "water",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 cup water",
+          "unit": "cup"
+        },
+        {
+          "name": "small onion",
+          "note": "grated",
+          "quantity": "1",
+          "raw": "1 small onion, grated",
+          "unit": null
+        },
+        {
+          "name": "onion",
+          "note": "minced",
+          "quantity": "1",
+          "raw": "1 onion, minced",
+          "unit": null
+        },
+        {
+          "name": "egg",
+          "note": "slightly beaten",
+          "quantity": "1",
+          "raw": "1 egg, slightly beaten",
+          "unit": null
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 teaspoon salt",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 teaspoon pepper",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 tablespoon salt",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "chili powder",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 teaspoon chili powder",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 teaspoon pepper",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "ground sage",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 teaspoon ground sage",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "brown sugar",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 tablespoon brown sugar",
+          "unit": "tablespoon"
+        }
+      ],
+      "instructions": [
+        "Combine first eight ingredients and mix thoroughly.",
+        "Form into small balls, about 1 1/2 inches in diameter and roll in flour.",
+        "Brown balls lightly in lard.",
+        "Mix sauce ingredients together thoroughly and boil for three minutes.",
+        "Add meat balls and simmer 45 minutes, until meat is well cooked.",
+        "Pour mixture over platter of cooked spaghetti and serve with sprinkling of dry grated cheese."
+      ],
+      "name": "Meat Balls with Spaghetti Sauce",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/meat-balls-with-spaghetti-sauce/",
+      "yield": "6-8 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-15",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "knife",
+        "oven",
+        "rolling pin"
+      ],
+      "id": "99fb6ca586cda41e",
+      "image": "https://publicdomainrecipes.org/recipes/beef-biscuit-roll/Beef%20Biscuit%20Roll_hu_22479973c255a78e.png",
+      "ingredients": [
+        {
+          "name": "ground beef chuck",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 pound ground beef chuck",
+          "unit": "pound"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 teaspoon salt",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": "1/8",
+          "raw": "1/8 teaspoon pepper",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "chopped onion",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 cup chopped onion",
+          "unit": "cup"
+        },
+        {
+          "name": "chopped green pepper",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 cup chopped green pepper",
+          "unit": "cup"
+        },
+        {
+          "name": "butter",
+          "note": "or beef fat",
+          "quantity": null,
+          "raw": "butter, or beef fat",
+          "unit": null
+        }
+      ],
+      "instructions": [
+        "Brown the onion, green pepper and beef in butter or beef fat in a frying pan.",
+        "Add the seasonings.",
+        "Make a regulation biscuit dough and spread dough with meat mixture and roll like jelly roll.",
+        "If dough is too soft, chill in refrigerator first, then cut in 1 1/2-inch slices.",
+        "Place in greased pan, cut side up, brush tops with melted butter.",
+        "Bake 20-25 minutes at 450\u00b0 f.",
+        "Serve with brown gravy or cheese sauce."
+      ],
+      "name": "Beef Biscuit Roll",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/beef-biscuit-roll/",
+      "yield": "5-6 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "knife",
+        "oven",
+        "stove"
+      ],
+      "id": "c485b2ea902ef2be",
+      "image": "https://publicdomainrecipes.org/recipes/crosscut-beef-shank-stew/Crosscut%20Beef%20Shank%20Stew_hu_f78cf216de6130c4.png",
+      "ingredients": [
+        {
+          "name": "beef shank",
+          "note": "cut in 2-inch pieces",
+          "quantity": "2",
+          "raw": "2 pound beef shank , (cut in 2-inch pieces)",
+          "unit": "pound"
+        },
+        {
+          "name": "cooked tomatoes",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 cup cooked tomatoes",
+          "unit": "cup"
+        },
+        {
+          "name": "water",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 cup water",
+          "unit": "cup"
+        },
+        {
+          "name": "lard",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon lard",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "onion",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 onion",
+          "unit": null
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 teaspoon salt",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "diced celery",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 cup diced celery",
+          "unit": "cup"
+        }
+      ],
+      "instructions": [
+        "Brown meat in lard.",
+        "Season.",
+        "Add tomatoes, water, sliced onion, and celery.",
+        "Cover and cook slowly, or bake in a moderate oven (350\u00b0 f) about 2 hours."
+      ],
+      "name": "Crosscut Beef Shank Stew",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/crosscut-beef-shank-stew/",
+      "yield": "4-5 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "stove"
+      ],
+      "id": "3401f9136805efa5",
+      "image": "https://publicdomainrecipes.org/recipes/beef-pot-roast-with-horseradish/Beef%20Pot%20Roast%20with%20Horseradish_hu_d875d9cecf8dbd9.png",
+      "ingredients": [
+        {
+          "name": "-4 pound rump or chuck pot roast",
+          "note": null,
+          "quantity": "3",
+          "raw": "3 -4 pound rump or chuck pot roast",
+          "unit": null
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": null,
+          "raw": "salt",
+          "unit": null
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": null,
+          "raw": "pepper",
+          "unit": null
+        },
+        {
+          "name": "lard",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon lard",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "horseradish",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 cup horseradish",
+          "unit": "cup"
+        },
+        {
+          "name": "water",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 cup water",
+          "unit": "cup"
+        }
+      ],
+      "instructions": [
+        "Select a three or four-pound rump or chuck pot roast.",
+        "Season with salt and pepper.",
+        "Brown well on all sides, adding 2 tablespoons of lard to kettle, if necessary.",
+        "When browned, spread prepared horseradish over the meat.",
+        "Add 1 cup water, cover closely and cook at a simmering temperature about 3 1/2 hours.",
+        "Turn the pot roast once or twice so that it will cook evenly.",
+        "Thicken the liquid and add water for gravy."
+      ],
+      "name": "Beef Pot Roast with Horseradish",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/beef-pot-roast-with-horseradish/",
+      "yield": "3 to the pound"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "strainer",
+        "stove"
+      ],
+      "id": "1fa93c8dd50a83b2",
+      "image": "https://publicdomainrecipes.org/recipes/horseradish-sauce-iv/Horseradish%20Sauce%20IV_hu_5789be78eb396ee.png",
+      "ingredients": [
+        {
+          "name": "butter",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 tablespoon butter",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "lemon juice",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 tablespoon lemon juice",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "flour",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 tablespoon flour",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": null,
+          "raw": "salt",
+          "unit": null
+        },
+        {
+          "name": "milk",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 cup milk",
+          "unit": "cup"
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": null,
+          "raw": "pepper",
+          "unit": null
+        },
+        {
+          "name": "horseradish",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 cup horseradish",
+          "unit": "cup"
+        },
+        {
+          "name": "pimiento",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 tablespoon pimiento",
+          "unit": "tablespoon"
+        }
+      ],
+      "instructions": [
+        "Melt butter and add flour.",
+        "Add milk slowly, stirring constantly until mixture boils.",
+        "Drain horse-radish, combine with lemon juice, seasonings, and pimiento.",
+        "Add to cream sauce.",
+        "Serve hot with brisket of beef."
+      ],
+      "name": "Horseradish Sauce",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/horseradish-sauce-iv/",
+      "yield": ""
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "stove"
+      ],
+      "id": "8170a485e90d1be9",
+      "image": "https://publicdomainrecipes.org/recipes/beef-brisket-with-horseradish/Beef%20Brisket%20with%20Horseradish_hu_5789be78eb396ee.png",
+      "ingredients": [
+        {
+          "name": "beef brisket",
+          "note": null,
+          "quantity": null,
+          "raw": "beef brisket",
+          "unit": null
+        },
+        {
+          "name": "water",
+          "note": null,
+          "quantity": null,
+          "raw": "water",
+          "unit": null
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": null,
+          "raw": "salt",
+          "unit": null
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": null,
+          "raw": "pepper",
+          "unit": null
+        }
+      ],
+      "instructions": [
+        "Select a three or four-pound piece of fresh beef brisket.",
+        "Cover with hot water.",
+        "Season with salt and pepper.",
+        "Cook at a simmering temperature three to four hours or until tender."
+      ],
+      "name": "Beef Brisket with Horseradish",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/beef-brisket-with-horseradish/",
+      "yield": "3 to the pound"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "egg beater",
+        "strainer",
+        "stove"
+      ],
+      "id": "19d9e1e610267918",
+      "image": "https://publicdomainrecipes.org/recipes/sweetbreads-and-bacon/Sweetbreads%20and%20Bacon_hu_807a127371c8d341.png",
+      "ingredients": [
+        {
+          "name": "pairs sweetbreads",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 pairs sweetbreads",
+          "unit": null
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": null,
+          "raw": "salt",
+          "unit": null
+        },
+        {
+          "name": "lemon juice",
+          "note": null,
+          "quantity": null,
+          "raw": "lemon juice",
+          "unit": null
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": null,
+          "raw": "salt",
+          "unit": null
+        },
+        {
+          "name": "bacon",
+          "note": null,
+          "quantity": "8",
+          "raw": "8 slices bacon",
+          "unit": "slices"
+        },
+        {
+          "name": "bread crumbs",
+          "note": null,
+          "quantity": null,
+          "raw": "bread crumbs",
+          "unit": null
+        },
+        {
+          "name": "beaten egg",
+          "note": null,
+          "quantity": null,
+          "raw": "beaten egg",
+          "unit": null
+        }
+      ],
+      "instructions": [
+        "Precooking: (to be done immediately on receipt of sweetbreads) soak sweetbreads in cold water for 30 minutes, then simmer very gently for 20 minutes in water to which 1 teaspoon salt and 1 tablespoon lemon juice or vinegar have been added for each quart of water used.",
+        "Drain, drop into cold water, and remove loose membrane.",
+        "Use at once or keep in refrigerator.",
+        "Season whole precooked sweetbreads.",
+        "Dip in crumbs, beaten egg, and again in crumbs.",
+        "Fry bacon until crisp.",
+        "Remove to hot pan and keep warm.",
+        "Brown sweetbreads in hot drippings."
+      ],
+      "name": "Sweetbreads and Bacon",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/sweetbreads-and-bacon/",
+      "yield": "4 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "knife"
+      ],
+      "id": "5c996c4955b212bf",
+      "image": "https://publicdomainrecipes.org/recipes/hungarian-goulash-ii/Hungarian%20Goulash%20II_hu_7717a25f3c3633c2.png",
+      "ingredients": [
+        {
+          "name": "beef chuck",
+          "note": "or neck meat",
+          "quantity": "2",
+          "raw": "2 pound beef chuck, or neck meat",
+          "unit": "pound"
+        },
+        {
+          "name": "caraway seed",
+          "note": "if desired",
+          "quantity": "1",
+          "raw": "1 teaspoon caraway seed, (if desired)",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "onions",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 onions",
+          "unit": null
+        },
+        {
+          "name": "powdered marjoram",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 teaspoon powdered marjoram",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "butter",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon butter",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "of garlic",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 clove of garlic",
+          "unit": "clove"
+        },
+        {
+          "name": "paprika",
+          "note": null,
+          "quantity": null,
+          "raw": "paprika",
+          "unit": null
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "1 1/2",
+          "raw": "1 1/2 teaspoon salt",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "water",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 cup water",
+          "unit": "cup"
+        }
+      ],
+      "instructions": [
+        "Cut meat into 1-inch cubes.",
+        "Let onions brown in butter, then add meat and let it brown lightly.",
+        "Add caraway seed, marjoram, chopped garlic, and enough paprika to effect a noticeable red color.",
+        "Add water and sait, cover and simmer for 2 1/2 hours.",
+        "Add more water if necessary.",
+        "Whole potatoes may be added to the goulash 1 hour before done.",
+        "Some goulash recipes call for the addition of tomatoes.",
+        "Strained tomatoes may be substituted for water in this recipe."
+      ],
+      "name": "Hungarian Goulash",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/hungarian-goulash-ii/",
+      "yield": "6 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "knife",
+        "egg beater",
+        "stove"
+      ],
+      "id": "7a6915999b8b2264",
+      "image": "https://publicdomainrecipes.org/recipes/beef-brains-and-scrambled-eggs/Beef%20Brains%20and%20Scrambled%20Eggs_hu_2f9245088961b3f7.png",
+      "ingredients": [
+        {
+          "name": "beef brains",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 cup beef brains",
+          "unit": "cup"
+        },
+        {
+          "name": "grated onion",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 teaspoon grated onion",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "butter",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 tablespoon butter",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "minced parsley",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon minced parsley",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "eggs",
+          "note": null,
+          "quantity": "3",
+          "raw": "3 eggs",
+          "unit": null
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 teaspoon salt",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "toast",
+          "note": null,
+          "quantity": "4",
+          "raw": "4 slices toast",
+          "unit": "slices"
+        }
+      ],
+      "instructions": [
+        "Soak brains in cold salted water 1/2 hour.",
+        "Skin and remove all fiber.",
+        "Cut or chop into small pieces.",
+        "Put into frying pan in which butter, onions and parsley have been heated.",
+        "Stir until brains are cooked 10-12 minutes.",
+        "Add eggs beaten with 2 tablespoons cold water.",
+        "Cook over moderate fire and stir until set.",
+        "Season, and serve on toast.",
+        "Garnish with parsley."
+      ],
+      "name": "Beef Brains and Scrambled Eggs",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/beef-brains-and-scrambled-eggs/",
+      "yield": "4 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "knife",
+        "stove"
+      ],
+      "id": "403496b53dac802a",
+      "image": "https://publicdomainrecipes.org/recipes/braised-short-ribs-of-beef-with-vegetables/Braised%20Short%20Ribs%20of%20Beef%20with%20Vegetables_hu_2af61bce58165a56.png",
+      "ingredients": [
+        {
+          "name": "beef short ribs",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 pound beef short ribs",
+          "unit": "pound"
+        },
+        {
+          "name": "onion",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 onion",
+          "unit": null
+        },
+        {
+          "name": "flour",
+          "note": null,
+          "quantity": null,
+          "raw": "flour",
+          "unit": null
+        },
+        {
+          "name": "water",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 cup water",
+          "unit": "cup"
+        },
+        {
+          "name": "lard",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon lard",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "carrots",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 carrots",
+          "unit": null
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 teaspoon salt",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "green pepper",
+          "note": "if desired",
+          "quantity": "1/2",
+          "raw": "1/2 green pepper, (if desired)",
+          "unit": null
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": "1/8",
+          "raw": "1/8 teaspoon pepper",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "celery",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 stalks celery",
+          "unit": "stalks"
+        }
+      ],
+      "instructions": [
+        "Cut short ribs into individual squares and flour them.",
+        "Brown slowly on all sides in lard, allowing 20-30 minutes for browning.",
+        "Add seasonings, onion (minced), and 1/2 cup water.",
+        "Cover closely and simmer for 2 hours.",
+        "Add vegetables, cut small, and continue cooking for 30-40 minutes.",
+        "Remove meat to platter, thicken the vegetable gravy with 1 tablespoon flour stirred into 1/2 cup water."
+      ],
+      "name": "Braised Short Ribs of Beef with Vegetables",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/braised-short-ribs-of-beef-with-vegetables/",
+      "yield": "4-5 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "stove"
+      ],
+      "id": "ecee20ea8f51ceb0",
+      "image": "https://publicdomainrecipes.org/recipes/new-england-dinner/New%20England%20Dinner_hu_ae7b1761d192b7ef.png",
+      "ingredients": [
+        {
+          "name": "beef brisket",
+          "note": "fresh or corned",
+          "quantity": "4",
+          "raw": "4 pound beef brisket, (fresh or corned)",
+          "unit": "pound"
+        },
+        {
+          "name": "carrots",
+          "note": null,
+          "quantity": "6",
+          "raw": "6 carrots",
+          "unit": null
+        },
+        {
+          "name": "small head cabbage",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 small head cabbage",
+          "unit": null
+        },
+        {
+          "name": "onions",
+          "note": null,
+          "quantity": "6",
+          "raw": "6 onions",
+          "unit": null
+        },
+        {
+          "name": "small beets",
+          "note": null,
+          "quantity": "12",
+          "raw": "12 small beets",
+          "unit": null
+        }
+      ],
+      "instructions": [
+        "Cover meat with boiling water.",
+        "If fresh brisket is used, add 11% tablespoons salt to cooking water.",
+        "Simmer slowly in covered kettle 3 to 5 hours or until tender.",
+        "Forty-five minutes before serving add onions and carrots.",
+        "Fifteen minutes later add quartered cabbage.",
+        "Cook beets separately.",
+        "Serve on a large platter, with the meat in the center and the vegetables arranged around it."
+      ],
+      "name": "New England Dinner",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/new-england-dinner/",
+      "yield": "6 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "knife",
+        "oven"
+      ],
+      "id": "94b485e116fbeab9",
+      "image": "https://publicdomainrecipes.org/recipes/western-ranch-meat-loaf/Western%20Ranch%20Meat%20Loaf_hu_2f8cbe7e1729abd8.png",
+      "ingredients": [
+        {
+          "name": "ground beef",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 pound ground beef",
+          "unit": "pound"
+        },
+        {
+          "name": "eggs",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 eggs",
+          "unit": null
+        },
+        {
+          "name": "medium onion",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 medium onion",
+          "unit": null
+        },
+        {
+          "name": "diced celery",
+          "note": null,
+          "quantity": "3/4",
+          "raw": "3/4 cup diced celery",
+          "unit": "cup"
+        },
+        {
+          "name": "soft breadcrumbs",
+          "note": null,
+          "quantity": "3",
+          "raw": "3 cup soft breadcrumbs",
+          "unit": "cup"
+        },
+        {
+          "name": "lard",
+          "note": null,
+          "quantity": "1/4",
+          "raw": "1/4 cup lard",
+          "unit": "cup"
+        },
+        {
+          "name": "water",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 cup water",
+          "unit": "cup"
+        },
+        {
+          "name": "diced green pepper",
+          "note": null,
+          "quantity": "1/4",
+          "raw": "1/4 cup diced green pepper",
+          "unit": "cup"
+        },
+        {
+          "name": "tomato juice",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 cup tomato juice",
+          "unit": "cup"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 tablespoon salt",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "melted butter",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon melted butter",
+          "unit": "tablespoon"
+        }
+      ],
+      "instructions": [
+        "Chop onion.",
+        "Brown onion and celery in lard.",
+        "Combine with green pepper, salt, eggs, bread crumbs and water to makc a dressing.",
+        "Add half of the dressing (1 1/2 cups) to the meat, mixing well.",
+        "Pat out half the meat mixture in a two-quart loaf pan.",
+        "Cover with remaining dressing, then top with remaining meat mixture.",
+        "Bake in a moderate oven (350\u00b0 f) 1 1/4 hours.",
+        "Baste twice with tomato juice and butter to keep loaf moist."
+      ],
+      "name": "Western Ranch Meat Loaf",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/western-ranch-meat-loaf/",
+      "yield": "8 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons"
+      ],
+      "id": "b5f37538f23a6c81",
+      "image": "https://publicdomainrecipes.org/recipes/beef-shank-barley-soup/Beef%20Shank%20Barley%20Soup_hu_44393bd16aed2d66.png",
+      "ingredients": [
+        {
+          "name": "beef",
+          "note": "shank",
+          "quantity": "2",
+          "raw": "2 pound beef, shank",
+          "unit": "pound"
+        },
+        {
+          "name": "julienne carrots",
+          "note": null,
+          "quantity": "1/3",
+          "raw": "1/3 cup julienne carrots",
+          "unit": "cup"
+        },
+        {
+          "name": "water",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 cup water",
+          "unit": "cup"
+        },
+        {
+          "name": "onions",
+          "note": "chopped",
+          "quantity": "1/3",
+          "raw": "1/3 cup onions, chopped",
+          "unit": "cup"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 teaspoon salt",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "parsley",
+          "note": "chopped",
+          "quantity": "2",
+          "raw": "2 tablespoon parsley, chopped",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": "1/8",
+          "raw": "1/8 teaspoon pepper",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "soup stock",
+          "note": "or beef bouillon",
+          "quantity": "1",
+          "raw": "1 quart soup stock, (or beef bouillon)",
+          "unit": "quart"
+        },
+        {
+          "name": "cayenne",
+          "note": null,
+          "quantity": "1/8",
+          "raw": "1/8 teaspoon cayenne",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "diced barley",
+          "note": null,
+          "quantity": "3",
+          "raw": "3 cup diced barley",
+          "unit": "cup"
+        },
+        {
+          "name": "diced celery",
+          "note": null,
+          "quantity": "1/3",
+          "raw": "1/3 cup diced celery",
+          "unit": "cup"
+        },
+        {
+          "name": "Worcestershire sauce",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 teaspoon Worcestershire sauce",
+          "unit": "teaspoon"
+        }
+      ],
+      "instructions": [
+        "Add water and seasonings to beef shank and simmer about 2 hours or until tender.",
+        "Pick meat from bones and return meat to stock.",
+        "Add vegetables, soup stock and barley.",
+        "Simmer 25-30 minutes.",
+        "Add worcestershire sauce and serve."
+      ],
+      "name": "Beef Shank Barley Soup",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/beef-shank-barley-soup/",
+      "yield": "5 servings, 1 cup each"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons"
+      ],
+      "id": "51e963ade85780d8",
+      "image": "https://publicdomainrecipes.org/recipes/chuck-steak-with-mushroom-gravy/Chuck%20Steak%20with%20Mushroom%20Gravy_hu_c059db04181dc3f8.png",
+      "ingredients": [
+        {
+          "name": "blade or round bone chuck steak",
+          "note": "cut 1/2 inch thick",
+          "quantity": "1",
+          "raw": "1 pound blade or round bone chuck steak, cut 1/2 inch thick",
+          "unit": "pound"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 teaspoon salt",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": "1/4",
+          "raw": "1/4 teaspoon pepper",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "mushroom soup",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 can mushroom soup",
+          "unit": "can"
+        },
+        {
+          "name": "flour",
+          "note": null,
+          "quantity": "1/4",
+          "raw": "1/4 cup flour",
+          "unit": "cup"
+        }
+      ],
+      "instructions": [
+        "Rub the flour, salt and pepper into the steak.",
+        "Brown slowly in hot skillet.",
+        "When brown on both sides add the mushroom soup, cover tightly and let simmer for 1 hour."
+      ],
+      "name": "Chuck Steak with Mushroom Gravy",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/chuck-steak-with-mushroom-gravy/",
+      "yield": "4 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "knife",
+        "rolling pin",
+        "stove"
+      ],
+      "id": "315f353da20b7b06",
+      "image": "https://publicdomainrecipes.org/recipes/braised-ox-joints/Braised%20Ox%20Joints_hu_e7fa9b19d46f590f.png",
+      "ingredients": [
+        {
+          "name": "oxtail",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 oxtail",
+          "unit": null
+        },
+        {
+          "name": "celery salt",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 teaspoon celery salt",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "flour",
+          "note": null,
+          "quantity": null,
+          "raw": "flour",
+          "unit": null
+        },
+        {
+          "name": "whole cloves",
+          "note": null,
+          "quantity": "4",
+          "raw": "4 whole cloves",
+          "unit": null
+        },
+        {
+          "name": "butter",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon butter",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "bay leaf",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 bay leaf",
+          "unit": null
+        },
+        {
+          "name": "water",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 cup water",
+          "unit": "cup"
+        },
+        {
+          "name": "diced carrots",
+          "note": null,
+          "quantity": "3",
+          "raw": "3 cup diced carrots",
+          "unit": "cup"
+        },
+        {
+          "name": "canned tomatoes",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 cup canned tomatoes",
+          "unit": "cup"
+        },
+        {
+          "name": "small onions",
+          "note": "chopped",
+          "quantity": "2",
+          "raw": "2 small onions, chopped",
+          "unit": null
+        },
+        {
+          "name": "of garlic",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 clove of garlic",
+          "unit": "clove"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 teaspoon salt",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "diced turnips",
+          "note": null,
+          "quantity": "1/4",
+          "raw": "1/4 cup diced turnips",
+          "unit": "cup"
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": "1/8",
+          "raw": "1/8 teaspoon pepper",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "lemon juice",
+          "note": null,
+          "quantity": "1/4",
+          "raw": "1/4 cup lemon juice",
+          "unit": "cup"
+        }
+      ],
+      "instructions": [
+        "Cut oxtail in short lengths for ox joints, roll in flour and brown in 1 tablespoon butter slowly, about 15 minutes.",
+        "Add water, tomatoes and seasonings; simmer about 2 hours or until tender.",
+        "Brown carrots, onions, garlic and turnips in 1 tablespoon butter 3-4 minutes; add to meat and cook 1/2 hour longer.",
+        "Add lemon juice the last 10 minutes of cooking."
+      ],
+      "name": "Braised Ox Joints",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/braised-ox-joints/",
+      "yield": "4-5 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons"
+      ],
+      "id": "2c8fe8d22dc06d58",
+      "image": "https://publicdomainrecipes.org/recipes/tomato-pot-roast/Tomato%20Pot%20Roast_hu_469c8c4c70a673f3.png",
+      "ingredients": [
+        {
+          "name": "to 3 lbs. beef chuck",
+          "note": "or rump",
+          "quantity": "2 1/2",
+          "raw": "2 1/2 to 3 lbs. beef chuck, or rump",
+          "unit": null
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 tablespoon salt",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "tomato juice",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 cup tomato juice",
+          "unit": "cup"
+        },
+        {
+          "name": "lard",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon lard",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "potatoes",
+          "note": null,
+          "quantity": "5",
+          "raw": "5 potatoes",
+          "unit": null
+        },
+        {
+          "name": "of garlic",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 clove of garlic",
+          "unit": "clove"
+        },
+        {
+          "name": "carrots",
+          "note": null,
+          "quantity": "5",
+          "raw": "5 carrots",
+          "unit": null
+        }
+      ],
+      "instructions": [
+        "Brown meat slowly in lard.",
+        "When well browned add tomato juice, salt and garlic.",
+        "Cover tightly and simmer until tender, approximately 3 1/2 hours.",
+        "Add vegetables 45 minutes before done."
+      ],
+      "name": "Tomato Pot Roast",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/tomato-pot-roast/",
+      "yield": "5 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "knife",
+        "stove"
+      ],
+      "id": "06866fdc9df2d728",
+      "image": "https://publicdomainrecipes.org/recipes/beef-tongue-and-spinach-smoked-or-pickled/Beef%20Tongue%20and%20Spinach%20%28Smoked%20or%20Pickled%29_hu_3e8c5777e5930612.png",
+      "ingredients": [
+        {
+          "name": "smoked beef tongue",
+          "note": "or pickled",
+          "quantity": null,
+          "raw": "smoked beef tongue, or pickled",
+          "unit": null
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": null,
+          "raw": "salt",
+          "unit": null
+        },
+        {
+          "name": "water",
+          "note": null,
+          "quantity": null,
+          "raw": "water",
+          "unit": null
+        }
+      ],
+      "instructions": [
+        "Cover with cold water, bring to a boil, reduce heat and simmer 2 1/2 to 3 hours, or until tender.",
+        "Keep tongue in the liquid until cool enough to handle, then remove outer skin.",
+        "Serve in thin slices, cold."
+      ],
+      "name": "Beef Tongue and Spinach (Smoked or Pickled)",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/beef-tongue-and-spinach-smoked-or-pickled/",
+      "yield": "4 servings to the pound of meat"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "knife",
+        "stove"
+      ],
+      "id": "c466cc2007ead4bb",
+      "image": "https://publicdomainrecipes.org/recipes/beef-tongue-and-spinach-fresh/Beef%20Tongue%20and%20Spinach%20%28Fresh%29_hu_3e8c5777e5930612.png",
+      "ingredients": [
+        {
+          "name": "beef tongue",
+          "note": null,
+          "quantity": null,
+          "raw": "beef tongue",
+          "unit": null
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": null,
+          "raw": "salt",
+          "unit": null
+        },
+        {
+          "name": "water",
+          "note": null,
+          "quantity": null,
+          "raw": "water",
+          "unit": null
+        }
+      ],
+      "instructions": [
+        "Cover with cold water, add 1/2 teaspoons salt to each quart of water; bring to a boil.",
+        "Simmer slowly until tender.",
+        "Allow 2 1/2 to 3 1/2 hours.",
+        "Keep tongue in the liquid until cool enough to handle, then remove outer skin.",
+        "Serve hot slices with hot piquant sauce or cooked spinach or other greens dressed with french dressing."
+      ],
+      "name": "Beef Tongue and Spinach (Fresh)",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/beef-tongue-and-spinach-fresh/",
+      "yield": "4 servings to the pound of meat"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "knife",
+        "stove"
+      ],
+      "id": "662a07da865f4b69",
+      "image": "https://publicdomainrecipes.org/recipes/barbecued-spareribs-ii/Barbecued%20Spareribs%20II_hu_cb94a1a0a83177c5.png",
+      "ingredients": [
+        {
+          "name": "pork spareribs",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 pound pork spareribs",
+          "unit": "pound"
+        },
+        {
+          "name": "Worcestershire sauce",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 teaspoon Worcestershire sauce",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "onion",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 onion",
+          "unit": null
+        },
+        {
+          "name": "ketchup",
+          "note": null,
+          "quantity": "1/4",
+          "raw": "1/4 cup ketchup",
+          "unit": "cup"
+        },
+        {
+          "name": "chili powder",
+          "note": null,
+          "quantity": "1/8",
+          "raw": "1/8 teaspoon chili powder",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "water",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 cup water",
+          "unit": "cup"
+        }
+      ],
+      "instructions": [
+        "Cut ribs in pieces for serving.",
+        "Place in baking dish.",
+        "Slice onions over the top and add other ingredients.",
+        "Cover and cook in a moderate oven (350\u00b0 f) about 2 hours."
+      ],
+      "name": "Barbecued Spareribs",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/barbecued-spareribs-ii/",
+      "yield": "4 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "rolling pin",
+        "strainer"
+      ],
+      "id": "2a29e23c797863e0",
+      "image": "https://publicdomainrecipes.org/recipes/fried-pork-brains/Fried%20Pork%20Brains_hu_79377bb3f8737758.png",
+      "ingredients": [
+        {
+          "name": "pork brains",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 pound pork brains",
+          "unit": "pound"
+        },
+        {
+          "name": "flour",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 cup flour",
+          "unit": "cup"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": null,
+          "raw": "salt",
+          "unit": null
+        },
+        {
+          "name": "fat",
+          "note": null,
+          "quantity": "3",
+          "raw": "3 tablespoon fat",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "vinegar",
+          "note": null,
+          "quantity": null,
+          "raw": "vinegar",
+          "unit": null
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": null,
+          "raw": "salt",
+          "unit": null
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": null,
+          "raw": "pepper",
+          "unit": null
+        }
+      ],
+      "instructions": [
+        "Soak the brains in cold water.",
+        "Remove membranes.",
+        "Simmer very gently for 15 minutes in water to which 1 teaspoon salt and 1 tablespoon of vinegar have been addedtoeach quart \u2019 of water.",
+        "Drain; chill in cold water.",
+        "Drain.",
+        "Season, roll in flour and fry in hot fat until nicely browned on both sides\u2014about 15 minutes."
+      ],
+      "name": "Fried Pork Brains",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/fried-pork-brains/",
+      "yield": "4 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "knife",
+        "oven",
+        "stove"
+      ],
+      "id": "d5f065232e5a9ab5",
+      "image": "https://publicdomainrecipes.org/recipes/pork-tenderloin-baked-in-cream/Pork%20Tenderloin%20Baked%20in%20Cream_hu_5c6f6360615b0597.png",
+      "ingredients": [
+        {
+          "name": "pork tenderloin",
+          "note": "cut crosswise in 2-in. pieces",
+          "quantity": null,
+          "raw": "pork tenderloin, cut crosswise in 2-in. pieces",
+          "unit": null
+        },
+        {
+          "name": "flour",
+          "note": null,
+          "quantity": null,
+          "raw": "flour",
+          "unit": null
+        },
+        {
+          "name": "lard or bacon drippings",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon lard or bacon drippings",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": null,
+          "raw": "salt",
+          "unit": null
+        },
+        {
+          "name": "light cream",
+          "note": "or top milk",
+          "quantity": "1/2",
+          "raw": "1/2 cup light cream, or top milk",
+          "unit": "cup"
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": null,
+          "raw": "pepper",
+          "unit": null
+        }
+      ],
+      "instructions": [
+        "Place each slice of pork tenderloin between pieces of waxed paper and flatten with wooden potato masher or mallet.",
+        "Season with salt and pepper; sprinkle with flour, saut\u00e9 in lard or bacon drippings until well browned.",
+        "Place in baking dish.",
+        "Add 1/2 cup light cream or top milk to drippings in pan, bring to a boil and pour over meat.",
+        "Cover and simmer, or bake in moderate oven (350\u00b0 f) about 1/2 hour, or until tender.",
+        "One large tenderloin will provide 6 pieces.",
+        "Allow 1 to 2 pieces per portion."
+      ],
+      "name": "Pork Tenderloin Baked in Cream",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/pork-tenderloin-baked-in-cream/",
+      "yield": ""
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "stove"
+      ],
+      "id": "0473bd409605fffa",
+      "image": "https://publicdomainrecipes.org/recipes/spareribs-and-sauerkraut/Spareribs%20and%20Sauerkraut_hu_f4690fca15fd41e.png",
+      "ingredients": [
+        {
+          "name": "spareribs",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 pound spareribs",
+          "unit": "pound"
+        },
+        {
+          "name": "sauerkraut",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 quart sauerkraut",
+          "unit": "quart"
+        },
+        {
+          "name": "hot water",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 cup hot water",
+          "unit": "cup"
+        }
+      ],
+      "instructions": [
+        "Place spareribs and water in covered pan.",
+        "Simmer for 2 hours.",
+        "Add sauerkraut, and cook for 15-20 minutes longer."
+      ],
+      "name": "Spareribs and Sauerkraut",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/spareribs-and-sauerkraut/",
+      "yield": "4 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "oven",
+        "stove"
+      ],
+      "id": "b753c568e69b746e",
+      "image": "https://publicdomainrecipes.org/recipes/celery-stuffed-spareribs/Celery%20Stuffed%20Spareribs_hu_2db5f090a92ede3f.png",
+      "ingredients": [
+        {
+          "name": "sides spareribs",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 sides spareribs",
+          "unit": null
+        },
+        {
+          "name": "soft bread",
+          "note": "cubes",
+          "quantity": "3",
+          "raw": "3 cup soft bread, cubes",
+          "unit": "cup"
+        },
+        {
+          "name": "diced salt pork",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 cup diced salt pork",
+          "unit": "cup"
+        },
+        {
+          "name": "onion",
+          "note": "chopped",
+          "quantity": "1",
+          "raw": "1 onion, chopped",
+          "unit": null
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "3/4",
+          "raw": "3/4 teaspoon salt",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "celery",
+          "note": "chopped",
+          "quantity": "1",
+          "raw": "1 cup celery, chopped",
+          "unit": "cup"
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": "1/8",
+          "raw": "1/8 teaspoon pepper",
+          "unit": "teaspoon"
+        }
+      ],
+      "instructions": [
+        "Fry the salt pork until crisp, then remove the pieces.",
+        "Cook the onion in the fat for a few minutes, then add the crisp salt pork, celery and bread cubes.",
+        "Season with salt and pepper.",
+        "Spread one section of the spareribs with the dressing.",
+        "Cover with the other section and sew or tie in place.",
+        "Sprinkle the outside with salt and pepper and rub with flour.",
+        "Lay the stuffed ribs on a rack in an open roasting pan and bake, uncovered, in a 350\u00b0 f oven for 30 minutes to the pound (about 2 hours)."
+      ],
+      "name": "Celery Stuffed Spareribs",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/celery-stuffed-spareribs/",
+      "yield": "8 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "knife",
+        "egg beater",
+        "stove"
+      ],
+      "id": "bcefcd4e696ad9e7",
+      "image": "https://publicdomainrecipes.org/recipes/pork-brains-and-eggs/Pork%20Brains%20and%20Eggs_hu_d0afa8203d4e7e5f.png",
+      "ingredients": [
+        {
+          "name": "pork brains",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 cup pork brains",
+          "unit": "cup"
+        },
+        {
+          "name": "butter",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon butter",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "eggs",
+          "note": null,
+          "quantity": "3",
+          "raw": "3 eggs",
+          "unit": null
+        },
+        {
+          "name": "grated onion",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 teaspoon grated onion",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "minced parsley",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon minced parsley",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 teaspoon salt",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "toast",
+          "note": null,
+          "quantity": "4",
+          "raw": "4 slices toast",
+          "unit": "slices"
+        }
+      ],
+      "instructions": [
+        "Soak brains in cold salted water 1/2 hr.",
+        "Skin and remove all fiber.",
+        "Cut or chop into small pieces.",
+        "Put into frying pan in which butter, onion and parsley have been heated.",
+        "Stir until brains are cooked (10-12 min).",
+        "Add eggs beaten with 2 tablespoons cold water.",
+        "Cook over moderate fire and stir until set.",
+        "Season and serve on toast.",
+        "Garnish with parsley."
+      ],
+      "name": "Pork Brains and Eggs",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/pork-brains-and-eggs/",
+      "yield": "4 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring spoons",
+        "stove"
+      ],
+      "id": "9dd59eb41a8d5ce0",
+      "image": "https://publicdomainrecipes.org/recipes/backbones-farm-style/Backbones%20Farm%20Style_hu_8cd688f0a4964d5e.png",
+      "ingredients": [
+        {
+          "name": "country style backbones",
+          "note": null,
+          "quantity": "2 1/4",
+          "raw": "2 1/4 pound country style backbones",
+          "unit": "pound"
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": null,
+          "raw": "pepper",
+          "unit": null
+        },
+        {
+          "name": "poultry seasoning",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 teaspoon poultry seasoning",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "1 1/2",
+          "raw": "1 1/2 teaspoon salt",
+          "unit": "teaspoon"
+        }
+      ],
+      "instructions": [
+        "Brown country style backbones.",
+        "Add seasoning, cover and cook in a moderate oven (350\u00b0 f) for about 1 1/2 to 2 hours or until well-done.",
+        "Pork always requires thorough cooking at moderate temperature to bring out the full rich flavor."
+      ],
+      "name": "Backbones Farm Style",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/backbones-farm-style/",
+      "yield": "4 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "knife",
+        "stove"
+      ],
+      "id": "bbfb4e2f550d6a92",
+      "image": "https://publicdomainrecipes.org/recipes/pork-liver-with-spanish-sauce-and-lima-beans/Pork%20Liver%20with%20Spanish%20Sauce%20and%20Lima%20Beans_hu_6a90e285a3c95755.png",
+      "ingredients": [
+        {
+          "name": "pork liver",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 pound pork liver",
+          "unit": "pound"
+        },
+        {
+          "name": "cooked lima beans",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 cup cooked lima beans",
+          "unit": "cup"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": null,
+          "raw": "salt",
+          "unit": null
+        },
+        {
+          "name": "flour",
+          "note": null,
+          "quantity": null,
+          "raw": "flour",
+          "unit": null
+        },
+        {
+          "name": "small onion",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 small onion",
+          "unit": null
+        },
+        {
+          "name": "lard",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon lard",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "cooked tomatoes",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 cup cooked tomatoes",
+          "unit": "cup"
+        }
+      ],
+      "instructions": [
+        "Slice liver in 1/2-inch slices.",
+        "Cut in 1-in pieces.",
+        "Season and dredge with four.",
+        "Brown sliced onion and liver in lard (or bacon drippings).",
+        "Add tomatoes.",
+        "Cover and cook slowly 20 to 30 minutes.",
+        "Serve over the hot lima beans."
+      ],
+      "name": "Pork Liver with Spanish Sauce and Lima Beans",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/pork-liver-with-spanish-sauce-and-lima-beans/",
+      "yield": "4 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "stove"
+      ],
+      "id": "c884c22e7e55424d",
+      "image": "https://publicdomainrecipes.org/recipes/pork-tenderloin-creole/Pork%20Tenderloin%20Creole_hu_3a108a11b82e81aa.png",
+      "ingredients": [
+        {
+          "name": "pork tenderloin",
+          "note": "sliced",
+          "quantity": "1 1/2",
+          "raw": "1 1/2 pound pork tenderloin, sliced",
+          "unit": "pound"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 teaspoon salt",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "carrots",
+          "note": null,
+          "quantity": "4",
+          "raw": "4 carrots",
+          "unit": null
+        },
+        {
+          "name": "flour",
+          "note": null,
+          "quantity": "3",
+          "raw": "3 tablespoon flour",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "onion",
+          "note": "sliced",
+          "quantity": "1",
+          "raw": "1 onion, sliced",
+          "unit": null
+        },
+        {
+          "name": "lard",
+          "note": null,
+          "quantity": "3",
+          "raw": "3 tablespoon lard",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "green pepper",
+          "note": "diced",
+          "quantity": "1/2",
+          "raw": "1/2 green pepper, diced",
+          "unit": null
+        },
+        {
+          "name": "tomatoes",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 cup tomatoes",
+          "unit": "cup"
+        }
+      ],
+      "instructions": [
+        "Dredge meat with flour; brown in lard.",
+        "Pour tomatoes over meat, add seasonings, onion, carrots and green pepper.",
+        "Place in covered pan and cook in slow oven (325\u00b0 f) for 1 hour."
+      ],
+      "name": "Pork Tenderloin Creole",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/pork-tenderloin-creole/",
+      "yield": "4 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring spoons",
+        "knife",
+        "egg beater",
+        "strainer",
+        "stove"
+      ],
+      "id": "2db9609297dd9c38",
+      "image": "https://publicdomainrecipes.org/recipes/pork-kidneys-and-scrambled-eggs/Pork%20Kidneys%20and%20Scrambled%20Eggs_hu_4bb29c6cee0bd990.png",
+      "ingredients": [
+        {
+          "name": "pork kidneys",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 pork kidneys",
+          "unit": null
+        },
+        {
+          "name": "paprika",
+          "note": null,
+          "quantity": null,
+          "raw": "paprika",
+          "unit": null
+        },
+        {
+          "name": "flour",
+          "note": null,
+          "quantity": null,
+          "raw": "flour",
+          "unit": null
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": null,
+          "raw": "salt",
+          "unit": null
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": null,
+          "raw": "pepper",
+          "unit": null
+        },
+        {
+          "name": "butter",
+          "note": "or bacon drippings",
+          "quantity": "2",
+          "raw": "2 tablespoon butter, or bacon drippings",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "eggs",
+          "note": null,
+          "quantity": "4",
+          "raw": "4 eggs",
+          "unit": null
+        },
+        {
+          "name": "milk or water",
+          "note": null,
+          "quantity": "4",
+          "raw": "4 tablespoon milk or water",
+          "unit": "tablespoon"
+        }
+      ],
+      "instructions": [
+        "Cut kidneys in half, remove outer membrane and heavy veins.",
+        "Soak 1 hr in cold salted water.",
+        "Drain; add fresh cold water; bring to boiling point.",
+        "Drain; blanch under cold water.",
+        "Cut into thin slices.",
+        "Dust lightly with flour and cook very slowly in fat for thirty minutes.",
+        "Season with paprika and salt.",
+        "Beat the eggs and add the milk or water, salt and pepper.",
+        "Cook in fat until done.",
+        "Place scrambled eggs in center of platter with kidneys in border around them."
+      ],
+      "name": "Pork Kidneys and Scrambled Eggs",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/pork-kidneys-and-scrambled-eggs/",
+      "yield": "4 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring spoons",
+        "stove"
+      ],
+      "id": "24b9b1c75d12a516",
+      "image": "https://publicdomainrecipes.org/recipes/country-boiled-dinner/Country%20%27Boiled%27%20Dinner_hu_dda8c3a2e159a7a6.png",
+      "ingredients": [
+        {
+          "name": "pork",
+          "note": "neckbones",
+          "quantity": "1 1/4",
+          "raw": "1 1/4 pound pork, neckbones",
+          "unit": "pound"
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 teaspoon pepper",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "onions",
+          "note": null,
+          "quantity": "8",
+          "raw": "8 onions",
+          "unit": null
+        },
+        {
+          "name": "water",
+          "note": null,
+          "quantity": null,
+          "raw": "water",
+          "unit": null
+        },
+        {
+          "name": "potatoes",
+          "note": null,
+          "quantity": "8",
+          "raw": "8 potatoes",
+          "unit": null
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 tablespoon salt",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "carrots",
+          "note": null,
+          "quantity": "8",
+          "raw": "8 carrots",
+          "unit": null
+        },
+        {
+          "name": "small head cabbage",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 small head cabbage",
+          "unit": null
+        }
+      ],
+      "instructions": [
+        "Wipe the meat with a damp cloth.",
+        "Cover with water and allow to simmer until nearly tender, about 1 1/2 hours.",
+        "Season.",
+        "Prepare vegetables and add carrots and onions whole.",
+        "Cook fifteen minutes and add whole potatoes.",
+        "Cook twenty minutes and add quartered cabbage.",
+        "Cook until cabbage is done."
+      ],
+      "name": "Country 'Boiled' Dinner",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/country-boiled-dinner/",
+      "yield": "4 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "knife",
+        "oven",
+        "loaf pan"
+      ],
+      "id": "f497e35ab133225e",
+      "image": "https://publicdomainrecipes.org/recipes/pork-liver-loaf/Pork%20Liver%20Loaf_hu_240c4569951ff584.png",
+      "ingredients": [
+        {
+          "name": "pork liver",
+          "note": null,
+          "quantity": "1 1/2",
+          "raw": "1 1/2 pound pork liver",
+          "unit": "pound"
+        },
+        {
+          "name": "soft breadcrumbs",
+          "note": null,
+          "quantity": "2 1/2",
+          "raw": "2 1/2 cup soft breadcrumbs",
+          "unit": "cup"
+        },
+        {
+          "name": "bacon",
+          "note": null,
+          "quantity": "4",
+          "raw": "4 slices bacon",
+          "unit": "slices"
+        },
+        {
+          "name": "onion",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 onion",
+          "unit": null
+        },
+        {
+          "name": "eggs",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 eggs",
+          "unit": null
+        },
+        {
+          "name": "chopped parsley",
+          "note": null,
+          "quantity": "1/4",
+          "raw": "1/4 cup chopped parsley",
+          "unit": "cup"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 teaspoon salt",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": "1/8",
+          "raw": "1/8 teaspoon pepper",
+          "unit": "teaspoon"
+        }
+      ],
+      "instructions": [
+        "Let slices of liver stand in hot water for 10 minutes and then grind with the onion and bacon.",
+        "Add eggs, crumbs, parsley and seasonings and pack firmly into a loaf pan.",
+        "Bake 1 hour at 350\u00b0 f.",
+        "May be sliced cold if desired."
+      ],
+      "name": "Pork Liver Loaf",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/pork-liver-loaf/",
+      "yield": "6-7 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "oven",
+        "stove",
+        "baking sheet"
+      ],
+      "id": "4e7504764db98c47",
+      "image": "https://publicdomainrecipes.org/recipes/baked-pork-feet/Baked%20Pork%20Feet_hu_1445efc609739fe0.png",
+      "ingredients": [
+        {
+          "name": "pork feet",
+          "note": null,
+          "quantity": null,
+          "raw": "pork feet",
+          "unit": null
+        },
+        {
+          "name": "water",
+          "note": null,
+          "quantity": null,
+          "raw": "water",
+          "unit": null
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": null,
+          "raw": "salt",
+          "unit": null
+        }
+      ],
+      "instructions": [
+        "Barely cover the pork feet with cold salted water.",
+        "Heat to boiling point and simmer until tender, about 3 hours.",
+        "Arrange on a greased baking sheet and bake in a hot oven (450\u00b0 f) until browned."
+      ],
+      "name": "Baked Pork Feet",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/baked-pork-feet/",
+      "yield": ""
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "knife",
+        "strainer",
+        "stove"
+      ],
+      "id": "211f3549486fad51",
+      "image": "https://publicdomainrecipes.org/recipes/pork-kidney-stew/Pork%20Kidney%20Stew_hu_72a400c485e2677e.png",
+      "ingredients": [
+        {
+          "name": "pork kidneys",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 pound pork kidneys",
+          "unit": "pound"
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": "1/8",
+          "raw": "1/8 teaspoon pepper",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "onions",
+          "note": "medium sized",
+          "quantity": "2",
+          "raw": "2 onions, medium sized",
+          "unit": null
+        },
+        {
+          "name": "water",
+          "note": null,
+          "quantity": "3",
+          "raw": "3 cup water",
+          "unit": "cup"
+        },
+        {
+          "name": "dry mustard",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 teaspoon dry mustard",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "flour",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon flour",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "butter",
+          "note": "or bacon drippings",
+          "quantity": "2",
+          "raw": "2 tablespoon butter, or bacon drippings",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 teaspoon salt",
+          "unit": "teaspoon"
+        }
+      ],
+      "instructions": [
+        "Remove heavy veins from kidneys.",
+        "Cube kidneys and and soak 1 hr in cold salted water.",
+        "Drain; add fresh cold water; bring to boiling point.",
+        "Drain; add 3 cups cold water.",
+        "Bring to boiling point, skim, add sliced onions and seasonings.",
+        "Simmer about 1 hr until kidneys are tender.",
+        "Brown flour in fat and gradually add kidneys and stock, stirring constantly.",
+        "Cook slowly about 15 minutes."
+      ],
+      "name": "Pork Kidney Stew",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/pork-kidney-stew/",
+      "yield": "4 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring spoons",
+        "stove"
+      ],
+      "id": "5a68857786cc9d99",
+      "image": "https://publicdomainrecipes.org/recipes/pork-knuckles-and-sauerkraut/Pork%20Knuckles%20and%20Sauerkraut_hu_d746513b9bc7283d.png",
+      "ingredients": [
+        {
+          "name": "pork",
+          "note": "knuckles",
+          "quantity": "4",
+          "raw": "4 pork, knuckles",
+          "unit": null
+        },
+        {
+          "name": "boiling water",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 quart boiling water",
+          "unit": "quart"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "3",
+          "raw": "3 teaspoon salt",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "sauerkraut",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 quart sauerkraut",
+          "unit": "quart"
+        }
+      ],
+      "instructions": [
+        "Place whole knuckles in boiling salted water.",
+        "Cover and simmer until meat is tender, about 2 1/2 to 3 hours.",
+        "20 minutes before serving, pour off most of water and add the sauerkraut.",
+        "Let heat thoroughly.",
+        "Serve the meat on a bed of sauerkraut."
+      ],
+      "name": "Pork Knuckles and Sauerkraut",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/pork-knuckles-and-sauerkraut/",
+      "yield": "4 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "knife",
+        "rolling pin",
+        "stove"
+      ],
+      "id": "673156bf8b5c3b20",
+      "image": "https://publicdomainrecipes.org/recipes/fricasseed-pork-hearts/Fricasseed%20Pork%20Hearts_hu_70b3e99df0ad656f.png",
+      "ingredients": [
+        {
+          "name": "-4 pork hearts",
+          "note": null,
+          "quantity": "3",
+          "raw": "3 -4 pork hearts",
+          "unit": null
+        },
+        {
+          "name": "onions",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 onions",
+          "unit": null
+        },
+        {
+          "name": "seasoning",
+          "note": null,
+          "quantity": null,
+          "raw": "seasoning",
+          "unit": null
+        },
+        {
+          "name": "diced carrots",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 cup diced carrots",
+          "unit": "cup"
+        },
+        {
+          "name": "flour",
+          "note": null,
+          "quantity": null,
+          "raw": "flour",
+          "unit": null
+        },
+        {
+          "name": "canned tomatoes",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 cup canned tomatoes",
+          "unit": "cup"
+        },
+        {
+          "name": "bacon fat",
+          "note": null,
+          "quantity": null,
+          "raw": "bacon fat",
+          "unit": null
+        },
+        {
+          "name": "hot water",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 cup hot water",
+          "unit": "cup"
+        }
+      ],
+      "instructions": [
+        "Wash and clean hearts.",
+        "Slice or chop the hearts into 3/4-inch pieces across the grain.",
+        "Season.",
+        "Roll in four and brown in bacon fat, in a heavy kettle.",
+        "Add sliced onions, tomatoes and hot water.",
+        "Cook slowly, covered, on top of the stove for 2 1/2 to 3 hours.",
+        "Add carrots the last hour.",
+        "Add more water from time to time if original amount cooks away.",
+        "Thicken liquid for gravy."
+      ],
+      "name": "Fricasseed Pork Hearts",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/fricasseed-pork-hearts/",
+      "yield": "4 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring spoons",
+        "rolling pin",
+        "strainer",
+        "frying pan"
+      ],
+      "id": "1153861ff2646b68",
+      "image": "https://publicdomainrecipes.org/recipes/pan-broiled-boneless-pork-feet/Pan-Broiled%20Boneless%20Pork%20Feet_hu_a940afb07e3cce81.png",
+      "ingredients": [
+        {
+          "name": "pork feet",
+          "note": null,
+          "quantity": "6",
+          "raw": "6 pork feet",
+          "unit": null
+        },
+        {
+          "name": "few sprigs parsley",
+          "note": null,
+          "quantity": null,
+          "raw": "few sprigs parsley",
+          "unit": null
+        },
+        {
+          "name": "cold water",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 quart cold water",
+          "unit": "quart"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": null,
+          "raw": "salt",
+          "unit": null
+        },
+        {
+          "name": "large carrot",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 large carrot",
+          "unit": null
+        },
+        {
+          "name": "whole mixed spices",
+          "note": null,
+          "quantity": "3",
+          "raw": "3 tablespoon whole mixed spices",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "medium onion",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 medium onion",
+          "unit": null
+        },
+        {
+          "name": "bread crumbs",
+          "note": null,
+          "quantity": null,
+          "raw": "bread crumbs",
+          "unit": null
+        },
+        {
+          "name": "celery",
+          "note": null,
+          "quantity": "3",
+          "raw": "3 stalks celery",
+          "unit": "stalks"
+        }
+      ],
+      "instructions": [
+        "Cover pork feet with cold water; add carrot, onion, celery, salt and spices; simmer gently about 3 hrs or until tender enough for bones to slip out.",
+        "Drain, slip out bones and press into shape with hands.",
+        "Place between two platters with a weight on top; let cool overnight.",
+        "Separate; dip in melted butter; roll in fine bread crumbs.",
+        "Let stand in refrigerator after patting well.",
+        "Pan-broil on lightly greased skillet to a golden brown, turning frequently.",
+        "Garnish with parsley."
+      ],
+      "name": "Pan-Broiled Boneless Pork Feet",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/pan-broiled-boneless-pork-feet/",
+      "yield": "4 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "stove"
+      ],
+      "id": "23752e74fbf034ce",
+      "image": "https://publicdomainrecipes.org/recipes/roast-loin-of-pork/Roast%20Loin%20of%20Pork_hu_a76d33462d8ffa78.png",
+      "ingredients": [
+        {
+          "name": "pork loin",
+          "note": null,
+          "quantity": null,
+          "raw": "pork loin",
+          "unit": null
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": null,
+          "raw": "salt",
+          "unit": null
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": null,
+          "raw": "pepper",
+          "unit": null
+        }
+      ],
+      "instructions": [
+        "Have backbone loosened from ribs so that carving will be easy.",
+        "Season with salt and pepper and place with the fat side up, bones down, in an open roasting pan.",
+        "Make an incision and insert a meat thermometer so that the center of the bulb reaches the center of the fleshiest part of the meat.",
+        "Put the roast in a moderate oven (350\u00b0 f) and cook without covering and without adding water.",
+        "It will be done when the meat thermometer registers 185\u00b0 f.",
+        "Allow about 30 min.",
+        "Per pound for roasting.",
+        "Make a gravy from part of the drippings and season it with sage."
+      ],
+      "name": "Roast Loin of Pork",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/roast-loin-of-pork/",
+      "yield": "3 to the pound"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "knife",
+        "stove"
+      ],
+      "id": "0d8fb6b4457b0bf6",
+      "image": "https://publicdomainrecipes.org/recipes/pork-chops-braised-in-milk/Pork%20Chops%20Braised%20in%20Milk_hu_b32faaaf060b858e.png",
+      "ingredients": [
+        {
+          "name": "loin end pork chops",
+          "note": null,
+          "quantity": "4",
+          "raw": "4 loin end pork chops",
+          "unit": null
+        },
+        {
+          "name": "mustard",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 teaspoon mustard",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": null,
+          "raw": "salt",
+          "unit": null
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": null,
+          "raw": "pepper",
+          "unit": null
+        },
+        {
+          "name": "evaporated milk",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 cup evaporated milk",
+          "unit": "cup"
+        }
+      ],
+      "instructions": [
+        "Dip chops in flour and brown well on both sides in lard or meat drippings.",
+        "Season with salt and pepper, add mustard in tiny dots to each chop and pour milk (undiluted) over meat.",
+        "Cover and cook in 350\u00b0 f oven for 45-50 minutes.",
+        "Serve on chop plate garnished with parsley or celery leaves."
+      ],
+      "name": "Pork Chops Braised in Milk",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/pork-chops-braised-in-milk/",
+      "yield": "4 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring spoons",
+        "knife",
+        "strainer",
+        "stove"
+      ],
+      "id": "236584f9a0368832",
+      "image": "https://publicdomainrecipes.org/recipes/stewed-pork-hearts-with-rice-border/Stewed%20Pork%20Hearts%20with%20Rice%20Border_hu_5ed0682b78e4d0cc.png",
+      "ingredients": [
+        {
+          "name": "pork hearts",
+          "note": null,
+          "quantity": "1 1/2",
+          "raw": "1 1/2 pound pork hearts",
+          "unit": "pound"
+        },
+        {
+          "name": "celery",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 stalk celery",
+          "unit": "stalk"
+        },
+        {
+          "name": "cubed onion",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon cubed onion",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "flour",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon flour",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "butter",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon butter",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "cubed carrot",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon cubed carrot",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 teaspoon salt",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "vinegar",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 tablespoon vinegar",
+          "unit": "tablespoon"
+        }
+      ],
+      "instructions": [
+        "Wash hearts and remove all veins and tough fibers.",
+        "Cut in small pieces and cover with water for 15 min.",
+        "Drain; add boiling water to cover.",
+        "Add cut carrot, onion and celery.",
+        "Simmer gently 3-4 hrs.",
+        "Mix flour and melted butter and stir into the hot stew.",
+        "Add vinegar and salt, and stir until thickened.",
+        "Serve with border of steamed rice.",
+        "Sprinkle with chopped parsley."
+      ],
+      "name": "Stewed Pork Hearts with Rice Border",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/stewed-pork-hearts-with-rice-border/",
+      "yield": "4 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "stove"
+      ],
+      "id": "6ad286a8c9dc58b0",
+      "image": "https://publicdomainrecipes.org/recipes/pork-feet-and-greens/Pork%20Feet%20and%20Greens_hu_e612dbb746035a45.png",
+      "ingredients": [
+        {
+          "name": "pork feet",
+          "note": null,
+          "quantity": null,
+          "raw": "pork feet",
+          "unit": null
+        },
+        {
+          "name": "water",
+          "note": null,
+          "quantity": null,
+          "raw": "water",
+          "unit": null
+        },
+        {
+          "name": "spinach",
+          "note": null,
+          "quantity": null,
+          "raw": "spinach",
+          "unit": null
+        },
+        {
+          "name": "greens",
+          "note": null,
+          "quantity": null,
+          "raw": "greens",
+          "unit": null
+        }
+      ],
+      "instructions": [
+        "Wash the pork feet.",
+        "Cover them with cold water and cook them (do not boil) for about 2 or 3 hours, until tender.",
+        "Season, and serve on hot platter with spinach or other greens."
+      ],
+      "name": "Pork Feet and Greens",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/pork-feet-and-greens/",
+      "yield": ""
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "knife"
+      ],
+      "id": "0f5c1b665f844786",
+      "image": "https://publicdomainrecipes.org/recipes/roast-fresh-ham/Roast%20Fresh%20Ham_hu_29f0b148516beb4c.png",
+      "ingredients": [
+        {
+          "name": "double-thick pork rib chops",
+          "note": null,
+          "quantity": "4",
+          "raw": "4 double-thick pork rib chops",
+          "unit": null
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 teaspoon salt",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": "1/8",
+          "raw": "1/8 teaspoon pepper",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "dry breadcrumbs",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 cup dry breadcrumbs",
+          "unit": "cup"
+        },
+        {
+          "name": "egg",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 egg",
+          "unit": null
+        },
+        {
+          "name": "chopped celery",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 cup chopped celery",
+          "unit": "cup"
+        },
+        {
+          "name": "pineapple juice",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon pineapple juice",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "crushed or diced pineapple",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 cup crushed or diced pineapple",
+          "unit": "cup"
+        },
+        {
+          "name": "butter",
+          "note": "drained",
+          "quantity": "2",
+          "raw": "2 tablespoon butter, (drained)",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "3/4",
+          "raw": "3/4 teaspoon salt",
+          "unit": "teaspoon"
+        }
+      ],
+      "instructions": [
+        "Lay the ham fat side up on a rack in an open roasting pan.",
+        "Sprinkle cut surface with salt and pepper.",
+        "Make incision and insert meat thermometer so that center of bulb reaches center of fleshiest part, (bulb should not rest on fat or bone.",
+        ") Place ham, uncovered, in moderate oven (350\u00b0 f.",
+        ") And roast until done.",
+        "It will be done when thermometer registers 185\u00b0 f.",
+        "Allow about 30 min per pound for roasting.",
+        "When almost done, remove from oven, and take off rind (if not already removed).",
+        "Score fat in diagonal lines, stick with whole cloves, rub surface with brown sugar-mustard mixture.",
+        "Return to oven to finish."
+      ],
+      "name": "Roast Fresh Ham",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/roast-fresh-ham/",
+      "yield": "3 to the pound"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [
+        "measuring cups",
+        "measuring spoons",
+        "knife",
+        "egg beater"
+      ],
+      "id": "18ce52a43247d8e8",
+      "image": "https://publicdomainrecipes.org/recipes/pineapple-stuffed-pork-chops/Pineapple%20Stuffed%20Pork%20Chops_hu_16249508b75b0a9a.png",
+      "ingredients": [
+        {
+          "name": "double-thick pork rib chops",
+          "note": null,
+          "quantity": "4",
+          "raw": "4 double-thick pork rib chops",
+          "unit": null
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 teaspoon salt",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "pepper",
+          "note": null,
+          "quantity": "1/8",
+          "raw": "1/8 teaspoon pepper",
+          "unit": "teaspoon"
+        },
+        {
+          "name": "dry breadcrumbs",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 cup dry breadcrumbs",
+          "unit": "cup"
+        },
+        {
+          "name": "egg",
+          "note": null,
+          "quantity": "1",
+          "raw": "1 egg",
+          "unit": null
+        },
+        {
+          "name": "chopped celery",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 cup chopped celery",
+          "unit": "cup"
+        },
+        {
+          "name": "pineapple juice",
+          "note": null,
+          "quantity": "2",
+          "raw": "2 tablespoon pineapple juice",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "crushed or diced pineapple",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 cup crushed or diced pineapple",
+          "unit": "cup"
+        },
+        {
+          "name": "butter",
+          "note": "drained",
+          "quantity": "2",
+          "raw": "2 tablespoon butter, (drained)",
+          "unit": "tablespoon"
+        },
+        {
+          "name": "salt",
+          "note": null,
+          "quantity": "3/4",
+          "raw": "3/4 teaspoon salt",
+          "unit": "teaspoon"
+        }
+      ],
+      "instructions": [
+        "Have chops cut double thickness and pocketed for stuffing on bone side of chop.",
+        "Rub inside and out with salt.",
+        "Make dressing by mixing crumbs, pineapple, juice, seasonings, celery, beaten egg and melted butter.",
+        "Pack into pockets in chops.",
+        "Place chops on rack in roasting pan, sprinkle with salt and pepper and place in 350\u00b0 f.",
+        "Oven for 1 1/4 hrs."
+      ],
+      "name": "Pineapple Stuffed Pork Chops",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/pineapple-stuffed-pork-chops/",
+      "yield": "4 servings"
+    },
+    {
+      "author": [
+        "American Meat Institute"
+      ],
+      "category": [
+        "Meat"
+      ],
+      "date_published": "1942-01-01",
+      "equipment": [],
+      "id": "7fd7b4017cbe8c59",
+      "image": "https://publicdomainrecipes.org/recipes/braised-pork-liver-and-bacon/Braised%20Pork%20Liver%20and%20Bacon_hu_96556314d9ee8a84.png",
+      "ingredients": [
+        {
+          "name": "pork liver",
+          "note": "sliced",
+          "quantity": "1",
+          "raw": "1 pound pork liver, sliced",
+          "unit": "pound"
+        },
+        {
+          "name": "bacon",
+          "note": null,
+          "quantity": "1/2",
+          "raw": "1/2 pound bacon",
+          "unit": "pound"
+        }
+      ],
+      "instructions": [
+        "Pan-broil the bacon.",
+        "Season and dredge the liver with flour and braise in 4 cup of bacon drippings.",
+        "After browning add 2 tablespoons of catch- up to 1/4 cup of water and simmer approximately 20-25 minutes."
+      ],
+      "name": "Braised Pork Liver and Bacon",
+      "public_domain": true,
+      "source": "Public Domain Recipes",
+      "source_url": "https://publicdomainrecipes.org/recipes/braised-pork-liver-and-bacon/",
+      "yield": "4 servings"
+    }
+  ]
+}
