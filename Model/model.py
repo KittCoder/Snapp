@@ -6,6 +6,7 @@ import math
 import random
 import re
 import time
+from difflib import get_close_matches
 from html import unescape
 from html.parser import HTMLParser
 from pathlib import Path
@@ -222,6 +223,15 @@ RECIPE_GENERIC_PROMPT_WORDS = RECIPE_SEARCH_STOPWORDS | {
     "lunch",
     "snack",
     "supper",
+}
+ALL_RECIPE_SEARCH_STOPWORDS = RECIPE_SEARCH_STOPWORDS - {"breakfast", "brunch", "dinner", "lunch", "snack", "supper"}
+ALL_RECIPE_QUERY_EXPANSIONS = {
+    "breakfast": ("egg", "oatmeal", "pancake", "muffin", "smoothie", "toast"),
+    "brunch": ("egg", "pancake", "muffin", "salad", "sandwich"),
+    "lunch": ("salad", "sandwich", "soup", "wrap", "bowl"),
+    "dinner": ("stew", "casserole", "pasta", "chicken", "beef", "rice"),
+    "snack": ("dip", "popcorn", "smoothie", "muffin", "bar"),
+    "supper": ("stew", "casserole", "pasta", "chicken", "rice"),
 }
 RECIPE_INGREDIENT_ALIASES = {
     "beef": {"beef", "brisket", "steak", "ground beef", "minced beef", "short ribs", "sirloin", "sirloin steak", "ribeye", "rib eye", "flank steak", "stewing beef"},
@@ -2190,7 +2200,7 @@ def all_recipe_search_tokens(value):
     return [
         word[:-1] if word.endswith("s") and len(word) > 3 else word
         for word in re.sub(r"[^a-z0-9\s]", " ", value or "").casefold().split()
-        if len(word) > 2 and word not in RECIPE_SEARCH_STOPWORDS
+        if len(word) > 2 and word not in ALL_RECIPE_SEARCH_STOPWORDS
     ]
 
 
@@ -2199,17 +2209,23 @@ def all_recipe_candidate_summaries(meal_prompt, recipe_ideas=None, limit=40):
     recipe_summaries = index.get("recipes") or {}
     postings = index.get("postings") or {}
     query_tokens = []
-    for query in [meal_prompt] + [
+    raw_queries = [meal_prompt] + [
         value
         for idea in recipe_ideas or []
         for value in (idea.get("name"), idea.get("query"))
-    ]:
+    ]
+    for query in raw_queries:
         query_tokens.extend(all_recipe_search_tokens(str(query or "")))
+    for token in list(dict.fromkeys(query_tokens)):
+        query_tokens.extend(ALL_RECIPE_QUERY_EXPANSIONS.get(token, ()))
 
     scores = {}
     for token in dict.fromkeys(query_tokens):
-        for recipe_id, weight in postings.get(token, []):
-            scores[recipe_id] = scores.get(recipe_id, 0) + int(weight)
+        matching_tokens = [token] if token in postings else get_close_matches(token, postings.keys(), n=3, cutoff=0.82)
+        for matching_token in matching_tokens:
+            token_weight_multiplier = 1 if matching_token == token else 0.75
+            for recipe_id, weight in postings.get(matching_token, []):
+                scores[recipe_id] = scores.get(recipe_id, 0) + max(1, round(weight * token_weight_multiplier))
 
     if not scores and query_tokens:
         joined_query = normalize_cuisine_text(" ".join(query_tokens))
@@ -2255,7 +2271,7 @@ def all_recipe_search_score(recipe, meal_prompt, recipe_ideas=None, indexed_reci
         query_words = [
             word[:-1] if word.endswith("s") and len(word) > 3 else word
             for word in re.sub(r"[^a-z0-9\s]", " ", query or "").casefold().split()
-            if len(word) > 2 and word not in RECIPE_SEARCH_STOPWORDS
+            if len(word) > 2 and word not in ALL_RECIPE_SEARCH_STOPWORDS
         ]
         if not query_words:
             continue
