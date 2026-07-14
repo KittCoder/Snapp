@@ -63,6 +63,7 @@ TRADER_JOES_STORE_CACHE_TTL_SECONDS = 24 * 60 * 60
 TRADER_JOES_PRODUCT_CACHE_TTL_SECONDS = 12 * 60 * 60
 SCRAPED_GROCERY_DB_FILENAME = "data.json"
 DEMO_GROCERY_DB_FILENAME = "snapp_demo_grocery_db.json"
+ALL_RECIPES_DB_FILENAME = "all_recipes.json"
 store_search_cache = {}
 trader_joes_store_cache = {}
 trader_joes_product_cache = {}
@@ -71,6 +72,7 @@ spoonacular_search_cache = {}
 spoonacular_lookup_cache = {}
 mealdb_search_cache = {}
 mealdb_lookup_cache = {}
+all_recipes_cache = None
 ingredient_generalization_cache = {}
 robots_cache = {}
 FDC_SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
@@ -1991,6 +1993,233 @@ def mealdb_recipe_to_recipe(meal):
     }
 
 
+def load_all_recipes_db():
+    global all_recipes_cache
+    if all_recipes_cache is not None:
+        return all_recipes_cache
+    path = Path(__file__).with_name(ALL_RECIPES_DB_FILENAME)
+    if not path.exists():
+        all_recipes_cache = []
+        return all_recipes_cache
+    try:
+        with path.open(encoding="utf-8") as file:
+            data = json.load(file)
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"Failed to load {ALL_RECIPES_DB_FILENAME}: {exc}", flush=True)
+        all_recipes_cache = []
+        return all_recipes_cache
+    recipes = data.get("recipes") if isinstance(data, dict) else []
+    all_recipes_cache = [
+        recipe for recipe in recipes
+        if isinstance(recipe, dict) and recipe.get("name") and recipe.get("ingredients")
+    ]
+    return all_recipes_cache
+
+
+def all_recipe_ingredient_display(ingredient):
+    raw = re.sub(r"\s+", " ", str(ingredient.get("raw") or "")).strip()
+    if raw:
+        return raw
+    quantity = re.sub(r"\s+", " ", str(ingredient.get("quantity") or "")).strip()
+    unit = re.sub(r"\s+", " ", str(ingredient.get("unit") or "")).strip()
+    name = re.sub(r"\s+", " ", str(ingredient.get("name") or "")).strip()
+    note = re.sub(r"\s+", " ", str(ingredient.get("note") or "")).strip()
+    display = " ".join(part for part in (quantity, unit, name) if part).strip()
+    if note:
+        display = f"{display} ({note})" if display else note
+    return display or name
+
+
+def all_recipe_ingredient_name(ingredient):
+    name = normalize_ingredient_name(ingredient.get("name"))
+    raw = normalize_ingredient_name(ingredient.get("raw"))
+    if not name:
+        return raw
+    generic_names = {
+        "boneless",
+        "skinless",
+        "low sodium",
+        "reduced sodium",
+        "fresh",
+        "frozen",
+        "canned",
+    }
+    if name.casefold() in generic_names and raw:
+        return raw
+    return name
+
+
+def all_recipe_to_spoonacular_recipe(recipe):
+    source_url = recipe.get("source_url") or recipe.get("original_usda_url")
+    recipe_id = str(recipe.get("id") or source_url or recipe.get("name") or "").strip()
+    categories = [
+        re.sub(r"\s+", " ", str(category or "")).strip()
+        for category in (recipe.get("category") or [])
+        if re.sub(r"\s+", " ", str(category or "")).strip()
+    ]
+    food_groups = [
+        re.sub(r"\s+", " ", str(group.get("label") or "")).strip()
+        for group in (recipe.get("food_groups") or [])
+        if isinstance(group, dict) and group.get("label")
+    ]
+    extended_ingredients = []
+    seen = set()
+    for ingredient in recipe.get("ingredients") or []:
+        if not isinstance(ingredient, dict):
+            continue
+        name = all_recipe_ingredient_name(ingredient)
+        display = all_recipe_ingredient_display(ingredient)
+        if not name and not display:
+            continue
+        identity = (name or display).casefold()
+        if identity in seen:
+            continue
+        seen.add(identity)
+        extended_ingredients.append(
+            {
+                "name": name or display,
+                "nameClean": name or display,
+                "original": display or name,
+                "originalName": display or name,
+            }
+        )
+
+    instructions = recipe.get("instructions") or []
+    if isinstance(instructions, list):
+        instruction_text = " ".join(
+            f"{index}. {spoonacular_recipe_text(step)}"
+            for index, step in enumerate(instructions, start=1)
+            if spoonacular_recipe_text(step)
+        )
+    else:
+        instruction_text = spoonacular_recipe_text(instructions)
+
+    provider = recipe.get("source") or "SNAPP recipe database"
+    return {
+        "id": recipe_id,
+        "title": recipe.get("name"),
+        "cuisines": [],
+        "dishTypes": categories or food_groups or ["main course"],
+        "extendedIngredients": extended_ingredients,
+        "instructions": instruction_text,
+        "image": recipe.get("image"),
+        "sourceUrl": source_url,
+        "spoonacularSourceUrl": source_url,
+        "servings": recipe.get("yield"),
+        "_snapp_recipe_provider": provider,
+        "_snapp_database_recipe": recipe,
+        "_snapp_original_usda_url": recipe.get("original_usda_url"),
+    }
+
+
+def all_recipe_query_terms(recipe):
+    database_recipe = recipe.get("_snapp_database_recipe") or {}
+    return normalize_cuisine_text(
+        " ".join(
+            [
+                recipe.get("title") or "",
+                database_recipe.get("description") or "",
+                " ".join(database_recipe.get("category") or []),
+                " ".join(
+                    group.get("label", "")
+                    for group in database_recipe.get("food_groups") or []
+                    if isinstance(group, dict)
+                ),
+                " ".join(
+                    ingredient.get("raw") or ingredient.get("name") or ""
+                    for ingredient in database_recipe.get("ingredients") or []
+                    if isinstance(ingredient, dict)
+                ),
+            ]
+        )
+    )
+
+
+def all_recipe_search_score(recipe, meal_prompt, recipe_ideas=None):
+    prompt_queries = [meal_prompt]
+    for idea in recipe_ideas or []:
+        prompt_queries.extend([idea.get("name"), idea.get("query")])
+    prompt_queries = [
+        re.sub(r"\s+", " ", str(query or "")).strip()
+        for query in prompt_queries
+        if re.sub(r"\s+", " ", str(query or "")).strip()
+    ]
+    title_text = normalize_cuisine_text(recipe.get("title"))
+    search_text = all_recipe_query_terms(recipe)
+    best_score = 0
+    for query in prompt_queries:
+        query_words = [
+            word[:-1] if word.endswith("s") and len(word) > 3 else word
+            for word in re.sub(r"[^a-z0-9\s]", " ", query or "").casefold().split()
+            if len(word) > 2 and word not in RECIPE_SEARCH_STOPWORDS
+        ]
+        if not query_words:
+            continue
+        query_text = normalize_cuisine_text(" ".join(query_words))
+        score = 0
+        if query_text and query_text == title_text:
+            score += 140
+        elif query_text and title_text.startswith(query_text):
+            score += 110
+        elif query_text and query_text in title_text:
+            score += 80
+        elif query_text and query_text in search_text:
+            score += 35
+        for word in query_words:
+            if re.search(rf"\b{re.escape(word)}\b", title_text):
+                score += 18
+            elif re.search(rf"\b{re.escape(word)}\b", search_text):
+                score += 8
+        best_score = max(best_score, score)
+
+    best_score += spoonacular_prompt_score(recipe, meal_prompt) * 10
+    requested_groups = requested_spoonacular_ingredient_groups(meal_prompt)
+    if requested_groups and spoonacular_matches_requested_ingredients(recipe, requested_groups):
+        best_score += 35 * len(requested_groups)
+    if spoonacular_matches_meal_type(recipe, meal_prompt):
+        best_score += 10
+    return best_score
+
+
+def all_recipe_candidates_for_prompt(meal_prompt, dietary_restrictions="", recipe_ideas=None):
+    requested_groups = requested_spoonacular_ingredient_groups(meal_prompt)
+    candidates = []
+    for database_recipe in load_all_recipes_db():
+        recipe = all_recipe_to_spoonacular_recipe(database_recipe)
+        if not spoonacular_ingredients(recipe):
+            continue
+        if not spoonacular_respects_restrictions(recipe, dietary_restrictions):
+            continue
+        hard_ingredient_match = spoonacular_matches_requested_ingredients(recipe, requested_groups)
+        score = all_recipe_search_score(recipe, meal_prompt, recipe_ideas)
+        if requested_groups and not hard_ingredient_match:
+            score -= 120
+        if not spoonacular_matches_meal_type(recipe, meal_prompt):
+            score -= 80
+        if score <= 0:
+            continue
+        recipe["_snapp_search_score"] = score
+        candidates.append(recipe)
+
+    candidates.sort(
+        key=lambda recipe: (
+            -recipe.get("_snapp_search_score", 0),
+            recipe.get("title", "").casefold(),
+        )
+    )
+    deduped = []
+    seen_names = set()
+    for recipe in candidates:
+        name = normalized_recipe_name(recipe.get("title"))
+        if name in seen_names:
+            continue
+        seen_names.add(name)
+        deduped.append(recipe)
+        if len(deduped) >= 80:
+            break
+    return deduped
+
+
 def search_mealdb_meals(query):
     normalized_query = re.sub(r"\s+", " ", query or "").strip()
     if not normalized_query:
@@ -3016,6 +3245,29 @@ def spoonacular_instructions(recipe):
 
 
 def spoonacular_recipe_from_recipe(recipe):
+    database_recipe = recipe.get("_snapp_database_recipe")
+    if database_recipe:
+        category = (database_recipe.get("category") or [None])[0]
+        source = recipe.get("sourceUrl") or database_recipe.get("source_url")
+        recipe_details = {
+            "id": spoonacular_recipe_id(recipe),
+            "name": recipe.get("title"),
+            "category": category,
+            "area": spoonacular_cuisine_label(recipe) or None,
+            "instructions": spoonacular_instructions(recipe),
+            "ingredients": spoonacular_ingredients(recipe),
+            "thumbnail": recipe.get("image"),
+            "youtube": recipe.get("_snapp_youtube"),
+            "source": source,
+            "source_name": database_recipe.get("source"),
+            "original_usda_url": database_recipe.get("original_usda_url"),
+            "equipment": database_recipe.get("equipment") or [],
+            "description": database_recipe.get("description"),
+            "notes": database_recipe.get("notes"),
+            "nutrition": database_recipe.get("nutrition") or {},
+            "food_groups": database_recipe.get("food_groups") or [],
+        }
+        return recipe_details
     return {
         "id": spoonacular_recipe_id(recipe),
         "name": recipe.get("title"),
@@ -3131,7 +3383,7 @@ def recipe_passes_hard_filters(recipe, filters):
 
 
 def recipe_constraint_score(recipe, meal_prompt, filters):
-    score = spoonacular_prompt_score(recipe, meal_prompt) * 10
+    score = recipe.get("_snapp_search_score", 0) + spoonacular_prompt_score(recipe, meal_prompt) * 10
     if recipe_matches_filter_terms(recipe, filters["include_ingredients"], require_all=True):
         score += 20 * len(filters["include_ingredients"])
     if recipe_matches_dietary_preference(recipe, filters["dietary_preference"]):
@@ -3143,7 +3395,13 @@ def recipe_constraint_score(recipe, meal_prompt, filters):
 
 
 def collect_recipe_candidates(meal_prompt, dietary_restrictions, recipe_ideas=None):
-    del dietary_restrictions
+    candidates = all_recipe_candidates_for_prompt(
+        meal_prompt,
+        dietary_restrictions=dietary_restrictions,
+        recipe_ideas=recipe_ideas,
+    )
+    if candidates:
+        return candidates
     effective_ideas = recipe_ideas or [
         {"name": meal_prompt, "query": meal_prompt, "cuisine": ""}
     ]
@@ -3824,7 +4082,7 @@ def dishes():
                 "store_number": None,
                 "pricing_source": grocery_db.get("pricing_source"),
                 "pricing_unavailable": bool(grocery_db.get("pricing_unavailable")),
-                "source": "TheMealDB recipes selected from AI-generated meal ideas and SNAPP demo grocery database pricing",
+                "source": "SNAPP all_recipes database selected from the user's Dishes request and matched against SNAPP demo grocery database pricing",
             }
         )
     except RuntimeError as exc:
