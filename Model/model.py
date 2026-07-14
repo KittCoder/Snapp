@@ -73,6 +73,7 @@ spoonacular_lookup_cache = {}
 mealdb_search_cache = {}
 mealdb_lookup_cache = {}
 all_recipes_cache = None
+all_recipes_search_cache = None
 ingredient_generalization_cache = {}
 robots_cache = {}
 FDC_SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
@@ -2135,7 +2136,30 @@ def all_recipe_query_terms(recipe):
     )
 
 
-def all_recipe_search_score(recipe, meal_prompt, recipe_ideas=None):
+def all_recipes_search_index():
+    global all_recipes_search_cache
+    if all_recipes_search_cache is not None:
+        return all_recipes_search_cache
+    indexed = []
+    for database_recipe in load_all_recipes_db():
+        recipe = all_recipe_to_spoonacular_recipe(database_recipe)
+        ingredients = spoonacular_ingredients(recipe)
+        if not ingredients:
+            continue
+        indexed.append(
+            {
+                "recipe": recipe,
+                "ingredients": ingredients,
+                "title_text": normalize_cuisine_text(recipe.get("title")),
+                "search_text": all_recipe_query_terms(recipe),
+                "meal_text": spoonacular_normalized_search_text(recipe),
+            }
+        )
+    all_recipes_search_cache = indexed
+    return all_recipes_search_cache
+
+
+def all_recipe_search_score(recipe, meal_prompt, recipe_ideas=None, indexed_recipe=None):
     prompt_queries = [meal_prompt]
     for idea in recipe_ideas or []:
         prompt_queries.extend([idea.get("name"), idea.get("query")])
@@ -2144,8 +2168,16 @@ def all_recipe_search_score(recipe, meal_prompt, recipe_ideas=None):
         for query in prompt_queries
         if re.sub(r"\s+", " ", str(query or "")).strip()
     ]
-    title_text = normalize_cuisine_text(recipe.get("title"))
-    search_text = all_recipe_query_terms(recipe)
+    title_text = (
+        indexed_recipe.get("title_text")
+        if indexed_recipe
+        else normalize_cuisine_text(recipe.get("title"))
+    )
+    search_text = (
+        indexed_recipe.get("search_text")
+        if indexed_recipe
+        else all_recipe_query_terms(recipe)
+    )
     best_score = 0
     for query in prompt_queries:
         query_words = [
@@ -2172,7 +2204,7 @@ def all_recipe_search_score(recipe, meal_prompt, recipe_ideas=None):
                 score += 8
         best_score = max(best_score, score)
 
-    best_score += spoonacular_prompt_score(recipe, meal_prompt) * 10
+    best_score += all_recipe_prompt_score(recipe, meal_prompt, indexed_recipe) * 10
     requested_groups = requested_spoonacular_ingredient_groups(meal_prompt)
     if requested_groups and spoonacular_matches_requested_ingredients(recipe, requested_groups):
         best_score += 35 * len(requested_groups)
@@ -2181,17 +2213,34 @@ def all_recipe_search_score(recipe, meal_prompt, recipe_ideas=None):
     return best_score
 
 
+def all_recipe_prompt_score(recipe, meal_prompt, indexed_recipe=None):
+    recipe_words = normalized_food_words(recipe.get("title"))
+    prompt_words = {
+        word
+        for word in normalized_food_words(meal_prompt)
+        if word not in RECIPE_SEARCH_STOPWORDS
+    }
+    score = len(recipe_words & prompt_words)
+    meal_text = indexed_recipe.get("meal_text") if indexed_recipe else spoonacular_normalized_search_text(recipe)
+    for meal_type, terms in RECIPE_MEAL_TYPE_HINTS.items():
+        if re.search(rf"\b{meal_type}\b", meal_prompt, re.I):
+            score += sum(2 for term in terms if term in meal_text)
+    if re.search(r"\bdinner\b", meal_prompt, re.I):
+        score -= sum(3 for term in RECIPE_NON_DINNER_TERMS if term in meal_text)
+    return score
+
+
 def all_recipe_candidates_for_prompt(meal_prompt, dietary_restrictions="", recipe_ideas=None):
     requested_groups = requested_spoonacular_ingredient_groups(meal_prompt)
     candidates = []
-    for database_recipe in load_all_recipes_db():
-        recipe = all_recipe_to_spoonacular_recipe(database_recipe)
-        if not spoonacular_ingredients(recipe):
+    for indexed_recipe in all_recipes_search_index():
+        recipe = indexed_recipe["recipe"]
+        if not indexed_recipe["ingredients"]:
             continue
         if not spoonacular_respects_restrictions(recipe, dietary_restrictions):
             continue
         hard_ingredient_match = spoonacular_matches_requested_ingredients(recipe, requested_groups)
-        score = all_recipe_search_score(recipe, meal_prompt, recipe_ideas)
+        score = all_recipe_search_score(recipe, meal_prompt, recipe_ideas, indexed_recipe)
         if requested_groups and not hard_ingredient_match:
             score -= 120
         if not spoonacular_matches_meal_type(recipe, meal_prompt):
@@ -2215,7 +2264,7 @@ def all_recipe_candidates_for_prompt(meal_prompt, dietary_restrictions="", recip
             continue
         seen_names.add(name)
         deduped.append(recipe)
-        if len(deduped) >= 80:
+        if len(deduped) >= 24:
             break
     return deduped
 
