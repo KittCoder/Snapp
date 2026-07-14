@@ -5,6 +5,7 @@ import hashlib
 import math
 import random
 import re
+import sqlite3
 import time
 from difflib import get_close_matches
 from html import unescape
@@ -66,6 +67,7 @@ SCRAPED_GROCERY_DB_FILENAME = "data.json"
 DEMO_GROCERY_DB_FILENAME = "snapp_demo_grocery_db.json"
 ALL_RECIPES_DB_FILENAME = "all_recipes.json"
 ALL_RECIPES_SEARCH_INDEX_FILENAME = "all_recipes_search_index.json"
+ALL_RECIPES_SEARCH_DB_FILENAME = "all_recipes_search.sqlite"
 store_search_cache = {}
 trader_joes_store_cache = {}
 trader_joes_product_cache = {}
@@ -77,6 +79,8 @@ mealdb_lookup_cache = {}
 all_recipes_cache = None
 all_recipes_search_cache = None
 all_recipes_by_id_cache = None
+all_recipes_sqlite_connection = None
+all_recipes_sqlite_vocab_cache = None
 ingredient_generalization_cache = {}
 robots_cache = {}
 FDC_SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
@@ -2204,7 +2208,113 @@ def all_recipe_search_tokens(value):
     ]
 
 
+def all_recipes_sqlite():
+    global all_recipes_sqlite_connection
+    if all_recipes_sqlite_connection is not None:
+        return all_recipes_sqlite_connection
+    path = Path(__file__).with_name(ALL_RECIPES_SEARCH_DB_FILENAME)
+    if not path.exists():
+        return None
+    try:
+        connection = sqlite3.connect(f"file:{path}?mode=ro", uri=True, check_same_thread=False)
+        connection.row_factory = sqlite3.Row
+        all_recipes_sqlite_connection = connection
+    except sqlite3.Error as exc:
+        print(f"Failed to open {ALL_RECIPES_SEARCH_DB_FILENAME}: {exc}", flush=True)
+        all_recipes_sqlite_connection = None
+    return all_recipes_sqlite_connection
+
+
+def all_recipes_sqlite_vocab():
+    global all_recipes_sqlite_vocab_cache
+    if all_recipes_sqlite_vocab_cache is not None:
+        return all_recipes_sqlite_vocab_cache
+    connection = all_recipes_sqlite()
+    if connection is None:
+        all_recipes_sqlite_vocab_cache = set()
+        return all_recipes_sqlite_vocab_cache
+    try:
+        all_recipes_sqlite_vocab_cache = {
+            row["token"] for row in connection.execute("select token from tokens")
+        }
+    except sqlite3.Error as exc:
+        print(f"Failed to load recipe search vocabulary: {exc}", flush=True)
+        all_recipes_sqlite_vocab_cache = set()
+    return all_recipes_sqlite_vocab_cache
+
+
+def all_recipe_fts_query(tokens):
+    vocab = all_recipes_sqlite_vocab()
+    terms = []
+    for token in dict.fromkeys(tokens):
+        if token in vocab:
+            terms.append(token)
+            continue
+        terms.extend(get_close_matches(token, vocab, n=3, cutoff=0.82))
+    return " OR ".join(dict.fromkeys(terms))
+
+
+def all_recipe_sqlite_candidate_summaries(meal_prompt, recipe_ideas=None, limit=40):
+    connection = all_recipes_sqlite()
+    if connection is None:
+        return None
+    query_tokens = []
+    raw_queries = [meal_prompt] + [
+        value
+        for idea in recipe_ideas or []
+        for value in (idea.get("name"), idea.get("query"))
+    ]
+    for query in raw_queries:
+        query_tokens.extend(all_recipe_search_tokens(str(query or "")))
+    for token in list(dict.fromkeys(query_tokens)):
+        query_tokens.extend(ALL_RECIPE_QUERY_EXPANSIONS.get(token, ()))
+    fts_query = all_recipe_fts_query(query_tokens)
+    if not fts_query:
+        return []
+    try:
+        rows = connection.execute(
+            """
+            select
+              recipes.id,
+              recipes.name,
+              recipes.payload,
+              recipe_fts.name as title_text,
+              recipe_fts.category || ' ' || recipe_fts.ingredients || ' ' || recipe_fts.description as search_text,
+              recipe_fts.name || ' ' || recipe_fts.category || ' ' || recipe_fts.ingredients as meal_text,
+              bm25(recipe_fts, 9.0, 4.0, 6.0, 1.5, 0.5) as rank
+            from recipe_fts
+            join recipes on recipes.id = recipe_fts.recipe_id
+            where recipe_fts match ?
+            order by rank
+            limit ?
+            """,
+            (fts_query, limit),
+        ).fetchall()
+    except sqlite3.Error as exc:
+        print(f"SQLite recipe search failed: {exc}", flush=True)
+        return []
+    return [
+        {
+            "id": row["id"],
+            "name": row["name"],
+            "title_text": normalize_cuisine_text(row["title_text"]),
+            "search_text": normalize_cuisine_text(row["search_text"]),
+            "meal_text": normalize_cuisine_text(row["meal_text"]),
+            "database_recipe": json.loads(row["payload"]),
+        }
+        for row in rows
+    ]
+
+
 def all_recipe_candidate_summaries(meal_prompt, recipe_ideas=None, limit=40):
+    sqlite_summaries = all_recipe_sqlite_candidate_summaries(
+        meal_prompt,
+        recipe_ideas=recipe_ideas,
+        limit=limit,
+    )
+    if sqlite_summaries is not None:
+        return sqlite_summaries
+
     index = all_recipes_search_index()
     recipe_summaries = index.get("recipes") or {}
     postings = index.get("postings") or {}
@@ -2320,10 +2430,11 @@ def all_recipe_prompt_score(recipe, meal_prompt, indexed_recipe=None):
 
 def all_recipe_candidates_for_prompt(meal_prompt, dietary_restrictions="", recipe_ideas=None):
     requested_groups = requested_spoonacular_ingredient_groups(meal_prompt)
-    recipes_by_id = load_all_recipes_by_id()
     candidates = []
     for indexed_recipe in all_recipe_candidate_summaries(meal_prompt, recipe_ideas, limit=20):
-        database_recipe = recipes_by_id.get(indexed_recipe["id"])
+        database_recipe = indexed_recipe.get("database_recipe")
+        if not database_recipe:
+            database_recipe = load_all_recipes_by_id().get(indexed_recipe["id"])
         if not database_recipe:
             continue
         recipe = all_recipe_to_spoonacular_recipe(database_recipe)

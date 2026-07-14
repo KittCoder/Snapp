@@ -122,6 +122,13 @@ cd Model
 python recipe_scraper.py --max-pages 5 --max-recipes 100
 ```
 
+The Dishes backend searches [Model/all_recipes_search.sqlite](/Users/2027kstarkie/Desktop/SNAPP/Model/all_recipes_search.sqlite:1), a generated SQLite FTS database built from `all_recipes.json`. Regenerate it after changing recipe data:
+
+```sh
+cd Model
+python build_recipe_search_db.py
+```
+
 ## Trader Joe's Price Data
 
 The backend loads [Model/data.json](/Users/2027kstarkie/Desktop/SNAPP/Model/data.json:1) first for grocery products and prices. If that file has no products, it falls back to the demo grocery database.
