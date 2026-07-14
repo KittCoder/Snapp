@@ -33,6 +33,9 @@ const dishModal = document.getElementById("dish-modal");
 const dishModalTitle = document.getElementById("dish-modal-title");
 const dishModalContent = document.getElementById("dish-modal-content");
 const dishModalClose = document.getElementById("dish-modal-close");
+const shoppingAddPantryButton = document.getElementById("shopping-add-pantry-button");
+const shoppingStatus = document.getElementById("shopping-status");
+const shoppingList = document.getElementById("shopping-list");
 const profileNameInput = document.getElementById("profile-name");
 const householdSizeInput = document.getElementById("household-size");
 const profileZipCodeInput = document.getElementById("profile-zip-code");
@@ -66,6 +69,7 @@ let myStoreMarkers = [];
 let pantryItems = [];
 let savedMyStores = [];
 const selectedMyStoreIds = new Set();
+const selectedShoppingIngredientIds = new Set();
 const SCHEDULE_DAYS = [
   "Monday",
   "Tuesday",
@@ -617,6 +621,31 @@ async function addPantryItem(name, quantity) {
   return true;
 }
 
+async function addPantryItems(items) {
+  if (!supabaseClient || !currentUser || !items.length) return false;
+
+  setPantryStatus(`Adding ${items.length} pantry item${items.length === 1 ? "" : "s"}...`);
+  const rows = items.map((item) => ({
+    user_id: currentUser.id,
+    name: item.name,
+    quantity: item.quantity,
+  }));
+  const { data, error } = await supabaseClient
+    .from("user_pantry_items")
+    .insert(rows)
+    .select("id,name,quantity,created_at");
+
+  if (error) {
+    setPantryStatus(getPantryErrorMessage(error), "error");
+    return false;
+  }
+
+  pantryItems = [...(data || []), ...pantryItems];
+  renderPantryItems();
+  setPantryStatus(`${items.length} pantry item${items.length === 1 ? "" : "s"} added.`, "success");
+  return true;
+}
+
 async function deletePantryItem(itemId) {
   if (!supabaseClient || !currentUser) return;
 
@@ -749,6 +778,138 @@ function normalizeScheduledMeal(record) {
   };
 }
 
+function getIngredientName(ingredient) {
+  if (typeof ingredient === "string") return ingredient;
+  if (!ingredient) return "Ingredient";
+
+  return (
+    ingredient.product_name ||
+    ingredient.recipe_ingredient ||
+    ingredient.name ||
+    ingredient.ingredient ||
+    ingredient.display ||
+    ingredient.measure ||
+    "Ingredient"
+  );
+}
+
+function getIngredientQuantity(ingredient) {
+  if (typeof ingredient === "string" || !ingredient) return "1 item";
+
+  return (
+    ingredient.package_size ||
+    ingredient.quantity ||
+    ingredient.amount ||
+    ingredient.measure ||
+    ingredient.display ||
+    "1 item"
+  );
+}
+
+function getShoppingIngredients() {
+  return scheduledMeals.flatMap((meal) => {
+    const ingredients =
+      meal.ingredients_to_buy?.length
+        ? meal.ingredients_to_buy
+        : meal.ingredients?.length
+          ? meal.ingredients
+          : meal.recipe?.ingredients || [];
+
+    return ingredients.map((ingredient, index) => ({
+      id: `${meal.schedule_id}:${index}`,
+      dishName: meal.name || "Scheduled dish",
+      name: getIngredientName(ingredient),
+      quantity: getIngredientQuantity(ingredient),
+      unavailable:
+        Boolean(
+          ingredient &&
+            typeof ingredient === "object" &&
+            (ingredient.unavailable ||
+              ingredient.availability_status === "unavailable")
+        ),
+    }));
+  });
+}
+
+function updateShoppingAddButton(items = getShoppingIngredients()) {
+  const selectedCount = selectedShoppingIngredientIds.size;
+  shoppingAddPantryButton.textContent = selectedCount
+    ? "Add selected to pantry"
+    : "Add all to pantry";
+  shoppingAddPantryButton.disabled = !items.length;
+}
+
+function renderShoppingList() {
+  const items = getShoppingIngredients();
+  const validIds = new Set(items.map((item) => item.id));
+  selectedShoppingIngredientIds.forEach((id) => {
+    if (!validIds.has(id)) selectedShoppingIngredientIds.delete(id);
+  });
+
+  shoppingList.replaceChildren();
+
+  if (!currentUser) {
+    shoppingStatus.textContent = "";
+    updateShoppingAddButton(items);
+    return;
+  }
+
+  if (!items.length) {
+    const emptyItem = document.createElement("li");
+    emptyItem.className = "shopping-empty";
+    emptyItem.textContent = "Add dishes to your schedule to build a shopping list.";
+    shoppingList.appendChild(emptyItem);
+    shoppingStatus.textContent = "";
+    updateShoppingAddButton(items);
+    return;
+  }
+
+  items.forEach((item) => {
+    const listItem = document.createElement("li");
+    const checkbox = document.createElement("input");
+    const details = document.createElement("span");
+    const addButton = document.createElement("button");
+
+    listItem.className = "shopping-list-item";
+    listItem.classList.toggle("selected", selectedShoppingIngredientIds.has(item.id));
+
+    checkbox.type = "checkbox";
+    checkbox.checked = selectedShoppingIngredientIds.has(item.id);
+    checkbox.setAttribute("aria-label", `Select ${item.name}`);
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) {
+        selectedShoppingIngredientIds.add(item.id);
+      } else {
+        selectedShoppingIngredientIds.delete(item.id);
+      }
+      listItem.classList.toggle("selected", checkbox.checked);
+      updateShoppingAddButton(items);
+    });
+
+    details.textContent = `${item.name} - ${item.quantity} (${item.dishName})`;
+    if (item.unavailable) {
+      details.textContent += " - unavailable";
+    }
+
+    addButton.type = "button";
+    addButton.textContent = "Add to pantry";
+    addButton.addEventListener("click", async () => {
+      addButton.disabled = true;
+      shoppingStatus.textContent = `Adding ${item.name} to pantry...`;
+      const wasAdded = await addPantryItem(item.name, item.quantity);
+      shoppingStatus.textContent = wasAdded
+        ? `${item.name} added to pantry.`
+        : "Could not add ingredient to pantry.";
+      addButton.disabled = false;
+    });
+
+    listItem.append(checkbox, details, addButton);
+    shoppingList.appendChild(listItem);
+  });
+
+  updateShoppingAddButton(items);
+}
+
 async function loadScheduledMeals() {
   scheduledMeals.splice(0, scheduledMeals.length);
 
@@ -809,6 +970,7 @@ function renderSchedule() {
   });
 
   renderBudget();
+  renderShoppingList();
 }
 
 function renderScheduleRecipeTray() {
@@ -1006,14 +1168,6 @@ function openDishModal(dish) {
   const recipe = dish.recipe || {};
   dishModalTitle.textContent = dish.name || "Recipe";
   dishModalContent.replaceChildren();
-
-  if (recipe.thumbnail) {
-    const image = document.createElement("img");
-    image.className = "dish-modal-image";
-    image.src = recipe.thumbnail;
-    image.alt = `${dish.name} recipe photo`;
-    dishModalContent.appendChild(image);
-  }
 
   const summary = document.createElement("p");
   summary.className = "dish-modal-summary";
@@ -1504,7 +1658,6 @@ function createDishCard(dish) {
     const totalNutrition = document.createElement("div");
     const restrictionWarnings = getRestrictionWarnings(dish);
     const scheduleButton = document.createElement("button");
-    const recipe = dish.recipe || {};
 
     card.className = "dish-card";
     card.tabIndex = 0;
@@ -1546,14 +1699,6 @@ function createDishCard(dish) {
     });
 
     card.appendChild(title);
-
-    if (recipe.thumbnail) {
-      const image = document.createElement("img");
-      image.className = "dish-recipe-image";
-      image.src = recipe.thumbnail;
-      image.alt = `${dish.name} recipe photo`;
-      card.appendChild(image);
-    }
 
     card.append(
       calories,
@@ -1788,6 +1933,28 @@ pantryForm.addEventListener("submit", async (event) => {
     }
   } finally {
     submitButton.disabled = false;
+  }
+});
+
+shoppingAddPantryButton.addEventListener("click", async () => {
+  const items = getShoppingIngredients();
+  const itemsToAdd = selectedShoppingIngredientIds.size
+    ? items.filter((item) => selectedShoppingIngredientIds.has(item.id))
+    : items;
+
+  if (!itemsToAdd.length) return;
+
+  shoppingAddPantryButton.disabled = true;
+  shoppingStatus.textContent = `Adding ${itemsToAdd.length} ingredient${itemsToAdd.length === 1 ? "" : "s"} to pantry...`;
+
+  const wasAdded = await addPantryItems(itemsToAdd);
+  if (wasAdded) {
+    selectedShoppingIngredientIds.clear();
+    shoppingStatus.textContent = `${itemsToAdd.length} ingredient${itemsToAdd.length === 1 ? "" : "s"} added to pantry.`;
+    renderShoppingList();
+  } else {
+    shoppingStatus.textContent = "Could not add ingredients to pantry.";
+    updateShoppingAddButton(items);
   }
 });
 

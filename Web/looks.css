@@ -485,6 +485,7 @@ main {
 .auth-form button[type="submit"],
 .dish-form button,
 .add-to-schedule-button,
+.shopping-header button,
 .store-search-form button {
   border: none;
   border-radius: 0.85rem;
@@ -501,6 +502,7 @@ main {
 .auth-form button[type="submit"]:hover,
 .dish-form button:hover,
 .add-to-schedule-button:hover,
+.shopping-header button:hover,
 .store-search-form button:hover {
   transform: translateY(-1px);
   box-shadow: 0 14px 26px rgba(17, 94, 89, 0.33);
@@ -508,6 +510,7 @@ main {
 
 .auth-form button:disabled,
 .account-status button:disabled,
+.shopping-header button:disabled,
 .secondary-button:disabled {
   cursor: wait;
   opacity: 0.65;
@@ -629,15 +632,6 @@ main {
 .dish-price {
   color: var(--color-text) !important;
   font-weight: 700;
-}
-
-.dish-recipe-image {
-  display: block;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  margin-top: 0.75rem;
-  border-radius: 0.65rem;
-  object-fit: cover;
 }
 
 .dish-method {
@@ -823,6 +817,76 @@ main {
   font-weight: 600;
 }
 
+.shopping-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.shopping-header p {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.shopping-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.shopping-list-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--color-panel-strong) 90%, transparent);
+}
+
+.shopping-list-item.selected {
+  border-color: color-mix(in srgb, var(--color-primary) 50%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-panel-strong));
+}
+
+.shopping-list-item input[type="checkbox"] {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--color-primary);
+}
+
+.shopping-list-item span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.shopping-list-item button {
+  border: none;
+  border-radius: 0.85rem;
+  padding: 0.55rem 0.8rem;
+  background: linear-gradient(140deg, var(--color-primary) 15%, #22c55e 100%);
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.shopping-list-item button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.shopping-empty {
+  color: var(--color-muted);
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--color-panel-strong) 90%, transparent);
+}
+
 .dish-modal {
   width: min(760px, calc(100vw - 2rem));
   max-height: min(780px, calc(100vh - 2rem));
@@ -867,13 +931,6 @@ main {
   max-height: calc(min(780px, 100vh - 2rem) - 4.5rem);
   overflow: auto;
   padding: 1rem;
-}
-
-.dish-modal-image {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  border-radius: 0.65rem;
 }
 
 .dish-modal-summary {
@@ -1324,6 +1381,15 @@ tbody tr:last-child td {
     overflow-x: visible;
   }
 
+  .shopping-header,
+  .shopping-list-item {
+    grid-template-columns: 1fr;
+  }
+
+  .shopping-header {
+    display: grid;
+  }
+
   .store-search-controls {
     flex-direction: column;
   }
@@ -1338,6 +1404,8 @@ tbody tr:last-child td {
 
   .dish-form button,
   .add-to-schedule-button,
+  .shopping-header button,
+  .shopping-list-item button,
   .store-search-form button {
     width: 100%;
   }
