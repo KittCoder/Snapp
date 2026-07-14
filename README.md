@@ -111,6 +111,17 @@ The API runs on `http://localhost:5000` locally.
 
 Recipe search uses the user's query against a small allowlist of real web recipe sites, respects `robots.txt`, parses `schema.org/Recipe` JSON-LD metadata, and links to the source for full instructions. Spoonacular is disabled by default.
 
+## Public Domain Recipe Data
+
+[Model/recipes.json](/Users/2027kstarkie/Desktop/SNAPP/Model/recipes.json:1) contains recipes scraped from Public Domain Recipes with names, parsed ingredient quantities, equipment, categories, and instructions.
+
+Refresh the recipe file with:
+
+```sh
+cd Model
+python recipe_scraper.py --max-pages 5 --max-recipes 100
+```
+
 ## Trader Joe's Price Data
 
 The backend loads [Model/data.json](/Users/2027kstarkie/Desktop/SNAPP/Model/data.json:1) first for grocery products and prices. If that file has no products, it falls back to the demo grocery database.
