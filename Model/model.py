@@ -3402,10 +3402,7 @@ def collect_recipe_candidates(meal_prompt, dietary_restrictions, recipe_ideas=No
     )
     if candidates:
         return candidates
-    effective_ideas = recipe_ideas or [
-        {"name": meal_prompt, "query": meal_prompt, "cuisine": ""}
-    ]
-    return mealdb_candidates_for_ideas(effective_ideas, meal_prompt)
+    raise RuntimeError("The all_recipes database could not provide recipe matches.")
 
 
 def recipe_result_from_recipe(
@@ -4049,12 +4046,7 @@ def dishes():
         stores = demo_store_lookup(grocery_db)
         products = available_demo_products(grocery_db)
         grocery_label = "SNAPP demo grocery database"
-        recipe_ideas = generate_recipe_search_ideas(
-            meal_prompt,
-            filters["servings"],
-            dietary_restrictions,
-            pantry_items,
-        )
+        recipe_ideas = [{"name": meal_prompt, "query": meal_prompt, "cuisine": ""}]
         dishes, used_relaxed_matches = build_real_recipe_results(
             meal_prompt,
             filters,
