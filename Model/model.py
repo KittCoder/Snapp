@@ -64,6 +64,7 @@ TRADER_JOES_PRODUCT_CACHE_TTL_SECONDS = 12 * 60 * 60
 SCRAPED_GROCERY_DB_FILENAME = "data.json"
 DEMO_GROCERY_DB_FILENAME = "snapp_demo_grocery_db.json"
 ALL_RECIPES_DB_FILENAME = "all_recipes.json"
+ALL_RECIPES_SEARCH_INDEX_FILENAME = "all_recipes_search_index.json"
 store_search_cache = {}
 trader_joes_store_cache = {}
 trader_joes_product_cache = {}
@@ -74,6 +75,7 @@ mealdb_search_cache = {}
 mealdb_lookup_cache = {}
 all_recipes_cache = None
 all_recipes_search_cache = None
+all_recipes_by_id_cache = None
 ingredient_generalization_cache = {}
 robots_cache = {}
 FDC_SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
@@ -2017,6 +2019,18 @@ def load_all_recipes_db():
     return all_recipes_cache
 
 
+def load_all_recipes_by_id():
+    global all_recipes_by_id_cache
+    if all_recipes_by_id_cache is not None:
+        return all_recipes_by_id_cache
+    all_recipes_by_id_cache = {
+        str(recipe.get("id")): recipe
+        for recipe in load_all_recipes_db()
+        if recipe.get("id")
+    }
+    return all_recipes_by_id_cache
+
+
 def all_recipe_ingredient_display(ingredient):
     raw = re.sub(r"\s+", " ", str(ingredient.get("raw") or "")).strip()
     if raw:
@@ -2140,23 +2154,81 @@ def all_recipes_search_index():
     global all_recipes_search_cache
     if all_recipes_search_cache is not None:
         return all_recipes_search_cache
-    indexed = []
+    path = Path(__file__).with_name(ALL_RECIPES_SEARCH_INDEX_FILENAME)
+    if path.exists():
+        try:
+            with path.open(encoding="utf-8") as file:
+                data = json.load(file)
+            if isinstance(data.get("recipes"), dict) and isinstance(data.get("postings"), dict):
+                all_recipes_search_cache = data
+                return all_recipes_search_cache
+        except (OSError, json.JSONDecodeError) as exc:
+            print(f"Failed to load {ALL_RECIPES_SEARCH_INDEX_FILENAME}: {exc}", flush=True)
+
+    recipes = {}
+    postings = {}
     for database_recipe in load_all_recipes_db():
         recipe = all_recipe_to_spoonacular_recipe(database_recipe)
-        ingredients = spoonacular_ingredients(recipe)
-        if not ingredients:
+        recipe_id = spoonacular_recipe_id(recipe)
+        if not recipe_id or not spoonacular_ingredients(recipe):
             continue
-        indexed.append(
-            {
-                "recipe": recipe,
-                "ingredients": ingredients,
-                "title_text": normalize_cuisine_text(recipe.get("title")),
-                "search_text": all_recipe_query_terms(recipe),
-                "meal_text": spoonacular_normalized_search_text(recipe),
-            }
-        )
-    all_recipes_search_cache = indexed
+        search_text = all_recipe_query_terms(recipe)
+        recipes[recipe_id] = {
+            "id": recipe_id,
+            "name": recipe.get("title"),
+            "title_text": normalize_cuisine_text(recipe.get("title")),
+            "search_text": search_text,
+            "meal_text": spoonacular_normalized_search_text(recipe),
+        }
+        for token in all_recipe_search_tokens(search_text):
+            postings.setdefault(token, []).append([recipe_id, 1])
+    all_recipes_search_cache = {"recipes": recipes, "postings": postings}
     return all_recipes_search_cache
+
+
+def all_recipe_search_tokens(value):
+    return [
+        word[:-1] if word.endswith("s") and len(word) > 3 else word
+        for word in re.sub(r"[^a-z0-9\s]", " ", value or "").casefold().split()
+        if len(word) > 2 and word not in RECIPE_SEARCH_STOPWORDS
+    ]
+
+
+def all_recipe_candidate_summaries(meal_prompt, recipe_ideas=None, limit=40):
+    index = all_recipes_search_index()
+    recipe_summaries = index.get("recipes") or {}
+    postings = index.get("postings") or {}
+    query_tokens = []
+    for query in [meal_prompt] + [
+        value
+        for idea in recipe_ideas or []
+        for value in (idea.get("name"), idea.get("query"))
+    ]:
+        query_tokens.extend(all_recipe_search_tokens(str(query or "")))
+
+    scores = {}
+    for token in dict.fromkeys(query_tokens):
+        for recipe_id, weight in postings.get(token, []):
+            scores[recipe_id] = scores.get(recipe_id, 0) + int(weight)
+
+    if not scores and query_tokens:
+        joined_query = normalize_cuisine_text(" ".join(query_tokens))
+        for recipe_id, summary in recipe_summaries.items():
+            if joined_query and joined_query in summary.get("search_text", ""):
+                scores[recipe_id] = 1
+
+    ranked_ids = sorted(
+        scores,
+        key=lambda recipe_id: (
+            -scores[recipe_id],
+            recipe_summaries.get(recipe_id, {}).get("name", "").casefold(),
+        ),
+    )
+    return [
+        recipe_summaries[recipe_id]
+        for recipe_id in ranked_ids[:limit]
+        if recipe_id in recipe_summaries
+    ]
 
 
 def all_recipe_search_score(recipe, meal_prompt, recipe_ideas=None, indexed_recipe=None):
@@ -2232,10 +2304,14 @@ def all_recipe_prompt_score(recipe, meal_prompt, indexed_recipe=None):
 
 def all_recipe_candidates_for_prompt(meal_prompt, dietary_restrictions="", recipe_ideas=None):
     requested_groups = requested_spoonacular_ingredient_groups(meal_prompt)
+    recipes_by_id = load_all_recipes_by_id()
     candidates = []
-    for indexed_recipe in all_recipes_search_index():
-        recipe = indexed_recipe["recipe"]
-        if not indexed_recipe["ingredients"]:
+    for indexed_recipe in all_recipe_candidate_summaries(meal_prompt, recipe_ideas, limit=20):
+        database_recipe = recipes_by_id.get(indexed_recipe["id"])
+        if not database_recipe:
+            continue
+        recipe = all_recipe_to_spoonacular_recipe(database_recipe)
+        if not spoonacular_ingredients(recipe):
             continue
         if not spoonacular_respects_restrictions(recipe, dietary_restrictions):
             continue
@@ -2264,7 +2340,7 @@ def all_recipe_candidates_for_prompt(meal_prompt, dietary_restrictions="", recip
             continue
         seen_names.add(name)
         deduped.append(recipe)
-        if len(deduped) >= 24:
+        if len(deduped) >= 10:
             break
     return deduped
 

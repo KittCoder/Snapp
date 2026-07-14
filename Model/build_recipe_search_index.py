@@ -1,0 +1,172 @@
+import json
+import re
+import tempfile
+from collections import defaultdict
+from datetime import datetime, timezone
+from pathlib import Path
+
+
+MODEL_DIR = Path(__file__).resolve().parent
+ALL_RECIPES_PATH = MODEL_DIR / "all_recipes.json"
+SEARCH_INDEX_PATH = MODEL_DIR / "all_recipes_search_index.json"
+
+STOPWORDS = {
+    "and",
+    "for",
+    "with",
+    "the",
+    "recipe",
+    "recipes",
+    "meal",
+    "meals",
+    "dinner",
+    "lunch",
+    "breakfast",
+    "easy",
+    "quick",
+    "healthy",
+}
+
+
+def normalize_text(value):
+    return re.sub(r"[^a-z0-9]+", " ", str(value or "").casefold()).strip()
+
+
+def token_list(value):
+    tokens = []
+    for token in normalize_text(value).split():
+        if len(token) <= 2 or token in STOPWORDS:
+            continue
+        if token.endswith("s") and len(token) > 3:
+            token = token[:-1]
+        tokens.append(token)
+    return tokens
+
+
+def add_weighted_terms(weighted_terms, value, weight):
+    for token in token_list(value):
+        weighted_terms[token] += weight
+
+
+def recipe_search_text(recipe):
+    return normalize_text(
+        " ".join(
+            [
+                recipe.get("name") or "",
+                recipe.get("description") or "",
+                " ".join(recipe.get("category") or []),
+                " ".join(
+                    group.get("label", "")
+                    for group in recipe.get("food_groups") or []
+                    if isinstance(group, dict)
+                ),
+                " ".join(
+                    ingredient.get("raw") or ingredient.get("name") or ""
+                    for ingredient in recipe.get("ingredients") or []
+                    if isinstance(ingredient, dict)
+                ),
+            ]
+        )
+    )
+
+
+def recipe_meal_text(recipe):
+    return normalize_text(
+        " ".join(
+            [
+                recipe.get("name") or "",
+                " ".join(recipe.get("category") or []),
+                " ".join(
+                    group.get("label", "")
+                    for group in recipe.get("food_groups") or []
+                    if isinstance(group, dict)
+                ),
+                " ".join(
+                    ingredient.get("name") or ingredient.get("raw") or ""
+                    for ingredient in recipe.get("ingredients") or []
+                    if isinstance(ingredient, dict)
+                ),
+            ]
+        )
+    )
+
+
+def build_index(recipes):
+    postings = defaultdict(dict)
+    recipes_by_id = {}
+    for recipe in recipes:
+        recipe_id = str(recipe.get("id") or "").strip()
+        name = str(recipe.get("name") or "").strip()
+        if not recipe_id or not name:
+            continue
+
+        weighted_terms = defaultdict(int)
+        add_weighted_terms(weighted_terms, name, 40)
+        add_weighted_terms(weighted_terms, " ".join(recipe.get("category") or []), 16)
+        add_weighted_terms(
+            weighted_terms,
+            " ".join(
+                group.get("label", "")
+                for group in recipe.get("food_groups") or []
+                if isinstance(group, dict)
+            ),
+            12,
+        )
+        add_weighted_terms(weighted_terms, recipe.get("description") or "", 4)
+        for ingredient in recipe.get("ingredients") or []:
+            if isinstance(ingredient, dict):
+                add_weighted_terms(weighted_terms, ingredient.get("name") or "", 18)
+                add_weighted_terms(weighted_terms, ingredient.get("raw") or "", 8)
+
+        recipes_by_id[recipe_id] = {
+            "id": recipe_id,
+            "name": name,
+            "title_text": normalize_text(name),
+            "search_text": recipe_search_text(recipe),
+            "meal_text": recipe_meal_text(recipe),
+        }
+        for token, weight in weighted_terms.items():
+            postings[token][recipe_id] = max(postings[token].get(recipe_id, 0), weight)
+
+    sorted_postings = {
+        token: sorted(scores.items(), key=lambda item: (-item[1], item[0]))[:500]
+        for token, scores in postings.items()
+    }
+    return recipes_by_id, sorted_postings
+
+
+def write_json(data, output_path):
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=output_path.parent, delete=False) as file:
+        json.dump(data, file, indent=2, sort_keys=True)
+        file.write("\n")
+        temp_name = file.name
+    Path(temp_name).replace(output_path)
+
+
+def main():
+    data = json.loads(ALL_RECIPES_PATH.read_text(encoding="utf-8"))
+    recipes = data.get("recipes") or []
+    recipes_by_id, postings = build_index(recipes)
+    index = {
+        "metadata": {
+            "source": "SNAPP all_recipes keyword search index",
+            "source_file": "all_recipes.json",
+            "recipe_count": len(recipes_by_id),
+            "token_count": len(postings),
+            "built_at": datetime.now(timezone.utc).isoformat(),
+            "notes": [
+                "Generated by build_recipe_search_index.py.",
+                "Used by /dishes to avoid full database scans at request time.",
+            ],
+        },
+        "recipes": recipes_by_id,
+        "postings": postings,
+    }
+    write_json(index, SEARCH_INDEX_PATH)
+    print(
+        f"Wrote {len(recipes_by_id)} recipes and {len(postings)} tokens to {SEARCH_INDEX_PATH}."
+    )
+
+
+if __name__ == "__main__":
+    main()
