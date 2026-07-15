@@ -141,4 +141,32 @@ python scraper.py
 ```
 
 The scraper runs the Apify Trader Joe's actor, normalizes the returned dataset into SNAPP's grocery product format, and writes product names, prices, sale prices when present, `on_sale`, package sizes, stock flags, tags, SKUs, and source URLs to `data.json`. If Apify returns no usable products, the scraper exits without replacing the existing pricing file with an empty dataset.
+
+## Ingredient Matching Foundation
+
+The ingredient parser and Morton Williams feature extractor live in `Model/ingredient_normalization.py`.
+
+Apply the Supabase schema migration from:
+
+```sh
+supabase/migrations/20260715180000_ingredient_matching_foundation.sql
+```
+
+Extract deterministic Morton Williams product features from `Model/database.merged.json`:
+
+```sh
+python3 Model/normalize_morton_williams_products.py \
+  --input Model/database.merged.json \
+  --output Model/morton_williams_product_features.json \
+  --uncertain-log Model/morton_williams_uncertain_products.csv \
+  --invalid-log Model/morton_williams_invalid_or_noise.csv
+```
+
+The command is safe to rerun. It does not mutate `database.merged.json`; uncertain canonical ingredient assignments are logged instead of guessed.
+
+Run the ingredient foundation tests:
+
+```sh
+python3 -m unittest discover -s Model/tests -v
+```
  
