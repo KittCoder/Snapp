@@ -90,6 +90,20 @@ def normalize_vectors(vectors: np.ndarray) -> np.ndarray:
     return vectors / norms
 
 
+def token_variants(token: str) -> set[str]:
+    variants = {token}
+    if token.endswith("ies") and len(token) > 3:
+        variants.add(f"{token[:-3]}y")
+    if token.endswith("es") and len(token) > 2:
+        variants.add(token[:-2])
+    if token.endswith("s") and len(token) > 1:
+        variants.add(token[:-1])
+    else:
+        variants.add(f"{token}s")
+        variants.add(f"{token}es")
+    return variants
+
+
 def eligible_product(feature: dict[str, Any]) -> bool:
     return (
         feature.get("eligible_for_retrieval") is True
@@ -479,12 +493,17 @@ class ProductCandidateRetriever:
     def lexical_search_space(self, query: str) -> list[dict[str, Any]]:
         token_index, canonical_index = self.lexical_indexes()
         query_tokens = set(normalize_text(query).split())
-        selected: set[int] = set()
+        expanded_query_tokens = set()
         for token in query_tokens:
+            expanded_query_tokens.update(token_variants(token))
+        selected: set[int] = set()
+        for token in expanded_query_tokens:
             selected.update(token_index.get(token, set()))
         alias_query = apply_alias(query)
         selected.update(canonical_index.get(normalize_text(query), set()))
         selected.update(canonical_index.get(normalize_text(alias_query), set()))
+        for token in expanded_query_tokens:
+            selected.update(canonical_index.get(token, set()))
         if not selected:
             prefix = next(iter(query_tokens), "")[:3]
             if prefix:
@@ -498,13 +517,16 @@ class ProductCandidateRetriever:
         alias_query = apply_alias(query)
         normalized_query = normalize_text(query)
         query_tokens = set(normalized_query.split())
+        expanded_query_tokens = set()
+        for token in query_tokens:
+            expanded_query_tokens.update(token_variants(token))
 
         def cheap_rank(doc: dict[str, Any]) -> tuple[float, str]:
             canonical = normalize_text(doc["canonical"] or "")
             normalized = doc["normalized"]
             tokens = doc["tokens"]
-            overlap = len(query_tokens & tokens)
-            token_score = overlap / len(query_tokens | tokens) if query_tokens and tokens else 0.0
+            overlap = len(expanded_query_tokens & tokens)
+            token_score = overlap / len(expanded_query_tokens | tokens) if expanded_query_tokens and tokens else 0.0
             exact = normalized_query == normalized or normalized_query == canonical or alias_query == canonical
             canonical_bonus = 1.0 if canonical and canonical in {normalized_query, alias_query} else 0.0
             return (-(2.0 if exact else 0.0) - canonical_bonus - token_score, normalized)
@@ -784,11 +806,14 @@ def lexical_score(query: str, feature_or_doc: dict[str, Any]) -> tuple[float, li
         candidate_tokens = set(normalize_text(candidate_text).split())
     alias_query = apply_alias(query)
     query_tokens = set(normalize_text(query).split())
+    expanded_query_tokens = set()
+    for token in query_tokens:
+        expanded_query_tokens.update(token_variants(token))
     exact = query == normalized or query == canonical or alias_query == canonical
     alias = alias_query != query and alias_query == canonical
     token_score = (
-        len(query_tokens & candidate_tokens) / len(query_tokens | candidate_tokens)
-        if query_tokens and candidate_tokens
+        len(expanded_query_tokens & candidate_tokens) / len(expanded_query_tokens | candidate_tokens)
+        if expanded_query_tokens and candidate_tokens
         else 0.0
     )
     ratio = 0.0

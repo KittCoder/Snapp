@@ -3159,6 +3159,19 @@ def morton_williams_store_lookup():
     return {"morton-williams": {"id": "morton-williams", "name": "Morton Williams"}}
 
 
+def should_buy_recipe_ingredient(ingredient):
+    text = normalize_cuisine_text(" ".join(str(ingredient.get(key) or "") for key in ("name", "measure", "display")))
+    if not text:
+        return False
+    no_buy_patterns = (
+        r"\bwater\b",
+        r"\bboiling water\b",
+        r"\bwarm water\b",
+        r"\bcold water\b",
+    )
+    return not any(re.search(pattern, text) for pattern in no_buy_patterns)
+
+
 def morton_williams_feature_to_demo_product(feature, ranked_match=None):
     from basket_quantity import parse_package_info, parse_price_info
 
@@ -3202,21 +3215,22 @@ def match_recipe_ingredients_to_morton_williams(recipe):
 
     service = get_product_match_service()
     recipe_ingredients = spoonacular_ingredients(recipe)
-    ingredient_texts = [ingredient["display"] or ingredient["name"] for ingredient in recipe_ingredients]
-    results = service.match_recipe_ingredients(ingredient_texts, limit=5)
+    buyable_ingredients = [ingredient for ingredient in recipe_ingredients if should_buy_recipe_ingredient(ingredient)]
+    ingredient_texts = [ingredient["display"] or ingredient["name"] for ingredient in buyable_ingredients]
+    results = service.match_recipe_ingredients(ingredient_texts, limit=5) if ingredient_texts else []
     matches = []
     used_product_ids = set()
-    for ingredient, result in zip(recipe_ingredients, results):
+    for ingredient, result in zip(buyable_ingredients, results):
         selected = result.selected_match
         if not selected or result.confidence in {NO_SAFE_MATCH, SUBSTITUTION_ONLY}:
-            matches.append((ingredient, None))
             continue
         if selected.product_id in used_product_ids:
-            matches.append((ingredient, None))
+            feature = service.feature_by_id.get(selected.product_id)
+            if feature:
+                matches.append((ingredient, morton_williams_feature_to_demo_product(feature, selected)))
             continue
         feature = service.feature_by_id.get(selected.product_id)
         if not feature:
-            matches.append((ingredient, None))
             continue
         used_product_ids.add(selected.product_id)
         matches.append((ingredient, morton_williams_feature_to_demo_product(feature, selected)))
@@ -3248,28 +3262,6 @@ def spoonacular_recipe_to_demo_dish(
 
     for recipe_ingredient, product in matched_products[:10]:
         if not product:
-            ingredient_lines.append(
-                {
-                    "product_id": None,
-                    "name": recipe_ingredient["name"],
-                    "recipe_ingredient": recipe_ingredient["name"],
-                    "recipe_measure": recipe_ingredient["measure"],
-                    "product_name": f"{recipe_ingredient['name']} unavailable",
-                    "matched_food": None,
-                    "food_group": None,
-                    "store_name": grocery_label,
-                    "package_size": f"Unavailable at {grocery_label}",
-                    "package_grams": None,
-                    "grams_total": 0,
-                    "grams_per_person": 0,
-                    "calories_total": 0,
-                    "calories_per_person": 0,
-                    "estimated_price_total": 0,
-                    "estimated_price_per_serving": 0,
-                    "availability_status": "unavailable",
-                    "unavailable": True,
-                }
-            )
             continue
         package_grams = int(product.get("package_grams") or 0)
         grams_total = min(package_grams, max(80, household_size * 125))

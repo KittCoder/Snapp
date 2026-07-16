@@ -221,6 +221,13 @@ class CompatibilityRuleTests(unittest.TestCase):
             ("low-fat yogurt", "yogurt", ["drink"], [feature("drink", "Activia Mango Lowfat Yogurt Drink", "yogurt", "dairy"), feature("yogurt", "Chobani Low-Fat Greek Yogurt", "yogurt", "dairy")]),
             ("lemon pepper seasoning", "seasoning", ["marinade"], [feature("marinade", "Lawry's Lemon Pepper Marinade", None, "pantry"), feature("seasoning", "Dash Lemon Pepper Seasoning Blend", None, "pantry")]),
             ("1/2 can low-sodium tomatoes", "canned", ["fresh"], [feature("fresh", "Bowl & Basket Grape Tomatoes", "tomatoes", "produce"), feature("canned", "San Merican Whole Peeled Tomatoes", "tomatoes", "pantry")]),
+            ("beef stew meat", "stew", ["mac"], [feature("mac", "Stouffer's Macaroni & Beef", "beef", "prepared"), feature("stew", "Beef For Stew", "beef", "meat")]),
+            ("pepper", "black", ["jalapeno", "jack"], [feature("jalapeno", "Jalapeno Pepper Bag", "peppers", "produce"), feature("jack", "Sargento Pepper Jack Slices", "peppers", "produce"), feature("black", "ShopRite Black Pepper", "peppers", "pantry")]),
+            ("1 onion, minced", "white", ["dip", "rings"], [feature("dip", "Utz Creamy Onion Dip", "onions", "produce"), feature("rings", "Funyuns Onion Flavored Rings", "onions", "produce"), feature("white", "White Onion", "onions", "produce")]),
+            ("celery", "celery", ["pasta", "salt"], [feature("pasta", "Colavita Cut Ziti Pasta", "pasta", "pantry"), feature("salt", "McCormick Celery Salt", "celery", "produce"), feature("celery", "Celery Package", None, None)]),
+            ("garlic", "garlic", ["powder", "salt"], [feature("powder", "McCormick Garlic Powder", "garlic", "produce"), feature("salt", "McCormick Garlic Salt", "garlic", "produce"), feature("garlic", "Garlic", None, None)]),
+            ("spinach", "spinach", ["dip", "ravioli", "pizza", "pouch"], [feature("dip", "Tostitos Creamy Spinach Dip", "spinach", "produce"), feature("ravioli", "Rana Spinach and Ricotta Ravioli", "spinach", "pantry"), feature("pizza", "Amy's Kitchen Spinach Pizza", "spinach", "frozen"), feature("pouch", "Beech-Nut Apple Blueberry and Spinach Pouch", "spinach", "baby"), feature("spinach", "Bowl & Basket Baby Spinach", None, None)]),
+            ("arugula", "arugula", ["wrap"], [feature("wrap", "Spinach and Arugula Tortilla Wraps", "arugula", "pantry"), feature("arugula", "Bowl & Basket Arugula", None, None)]),
         ]
         for query, expected, rejected, features in cases:
             with self.subTest(query=query):
@@ -313,12 +320,40 @@ class OverrideCacheBatchEndpointTests(unittest.TestCase):
             def match_recipe_ingredients(self, ingredients, limit=5):
                 return [fake_result for _ingredient in ingredients]
 
-        recipe = {"extendedIngredients": [{"name": "chicken breast", "original": "1 lb chicken breast"}]}
+        recipe = {
+            "extendedIngredients": [
+                {"name": "chicken breast", "original": "1 lb chicken breast"},
+                {"name": "water", "original": "2 cups boiling water"},
+            ]
+        }
         with patch("product_compatibility.get_product_match_service", return_value=FakeService()):
             matches = model.match_recipe_ingredients_to_morton_williams(recipe)
+        self.assertEqual(len(matches), 1)
         self.assertEqual(matches[0][1]["id"], "mw_chicken")
         self.assertEqual(matches[0][1]["store_id"], "morton-williams")
         self.assertEqual(matches[0][1]["pricing_source"], "morton_williams")
+
+    def test_demo_dish_does_not_emit_unavailable_buy_rows(self):
+        import model
+
+        recipe = {
+            "id": "r1",
+            "title": "Test Recipe",
+            "sourceUrl": "https://example.test",
+            "extendedIngredients": [
+                {"name": "water", "original": "2 cups water"},
+                {"name": "missing", "original": "1 missing ingredient"},
+            ],
+            "instructions": "Cook.",
+        }
+        dish = model.spoonacular_recipe_to_demo_dish(
+            recipe,
+            [({"name": "missing", "measure": "1 missing ingredient"}, None)],
+            model.morton_williams_store_lookup(),
+            2,
+            grocery_label="Morton Williams",
+        )
+        self.assertEqual(dish["ingredients_to_buy"], [])
 
     def test_evaluation_helper(self):
         from evaluate_product_matching import evaluate

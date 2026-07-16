@@ -47,6 +47,13 @@ class IngredientParserTests(unittest.TestCase):
         self.assertEqual(parsed.fat_level, "reduced-fat")
         self.assertEqual(parsed.preparation, ["divided"])
 
+    def test_count_unit_ingredient_keeps_canonical_identity(self):
+        parsed = parse_ingredient("1 onion, minced")
+        self.assertEqual(parsed.unit, "onion")
+        self.assertEqual(parsed.canonical_name, "onion")
+        self.assertEqual(parsed.preparation, ["minced"])
+        self.assertEqual(parse_ingredient("flour, for dredging").canonical_name, "flour")
+
     def test_meaningful_modifiers(self):
         cases = {
             "low-fat milk": ("milk", "low-fat", None, None, None),
@@ -129,6 +136,19 @@ class ProductFeatureTests(unittest.TestCase):
                     (features["canonical_name"], features["salted_status"], features["form"]),
                     expected,
                 )
+
+    def test_common_produce_feature_classification(self):
+        cases = {
+            "Bowl & Basket Baby Spinach": "spinach",
+            "Bowl & Basket Arugula": "arugula",
+            "Celery Package": "celery",
+            "White Mushrooms": "mushrooms",
+        }
+        for name, canonical in cases.items():
+            with self.subTest(name=name):
+                features = extract_product_features({"name": name, "unit": ""}, 1)
+                self.assertEqual(features["canonical_name"], canonical)
+                self.assertEqual(features["category"], "produce")
 
     def test_scraper_noise_rejected(self):
         product = {

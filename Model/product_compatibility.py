@@ -9,7 +9,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
-from ingredient_normalization import apply_alias, canonical_for_product, normalize_text, parse_ingredient
+from ingredient_normalization import COMMON_PRODUCE_CANONICALS, apply_alias, canonical_for_product, normalize_text, parse_ingredient
 from product_retrieval import (
     DEFAULT_FEATURES_PATH,
     DEFAULT_INDEX_DIR,
@@ -21,7 +21,7 @@ from product_retrieval import (
 )
 
 
-MATCHER_VERSION = "ingredient-product-matcher-v1"
+MATCHER_VERSION = "ingredient-product-matcher-v1.1"
 DEFAULT_OVERRIDES_PATH = Path(__file__).resolve().parent / "product_match_overrides.json"
 DEFAULT_EVALUATION_FIXTURE = Path(__file__).resolve().parent / "evaluation" / "product_match_cases.jsonl"
 
@@ -363,6 +363,7 @@ def classify_identity(
 ) -> IngredientProfile:
     normalized = normalize_text(text)
     detection_text = normalize_text(" ".join(part for part in (normalized, raw_text) if part))
+    normalized_raw_text = normalize_text(raw_text)
     canonical = canonical_for_product(normalized) or canonical
     canonical = normalize_text(canonical or "") or None
     family = canonical
@@ -491,7 +492,9 @@ def classify_identity(
         elif text_has(detection_text, r"\bcream(?:y)? tomato soup\b|\btomato soup\b"):
             profile.soup_type = "tomato"
 
-    if text_has(detection_text, r"\bground beef\b"):
+    if text_has(detection_text, r"\bbeef\s+(?:for\s+)?stew\b|\bstew(?:ing)?\s+(?:beef|meat)\b|\bbeef stew meat\b"):
+        profile.family = "meat cut"; profile.meat_species = "beef"; profile.meat_cut = "stew meat"
+    elif text_has(detection_text, r"\bground beef\b"):
         profile.family = "ground meat"; profile.meat_species = "beef"; profile.ground = True
     elif text_has(detection_text, r"\b(shaved|sliced|thin sliced)\s+(?:steak\s+)?beef\b|\b(?:beef\s+)?(shaved|sliced)\s+steak\b|\bshaved steak beef\b"):
         profile.family = "meat cut"; profile.meat_species = "beef"; profile.meat_cut = "shaved beef"
@@ -584,12 +587,15 @@ def classify_identity(
         if text_has(detection_text, r"\byogurt drink\b|\bdrinkable yogurt\b|\bsmoothie\b"):
             profile.family = "yogurt drink"
 
+    if text_has(detection_text, r"\bpepper jack\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"
+
     if text_has(
         detection_text,
-        r"\bpot pie\b|\bfrozen meal\b|\bfrozen dinners?\b|\balfredo\b|\bmacaroni and cheese\b|\bcovered raisins\b|\bmashed potatoes\b",
+        r"\bpot pie\b|\bfrozen meal\b|\bfrozen dinners?\b|\balfredo\b|\bmacaroni (?:and|&) (?:cheese|beef)\b|\bcovered raisins\b|\bmashed potatoes\b|\bdips?\b|\bpizza\b|\bravioli\b|\btortelloni\b|\bpierogi\b|\btortillas?\b|\bwraps?\b|\bbaby food\b|\bpouch\b|\bonion rings?\b|\bfunyuns?\b|\bfrench onion\b.*\bdip\b|\bdip\b.*\bfrench onion\b|\bonion dip\b|\bonion gravy\b|\bonion bagels?\b|\bhummus\b|\bpopcorn\b|\bcrackers?\b|\bchips?\b|\bmrs ts\b",
     ):
         profile.family = "prepared meal"
-        profile.category = profile.category or "prepared"
+        profile.category = "prepared"
 
     if text_has(detection_text, r"\bapple juice\b|\bjuice drink\b|\bfruit juice\b|\bsnapple\b"):
         profile.family = "juice"; profile.category = profile.category or "beverage"
@@ -598,24 +604,55 @@ def classify_identity(
     elif text_has(detection_text, r"\bapples?\b"):
         profile.family = "apple"; profile.category = profile.category or "produce"; profile.produce_type = "apple"
 
-    if text_has(detection_text, r"\bscallions?\b|\bgreen onions?\b"):
+    if text_has(detection_text, r"\bcelery salt\b|\bcelery seed\b|\bgarlic powder\b|\bgranulated garlic\b|\bgarlic salt\b"):
+        profile.family = "seasoning"; profile.category = "pantry"; profile.freshness = "dried"
+    elif text_has(detection_text, r"\bgranulated onion\b|\bonion powder\b|\bdried onion\b|\bonion minced\b|\bminced onion\b") and not text_has(normalized_raw_text, r"\b\d+(?:\.\d+)?\s+onions?\b"):
+        profile.family = "seasoning"; profile.category = "pantry"; profile.freshness = "dried"
+    elif text_has(detection_text, r"\bscallions?\b|\bgreen onions?\b"):
         profile.family = "green onion"; profile.category = profile.category or "produce"; profile.produce_type = "green onion"
-    elif text_has(detection_text, r"\bonions?\b") and profile.family not in {"green onion"}:
+    elif text_has(detection_text, r"\bonions?\b") and profile.family not in {"green onion", "prepared meal"}:
         profile.family = "onion"; profile.category = profile.category or "produce"; profile.produce_type = "onion"
+        if text_has(normalized_raw_text, r"\b\d+(?:\.\d+)?\s+onions?\b"):
+            profile.freshness = "fresh"
 
-    if text_has(detection_text, r"\bcayenne pepper\b|\bblack pepper\b|\bcrushed red pepper\b|\bred pepper flakes\b"):
+    generic_pepper = (
+        canonical == "peppers"
+        and text_has(normalized_raw_text, r"\bpepper\b")
+        and not text_has(normalized_raw_text, r"\b(green|red|yellow|orange|bell|sweet|jalapeno|jalapeño|chili|chile)\s+pepper\b")
+    )
+    if text_has(detection_text, r"\bmarinade\b"):
+        profile.family = "marinade"; profile.category = profile.category or "pantry"
+    if profile.family in {"cheese", "prepared meal", "marinade"}:
+        pass
+    elif text_has(detection_text, r"\bjalapeno(?:s)?\b|\bjalapeño(?:s)?\b|\bchili peppers?\b|\bchile peppers?\b|\bchipotle pepper\b|\bajicito\b|\bpepper paste\b|\bpepper sauce\b|\bhot sauce\b"):
+        profile.family = "hot pepper"; profile.category = profile.category or "produce"; profile.produce_type = "hot pepper"
+    elif generic_pepper or text_has(detection_text, r"\bcayenne pepper\b|\bblack pepper\b|\bcrushed red pepper\b|\bred pepper flakes\b|^pepper$|\bpeppercorns?\b"):
         profile.family = "pepper spice"; profile.category = profile.category or "pantry"
+        if generic_pepper or text_has(detection_text, r"\bblack pepper\b|\bpeppercorns?\b"):
+            profile.flavor = "black pepper"
+        elif text_has(detection_text, r"\bcayenne pepper\b"):
+            profile.flavor = "cayenne"
+        elif text_has(detection_text, r"\bcrushed red pepper\b|\bred pepper flakes\b"):
+            profile.flavor = "red pepper"
         profile.flavor = "cayenne" if "cayenne" in detection_text else profile.flavor
     elif text_has(detection_text, r"\blemon pepper seasoning\b|\bseasoning blend\b|\bseasoning\b"):
         profile.family = "seasoning"; profile.category = profile.category or "pantry"
         profile.flavor = "lemon pepper" if "lemon pepper" in detection_text else profile.flavor
-    elif text_has(detection_text, r"\bmarinade\b"):
-        profile.family = "marinade"; profile.category = profile.category or "pantry"
     elif text_has(detection_text, r"\b(?:green|red|yellow|orange|sweet|bell)\s+peppers?\b|\bpeppers?,\s*(?:green|red|yellow|orange)\b"):
         profile.family = "bell pepper"; profile.category = profile.category or "produce"; profile.produce_type = "bell pepper"
 
     if text_has(detection_text, r"\bgrape tomatoes\b|\bcherry tomatoes\b|\bfresh tomatoes\b"):
         profile.family = "fresh tomato"; profile.category = profile.category or "produce"; profile.produce_type = "tomato"
+    if text_has(detection_text, r"\bcelery\b") and not text_has(detection_text, r"\bcelery salt\b|\bcelery seed\b"):
+        profile.family = "celery"; profile.category = profile.category or "produce"; profile.produce_type = "celery"
+    if (
+        profile.family in COMMON_PRODUCE_CANONICALS
+        and text_has(detection_text, r"\bpasta\b|\blinguine\b|\bspaghetti\b|\bpenne\b|\bravioli\b|\btortelloni\b|\bpierogi\b|\bpizza\b|\bdips?\b|\bhummus\b|\bbaby food\b|\bpouch\b|\btortillas?\b|\bwraps?\b")
+    ):
+        profile.family = "prepared meal"; profile.category = "prepared"; profile.produce_type = None
+    if profile.family in COMMON_PRODUCE_CANONICALS:
+        profile.category = profile.category or "produce"
+        profile.produce_type = profile.produce_type or profile.family
 
     if profile.category is None:
         if profile.family in {"milk", "butter", "heavy cream", "half-and-half", "butter blend", "margarine"}:
@@ -724,6 +761,8 @@ def compatibility_signals(query: IngredientProfile, product: IngredientProfile) 
             signals.append(CompatibilitySignal("oil_identity", HARD_REJECT, "olive-oil-flavored or packed product is not bottled olive oil"))
         if query.form == "extra virgin" and product.form != "extra virgin":
             signals.append(CompatibilitySignal("olive_oil_form", STRONG_PENALTY, "extra virgin requested"))
+    if query.family == "pepper spice" and product.family == "pepper spice" and query.flavor and product.flavor and query.flavor != product.flavor:
+        signals.append(CompatibilitySignal("pepper_spice_type", HARD_REJECT, f"{product.flavor} is not {query.flavor}"))
 
     if query.sweetened_status == "unsweetened" and product.sweetened_status == "sweetened":
         signals.append(CompatibilitySignal("sweetened_status", HARD_REJECT, "sweetened product conflicts with unsweetened request"))

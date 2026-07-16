@@ -176,6 +176,8 @@ DIETARY_ATTRIBUTES = [
 
 PREPARATION_TERMS = [
     "for garnish",
+    "for dredging",
+    "for browning",
     "room temperature",
     "roughly chopped",
     "finely chopped",
@@ -197,6 +199,39 @@ IDENTITY_PHRASES = {
     "baking powder",
     "all-purpose flour",
 }
+
+COUNT_UNIT_INGREDIENTS = {
+    "onion",
+    "egg",
+    "lemon",
+    "avocado",
+}
+
+COMMON_PRODUCE_CANONICALS = (
+    "arugula",
+    "asparagus",
+    "avocado",
+    "beets",
+    "broccoli",
+    "cabbage",
+    "carrots",
+    "cauliflower",
+    "celery",
+    "cucumber",
+    "eggplant",
+    "garlic",
+    "kale",
+    "leeks",
+    "lettuce",
+    "mushrooms",
+    "onions",
+    "potatoes",
+    "radishes",
+    "shallots",
+    "spinach",
+    "squash",
+    "zucchini",
+)
 
 CANONICAL_PATTERNS = (
     (r"\ball[-\s]?purpose flour\b|\bplain flour\b|\bap flour\b", "all-purpose flour"),
@@ -258,6 +293,24 @@ CANONICAL_PATTERNS = (
     (r"\btomatoes?\b", "tomatoes"),
     (r"\bpeppers?\b", "peppers"),
     (r"\blettuce\b", "lettuce"),
+    (r"\bspinach\b", "spinach"),
+    (r"\barugula\b", "arugula"),
+    (r"\bkale\b", "kale"),
+    (r"\bcelery\b", "celery"),
+    (r"\bcucumbers?\b", "cucumber"),
+    (r"\bmushrooms?\b", "mushrooms"),
+    (r"\bgarlic\b", "garlic"),
+    (r"\bshallots?\b", "shallots"),
+    (r"\bzucchini\b", "zucchini"),
+    (r"\bsquash\b", "squash"),
+    (r"\basparagus\b", "asparagus"),
+    (r"\bcauliflower\b", "cauliflower"),
+    (r"\bcabbage\b", "cabbage"),
+    (r"\bavocados?\b", "avocado"),
+    (r"\beggplants?\b", "eggplant"),
+    (r"\bbeets?\b", "beets"),
+    (r"\bradishes?\b", "radishes"),
+    (r"\bleeks?\b", "leeks"),
     (r"\bbroccoli\b", "broccoli"),
     (r"\bcarrots?\b", "carrots"),
     (r"\bonions?\b", "onions"),
@@ -315,7 +368,7 @@ BRAND_HINTS = {
 PRODUCT_EVIDENCE_PATTERNS = (
     r"\b(milk|butter|cheese|cream|yogurt|flour|sugar|baking|yeast|chicken|beef|pork|steak|turkey|ham|bacon|shrimp|salmon|tuna|fish|eggs?)\b",
     r"\b(rice|pasta|spaghetti|penne|beans|soup|broth|stock|sauce|salsa|dressing|oil|vinegar|mayonnaise|mustard)\b",
-    r"\b(tomatoes?|peppers?|lettuce|broccoli|carrots?|onions?|potatoes|parsley|cilantro|basil|strawberr|nectarine|banana|apple)\b",
+    r"\b(tomatoes?|peppers?|lettuce|spinach|arugula|kale|celery|cucumbers?|mushrooms?|garlic|shallots?|zucchini|squash|asparagus|cauliflower|cabbage|avocados?|eggplants?|beets?|radishes?|leeks?|broccoli|carrots?|onions?|potatoes|parsley|cilantro|basil|strawberr|nectarine|banana|apple)\b",
     r"\b(water|soda|juice|tea|coffee|beer|chips|crackers|cookies|cereal|oatmeal|bread|rolls?|buns?|tortilla)\b",
 )
 
@@ -550,6 +603,8 @@ def parse_ingredient(raw_text: str) -> ParsedIngredient:
     canonical_source, features = extract_modifiers(normalized_rest, preserve_identity=True)
     canonical = apply_alias(canonical_source)
     canonical = re.sub(r"\s+", " ", canonical).strip(" ,-")
+    if not canonical and unit in COUNT_UNIT_INGREDIENTS:
+        canonical = unit
     return ParsedIngredient(
         raw_text=raw,
         quantity=quantity,
@@ -807,7 +862,7 @@ def infer_category(name: str) -> tuple[str | None, str | None]:
         (r"\b(milk|cheese|butter|cream|yogurt)\b", "dairy", None),
         (r"\b(flour|sugar|baking powder|baking soda|yeast|cake mix|brownie)\b", "pantry", "baking"),
         (r"\b(tomato paste|canned|sauce|pasta|rice|beans|broth|stock|soup|oil|vinegar|mayonnaise|mustard|salsa)\b", "pantry", None),
-        (r"\b(parsley|cilantro|basil|thyme|oregano|lettuce|pepper|onion|strawberr|nectarine|apple|banana|tomato|broccoli|carrot|potato)\b", "produce", None),
+        (r"\b(parsley|cilantro|basil|thyme|oregano|lettuce|spinach|arugula|kale|celery|cucumbers?|mushrooms?|garlic|shallots?|zucchini|squash|asparagus|cauliflower|cabbage|avocados?|eggplants?|beets?|radishes?|leeks?|peppers?|onions?|strawberr|nectarines?|apples?|bananas?|tomatoes?|broccoli|carrots?|potatoes)\b", "produce", None),
         (r"\b(water|soda|juice|ale)\b", "beverage", None),
         (r"\b(chips|crackers|cookies|cereal|pretzel|popcorn)\b", "snacks", None),
         (r"\b(cleaner|detergent|paper towel|tissue|bandage|soap|shampoo|conditioner)\b", "household", None),
