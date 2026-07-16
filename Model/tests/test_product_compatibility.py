@@ -3,6 +3,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 
@@ -222,6 +223,8 @@ class CompatibilityRuleTests(unittest.TestCase):
             ("lemon pepper seasoning", "seasoning", ["marinade"], [feature("marinade", "Lawry's Lemon Pepper Marinade", None, "pantry"), feature("seasoning", "Dash Lemon Pepper Seasoning Blend", None, "pantry")]),
             ("1/2 can low-sodium tomatoes", "canned", ["fresh"], [feature("fresh", "Bowl & Basket Grape Tomatoes", "tomatoes", "produce"), feature("canned", "San Merican Whole Peeled Tomatoes", "tomatoes", "pantry")]),
             ("beef stew meat", "stew", ["mac"], [feature("mac", "Stouffer's Macaroni & Beef", "beef", "prepared"), feature("stew", "Beef For Stew", "beef", "meat")]),
+            ("2 pounds stew meat, cut into 1-inch cubes", "stew", ["canned"], [feature("canned", "Dinty Moore Beef Stew With Potatoes And Carrots", "beef stew meat", "pantry"), feature("stew", "Beef For Stew", "beef stew meat", "meat")]),
+            ("2 large carrots", "carrots", ["cake"], [feature("cake", "Carlo's Carrot Cake", "carrots", "bakery"), feature("carrots", "Wholesome Pantry Whole Carrots", "carrots", "produce")]),
             ("pepper", "black", ["jalapeno", "jack"], [feature("jalapeno", "Jalapeno Pepper Bag", "peppers", "produce"), feature("jack", "Sargento Pepper Jack Slices", "peppers", "produce"), feature("black", "ShopRite Black Pepper", "peppers", "pantry")]),
             ("1 onion, minced", "white", ["dip", "rings"], [feature("dip", "Utz Creamy Onion Dip", "onions", "produce"), feature("rings", "Funyuns Onion Flavored Rings", "onions", "produce"), feature("white", "White Onion", "onions", "produce")]),
             ("celery", "celery", ["pasta", "salt"], [feature("pasta", "Colavita Cut Ziti Pasta", "pasta", "pantry"), feature("salt", "McCormick Celery Salt", "celery", "produce"), feature("celery", "Celery Package", None, None)]),
@@ -311,14 +314,21 @@ class OverrideCacheBatchEndpointTests(unittest.TestCase):
             "package_quantity": 1,
             "package_unit": "pound",
         }
-        fake_result = service([feature("mw_chicken", "Bell & Evans Chicken Breast", "chicken breast", "meat")]).match_recipe_ingredient("chicken breast")
-        fake_result.selected_match.product_id = "mw_chicken"
+        fake_item = SimpleNamespace(
+            product_id="mw_chicken",
+            checkout_cost=9.99,
+            package=SimpleNamespace(package_quantity=1, package_unit="pound"),
+            packages_required=1,
+            total_required=SimpleNamespace(to_dict=lambda: {"quantity": 1, "unit": "pound"}),
+            leftover=SimpleNamespace(to_dict=lambda: {"quantity": 0, "unit": "pound"}),
+            warnings=[],
+            ingredients=["1 lb chicken breast"],
+            product_name="Bell & Evans Chicken Breast",
+        )
+        fake_basket = SimpleNamespace(shopping_basket=[fake_item])
 
         class FakeService:
             feature_by_id = {"mw_chicken": fake_feature}
-
-            def match_recipe_ingredients(self, ingredients, limit=5):
-                return [fake_result for _ingredient in ingredients]
 
         recipe = {
             "extendedIngredients": [
@@ -326,12 +336,36 @@ class OverrideCacheBatchEndpointTests(unittest.TestCase):
                 {"name": "water", "original": "2 cups boiling water"},
             ]
         }
-        with patch("product_compatibility.get_product_match_service", return_value=FakeService()):
+        with patch("basket_quantity.build_recipe_basket", return_value=fake_basket), patch(
+            "model.basket_builder_match_service", return_value=FakeService()
+        ):
             matches = model.match_recipe_ingredients_to_morton_williams(recipe)
         self.assertEqual(len(matches), 1)
         self.assertEqual(matches[0][1]["id"], "mw_chicken")
         self.assertEqual(matches[0][1]["store_id"], "morton-williams")
-        self.assertEqual(matches[0][1]["pricing_source"], "morton_williams")
+        self.assertEqual(matches[0][1]["pricing_source"], "morton_williams_quantity_engine")
+        self.assertEqual(matches[0][1]["estimated_price_total"], 9.99)
+
+    def test_pantry_adjustment_filters_covered_items_and_spices(self):
+        import model
+
+        recipe = {
+            "extendedIngredients": [
+                {"name": "flour", "original": "1/4 cup flour"},
+                {"name": "salt and pepper", "original": "salt and pepper"},
+                {"name": "carrots", "original": "3 medium carrots"},
+            ]
+        }
+        adjusted, _originals = model.pantry_adjusted_recipe_ingredients(
+            recipe,
+            [
+                {"name": "flour", "quantity": "1 cup"},
+                {"name": "salt", "quantity": "1 jar"},
+                {"name": "black pepper", "quantity": "1 jar"},
+                {"name": "carrots", "quantity": "1 carrot"},
+            ],
+        )
+        self.assertEqual(adjusted, ["2 carrots"])
 
     def test_demo_dish_does_not_emit_unavailable_buy_rows(self):
         import model

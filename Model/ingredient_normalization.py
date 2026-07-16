@@ -205,6 +205,41 @@ COUNT_UNIT_INGREDIENTS = {
     "egg",
     "lemon",
     "avocado",
+    "carrot",
+    "potato",
+    "cabbage",
+    "celery",
+    "pepper",
+    "tomato",
+}
+
+COUNT_DESCRIPTOR_WORDS = {
+    "small",
+    "medium",
+    "large",
+}
+
+COUNT_CONTAINER_UNITS = {
+    "head": "head",
+    "heads": "head",
+    "stalk": "stalk",
+    "stalks": "stalk",
+}
+
+COUNT_INGREDIENT_UNITS = {
+    "carrot": "carrots",
+    "carrots": "carrots",
+    "onion": "onions",
+    "onions": "onions",
+    "potato": "potatoes",
+    "potatoes": "potatoes",
+    "cabbage": "cabbage",
+    "celery": "celery",
+    "pepper": "peppers",
+    "peppers": "peppers",
+    "tomato": "tomatoes",
+    "tomatoes": "tomatoes",
+    "garlic": "garlic",
 }
 
 COMMON_PRODUCE_CANONICALS = (
@@ -248,6 +283,7 @@ CANONICAL_PATTERNS = (
     (r"\b(chicken breast|chicken breasts)\b", "chicken breast"),
     (r"\bchicken thighs?\b", "chicken thighs"),
     (r"\bground beef\b", "ground beef"),
+    (r"\bbeef\s+for\s+stew\b|\bbeef stew meat\b|\bstew meat\b", "beef stew meat"),
     (r"\b(beef|hanger steak|rib steak|ribeye steak|sirloin steak|short ribs?|steak)\b", "beef"),
     (r"\bpork\b", "pork"),
     (r"\bham\b", "ham"),
@@ -601,6 +637,21 @@ def parse_ingredient(raw_text: str) -> ParsedIngredient:
     optional = bool(re.search(r"\boptional\b", normalized_rest))
     normalized_rest = re.sub(r"\boptional\b", " ", normalized_rest).strip()
     canonical_source, features = extract_modifiers(normalized_rest, preserve_identity=True)
+    canonical_source = re.sub(r"\bcut into\b.*$", " ", canonical_source).strip()
+    if re.search(r"\bstew meat\b", canonical_source) and "beef" not in canonical_source:
+        canonical_source = "beef stew meat"
+    canonical_words = canonical_source.split()
+    if quantity is not None and unit is None and canonical_words:
+        if canonical_words[0] in COUNT_CONTAINER_UNITS and len(canonical_words) > 1:
+            unit = COUNT_CONTAINER_UNITS[canonical_words[0]]
+            canonical_source = " ".join(canonical_words[1:])
+            canonical_words = canonical_source.split()
+        if canonical_words and canonical_words[0] in COUNT_DESCRIPTOR_WORDS and len(canonical_words) > 1:
+            canonical_source = " ".join(canonical_words[1:])
+            canonical_words = canonical_source.split()
+        if canonical_words and canonical_words[0] in COUNT_INGREDIENT_UNITS:
+            unit = canonical_words[0].rstrip("s") if canonical_words[0] != "potatoes" else "potato"
+            canonical_source = COUNT_INGREDIENT_UNITS[canonical_words[0]]
     canonical = apply_alias(canonical_source)
     canonical = re.sub(r"\s+", " ", canonical).strip(" ,-")
     if not canonical and unit in COUNT_UNIT_INGREDIENTS:

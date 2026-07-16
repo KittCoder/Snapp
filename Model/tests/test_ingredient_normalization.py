@@ -53,6 +53,16 @@ class IngredientParserTests(unittest.TestCase):
         self.assertEqual(parsed.canonical_name, "onion")
         self.assertEqual(parsed.preparation, ["minced"])
         self.assertEqual(parse_ingredient("flour, for dredging").canonical_name, "flour")
+        self.assertEqual(parse_ingredient("2 pounds stew meat, cut into 1-inch cubes").canonical_name, "beef stew meat")
+        carrots = parse_ingredient("3 medium carrots, sliced")
+        self.assertEqual(carrots.unit, "carrot")
+        self.assertEqual(carrots.canonical_name, "carrots")
+        cabbage = parse_ingredient("1 head cabbage")
+        self.assertEqual(cabbage.unit, "cabbage")
+        self.assertEqual(cabbage.canonical_name, "cabbage")
+        onions = parse_ingredient("2 medium onions")
+        self.assertEqual(onions.unit, "onion")
+        self.assertEqual(onions.canonical_name, "onions")
 
     def test_meaningful_modifiers(self):
         cases = {

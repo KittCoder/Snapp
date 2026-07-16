@@ -492,7 +492,7 @@ def classify_identity(
         elif text_has(detection_text, r"\bcream(?:y)? tomato soup\b|\btomato soup\b"):
             profile.soup_type = "tomato"
 
-    if text_has(detection_text, r"\bbeef\s+(?:for\s+)?stew\b|\bstew(?:ing)?\s+(?:beef|meat)\b|\bbeef stew meat\b"):
+    if text_has(detection_text, r"\bbeef\s+(?:for\s+)?stew\b|\bstew(?:ing)?\s+(?:beef|meat)\b|\bbeef stew meat\b|\bstew meat\b"):
         profile.family = "meat cut"; profile.meat_species = "beef"; profile.meat_cut = "stew meat"
     elif text_has(detection_text, r"\bground beef\b"):
         profile.family = "ground meat"; profile.meat_species = "beef"; profile.ground = True
@@ -592,7 +592,7 @@ def classify_identity(
 
     if text_has(
         detection_text,
-        r"\bpot pie\b|\bfrozen meal\b|\bfrozen dinners?\b|\balfredo\b|\bmacaroni (?:and|&) (?:cheese|beef)\b|\bcovered raisins\b|\bmashed potatoes\b|\bdips?\b|\bpizza\b|\bravioli\b|\btortelloni\b|\bpierogi\b|\btortillas?\b|\bwraps?\b|\bbaby food\b|\bpouch\b|\bonion rings?\b|\bfunyuns?\b|\bfrench onion\b.*\bdip\b|\bdip\b.*\bfrench onion\b|\bonion dip\b|\bonion gravy\b|\bonion bagels?\b|\bhummus\b|\bpopcorn\b|\bcrackers?\b|\bchips?\b|\bmrs ts\b",
+        r"\bpot pie\b|\bfrozen meal\b|\bfrozen dinners?\b|\balfredo\b|\bmacaroni (?:and|&) (?:cheese|beef)\b|\bcovered raisins\b|\bmashed potatoes\b|\bcakes?\b|\bcheesecake\b|\bcupcakes?\b|\bdips?\b|\bpizza\b|\bravioli\b|\btortelloni\b|\bpierogi\b|\btortillas?\b|\bwraps?\b|\bbaby food\b|\bpouch\b|\bbeef stew with\b|\bdinty moore\b|\bonion rings?\b|\bfunyuns?\b|\bfrench onion\b.*\bdip\b|\bdip\b.*\bfrench onion\b|\bonion dip\b|\bonion gravy\b|\bonion bagels?\b|\bhummus\b|\bpopcorn\b|\bcrackers?\b|\bchips?\b|\bmrs ts\b",
     ):
         profile.family = "prepared meal"
         profile.category = "prepared"
@@ -606,7 +606,7 @@ def classify_identity(
 
     if text_has(detection_text, r"\bcelery salt\b|\bcelery seed\b|\bgarlic powder\b|\bgranulated garlic\b|\bgarlic salt\b"):
         profile.family = "seasoning"; profile.category = "pantry"; profile.freshness = "dried"
-    elif text_has(detection_text, r"\bgranulated onion\b|\bonion powder\b|\bdried onion\b|\bonion minced\b|\bminced onion\b") and not text_has(normalized_raw_text, r"\b\d+(?:\.\d+)?\s+onions?\b"):
+    elif text_has(detection_text, r"\bgranulated onion\b|\bonion powder\b|\bdried onion\b|\bonions? minced\b|\bminced onions?\b") and not text_has(normalized_raw_text, r"\b\d+(?:\.\d+)?\s+onions?\b"):
         profile.family = "seasoning"; profile.category = "pantry"; profile.freshness = "dried"
     elif text_has(detection_text, r"\bscallions?\b|\bgreen onions?\b"):
         profile.family = "green onion"; profile.category = profile.category or "produce"; profile.produce_type = "green onion"
@@ -653,6 +653,8 @@ def classify_identity(
     if profile.family in COMMON_PRODUCE_CANONICALS:
         profile.category = profile.category or "produce"
         profile.produce_type = profile.produce_type or profile.family
+        if text_has(normalized_raw_text, r"^\s*\d") and not profile.freshness and profile.category == "produce":
+            profile.freshness = "fresh"
 
     if profile.category is None:
         if profile.family in {"milk", "butter", "heavy cream", "half-and-half", "butter blend", "margarine"}:

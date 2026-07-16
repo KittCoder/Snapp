@@ -3168,8 +3168,156 @@ def should_buy_recipe_ingredient(ingredient):
         r"\bboiling water\b",
         r"\bwarm water\b",
         r"\bcold water\b",
+        r"\bas desired\b",
+        r"\bto taste\b",
     )
     return not any(re.search(pattern, text) for pattern in no_buy_patterns)
+
+
+SPICE_PANTRY_TERMS = {
+    "salt",
+    "pepper",
+    "black pepper",
+    "basil",
+    "oregano",
+    "thyme",
+    "rosemary",
+    "parsley",
+    "bay leaf",
+    "bay leaves",
+    "paprika",
+    "cumin",
+    "cinnamon",
+    "nutmeg",
+    "garlic powder",
+    "onion powder",
+}
+
+
+def ingredient_display_text(ingredient):
+    return ingredient.get("display") or ingredient.get("measure") or ingredient.get("name") or ""
+
+
+def pantry_entry_text(item):
+    quantity = str(item.get("quantity") or "").strip()
+    name = str(item.get("name") or "").strip()
+    return f"{quantity} {name}".strip() if quantity else name
+
+
+def ingredient_identity_key(text):
+    from ingredient_normalization import canonical_for_product, normalize_text, parse_ingredient
+
+    parsed = parse_ingredient(text)
+    canonical = canonical_for_product(parsed.canonical_name) or canonical_for_product(normalize_text(text)) or parsed.canonical_name
+    return normalize_text(canonical or text)
+
+
+def spice_requirements_for_text(text):
+    normalized = normalize_cuisine_text(text)
+    return {term for term in SPICE_PANTRY_TERMS if re.search(rf"\b{re.escape(term)}s?\b", normalized)}
+
+
+def pantry_spice_keys(pantry_items):
+    keys = set()
+    for item in pantry_items or []:
+        keys.update(spice_requirements_for_text(pantry_entry_text(item)))
+    return keys
+
+
+def pantry_quantity_buckets(pantry_items):
+    from basket_quantity import canonical_quantity
+    from ingredient_normalization import parse_ingredient
+
+    buckets = {}
+    for item in pantry_items or []:
+        text = pantry_entry_text(item)
+        parsed = parse_ingredient(text)
+        key = ingredient_identity_key(text)
+        if not key:
+            continue
+        quantity = canonical_quantity(parsed.quantity, parsed.unit, parsed.canonical_name)
+        if quantity.base_quantity is None:
+            continue
+        bucket = buckets.setdefault(
+            key,
+            {
+                "base_unit": quantity.base_unit,
+                "dimension": quantity.dimension,
+                "base_quantity": 0.0,
+            },
+        )
+        if bucket["base_unit"] == quantity.base_unit:
+            bucket["base_quantity"] += quantity.base_quantity
+    return buckets
+
+
+def pantry_adjusted_ingredient_text(ingredient, pantry_buckets, spice_keys):
+    from basket_quantity import Quantity, canonical_quantity, convert_quantity
+    from ingredient_normalization import parse_ingredient
+
+    text = ingredient_display_text(ingredient)
+    spice_terms = spice_requirements_for_text(text)
+    if spice_terms and spice_terms <= spice_keys:
+        return None
+    key = ingredient_identity_key(text)
+    parsed = parse_ingredient(text)
+    required = canonical_quantity(parsed.quantity, parsed.unit, parsed.canonical_name)
+    bucket = pantry_buckets.get(key)
+    if not bucket or required.base_quantity is None:
+        return text
+    if bucket["base_unit"] != required.base_unit:
+        pantry_quantity = Quantity(
+            bucket["base_quantity"],
+            bucket["base_unit"],
+            bucket["dimension"],
+            bucket["base_quantity"],
+            bucket["base_unit"],
+        )
+        pantry_quantity = convert_quantity(pantry_quantity, required.base_unit, parsed.canonical_name)
+        pantry_base = pantry_quantity.base_quantity
+    else:
+        pantry_base = bucket["base_quantity"]
+    if pantry_base is None or pantry_base <= 0:
+        return text
+    if pantry_base >= required.base_quantity:
+        if bucket["base_unit"] == required.base_unit:
+            bucket["base_quantity"] = max(0.0, bucket["base_quantity"] - required.base_quantity)
+        else:
+            required_in_pantry_units = convert_quantity(required, bucket["base_unit"], parsed.canonical_name)
+            if required_in_pantry_units.base_quantity is not None:
+                bucket["base_quantity"] = max(0.0, bucket["base_quantity"] - required_in_pantry_units.base_quantity)
+            else:
+                bucket["base_quantity"] = 0.0
+        return None
+    remaining_base = required.base_quantity - pantry_base
+    bucket["base_quantity"] = 0.0
+    remaining = convert_quantity(
+        Quantity(remaining_base, required.base_unit, required.dimension, remaining_base, required.base_unit),
+        required.unit,
+        parsed.canonical_name,
+    )
+    if remaining.quantity is None:
+        return text
+    name = parsed.canonical_name or ingredient.get("name") or text
+    if remaining.dimension == "count" and name:
+        return f"{remaining.quantity:g} {name}".strip()
+    return f"{remaining.quantity:g} {remaining.unit or ''} {name}".strip()
+
+
+def pantry_adjusted_recipe_ingredients(recipe, pantry_items=None):
+    pantry_buckets = pantry_quantity_buckets(pantry_items or [])
+    spice_keys = pantry_spice_keys(pantry_items or [])
+    adjusted = []
+    original_by_text = {}
+    for ingredient in spoonacular_ingredients(recipe):
+        if not should_buy_recipe_ingredient(ingredient):
+            continue
+        adjusted_text = pantry_adjusted_ingredient_text(ingredient, pantry_buckets, spice_keys)
+        if not adjusted_text:
+            continue
+        adjusted.append(adjusted_text)
+        original_by_text[adjusted_text] = ingredient
+    return adjusted, original_by_text
 
 
 def morton_williams_feature_to_demo_product(feature, ranked_match=None):
@@ -3210,31 +3358,56 @@ def morton_williams_feature_to_demo_product(feature, ranked_match=None):
     }
 
 
-def match_recipe_ingredients_to_morton_williams(recipe):
-    from product_compatibility import NO_SAFE_MATCH, SUBSTITUTION_ONLY, get_product_match_service
+def basket_item_to_morton_williams_product(item, feature):
+    product = morton_williams_feature_to_demo_product(feature)
+    checkout_cost = item.checkout_cost
+    if checkout_cost is not None:
+        product["price"] = round(float(checkout_cost), 2)
+    if item.package.package_quantity and item.package.package_unit:
+        product["package_size"] = f"{item.package.package_quantity:g} {item.package.package_unit}"
+    product["packages_purchased"] = item.packages_required
+    product["required_quantity"] = item.total_required.to_dict()
+    product["leftover_quantity"] = item.leftover.to_dict()
+    product["estimated_price_total"] = round(float(checkout_cost), 2) if checkout_cost is not None else product.get("price")
+    product["quantity_optimization_warnings"] = item.warnings
+    product["pricing_source"] = "morton_williams_quantity_engine"
+    return product
 
-    service = get_product_match_service()
-    recipe_ingredients = spoonacular_ingredients(recipe)
-    buyable_ingredients = [ingredient for ingredient in recipe_ingredients if should_buy_recipe_ingredient(ingredient)]
-    ingredient_texts = [ingredient["display"] or ingredient["name"] for ingredient in buyable_ingredients]
-    results = service.match_recipe_ingredients(ingredient_texts, limit=5) if ingredient_texts else []
+
+def match_recipe_ingredients_to_morton_williams(recipe, pantry_items=None):
+    from basket_quantity import build_recipe_basket
+
+    ingredient_texts, original_by_text = pantry_adjusted_recipe_ingredients(recipe, pantry_items)
+    if not ingredient_texts:
+        return []
+    basket_recipe = {
+        "id": spoonacular_recipe_id(recipe) or recipe.get("title") or "recipe",
+        "ingredients": ingredient_texts,
+    }
+    basket = build_recipe_basket(basket_recipe, optimization_mode="balanced")
+    service = basket_builder_match_service()
     matches = []
-    used_product_ids = set()
-    for ingredient, result in zip(buyable_ingredients, results):
-        selected = result.selected_match
-        if not selected or result.confidence in {NO_SAFE_MATCH, SUBSTITUTION_ONLY}:
-            continue
-        if selected.product_id in used_product_ids:
-            feature = service.feature_by_id.get(selected.product_id)
-            if feature:
-                matches.append((ingredient, morton_williams_feature_to_demo_product(feature, selected)))
-            continue
-        feature = service.feature_by_id.get(selected.product_id)
+    for item in basket.shopping_basket:
+        feature = service.feature_by_id.get(item.product_id)
         if not feature:
             continue
-        used_product_ids.add(selected.product_id)
-        matches.append((ingredient, morton_williams_feature_to_demo_product(feature, selected)))
+        raw_ingredient = item.ingredients[0] if item.ingredients else item.product_name
+        ingredient = original_by_text.get(
+            raw_ingredient,
+            {
+                "name": ingredient_identity_key(raw_ingredient),
+                "measure": raw_ingredient,
+                "display": raw_ingredient,
+            },
+        )
+        matches.append((ingredient, basket_item_to_morton_williams_product(item, feature)))
     return matches
+
+
+def basket_builder_match_service():
+    from basket_quantity import get_basket_builder
+
+    return get_basket_builder().match_service
 
 
 def matched_product_count(matched_products):
@@ -3268,7 +3441,11 @@ def spoonacular_recipe_to_demo_dish(
         if grams_total < 1:
             continue
 
-        package_price = product_effective_price(product)
+        package_price = float(
+            product.get("estimated_price_total")
+            if product.get("estimated_price_total") is not None
+            else product_effective_price(product)
+        )
         calories_total = (float(product.get("calories_per_100g") or 0) * grams_total) / 100
         total_calories += calories_total
         total_price += package_price
@@ -3291,6 +3468,9 @@ def spoonacular_recipe_to_demo_dish(
                 "store_name": store.get("name", product.get("store_id")),
                 "package_size": product.get("package_size"),
                 "package_grams": product.get("package_grams"),
+                "packages_purchased": product.get("packages_purchased"),
+                "required_quantity": product.get("required_quantity"),
+                "leftover_quantity": product.get("leftover_quantity"),
                 "grams_total": grams_total,
                 "grams_per_person": round(grams_total / household_size),
                 "calories_total": round(calories_total),
@@ -3769,6 +3949,7 @@ def build_real_recipe_results(
     result_limit=3,
     recipe_ideas=None,
     grocery_label="grocery database",
+    pantry_items=None,
 ):
     stores = stores or morton_williams_store_lookup()
     candidates = collect_recipe_candidates(
@@ -3782,7 +3963,7 @@ def build_real_recipe_results(
         if not spoonacular_ingredients(recipe):
             continue
         if products is None:
-            matches = match_recipe_ingredients_to_morton_williams(recipe)
+            matches = match_recipe_ingredients_to_morton_williams(recipe, pantry_items=pantry_items)
         else:
             matches = match_recipe_ingredients_to_products(recipe, products)
         if not matches:
@@ -4419,6 +4600,7 @@ def dishes():
             stores=stores,
             recipe_ideas=recipe_ideas,
             grocery_label=grocery_label,
+            pantry_items=pantry_items,
         )
         return jsonify(
             {
