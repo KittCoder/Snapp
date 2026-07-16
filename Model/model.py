@@ -4207,6 +4207,27 @@ def health():
     return jsonify({"status": "ok"})
 
 
+@app.get("/dev/product-candidates")
+def dev_product_candidates():
+    environment = os.getenv("SNAPP_ENV") or os.getenv("FLASK_ENV") or ""
+    if environment.casefold() == "production":
+        return jsonify({"error": "Development endpoint is disabled in production."}), 404
+    ingredient = request.args.get("ingredient", "").strip()
+    if not ingredient:
+        return jsonify({"error": "ingredient query parameter is required."}), 400
+    try:
+        limit = max(1, min(int(request.args.get("limit", 30)), 50))
+    except ValueError:
+        return jsonify({"error": "limit must be an integer."}), 400
+    try:
+        from product_retrieval import retrieve_product_candidates
+
+        result = retrieve_product_candidates(ingredient, limit=limit)
+    except Exception as exc:
+        return jsonify({"error": "Candidate retrieval failed.", "details": str(exc)}), 503
+    return jsonify(result.to_dict())
+
+
 @app.post("/chat")
 def chat():
     data = request.get_json(silent=True) or {}

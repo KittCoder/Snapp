@@ -169,4 +169,41 @@ Run the ingredient foundation tests:
 ```sh
 python3 -m unittest discover -s Model/tests -v
 ```
+
+Build the local Morton Williams product embedding index:
+
+```sh
+python3 Model/build_product_embedding_index.py \
+  --features Model/morton_williams_product_features.json \
+  --index-dir Model/morton_williams_vector_index \
+  --model BAAI/bge-small-en-v1.5 \
+  --batch-size 64
+```
+
+The first run downloads and loads the local `sentence-transformers` model. Later runs reuse unchanged vectors by comparing each product's embedding source-text hash.
+
+For an offline smoke test that does not download the model:
+
+```sh
+python3 Model/build_product_embedding_index.py \
+  --features Model/morton_williams_product_features.json \
+  --index-dir Model/morton_williams_vector_index_test \
+  --deterministic-test-embeddings
+```
+
+Local candidate retrieval is available through the reusable Python service:
+
+```python
+from product_retrieval import retrieve_product_candidates
+
+result = retrieve_product_candidates("unsalted butter", limit=30)
+```
+
+For local development only, Flask exposes:
+
+```sh
+curl "http://localhost:5000/dev/product-candidates?ingredient=unsalted%20butter&limit=10"
+```
+
+The development endpoint is disabled when `SNAPP_ENV=production` or `FLASK_ENV=production`.
  

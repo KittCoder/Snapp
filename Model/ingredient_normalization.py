@@ -826,6 +826,7 @@ def extract_product_features(
     )
     feature = {
         "product_id": product.get("id") or stable_product_id(product, index),
+        "original_product_name": source_name,
         "normalized_name": normalized_name,
         "record_status": classification["record_status"],
         "exclusion_reasons": classification["exclusion_reasons"],

@@ -9,3 +9,4 @@ node_modules/
 dist/
 .vercel/
 Model/database.merged.json
+Model/morton_williams_vector_index/
