@@ -153,6 +153,11 @@ class CompatibilityRuleTests(unittest.TestCase):
             ("olive oil", "oil", ["dressing"], [feature("dressing", "Olive Oil Dressing", None, "pantry"), feature("oil", "Extra Virgin Olive Oil", "olive oil", "pantry")]),
             ("soy sauce", "soy", ["soybean"], [feature("soybean", "Soy Beans", None, "pantry"), feature("soy", "Kikkoman Soy Sauce", "soy sauce", "pantry")]),
             ("plain milk", "plain", ["chocolate"], [feature("chocolate", "Chocolate Milk", "milk", "dairy"), feature("plain", "Whole Milk", "milk", "dairy")]),
+            ("oat milk", "oat", ["dairy"], [feature("dairy", "Whole Milk", "milk", "dairy"), feature("oat", "Elmhurst Unsweetened Oat Milk", "milk", "dairy")]),
+            ("powdered milk", "dry", ["plain"], [feature("plain", "Bowl & Basket Milk", "milk", "dairy"), feature("dry", "Bowl & Basket Dry Milk", "milk", "dairy")]),
+            ("beef stock", "beef", ["seafood"], [feature("seafood", "Kitchen Basics Seafood Stock", "stock", "pantry"), feature("beef", "Kitchen Basics Beef Stock", "stock", "pantry")]),
+            ("cream of chicken soup", "chicken", ["tomato"], [feature("tomato", "Campbell's Creamy Tomato Soup", "soup", "pantry"), feature("chicken", "Campbell's Cream of Chicken Soup", "soup", "pantry")]),
+            ("diced tomatoes", "diced", ["whole"], [feature("whole", "San Merican Whole Peeled Tomatoes", "tomatoes", "pantry"), feature("diced", "Bowl & Basket Tomatoes Diced", "tomatoes", "pantry")]),
         ]
         for query, expected, rejected, features in cases:
             with self.subTest(query=query):
@@ -165,6 +170,26 @@ class CompatibilityRuleTests(unittest.TestCase):
         product = profile_from_feature(feature("ap", "Gold Medal All Purpose Flour", "all-purpose flour", "pantry"))
         signals = compatibility_signals(query, product)
         self.assertTrue(any(signal.classification == HARD_REJECT for signal in signals))
+
+    def test_vegan_butter_alias_retrieves_plant_butter(self):
+        overrides = {
+            "version": "test-v1",
+            "forbidden_products": [],
+            "forced_matches": [],
+            "approved_matches": [],
+            "canonical_overrides": [],
+            "aliases": [{"alias": "vegan butter", "canonical": "plant butter"}],
+            "substitutions": [],
+            "incompatible_families": [],
+        }
+        svc = service(
+            [
+                feature("dairy", "Wholesome Pantry Organic Butter", "butter", "dairy"),
+                feature("plant", "Earth Balance Plant Butter Original Plant Based Oil Spread", "butter", "dairy"),
+            ],
+            overrides,
+        )
+        self.assertEqual(svc.match_recipe_ingredient("vegan butter").selected_match.product_id, "plant")
 
 
 class OverrideCacheBatchEndpointTests(unittest.TestCase):

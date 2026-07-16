@@ -145,6 +145,7 @@ MEANINGFUL_MODIFIERS = {
 
 DIETARY_ATTRIBUTES = [
     "gluten-free",
+    "nut-free",
     "lactose-free",
     "dairy-free",
     "vegan",
