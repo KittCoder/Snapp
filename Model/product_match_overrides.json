@@ -1,0 +1,13 @@
+{
+  "version": "snapp-product-overrides-v1",
+  "forbidden_products": [],
+  "forced_matches": [],
+  "approved_matches": [],
+  "canonical_overrides": [],
+  "aliases": [
+    {"alias": "ap flour", "canonical": "all-purpose flour"},
+    {"alias": "plain flour", "canonical": "all-purpose flour"}
+  ],
+  "substitutions": [],
+  "incompatible_families": []
+}

@@ -206,4 +206,37 @@ curl "http://localhost:5000/dev/product-candidates?ingredient=unsalted%20butter&
 ```
 
 The development endpoint is disabled when `SNAPP_ENV=production` or `FLASK_ENV=production`.
+
+Run final compatibility matching:
+
+```python
+from product_compatibility import match_recipe_ingredient
+
+result = match_recipe_ingredient("unsalted butter", limit=5)
+```
+
+Development-only matcher endpoint:
+
+```sh
+curl "http://localhost:5000/dev/product-match?ingredient=unsalted%20butter&limit=5"
+```
+
+Manual overrides live in `Model/product_match_overrides.json`. The file supports:
+
+- `forbidden_products`
+- `forced_matches`
+- `approved_matches`
+- `canonical_overrides`
+- `aliases`
+- `substitutions`
+- `incompatible_families`
+
+Each override entry should include a `query` and the relevant `product_id`, `canonical`, `alias`, or `family` field. Overrides are loaded lazily, do not mutate source product data, and use deterministic precedence: forbidden, forced, approved, aliases/canonical overrides, then automated ranking.
+
+Run the checked-in matcher evaluation:
+
+```sh
+python3 Model/evaluate_product_matching.py \
+  --fixture Model/evaluation/product_match_cases.jsonl
+```
  

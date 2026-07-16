@@ -4228,6 +4228,27 @@ def dev_product_candidates():
     return jsonify(result.to_dict())
 
 
+@app.get("/dev/product-match")
+def dev_product_match():
+    environment = os.getenv("SNAPP_ENV") or os.getenv("FLASK_ENV") or ""
+    if environment.casefold() == "production":
+        return jsonify({"error": "Development endpoint is disabled in production."}), 404
+    ingredient = request.args.get("ingredient", "").strip()
+    if not ingredient:
+        return jsonify({"error": "ingredient query parameter is required."}), 400
+    try:
+        limit = max(1, min(int(request.args.get("limit", 5)), 20))
+    except ValueError:
+        return jsonify({"error": "limit must be an integer."}), 400
+    try:
+        from product_compatibility import match_recipe_ingredient
+
+        result = match_recipe_ingredient(ingredient, limit=limit)
+    except Exception as exc:
+        return jsonify({"error": "Product matching failed.", "details": str(exc)}), 503
+    return jsonify(result.to_dict())
+
+
 @app.post("/chat")
 def chat():
     data = request.get_json(silent=True) or {}
