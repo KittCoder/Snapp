@@ -4207,6 +4207,15 @@ def health():
     return jsonify({"status": "ok"})
 
 
+@app.get("/ready")
+def ready():
+    from matcher_warmup import warmup_status
+
+    state = warmup_status()
+    status_code = 200 if state.status in {"ready", "degraded"} else 503
+    return jsonify(state.safe_dict()), status_code
+
+
 @app.get("/dev/product-candidates")
 def dev_product_candidates():
     environment = os.getenv("SNAPP_ENV") or os.getenv("FLASK_ENV") or ""
@@ -4382,6 +4391,15 @@ def dishes():
 @app.route("/dishes", methods=["OPTIONS"])
 def dishes_options():
     return ("", 204)
+
+
+if os.getenv("SNAPP_DISABLE_MATCHER_WARMUP", "").lower() not in {"1", "true", "yes"}:
+    try:
+        from matcher_warmup import start_background_warmup
+
+        start_background_warmup()
+    except Exception as exc:
+        print(f"Matcher warmup could not start: {exc}", flush=True)
 
 
 if __name__ == "__main__":

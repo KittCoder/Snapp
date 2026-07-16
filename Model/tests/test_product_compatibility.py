@@ -179,11 +179,15 @@ class CompatibilityRuleTests(unittest.TestCase):
                 feature("reduced", "Bowl & Basket 2% Reduced Fat Milk", "milk", "dairy"),
                 feature("oat", "Elmhurst Unsweetened Oat Milk", "milk", "dairy"),
                 feature("evap", "Carnation Evaporated Milk", "milk", "dairy"),
+                feature("evap_fatfree", "Carnation Evaporated Fat-Free Milk", "milk", "dairy"),
+                feature("kefir", "Lifeway Kefir Cultured Lowfat Milk", "milk", "dairy"),
             ]
         )
         nonfat = svc.match_recipe_ingredient("non-fat milk")
         self.assertEqual(nonfat.selected_match.product_id, "fatfree")
         self.assertIn("whole", {item.product_id for item in nonfat.rejected_candidates})
+        self.assertIn("evap_fatfree", {item.product_id for item in nonfat.rejected_candidates})
+        self.assertIn("kefir", {item.product_id for item in nonfat.rejected_candidates})
         plant = svc.match_recipe_ingredient("oat milk")
         self.assertEqual(plant.selected_match.product_id, "oat")
         self.assertIn("whole", {item.product_id for item in plant.rejected_candidates})
@@ -207,6 +211,22 @@ class CompatibilityRuleTests(unittest.TestCase):
         ground = svc.match_recipe_ingredient("ground beef")
         self.assertEqual(ground.selected_match.product_id, "ground")
         self.assertTrue({"shaved", "skirt"} <= {item.product_id for item in ground.rejected_candidates})
+
+    def test_demo_identity_regressions(self):
+        cases = [
+            ("apples", "apple", ["juice"], [feature("juice", "Snapple Juice Drink, Apple", None, "beverage"), feature("apple", "Bowl & Basket Macintosh Apples", "apple", "produce")]),
+            ("almond butter", "almond", ["butter"], [feature("butter", "Bowl & Basket Butter", "butter", "dairy"), feature("almond", "Justin's Classic Almond Butter", None, "pantry")]),
+            ("cayenne pepper", "cayenne", ["sweet"], [feature("sweet", "B&G Sweet Peppers", None, "pantry"), feature("cayenne", "Red Cayenne Pepper", None, "pantry")]),
+            ("green onions", "scallion", ["onion"], [feature("onion", "Yellow Onions", "onion", "produce"), feature("scallion", "Green Onions (Scallions)", None, "produce")]),
+            ("low-fat yogurt", "yogurt", ["drink"], [feature("drink", "Activia Mango Lowfat Yogurt Drink", "yogurt", "dairy"), feature("yogurt", "Chobani Low-Fat Greek Yogurt", "yogurt", "dairy")]),
+            ("lemon pepper seasoning", "seasoning", ["marinade"], [feature("marinade", "Lawry's Lemon Pepper Marinade", None, "pantry"), feature("seasoning", "Dash Lemon Pepper Seasoning Blend", None, "pantry")]),
+            ("1/2 can low-sodium tomatoes", "canned", ["fresh"], [feature("fresh", "Bowl & Basket Grape Tomatoes", "tomatoes", "produce"), feature("canned", "San Merican Whole Peeled Tomatoes", "tomatoes", "pantry")]),
+        ]
+        for query, expected, rejected, features in cases:
+            with self.subTest(query=query):
+                result = service(features).match_recipe_ingredient(query)
+                self.assertEqual(result.selected_match.product_id, expected)
+                self.assertTrue(set(rejected) <= {item.product_id for item in result.rejected_candidates})
 
     def test_vegan_butter_alias_retrieves_plant_butter(self):
         overrides = {

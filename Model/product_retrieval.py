@@ -381,18 +381,35 @@ class LruEmbeddingCache:
         return len(self._items)
 
 
+@dataclass
+class RetrievalStats:
+    encode_calls: int = 0
+    vector_searches: int = 0
+    lexical_searches: int = 0
+    cache_hits: int = 0
+    cache_misses: int = 0
+    embedding_ms: float = 0.0
+    vector_ms: float = 0.0
+    lexical_ms: float = 0.0
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
 class ProductCandidateRetriever:
     def __init__(
         self,
         features_path: Path = DEFAULT_FEATURES_PATH,
         index_dir: Path = DEFAULT_INDEX_DIR,
         backend: Any | None = None,
-        cache_size: int = 256,
+        cache_size: int = 2048,
+        max_lexical_search_space: int = 350,
     ):
         self.features_path = Path(features_path)
         self.index_dir = Path(index_dir)
         self.backend = backend or embedding_backend()
         self.query_cache = LruEmbeddingCache(cache_size)
+        self.max_lexical_search_space = max_lexical_search_space
         self._features: list[dict[str, Any]] | None = None
         self._eligible_features: list[dict[str, Any]] | None = None
         self._index_embeddings: np.ndarray | None = None
@@ -400,6 +417,8 @@ class ProductCandidateRetriever:
         self._index_error: str | None = None
         self._token_index: dict[str, set[int]] | None = None
         self._canonical_index: dict[str, set[int]] | None = None
+        self._lexical_docs: list[dict[str, Any]] | None = None
+        self.stats = RetrievalStats()
 
     @property
     def features(self) -> list[dict[str, Any]]:
@@ -438,6 +457,25 @@ class ProductCandidateRetriever:
         self._canonical_index = canonical_index
         return token_index, canonical_index
 
+    @property
+    def lexical_docs(self) -> list[dict[str, Any]]:
+        if self._lexical_docs is None:
+            docs = []
+            for feature in self.eligible_features:
+                normalized = feature.get("normalized_name") or ""
+                canonical = feature.get("canonical_name") or ""
+                candidate_text = " ".join([normalized, canonical])
+                docs.append(
+                    {
+                        "feature": feature,
+                        "normalized": normalized,
+                        "canonical": canonical,
+                        "tokens": set(normalize_text(candidate_text).split()),
+                    }
+                )
+            self._lexical_docs = docs
+        return self._lexical_docs
+
     def lexical_search_space(self, query: str) -> list[dict[str, Any]]:
         token_index, canonical_index = self.lexical_indexes()
         query_tokens = set(normalize_text(query).split())
@@ -453,7 +491,25 @@ class ProductCandidateRetriever:
                 for token, indexes in token_index.items():
                     if token.startswith(prefix):
                         selected.update(indexes)
-        return [self.eligible_features[index] for index in selected]
+        docs = self.lexical_docs
+        selected_docs = [docs[index] for index in selected]
+        if len(selected_docs) <= self.max_lexical_search_space:
+            return selected_docs
+        alias_query = apply_alias(query)
+        normalized_query = normalize_text(query)
+        query_tokens = set(normalized_query.split())
+
+        def cheap_rank(doc: dict[str, Any]) -> tuple[float, str]:
+            canonical = normalize_text(doc["canonical"] or "")
+            normalized = doc["normalized"]
+            tokens = doc["tokens"]
+            overlap = len(query_tokens & tokens)
+            token_score = overlap / len(query_tokens | tokens) if query_tokens and tokens else 0.0
+            exact = normalized_query == normalized or normalized_query == canonical or alias_query == canonical
+            canonical_bonus = 1.0 if canonical and canonical in {normalized_query, alias_query} else 0.0
+            return (-(2.0 if exact else 0.0) - canonical_bonus - token_score, normalized)
+
+        return sorted(selected_docs, key=cheap_rank)[: self.max_lexical_search_space]
 
     def load_index(self) -> bool:
         if self._index_embeddings is not None and self._index_metadata is not None:
@@ -477,15 +533,50 @@ class ProductCandidateRetriever:
         key = (text, self.backend.model_version)
         cached = self.query_cache.get(key)
         if cached is not None:
+            self.stats.cache_hits += 1
             return cached, 0.0, None
+        self.stats.cache_misses += 1
         started_at = time.perf_counter()
         try:
+            self.stats.encode_calls += 1
             vector = self.backend.embed([text], batch_size=1)[0]
         except Exception as exc:
             return None, None, str(exc)
         latency = round((time.perf_counter() - started_at) * 1000, 2)
+        self.stats.embedding_ms += latency
         self.query_cache.set(key, vector)
         return vector, latency, None
+
+    def query_vectors(self, texts: list[str], batch_size: int = 64) -> tuple[dict[str, np.ndarray], float | None, list[str]]:
+        vectors: dict[str, np.ndarray] = {}
+        missing: list[str] = []
+        seen: set[str] = set()
+        for text in texts:
+            if text in seen:
+                continue
+            seen.add(text)
+            key = (text, self.backend.model_version)
+            cached = self.query_cache.get(key)
+            if cached is not None:
+                self.stats.cache_hits += 1
+                vectors[text] = cached
+            else:
+                self.stats.cache_misses += 1
+                missing.append(text)
+        if not missing:
+            return vectors, 0.0, []
+        started_at = time.perf_counter()
+        try:
+            self.stats.encode_calls += 1
+            batch_vectors = self.backend.embed(missing, batch_size=batch_size)
+        except Exception as exc:
+            return vectors, None, [str(exc)]
+        latency = round((time.perf_counter() - started_at) * 1000, 2)
+        self.stats.embedding_ms += latency
+        for text, vector in zip(missing, batch_vectors):
+            self.query_cache.set((text, self.backend.model_version), vector)
+            vectors[text] = vector
+        return vectors, latency, []
 
     def retrieve_product_candidates(self, ingredient_text: str, limit: int = 30) -> CandidateRetrievalResult:
         started_at = time.perf_counter()
@@ -494,9 +585,11 @@ class ProductCandidateRetriever:
         errors = []
 
         lexical_started = time.perf_counter()
+        self.stats.lexical_searches += 1
         lexical_space = self.lexical_search_space(normalized_query)
         lexical = lexical_candidates(lexical_space, normalized_query, parsed, query_category, limit=max(80, limit * 3))
         lexical_latency = round((time.perf_counter() - lexical_started) * 1000, 2)
+        self.stats.lexical_ms += lexical_latency
 
         semantic_candidates = []
         semantic_latency = None
@@ -510,6 +603,7 @@ class ProductCandidateRetriever:
                 semantic_failed = True
             elif vector is not None:
                 semantic_started = time.perf_counter()
+                self.stats.vector_searches += 1
                 scores = self._index_embeddings @ vector
                 top_count = min(max(80, limit * 3), len(scores))
                 if top_count:
@@ -534,6 +628,7 @@ class ProductCandidateRetriever:
                             )
                         )
                 semantic_latency = round((time.perf_counter() - semantic_started) * 1000, 2)
+                self.stats.vector_ms += semantic_latency
         else:
             errors.append(self._index_error or "Persisted vector index unavailable.")
 
@@ -555,6 +650,111 @@ class ProductCandidateRetriever:
             errors=errors,
         )
 
+    def retrieve_product_candidates_batch(
+        self,
+        ingredient_texts: list[str],
+        limit: int = 30,
+        embedding_batch_size: int = 64,
+        vector_batch_size: int = 128,
+    ) -> list[CandidateRetrievalResult]:
+        started_at = time.perf_counter()
+        normalized_items = [query_embedding_text(text) for text in ingredient_texts]
+        normalized_queries = [item[0] for item in normalized_items]
+        query_categories = [infer_category(query)[0] for query in normalized_queries]
+        errors_by_query: list[list[str]] = [[] for _ in ingredient_texts]
+
+        lexical_started = time.perf_counter()
+        lexical_results = []
+        for normalized_query, parsed, query_category in zip(normalized_queries, [item[1] for item in normalized_items], query_categories):
+            self.stats.lexical_searches += 1
+            lexical_space = self.lexical_search_space(normalized_query)
+            lexical_results.append(lexical_candidates(lexical_space, normalized_query, parsed, query_category, limit=max(80, limit * 3)))
+        lexical_total = round((time.perf_counter() - lexical_started) * 1000, 2)
+        self.stats.lexical_ms += lexical_total
+
+        semantic_results: list[list[Candidate]] = [[] for _ in ingredient_texts]
+        semantic_latencies: list[float | None] = [None for _ in ingredient_texts]
+        query_embedding_latency: float | None = None
+        index_available = self.load_index()
+        semantic_failed = False
+        if index_available:
+            vectors_by_text, query_embedding_latency, errors = self.query_vectors(normalized_queries, batch_size=embedding_batch_size)
+            if errors:
+                semantic_failed = True
+                for bucket in errors_by_query:
+                    bucket.extend(errors)
+            rows = (self._index_metadata or {}).get("rows") or []
+            unique_vectors = [(query, vectors_by_text[query]) for query in dict.fromkeys(normalized_queries) if query in vectors_by_text]
+            semantic_by_query: dict[str, tuple[list[Candidate], float]] = {}
+            top_count = min(max(80, limit * 3), len(rows))
+            for offset in range(0, len(unique_vectors), vector_batch_size):
+                batch = unique_vectors[offset : offset + vector_batch_size]
+                if not batch or not top_count:
+                    continue
+                matrix = np.vstack([item[1] for item in batch])
+                semantic_started = time.perf_counter()
+                self.stats.vector_searches += 1
+                scores_matrix = matrix @ self._index_embeddings.T
+                for row_offset, (query, _vector) in enumerate(batch):
+                    scores = scores_matrix[row_offset]
+                    top_indices = np.argpartition(-scores, top_count - 1)[:top_count]
+                    top_indices = top_indices[np.lexsort((top_indices, -scores[top_indices]))]
+                    candidates = []
+                    query_category = infer_category(query)[0]
+                    for rank, index in enumerate(top_indices):
+                        if index >= len(rows):
+                            continue
+                        row = rows[int(index)]
+                        candidates.append(
+                            Candidate(
+                                product_id=row["product_id"],
+                                original_product_name=row.get("original_product_name") or row["normalized_name"],
+                                normalized_name=row["normalized_name"],
+                                record_status=row.get("record_status"),
+                                canonical_ingredient=row.get("canonical_name"),
+                                semantic_similarity=round(float(scores[index]), 4),
+                                category_match_signal=category_signal(query_category, row.get("category")),
+                                retrieval_reason_codes=["semantic_vector"],
+                                source_rank=rank,
+                            )
+                        )
+                    semantic_by_query[query] = (candidates, 0.0)
+                vector_latency = round((time.perf_counter() - semantic_started) * 1000, 2)
+                self.stats.vector_ms += vector_latency
+                for query, _vector in batch:
+                    candidates, _ = semantic_by_query[query]
+                    semantic_by_query[query] = (candidates, vector_latency)
+            for index, query in enumerate(normalized_queries):
+                candidates, latency = semantic_by_query.get(query, ([], None))
+                semantic_results[index] = candidates
+                semantic_latencies[index] = latency
+        else:
+            error = self._index_error or "Persisted vector index unavailable."
+            for bucket in errors_by_query:
+                bucket.append(error)
+
+        results = []
+        for index, (ingredient_text, (normalized_query, parsed), query_category) in enumerate(zip(ingredient_texts, normalized_items, query_categories)):
+            merged = merge_candidates(lexical_results[index], semantic_results[index], limit=limit)
+            results.append(
+                CandidateRetrievalResult(
+                    ingredient_text=ingredient_text,
+                    parsed_query=parsed,
+                    normalized_semantic_query=normalized_query,
+                    candidates=merged,
+                    retrieval_latency_ms=round((time.perf_counter() - started_at) * 1000, 2),
+                    lexical_latency_ms=lexical_total,
+                    semantic_latency_ms=semantic_latencies[index],
+                    query_embedding_latency_ms=query_embedding_latency,
+                    embedding_index_available=index_available,
+                    embedding_model_version=self.backend.model_version if index_available else None,
+                    index_version=(self._index_metadata or {}).get("index_version") if index_available else None,
+                    degraded_mode=not index_available or semantic_failed,
+                    errors=errors_by_query[index],
+                )
+            )
+        return results
+
 
 def token_similarity(query: str, candidate: str) -> float:
     query_tokens = set(normalize_text(query).split())
@@ -570,13 +770,20 @@ def category_signal(query_category: str | None, product_category: str | None) ->
     return "match" if query_category == product_category else "mismatch"
 
 
-def lexical_score(query: str, feature: dict[str, Any]) -> tuple[float, list[str], bool, bool]:
-    normalized = feature.get("normalized_name") or ""
-    canonical = feature.get("canonical_name") or ""
+def lexical_score(query: str, feature_or_doc: dict[str, Any]) -> tuple[float, list[str], bool, bool]:
+    if "feature" in feature_or_doc:
+        feature = feature_or_doc["feature"]
+        normalized = feature_or_doc["normalized"]
+        canonical = feature_or_doc["canonical"]
+        candidate_tokens = feature_or_doc["tokens"]
+    else:
+        feature = feature_or_doc
+        normalized = feature.get("normalized_name") or ""
+        canonical = feature.get("canonical_name") or ""
+        candidate_text = " ".join([normalized, canonical])
+        candidate_tokens = set(normalize_text(candidate_text).split())
     alias_query = apply_alias(query)
     query_tokens = set(normalize_text(query).split())
-    candidate_text = " ".join([normalized, canonical])
-    candidate_tokens = set(normalize_text(candidate_text).split())
     exact = query == normalized or query == canonical or alias_query == canonical
     alias = alias_query != query and alias_query == canonical
     token_score = (
@@ -610,8 +817,9 @@ def lexical_candidates(
     limit: int = 90,
 ) -> list[Candidate]:
     candidates = []
-    for feature in features:
-        score, reasons, exact, alias = lexical_score(query, feature)
+    for item in features:
+        feature = item["feature"] if "feature" in item else item
+        score, reasons, exact, alias = lexical_score(query, item)
         if score < 0.18 and not exact and not alias:
             continue
         category_match = category_signal(query_category, feature.get("category"))

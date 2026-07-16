@@ -81,6 +81,7 @@ class IngredientProfile:
     broth_type: str | None = None
     broth_species: str | None = None
     soup_type: str | None = None
+    produce_type: str | None = None
     meat_species: str | None = None
     meat_cut: str | None = None
     ground: bool = False
@@ -155,7 +156,7 @@ class MatchResult:
 
 
 class MatchCache:
-    def __init__(self, max_size: int = 256):
+    def __init__(self, max_size: int = 2048):
         self.max_size = max_size
         self._items: OrderedDict[str, MatchResult] = OrderedDict()
 
@@ -385,7 +386,9 @@ def classify_identity(
     elif text_has(detection_text, r"\breduced[-\s]?sodium\b|\blow[-\s]?sodium\b"):
         profile.salted_status = "reduced-sodium"
 
-    if text_has(detection_text, r"\boat milk\b|\boatmilk\b"):
+    if text_has(detection_text, r"\bkefir\b"):
+        profile.family = "kefir"; profile.category = profile.category or "dairy"
+    elif text_has(detection_text, r"\boat milk\b|\boatmilk\b"):
         profile.family = "milk"; profile.dairy_type = "plant"; profile.milk_kind = "oat milk"
     elif text_has(detection_text, r"\balmond milk\b|\balmondmilk\b"):
         profile.family = "milk"; profile.dairy_type = "plant"; profile.milk_kind = "almond milk"
@@ -393,9 +396,9 @@ def classify_identity(
         profile.family = "milk"; profile.dairy_type = "plant"; profile.milk_kind = "soy milk"
     elif text_has(detection_text, r"\bcoconut milk\b"):
         profile.family = "milk"; profile.dairy_type = "plant"; profile.milk_kind = "coconut milk"
-    elif text_has(detection_text, r"\bevaporated milk\b"):
+    elif text_has(detection_text, r"\bevaporated(?:\s+[\w-]+){0,4}\s+milk\b"):
         profile.family = "milk"; profile.dairy_type = "dairy"; profile.milk_kind = "evaporated milk"
-    elif text_has(detection_text, r"\bcondensed milk\b"):
+    elif text_has(detection_text, r"\bcondensed(?:\s+[\w-]+){0,4}\s+milk\b"):
         profile.family = "milk"; profile.dairy_type = "dairy"; profile.milk_kind = "condensed milk"
     elif text_has(detection_text, r"\bdry milk\b|\bpowdered milk\b"):
         profile.family = "milk"; profile.dairy_type = "dairy"; profile.milk_kind = "powdered milk"
@@ -429,6 +432,11 @@ def classify_identity(
     elif text_has(detection_text, r"\bbutter\b") and profile.family != "peanut butter":
         profile.family = "butter"; profile.category = profile.category or "dairy"
 
+    if text_has(detection_text, r"\balmond butter\b|\bcashew butter\b|\bsunflower butter\b"):
+        profile.family = "nut butter"; profile.category = profile.category or "pantry"
+    elif text_has(detection_text, r"\bpeanut butter\b"):
+        profile.family = "peanut butter"; profile.category = profile.category or "pantry"
+
     flour_patterns = {
         "all-purpose flour": r"\ball[-\s]?purpose flour\b|\bplain flour\b",
         "bread flour": r"\bbread flour\b",
@@ -454,7 +462,7 @@ def classify_identity(
         "crushed tomatoes": r"\bcrushed tomatoes\b|\btomatoes crushed\b",
         "diced tomatoes": r"\bdiced tomatoes\b|\btomatoes diced\b",
         "stewed tomatoes": r"\bstewed tomatoes\b|\btomatoes stewed\b",
-        "tomatoes": r"\bcanned tomatoes\b|\bwhole peeled tomatoes\b",
+        "tomatoes": r"\bcanned tomatoes\b|\bwhole peeled tomatoes\b|\bcan\b.*\btomatoes\b|\btomatoes\b.*\bcan\b",
         "pasta sauce": r"\bpasta sauce\b|\bmarinara\b",
     }
     for tomato_type, pattern in tomato_patterns.items():
@@ -573,6 +581,8 @@ def classify_identity(
         profile.family = "yogurt"
         profile.category = profile.category or "dairy"
         profile.flavor = detect_yogurt_flavor(detection_text)
+        if text_has(detection_text, r"\byogurt drink\b|\bdrinkable yogurt\b|\bsmoothie\b"):
+            profile.family = "yogurt drink"
 
     if text_has(
         detection_text,
@@ -580,6 +590,32 @@ def classify_identity(
     ):
         profile.family = "prepared meal"
         profile.category = profile.category or "prepared"
+
+    if text_has(detection_text, r"\bapple juice\b|\bjuice drink\b|\bfruit juice\b|\bsnapple\b"):
+        profile.family = "juice"; profile.category = profile.category or "beverage"
+        if text_has(detection_text, r"\bapple\b"):
+            profile.produce_type = "apple"
+    elif text_has(detection_text, r"\bapples?\b"):
+        profile.family = "apple"; profile.category = profile.category or "produce"; profile.produce_type = "apple"
+
+    if text_has(detection_text, r"\bscallions?\b|\bgreen onions?\b"):
+        profile.family = "green onion"; profile.category = profile.category or "produce"; profile.produce_type = "green onion"
+    elif text_has(detection_text, r"\bonions?\b") and profile.family not in {"green onion"}:
+        profile.family = "onion"; profile.category = profile.category or "produce"; profile.produce_type = "onion"
+
+    if text_has(detection_text, r"\bcayenne pepper\b|\bblack pepper\b|\bcrushed red pepper\b|\bred pepper flakes\b"):
+        profile.family = "pepper spice"; profile.category = profile.category or "pantry"
+        profile.flavor = "cayenne" if "cayenne" in detection_text else profile.flavor
+    elif text_has(detection_text, r"\blemon pepper seasoning\b|\bseasoning blend\b|\bseasoning\b"):
+        profile.family = "seasoning"; profile.category = profile.category or "pantry"
+        profile.flavor = "lemon pepper" if "lemon pepper" in detection_text else profile.flavor
+    elif text_has(detection_text, r"\bmarinade\b"):
+        profile.family = "marinade"; profile.category = profile.category or "pantry"
+    elif text_has(detection_text, r"\b(?:green|red|yellow|orange|sweet|bell)\s+peppers?\b|\bpeppers?,\s*(?:green|red|yellow|orange)\b"):
+        profile.family = "bell pepper"; profile.category = profile.category or "produce"; profile.produce_type = "bell pepper"
+
+    if text_has(detection_text, r"\bgrape tomatoes\b|\bcherry tomatoes\b|\bfresh tomatoes\b"):
+        profile.family = "fresh tomato"; profile.category = profile.category or "produce"; profile.produce_type = "tomato"
 
     if profile.category is None:
         if profile.family in {"milk", "butter", "heavy cream", "half-and-half", "butter blend", "margarine"}:
@@ -912,6 +948,20 @@ class ProductMatchService:
             return forced
 
         retrieval = self.retriever.retrieve_product_candidates(query_profile.normalized_signature, limit=candidate_limit)
+        result = self._match_from_retrieval(ingredient_text, query_profile, parsed, retrieval, started, limit, candidate_limit)
+        self.cache.set(key, result)
+        return result
+
+    def _match_from_retrieval(
+        self,
+        ingredient_text: str,
+        query_profile: IngredientProfile,
+        parsed: dict[str, Any],
+        retrieval: CandidateRetrievalResult,
+        started: float,
+        limit: int,
+        candidate_limit: int,
+    ) -> MatchResult:
         rerank_started = time.perf_counter()
         forbidden_ids = {
             item.get("product_id")
@@ -999,7 +1049,6 @@ class ProductMatchService:
             product_index_version=retrieval.index_version or self.product_index_version(),
             override_version=self.overrides.version,
         )
-        self.cache.set(key, result)
         return result
 
     def _cached_selection_is_valid(self, result: MatchResult) -> bool:
@@ -1063,15 +1112,57 @@ class ProductMatchService:
         return None
 
     def match_recipe_ingredients(self, ingredients: list[str | dict[str, Any]], limit: int = 5) -> list[MatchResult]:
-        results = []
+        texts = []
         for ingredient in ingredients:
             if isinstance(ingredient, dict):
                 text = ingredient.get("raw") or ingredient.get("display") or ingredient.get("name") or ""
             else:
                 text = str(ingredient)
             if text:
-                results.append(self.match_recipe_ingredient(text, limit=limit))
-        return results
+                texts.append(text)
+        if not texts:
+            return []
+
+        started_by_text = {text: time.perf_counter() for text in texts}
+        profiles: dict[str, tuple[IngredientProfile, dict[str, Any], str]] = {}
+        unique_queries: dict[str, str] = {}
+        results_by_key: dict[str, MatchResult] = {}
+        misses: list[tuple[str, IngredientProfile, dict[str, Any], str]] = []
+        for text in texts:
+            query_profile, parsed = profile_from_query(text, self.overrides)
+            key = self.cache_key(query_profile)
+            profiles[text] = (query_profile, parsed, key)
+            cached = self.cache.get(key)
+            if cached and self._cached_selection_is_valid(cached):
+                result = copy.deepcopy(cached)
+                result.cache_hit = True
+                result.total_timing_ms = round((time.perf_counter() - started_by_text[text]) * 1000, 2)
+                results_by_key[key] = result
+                continue
+            forced = self._forced_result(text, query_profile, parsed, started_by_text[text])
+            if forced:
+                self.cache.set(key, forced)
+                results_by_key[key] = forced
+                continue
+            if key not in unique_queries:
+                unique_queries[key] = query_profile.normalized_signature
+                misses.append((text, query_profile, parsed, key))
+
+        if misses:
+            retrievals = self.retriever.retrieve_product_candidates_batch(
+                [query for _text, query_profile, _parsed, _key in misses for query in [query_profile.normalized_signature]],
+                limit=50,
+            )
+            for (text, query_profile, parsed, key), retrieval in zip(misses, retrievals):
+                result = self._match_from_retrieval(text, query_profile, parsed, retrieval, started_by_text[text], limit, 50)
+                self.cache.set(key, result)
+                results_by_key[key] = result
+
+        ordered = []
+        for text in texts:
+            _profile, _parsed, key = profiles[text]
+            ordered.append(copy.deepcopy(results_by_key[key]))
+        return ordered
 
 
 _match_service_singleton: ProductMatchService | None = None

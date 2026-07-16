@@ -157,6 +157,42 @@ class ProductRetrievalTests(unittest.TestCase):
             self.assertIsNotNone(first.query_embedding_latency_ms)
             self.assertEqual(second.query_embedding_latency_ms, 0.0)
 
+    def test_batch_query_vectors_only_embeds_cache_misses_and_preserves_order(self):
+        with tempfile.TemporaryDirectory() as directory:
+            features_path = self.write_features(directory, [feature("milk", "low-fat milk", "milk", "dairy")])
+            index_dir = Path(directory) / "index"
+            backend = DeterministicEmbeddingBackend()
+            build_product_index(features_path, index_dir, backend=backend)
+            retriever = ProductCandidateRetriever(features_path, index_dir, backend=backend)
+            retriever.query_vectors(["milk"], batch_size=8)
+            before = retriever.stats.encode_calls
+            vectors, _latency, errors = retriever.query_vectors(["milk", "butter", "milk"], batch_size=8)
+            self.assertFalse(errors)
+            self.assertEqual(set(vectors), {"milk", "butter"})
+            self.assertEqual(retriever.stats.encode_calls, before + 1)
+            self.assertGreaterEqual(retriever.stats.cache_hits, 1)
+
+    def test_batched_retrieval_matches_single_query_order(self):
+        with tempfile.TemporaryDirectory() as directory:
+            features_path = self.write_features(
+                directory,
+                [
+                    feature("milk", "low-fat milk", "milk", "dairy"),
+                    feature("flour", "all purpose flour", "all-purpose flour", "pantry"),
+                    feature("butter", "unsalted butter", "butter", "dairy"),
+                ],
+            )
+            index_dir = Path(directory) / "index"
+            backend = DeterministicEmbeddingBackend()
+            build_product_index(features_path, index_dir, backend=backend)
+            single = ProductCandidateRetriever(features_path, index_dir, backend=backend)
+            batched = ProductCandidateRetriever(features_path, index_dir, backend=backend)
+            queries = ["low-fat milk", "all-purpose flour", "unsalted butter"]
+            single_ids = [[candidate.product_id for candidate in single.retrieve_product_candidates(query, limit=5).candidates] for query in queries]
+            batch_ids = [[candidate.product_id for candidate in result.candidates] for result in batched.retrieve_product_candidates_batch(queries, limit=5)]
+            self.assertEqual(batch_ids, single_ids)
+            self.assertLessEqual(batched.stats.encode_calls, 1)
+
     def test_exact_lexical_semantic_dedup_and_degraded_mode(self):
         with tempfile.TemporaryDirectory() as directory:
             features_path = self.write_features(
