@@ -290,6 +290,36 @@ class OverrideCacheBatchEndpointTests(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.get_json()["selected_match"]["product_id"], "butter")
 
+    def test_morton_williams_recipe_matching_uses_product_match_service(self):
+        import model
+
+        fake_feature = {
+            "product_id": "mw_chicken",
+            "original_product_name": "Bell & Evans Chicken Breast",
+            "normalized_name": "bell and evans chicken breast",
+            "canonical_name": "chicken breast",
+            "category": "meat",
+            "eligible_for_retrieval": True,
+            "price": 9.99,
+            "package_quantity": 1,
+            "package_unit": "pound",
+        }
+        fake_result = service([feature("mw_chicken", "Bell & Evans Chicken Breast", "chicken breast", "meat")]).match_recipe_ingredient("chicken breast")
+        fake_result.selected_match.product_id = "mw_chicken"
+
+        class FakeService:
+            feature_by_id = {"mw_chicken": fake_feature}
+
+            def match_recipe_ingredients(self, ingredients, limit=5):
+                return [fake_result for _ingredient in ingredients]
+
+        recipe = {"extendedIngredients": [{"name": "chicken breast", "original": "1 lb chicken breast"}]}
+        with patch("product_compatibility.get_product_match_service", return_value=FakeService()):
+            matches = model.match_recipe_ingredients_to_morton_williams(recipe)
+        self.assertEqual(matches[0][1]["id"], "mw_chicken")
+        self.assertEqual(matches[0][1]["store_id"], "morton-williams")
+        self.assertEqual(matches[0][1]["pricing_source"], "morton_williams")
+
     def test_evaluation_helper(self):
         from evaluate_product_matching import evaluate
 

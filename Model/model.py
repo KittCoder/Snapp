@@ -3155,6 +3155,74 @@ def match_recipe_ingredients_to_products(recipe, products):
     return matches
 
 
+def morton_williams_store_lookup():
+    return {"morton-williams": {"id": "morton-williams", "name": "Morton Williams"}}
+
+
+def morton_williams_feature_to_demo_product(feature, ranked_match=None):
+    from basket_quantity import parse_package_info, parse_price_info
+
+    package = parse_package_info(feature)
+    price = parse_price_info(feature.get("raw_price") or feature.get("price"), feature)
+    checkout_price = price.checkout_price
+    if checkout_price is None and price.unit_price is not None:
+        checkout_price = price.unit_price
+    package_grams = None
+    if package.base_quantity is not None:
+        if package.base_unit == "gram":
+            package_grams = int(round(package.base_quantity))
+        elif package.base_unit == "milliliter":
+            package_grams = int(round(package.base_quantity))
+        elif package.base_unit in {"count", "each"}:
+            package_grams = 454
+    if not package_grams or package_grams < 1:
+        package_grams = 454
+    package_size = feature.get("raw_unit_text") or feature.get("package_size")
+    if not package_size and package.package_quantity and package.package_unit:
+        package_size = f"{package.package_quantity:g} {package.package_unit}"
+    return {
+        "id": feature.get("product_id"),
+        "ingredient": feature.get("canonical_name") or feature.get("normalized_name"),
+        "product_name": feature.get("original_product_name") or feature.get("normalized_name"),
+        "food_group": feature.get("category"),
+        "store_id": "morton-williams",
+        "package_size": package_size or "Package size unavailable",
+        "package_grams": package_grams,
+        "price": round(float(checkout_price), 2) if checkout_price is not None else 0,
+        "sale_price": None,
+        "calories_per_100g": 0,
+        "match_confidence": getattr(ranked_match, "confidence", None),
+        "match_score": getattr(ranked_match, "final_score", None),
+        "pricing_source": "morton_williams",
+    }
+
+
+def match_recipe_ingredients_to_morton_williams(recipe):
+    from product_compatibility import NO_SAFE_MATCH, SUBSTITUTION_ONLY, get_product_match_service
+
+    service = get_product_match_service()
+    recipe_ingredients = spoonacular_ingredients(recipe)
+    ingredient_texts = [ingredient["display"] or ingredient["name"] for ingredient in recipe_ingredients]
+    results = service.match_recipe_ingredients(ingredient_texts, limit=5)
+    matches = []
+    used_product_ids = set()
+    for ingredient, result in zip(recipe_ingredients, results):
+        selected = result.selected_match
+        if not selected or result.confidence in {NO_SAFE_MATCH, SUBSTITUTION_ONLY}:
+            matches.append((ingredient, None))
+            continue
+        if selected.product_id in used_product_ids:
+            matches.append((ingredient, None))
+            continue
+        feature = service.feature_by_id.get(selected.product_id)
+        if not feature:
+            matches.append((ingredient, None))
+            continue
+        used_product_ids.add(selected.product_id)
+        matches.append((ingredient, morton_williams_feature_to_demo_product(feature, selected)))
+    return matches
+
+
 def matched_product_count(matched_products):
     return sum(1 for _ingredient, product in matched_products if product)
 
@@ -3704,12 +3772,13 @@ def recipe_result_from_recipe(
 def build_real_recipe_results(
     meal_prompt,
     filters,
-    products,
-    stores,
+    products=None,
+    stores=None,
     result_limit=3,
     recipe_ideas=None,
     grocery_label="grocery database",
 ):
+    stores = stores or morton_williams_store_lookup()
     candidates = collect_recipe_candidates(
         meal_prompt,
         filters["dietary_restrictions"],
@@ -3720,7 +3789,10 @@ def build_real_recipe_results(
     for recipe in candidates:
         if not spoonacular_ingredients(recipe):
             continue
-        matches = match_recipe_ingredients_to_products(recipe, products)
+        if products is None:
+            matches = match_recipe_ingredients_to_morton_williams(recipe)
+        else:
+            matches = match_recipe_ingredients_to_products(recipe, products)
         if not matches:
             continue
         relevance_score = recipe_constraint_score(recipe, meal_prompt, filters)
@@ -4345,16 +4417,14 @@ def dishes():
         return jsonify({"error": "Describe the meal you want."}), 400
 
     try:
-        grocery_db = load_snapp_demo_grocery_db()
-        stores = demo_store_lookup(grocery_db)
-        products = available_demo_products(grocery_db)
-        grocery_label = "SNAPP demo grocery database"
+        stores = morton_williams_store_lookup()
+        grocery_label = "Morton Williams"
         recipe_ideas = [{"name": meal_prompt, "query": meal_prompt, "cuisine": ""}]
         dishes, used_relaxed_matches = build_real_recipe_results(
             meal_prompt,
             filters,
-            products,
-            stores,
+            products=None,
+            stores=stores,
             recipe_ideas=recipe_ideas,
             grocery_label=grocery_label,
         )
@@ -4375,9 +4445,9 @@ def dishes():
                 "recipe_ideas": recipe_ideas,
                 "used_relaxed_matches": used_relaxed_matches,
                 "store_number": None,
-                "pricing_source": grocery_db.get("pricing_source"),
-                "pricing_unavailable": bool(grocery_db.get("pricing_unavailable")),
-                "source": "SNAPP all_recipes database selected from the user's Dishes request and matched against SNAPP demo grocery database pricing",
+                "pricing_source": "morton_williams",
+                "pricing_unavailable": False,
+                "source": "SNAPP all_recipes database selected from the user's Dishes request and matched against Morton Williams product data",
             }
         )
     except RuntimeError as exc:
