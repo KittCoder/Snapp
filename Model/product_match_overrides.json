@@ -1,0 +1,18 @@
+{
+  "version": "snapp-product-overrides-v1",
+  "forbidden_products": [],
+  "forced_matches": [],
+  "approved_matches": [],
+  "canonical_overrides": [],
+  "aliases": [
+    {"alias": "ap flour", "canonical": "all-purpose flour"},
+    {"alias": "plain flour", "canonical": "all-purpose flour"},
+    {
+      "alias": "vegan butter",
+      "canonical": "plant butter",
+      "justification": "Vegan butter is commonly merchandised as plant butter or plant-based oil spread."
+    }
+  ],
+  "substitutions": [],
+  "incompatible_families": []
+}

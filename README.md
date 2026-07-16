@@ -141,4 +141,102 @@ python scraper.py
 ```
 
 The scraper runs the Apify Trader Joe's actor, normalizes the returned dataset into SNAPP's grocery product format, and writes product names, prices, sale prices when present, `on_sale`, package sizes, stock flags, tags, SKUs, and source URLs to `data.json`. If Apify returns no usable products, the scraper exits without replacing the existing pricing file with an empty dataset.
+
+## Ingredient Matching Foundation
+
+The ingredient parser and Morton Williams feature extractor live in `Model/ingredient_normalization.py`.
+
+Apply the Supabase schema migration from:
+
+```sh
+supabase/migrations/20260715180000_ingredient_matching_foundation.sql
+```
+
+Extract deterministic Morton Williams product features from `Model/database.merged.json`:
+
+```sh
+python3 Model/normalize_morton_williams_products.py \
+  --input Model/database.merged.json \
+  --output Model/morton_williams_product_features.json \
+  --uncertain-log Model/morton_williams_uncertain_products.csv \
+  --invalid-log Model/morton_williams_invalid_or_noise.csv
+```
+
+The command is safe to rerun. It does not mutate `database.merged.json`; uncertain canonical ingredient assignments are logged instead of guessed.
+
+Run the ingredient foundation tests:
+
+```sh
+python3 -m unittest discover -s Model/tests -v
+```
+
+Build the local Morton Williams product embedding index:
+
+```sh
+python3 Model/build_product_embedding_index.py \
+  --features Model/morton_williams_product_features.json \
+  --index-dir Model/morton_williams_vector_index \
+  --model BAAI/bge-small-en-v1.5 \
+  --batch-size 64
+```
+
+The first run downloads and loads the local `sentence-transformers` model. Later runs reuse unchanged vectors by comparing each product's embedding source-text hash.
+
+For an offline smoke test that does not download the model:
+
+```sh
+python3 Model/build_product_embedding_index.py \
+  --features Model/morton_williams_product_features.json \
+  --index-dir Model/morton_williams_vector_index_test \
+  --deterministic-test-embeddings
+```
+
+Local candidate retrieval is available through the reusable Python service:
+
+```python
+from product_retrieval import retrieve_product_candidates
+
+result = retrieve_product_candidates("unsalted butter", limit=30)
+```
+
+For local development only, Flask exposes:
+
+```sh
+curl "http://localhost:5000/dev/product-candidates?ingredient=unsalted%20butter&limit=10"
+```
+
+The development endpoint is disabled when `SNAPP_ENV=production` or `FLASK_ENV=production`.
+
+Run final compatibility matching:
+
+```python
+from product_compatibility import match_recipe_ingredient
+
+result = match_recipe_ingredient("unsalted butter", limit=5)
+```
+
+Development-only matcher endpoint:
+
+```sh
+curl "http://localhost:5000/dev/product-match?ingredient=unsalted%20butter&limit=5"
+```
+
+Manual overrides live in `Model/product_match_overrides.json`. The file supports:
+
+- `forbidden_products`
+- `forced_matches`
+- `approved_matches`
+- `canonical_overrides`
+- `aliases`
+- `substitutions`
+- `incompatible_families`
+
+Each override entry should include a `query` and the relevant `product_id`, `canonical`, `alias`, or `family` field. Overrides are loaded lazily, do not mutate source product data, and use deterministic precedence: forbidden, forced, approved, aliases/canonical overrides, then automated ranking.
+
+Run the checked-in matcher evaluation:
+
+```sh
+python3 Model/evaluate_product_matching.py \
+  --fixture Model/evaluation/product_match_cases.jsonl
+```
  
