@@ -171,6 +171,43 @@ class CompatibilityRuleTests(unittest.TestCase):
         signals = compatibility_signals(query, product)
         self.assertTrue(any(signal.classification == HARD_REJECT for signal in signals))
 
+    def test_milk_fat_and_kind_regressions(self):
+        svc = service(
+            [
+                feature("whole", "a2 Milk Whole Milk", "milk", "dairy"),
+                feature("fatfree", "Bowl & Basket Fat Free Milk", "milk", "dairy"),
+                feature("reduced", "Bowl & Basket 2% Reduced Fat Milk", "milk", "dairy"),
+                feature("oat", "Elmhurst Unsweetened Oat Milk", "milk", "dairy"),
+                feature("evap", "Carnation Evaporated Milk", "milk", "dairy"),
+            ]
+        )
+        nonfat = svc.match_recipe_ingredient("non-fat milk")
+        self.assertEqual(nonfat.selected_match.product_id, "fatfree")
+        self.assertIn("whole", {item.product_id for item in nonfat.rejected_candidates})
+        plant = svc.match_recipe_ingredient("oat milk")
+        self.assertEqual(plant.selected_match.product_id, "oat")
+        self.assertIn("whole", {item.product_id for item in plant.rejected_candidates})
+        ordinary = svc.match_recipe_ingredient("plain milk")
+        self.assertIn("evap", {item.product_id for item in ordinary.rejected_candidates})
+        fatfree = svc.match_recipe_ingredient("fat-free milk")
+        self.assertEqual(fatfree.selected_match.product_id, "fatfree")
+        self.assertIn("reduced", {item.product_id for item in fatfree.rejected_candidates})
+
+    def test_beef_cut_regressions(self):
+        svc = service(
+            [
+                feature("shaved", "Demakes Bros. Shaved Steak Beef", "beef", "meat"),
+                feature("skirt", "Skirt Steak", "beef", "meat"),
+                feature("ground", "Ground Beef Chuck", "ground beef", "meat"),
+            ]
+        )
+        steak = svc.match_recipe_ingredient("skirt steak")
+        self.assertEqual(steak.selected_match.product_id, "skirt")
+        self.assertIn("shaved", {item.product_id for item in steak.rejected_candidates})
+        ground = svc.match_recipe_ingredient("ground beef")
+        self.assertEqual(ground.selected_match.product_id, "ground")
+        self.assertTrue({"shaved", "skirt"} <= {item.product_id for item in ground.rejected_candidates})
+
     def test_vegan_butter_alias_retrieves_plant_butter(self):
         overrides = {
             "version": "test-v1",

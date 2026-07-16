@@ -58,6 +58,15 @@ UNIT_ALIASES = {
     "fl oz": "fluid ounce",
     "fluid ounce": "fluid ounce",
     "fluid ounces": "fluid ounce",
+    "pint": "pint",
+    "pints": "pint",
+    "pt": "pint",
+    "quart": "quart",
+    "quarts": "quart",
+    "qt": "quart",
+    "gallon": "gallon",
+    "gallons": "gallon",
+    "gal": "gallon",
     "g": "gram",
     "gram": "gram",
     "grams": "gram",
@@ -74,6 +83,16 @@ UNIT_ALIASES = {
     "pinches": "pinch",
     "clove": "clove",
     "cloves": "clove",
+    "stick": "stick",
+    "sticks": "stick",
+    "egg": "egg",
+    "eggs": "egg",
+    "onion": "onion",
+    "onions": "onion",
+    "lemon": "lemon",
+    "lemons": "lemon",
+    "avocado": "avocado",
+    "avocados": "avocado",
     "stalk": "stalk",
     "stalks": "stalk",
     "bunch": "bunch",
@@ -120,6 +139,8 @@ MEANINGFUL_MODIFIERS = {
         "reduced-fat",
         "low-fat",
         "fat-free",
+        "non-fat",
+        "nonfat",
         "2 percent",
         "1 percent",
         "whole",
@@ -705,22 +726,62 @@ def classify_product_record(
     }
 
 
+def normalize_package_text(value: str | None) -> str:
+    text = normalize_unicode(value or "").casefold()
+    text = text.replace("&", " and ")
+    text = re.sub(r"(?<=\d),(?=\d)", "", text)
+    text = re.sub(r"(?<=\d)\s*\.\s*(?=\d)", ".", text)
+    text = re.sub(r"[^a-z0-9.+\-\sx/]", " ", text)
+    text = re.sub(r"\s*-\s*", "-", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
 def parse_package_size(value: str | None) -> tuple[float | None, str | None, float | None, str | None]:
-    text = normalize_text(value or "")
+    text = normalize_package_text(value or "")
     if not text:
         return None, None, None, None
-    match = re.search(r"(?P<count>\d+(?:\.\d+)?)\s*x\s*(?P<amount>\d+(?:\.\d+)?)\s*(?P<unit>fl oz|oz|lb|g|kg|ct|count|each|ml|l|liter)", text)
+    match = re.search(r"(?P<count>\d+(?:\.\d+)?)\s*x\s*(?P<amount>\d+(?:\.\d+)?)\s*(?P<unit>fl oz|fluid ounce|oz|lb|pound|g|gram|kg|ct|count|each|ml|l|liter)", text)
     if match:
         quantity = float(match.group("count")) * float(match.group("amount"))
         unit = normalize_unit(match.group("unit"))
     else:
-        match = re.search(r"(?P<amount>\d+(?:\.\d+)?)\s*(?P<unit>fl oz|oz|lb|g|kg|ct|count|each|ml|l|liter|pack)\b", text)
+        match = re.search(r"(?P<amount>\d+(?:\.\d+)?)\s*(?P<unit>fl oz|fluid ounce|oz|lb|pound|g|gram|kg|ct|count|each|ml|l|liter|pack)\b", text)
         if not match:
             return None, None, None, None
         quantity = float(match.group("amount"))
         unit = normalize_unit(match.group("unit"))
     base_quantity, base_unit = to_base_unit(quantity, unit)
     return quantity, unit, base_quantity, base_unit
+
+
+def validate_package_parse(
+    quantity: float | None,
+    unit: str | None,
+    source_text: str | None,
+    product_name: str | None = None,
+) -> tuple[str, str | None, list[str]]:
+    warnings: list[str] = []
+    source = "structured_unit" if normalize_package_text(source_text or "") else None
+    if quantity is None or not unit:
+        return "none", source, ["package size unavailable"]
+    text = normalize_package_text(" ".join(part for part in (source_text, product_name) if part))
+    if re.search(r"\b(variable weight|sold by weight|average weight|avg weight|per lb|per pound|family pack)\b", text):
+        warnings.append("variable-weight package; fixed package quantity is not reliable")
+    if re.search(r"\b\d+\s+\d+\s*(?:oz|fl oz|lb|ml|l|g|kg)\b", text) and not re.search(
+        r"\b\d+\s+\d+/\d+\s*(?:oz|fl oz|lb|ml|l|g|kg)\b", text
+    ):
+        warnings.append("adjacent numeric tokens may indicate decimal-loss or merged source text")
+    if unit in {"ounce", "fluid ounce"} and quantity >= 128:
+        warnings.append("large ounce package should be verified before optimization")
+    if unit == "gram" and quantity > 10000:
+        warnings.append("large gram package should be verified before optimization")
+    if quantity <= 0:
+        warnings.append("non-positive package quantity")
+    confidence = "high"
+    if warnings:
+        confidence = "low" if any("large ounce" in warning or "variable-weight" in warning or "non-positive" in warning for warning in warnings) else "medium"
+    return confidence, source, warnings
 
 
 def to_base_unit(quantity: float, unit: str | None) -> tuple[float | None, str | None]:
@@ -822,8 +883,13 @@ def extract_product_features(
     category = product.get("category")
     subcategory = product.get("subcategory")
     inferred_category, inferred_subcategory = infer_category(normalized_name)
-    package_quantity, package_unit, package_quantity_base, base_unit = parse_package_size(
-        product.get("package_size") or product.get("unit")
+    package_source_text = product.get("package_size") or product.get("unit") or ""
+    package_quantity, package_unit, package_quantity_base, base_unit = parse_package_size(package_source_text)
+    package_confidence, package_source, package_warnings = validate_package_parse(
+        package_quantity,
+        package_unit,
+        package_source_text,
+        source_name,
     )
     feature = {
         "product_id": product.get("id") or stable_product_id(product, index),
@@ -834,6 +900,8 @@ def extract_product_features(
         "source_quality_score": classification["source_quality_score"],
         "quality_notes": classification.get("quality_notes", []),
         "eligible_for_retrieval": classification["eligible_for_retrieval"],
+        "raw_price": product.get("price"),
+        "raw_unit_text": package_source_text,
         "price": parse_price_value(product.get("price")),
         "canonical_name": canonical_for_product(normalized_name),
         "brand": product.get("brand") or infer_brand(source_name),
@@ -852,6 +920,9 @@ def extract_product_features(
         "package_unit": package_unit,
         "package_quantity_base": package_quantity_base,
         "base_unit": base_unit,
+        "package_parse_confidence": package_confidence,
+        "package_parse_source": package_source,
+        "package_parse_warnings": package_warnings,
         "feature_extraction_version": FEATURE_EXTRACTION_VERSION,
     }
     feature["uncertainty_reasons"] = uncertainty_reasons(feature)

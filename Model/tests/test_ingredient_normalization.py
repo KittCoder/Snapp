@@ -15,6 +15,7 @@ from ingredient_normalization import (  # noqa: E402
     normalize_text,
     parse_ingredient,
     parse_package_size,
+    validate_package_parse,
 )
 
 
@@ -91,6 +92,11 @@ class ProductFeatureTests(unittest.TestCase):
     def test_package_size_extraction(self):
         self.assertEqual(parse_package_size("1 lb"), (1.0, "pound", 453.592, "gram"))
         self.assertEqual(parse_package_size("12 fl oz"), (12.0, "fluid ounce", 354.882, "milliliter"))
+        self.assertEqual(parse_package_size("12.98 oz"), (12.98, "ounce", 367.977, "gram"))
+        self.assertEqual(parse_package_size("25.3oz bottle"), (25.3, "ounce", 717.242, "gram"))
+        confidence, source, warnings = validate_package_parse(253.0, "ounce", "253 oz", "Extra Virgin Olive Oil")
+        self.assertEqual(confidence, "low")
+        self.assertIn("large ounce package should be verified before optimization", warnings)
 
     def test_attribute_extraction(self):
         product = {

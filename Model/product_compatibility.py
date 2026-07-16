@@ -251,7 +251,7 @@ def text_has(text: str, *patterns: str) -> bool:
 
 def normalize_fat(value: str | None, text: str) -> str | None:
     text = normalize_text(" ".join([value or "", text]))
-    if text_has(text, r"\bfat-free\b", r"\bfat free\b", r"\bnonfat\b", r"\bskim\b", r"\b0 percent\b"):
+    if text_has(text, r"\bfat-free\b", r"\bfat free\b", r"\bnon-fat\b", r"\bnonfat\b", r"\bskim\b", r"\b0 percent\b"):
         return "fat-free"
     if text_has(text, r"\blowfat\b", r"\blow-fat\b", r"\breduced-fat\b", r"\b2 percent\b", r"\b1 percent\b"):
         return "low-fat"
@@ -485,13 +485,23 @@ def classify_identity(
 
     if text_has(detection_text, r"\bground beef\b"):
         profile.family = "ground meat"; profile.meat_species = "beef"; profile.ground = True
+    elif text_has(detection_text, r"\b(shaved|sliced|thin sliced)\s+(?:steak\s+)?beef\b|\b(?:beef\s+)?(shaved|sliced)\s+steak\b|\bshaved steak beef\b"):
+        profile.family = "meat cut"; profile.meat_species = "beef"; profile.meat_cut = "shaved beef"
     elif text_has(detection_text, r"\bground turkey\b"):
         profile.family = "ground meat"; profile.meat_species = "turkey"; profile.ground = True
     elif text_has(detection_text, r"\bchicken breast\b"):
         profile.family = "meat cut"; profile.meat_species = "chicken"; profile.meat_cut = "breast"
     elif text_has(detection_text, r"\bchicken thighs?\b"):
         profile.family = "meat cut"; profile.meat_species = "chicken"; profile.meat_cut = "thigh"
-    elif text_has(detection_text, r"\bsteak\b|\bribeye\b|\bsirloin\b|\bhanger\b"):
+    elif text_has(detection_text, r"\bskirt steak\b"):
+        profile.family = "meat cut"; profile.meat_species = "beef"; profile.meat_cut = "skirt steak"
+    elif text_has(detection_text, r"\bribeye\b"):
+        profile.family = "meat cut"; profile.meat_species = "beef"; profile.meat_cut = "ribeye steak"
+    elif text_has(detection_text, r"\bsirloin\b"):
+        profile.family = "meat cut"; profile.meat_species = "beef"; profile.meat_cut = "sirloin steak"
+    elif text_has(detection_text, r"\bhanger\b"):
+        profile.family = "meat cut"; profile.meat_species = "beef"; profile.meat_cut = "hanger steak"
+    elif text_has(detection_text, r"\bsteak\b"):
         profile.family = "meat cut"; profile.meat_species = "beef"; profile.meat_cut = "steak"
     elif text_has(detection_text, r"\btuna\b") and text_has(detection_text, r"\bcan|canned\b"):
         profile.family = "canned tuna"; profile.meat_species = "tuna"
