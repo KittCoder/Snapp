@@ -282,6 +282,7 @@ CANONICAL_PATTERNS = (
     (r"\bsugar\b", "sugar"),
     (r"\b(chicken breast|chicken breasts)\b", "chicken breast"),
     (r"\bchicken thighs?\b", "chicken thighs"),
+    (r"\bchicken\b", "chicken"),
     (r"\bground beef\b", "ground beef"),
     (r"\bbeef\s+for\s+stew\b|\bbeef stew meat\b|\bstew meat\b", "beef stew meat"),
     (r"\b(beef|hanger steak|rib steak|ribeye steak|sirloin steak|short ribs?|steak)\b", "beef"),
@@ -934,7 +935,7 @@ def canonical_for_product(normalized_name: str) -> str | None:
                 continue
             if canonical == "milk" and "muscle milk" in normalized:
                 continue
-            if canonical in {"beef", "chicken breast", "chicken thighs"} and re.search(r"\b(broth|stock|bouillon)\b", normalized):
+            if canonical in {"beef", "chicken", "chicken breast", "chicken thighs"} and re.search(r"\b(broth|stock|bouillon)\b", normalized):
                 continue
             if canonical == "pasta" and re.search(r"\bpasta sauce\b", normalized):
                 continue

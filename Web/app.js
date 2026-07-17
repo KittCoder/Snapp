@@ -1180,7 +1180,6 @@ function openDishModal(dish) {
     dish.estimated_price_total
       ? `${currencyFormatter.format(dish.estimated_price_total)} estimated groceries`
       : "",
-    dish.calories_total ? `${dish.calories_total} matched grocery calories` : "",
   ].filter(Boolean).join(" | ");
   dishModalContent.appendChild(summary);
 
@@ -1636,6 +1635,9 @@ function renderDishes(data) {
 
   dishResults.appendChild(botMessage);
   dishResults.scrollTop = dishResults.scrollHeight;
+  requestAnimationFrame(() => {
+    botMessage.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 }
 
 function appendDishMessage(type, text) {
@@ -1652,7 +1654,6 @@ function createDishCard(dish) {
     const nutritionTotal = dish.nutrition_total || {};
     const card = document.createElement("article");
     const title = document.createElement("h3");
-    const calories = document.createElement("p");
     const price = document.createElement("p");
     const metadata = document.createElement("p");
     const totalNutrition = document.createElement("div");
@@ -1669,10 +1670,6 @@ function createDishCard(dish) {
       }
     });
     title.textContent = dish.name;
-    calories.className = "dish-calories";
-    calories.textContent = dish.calories_total
-      ? `${dish.calories_total} matched grocery calories | ${dish.calories_per_person} per person`
-      : "No demo grocery calorie match";
     price.className = "dish-price";
     price.textContent = dish.estimated_price_total
       ? `${currencyFormatter.format(dish.estimated_price_total)} estimated grocery total | ${currencyFormatter.format(dish.estimated_price_per_serving)} per serving`
@@ -1685,10 +1682,10 @@ function createDishCard(dish) {
     ].filter(Boolean).join(" | ");
     totalNutrition.className = "dish-nutrition";
     totalNutrition.textContent = [
-      `${nutritionTotal.protein_g || 0}g protein`,
-      `${nutritionTotal.carbohydrates_g || 0}g carbs`,
-      `${nutritionTotal.fat_g || 0}g fat`,
-      `${nutritionTotal.fiber_g || 0}g fiber`,
+      `${nutritionTotal.protein_g || "x g"} protein`,
+      `${nutritionTotal.carbohydrates_g || "x g"} carbs`,
+      `${nutritionTotal.fat_g || "x g"} fat`,
+      `${nutritionTotal.fiber_g || "x g"} fiber`,
     ].join(" | ");
     scheduleButton.type = "button";
     scheduleButton.className = "add-to-schedule-button";
@@ -1701,7 +1698,6 @@ function createDishCard(dish) {
     card.appendChild(title);
 
     card.append(
-      calories,
       price,
       metadata,
       totalNutrition,

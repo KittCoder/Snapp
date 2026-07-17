@@ -21,7 +21,7 @@ from product_retrieval import (
 )
 
 
-MATCHER_VERSION = "ingredient-product-matcher-v1.1"
+MATCHER_VERSION = "ingredient-product-matcher-v1.2"
 DEFAULT_OVERRIDES_PATH = Path(__file__).resolve().parent / "product_match_overrides.json"
 DEFAULT_EVALUATION_FIXTURE = Path(__file__).resolve().parent / "evaluation" / "product_match_cases.jsonl"
 
@@ -504,6 +504,8 @@ def classify_identity(
         profile.family = "meat cut"; profile.meat_species = "chicken"; profile.meat_cut = "breast"
     elif text_has(detection_text, r"\bchicken thighs?\b"):
         profile.family = "meat cut"; profile.meat_species = "chicken"; profile.meat_cut = "thigh"
+    elif text_has(detection_text, r"\bchicken\b") and profile.family not in {"broth", "stock", "soup", "bouillon"}:
+        profile.family = "chicken"; profile.category = profile.category or "meat"; profile.meat_species = "chicken"
     elif text_has(detection_text, r"\bskirt steak\b"):
         profile.family = "meat cut"; profile.meat_species = "beef"; profile.meat_cut = "skirt steak"
     elif text_has(detection_text, r"\bribeye\b"):
@@ -592,7 +594,7 @@ def classify_identity(
 
     if text_has(
         detection_text,
-        r"\bpot pie\b|\bfrozen meal\b|\bfrozen dinners?\b|\balfredo\b|\bmacaroni (?:and|&) (?:cheese|beef)\b|\bcovered raisins\b|\bmashed potatoes\b|\bcakes?\b|\bcheesecake\b|\bcupcakes?\b|\bdips?\b|\bpizza\b|\bravioli\b|\btortelloni\b|\bpierogi\b|\btortillas?\b|\bwraps?\b|\bbaby food\b|\bpouch\b|\bbeef stew with\b|\bdinty moore\b|\bonion rings?\b|\bfunyuns?\b|\bfrench onion\b.*\bdip\b|\bdip\b.*\bfrench onion\b|\bonion dip\b|\bonion gravy\b|\bonion bagels?\b|\bhummus\b|\bpopcorn\b|\bcrackers?\b|\bchips?\b|\bmrs ts\b",
+        r"\bpot pie\b|\bfrozen meal\b|\bfrozen dinners?\b|\balfredo\b|\bmacaroni (?:and|&) (?:cheese|beef)\b|\bcovered raisins\b|\bmashed potatoes\b|\bcakes?\b|\bcheesecake\b|\bcupcakes?\b|\bdips?\b|\bpizza\b|\bravioli\b|\btortelloni\b|\bpierogi\b|\btortillas?\b|\bwraps?\b|\bbaby food\b|\bpouch\b|\bbeef stew with\b|\bdinty moore\b|\bchicken parmesan\b|\bchallah\b|\brolls?\b|\bonion rings?\b|\bfunyuns?\b|\bfrench onion\b.*\bdip\b|\bdip\b.*\bfrench onion\b|\bonion dip\b|\bonion gravy\b|\bonion bagels?\b|\bhummus\b|\bpopcorn\b|\bcrackers?\b|\bchips?\b|\bmrs ts\b",
     ):
         profile.family = "prepared meal"
         profile.category = "prepared"
@@ -670,6 +672,8 @@ def compatibility_signals(query: IngredientProfile, product: IngredientProfile) 
     if query.family and product.family:
         if query.family == product.family:
             signals.append(CompatibilitySignal("base_family", COMPATIBLE, f"family {query.family} matches"))
+        elif query.family == "chicken" and product.family == "meat cut" and product.meat_species == "chicken":
+            signals.append(CompatibilitySignal("base_family", COMPATIBLE, "chicken cut satisfies generic chicken"))
         elif {query.family, product.family} <= {"broth", "stock"}:
             signals.append(CompatibilitySignal("base_family", SOFT_PREFERENCE, "broth and stock are close substitutions"))
         else:
@@ -729,6 +733,8 @@ def compatibility_signals(query: IngredientProfile, product: IngredientProfile) 
             signals.append(CompatibilitySignal("meat_species", HARD_REJECT, "meat species differs"))
         if query.meat_cut and product.meat_cut and query.meat_cut != product.meat_cut:
             signals.append(CompatibilitySignal("meat_cut", HARD_REJECT, "meat cut differs"))
+    if query.family == "chicken" and product.family in {"broth", "stock", "soup", "bouillon"}:
+        signals.append(CompatibilitySignal("chicken_identity", HARD_REJECT, f"{product.family} is not chicken meat"))
     if query.family == "broth" and product.family in {"meat cut", "ground meat", "soup", "bouillon"}:
         severity = HARD_REJECT if product.family in {"meat cut", "ground meat", "soup"} else STRONG_PENALTY
         signals.append(CompatibilitySignal("broth_identity", severity, f"{product.family} is not broth"))

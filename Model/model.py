@@ -3422,15 +3422,14 @@ def spoonacular_recipe_to_demo_dish(
     grocery_label="grocery database",
 ):
     ingredient_lines = []
-    total_calories = 0
     total_price = 0
-    total_nutrients = {
-        "protein_g": 0,
-        "carbohydrates_g": 0,
-        "fat_g": 0,
-        "fiber_g": 0,
-        "sugars_g": 0,
-        "sodium_mg": 0,
+    placeholder_nutrients = {
+        "protein_g": "x g",
+        "carbohydrates_g": "x g",
+        "fat_g": "x g",
+        "fiber_g": "x g",
+        "sugars_g": "x g",
+        "sodium_mg": "x g",
     }
 
     for recipe_ingredient, product in matched_products[:10]:
@@ -3446,15 +3445,7 @@ def spoonacular_recipe_to_demo_dish(
             if product.get("estimated_price_total") is not None
             else product_effective_price(product)
         )
-        calories_total = (float(product.get("calories_per_100g") or 0) * grams_total) / 100
-        total_calories += calories_total
         total_price += package_price
-        add_nutrients(
-            total_nutrients,
-            nutrition_from_calories(
-                calories_total, grams_total, product.get("food_group")
-            ),
-        )
         store = stores.get(product.get("store_id"), {})
         ingredient_lines.append(
             {
@@ -3473,8 +3464,8 @@ def spoonacular_recipe_to_demo_dish(
                 "leftover_quantity": product.get("leftover_quantity"),
                 "grams_total": grams_total,
                 "grams_per_person": round(grams_total / household_size),
-                "calories_total": round(calories_total),
-                "calories_per_person": round(calories_total / household_size),
+                "calories_total": 0,
+                "calories_per_person": 0,
                 "estimated_price_total": package_price,
                 "estimated_price_per_serving": round(package_price / household_size, 2),
             }
@@ -3488,18 +3479,12 @@ def spoonacular_recipe_to_demo_dish(
     return {
         "name": recipe["name"],
         "servings": household_size,
-        "calories_total": round(total_calories),
-        "calories_per_person": round(total_calories / household_size),
+        "calories_total": 0,
+        "calories_per_person": 0,
         "estimated_price_total": round(total_price, 2),
         "estimated_price_per_serving": round(total_price / household_size, 2),
-        "nutrition_total": {
-            key: round(value, 1)
-            for key, value in total_nutrients.items()
-        },
-        "nutrition_per_person": {
-            key: round(value / household_size, 1)
-            for key, value in total_nutrients.items()
-        },
+        "nutrition_total": dict(placeholder_nutrients),
+        "nutrition_per_person": dict(placeholder_nutrients),
         "ingredients": ingredient_lines,
         "ingredients_to_buy": ingredient_lines,
         "portion_note": f"Recipe from {provider_name}. Grocery matches are from {grocery_label}.",
@@ -3923,11 +3908,8 @@ def recipe_result_from_recipe(
     dish["estimated_price_per_serving"] = round(
         dish["estimated_price_total"] / max(1, dish["servings"]), 2
     )
-    dish["calories_per_person"] = (
-        round(dish["calories_total"] / max(1, dish["servings"]))
-        if dish.get("calories_total")
-        else 0
-    )
+    dish["calories_total"] = 0
+    dish["calories_per_person"] = 0
     dish["recipe"] = recipe_details
     dish["cook_time_minutes"] = recipe_details["cook_time_minutes"]
     dish["dietary_tags"] = recipe_details["dietary_tags"]
