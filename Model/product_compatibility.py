@@ -21,7 +21,7 @@ from product_retrieval import (
 )
 
 
-MATCHER_VERSION = "ingredient-product-matcher-v1.3"
+MATCHER_VERSION = "ingredient-product-matcher-v1.4"
 DEFAULT_OVERRIDES_PATH = Path(__file__).resolve().parent / "product_match_overrides.json"
 DEFAULT_EVALUATION_FIXTURE = Path(__file__).resolve().parent / "evaluation" / "product_match_cases.jsonl"
 
@@ -496,10 +496,20 @@ def classify_identity(
         profile.family = "meat cut"; profile.meat_species = "beef"; profile.meat_cut = "stew meat"
     elif text_has(detection_text, r"\bground beef\b"):
         profile.family = "ground meat"; profile.meat_species = "beef"; profile.ground = True
+    elif text_has(detection_text, r"\bbeef sausage\b"):
+        profile.family = "sausage"; profile.category = profile.category or "meat"; profile.meat_species = "beef"
+    elif text_has(detection_text, r"\bpork sausage\b|\bpork sausages\b"):
+        profile.family = "sausage"; profile.category = profile.category or "meat"; profile.meat_species = "pork"
+    elif text_has(detection_text, r"\bchicken sausage\b|\bchicken sausages\b"):
+        profile.family = "sausage"; profile.category = profile.category or "meat"; profile.meat_species = "chicken"
+    elif text_has(detection_text, r"\bsausage\b"):
+        profile.family = "sausage"; profile.category = profile.category or "meat"
     elif text_has(detection_text, r"\b(shaved|sliced|thin sliced)\s+(?:steak\s+)?beef\b|\b(?:beef\s+)?(shaved|sliced)\s+steak\b|\bshaved steak beef\b"):
         profile.family = "meat cut"; profile.meat_species = "beef"; profile.meat_cut = "shaved beef"
     elif text_has(detection_text, r"\bground turkey\b"):
         profile.family = "ground meat"; profile.meat_species = "turkey"; profile.ground = True
+    elif text_has(detection_text, r"\bpork\b"):
+        profile.family = "pork"; profile.category = profile.category or "meat"; profile.meat_species = "pork"
     elif text_has(detection_text, r"\bchicken breast\b"):
         profile.family = "meat cut"; profile.meat_species = "chicken"; profile.meat_cut = "breast"
     elif text_has(detection_text, r"\bchicken thighs?\b"):
@@ -518,6 +528,8 @@ def classify_identity(
         profile.family = "meat cut"; profile.meat_species = "beef"; profile.meat_cut = "steak"
     elif text_has(detection_text, r"\btuna\b") and text_has(detection_text, r"\bcan|canned\b"):
         profile.family = "canned tuna"; profile.meat_species = "tuna"
+    elif text_has(detection_text, r"\bbeef\b") and profile.family not in {"broth", "stock", "soup", "bouillon", "sausage", "meat cut", "ground meat"}:
+        profile.family = "beef"; profile.category = profile.category or "meat"; profile.meat_species = "beef"
 
     if text_has(detection_text, r"\bfresh\b"):
         profile.freshness = "fresh"
@@ -551,9 +563,25 @@ def classify_identity(
         profile.family = "potato pancake mix"
 
     if text_has(normalized, r"\bcurry powder\b"):
-        profile.family = "curry powder"; profile.category = "pantry"
+        profile.family = "curry powder"; profile.category = profile.category or "pantry"
     if text_has(normalized, r"\bcorn starch\b|\bcornflour\b|\bcorn flour\b"):
         profile.family = "corn starch"; profile.category = "pantry"
+    if text_has(detection_text, r"\bwalnuts?\b"):
+        profile.family = "walnuts"; profile.category = profile.category or "pantry"
+    elif text_has(detection_text, r"\bolives?\b|\bkalamata\b"):
+        profile.family = "olives"; profile.category = profile.category or "pantry"
+    elif text_has(detection_text, r"\bchili powder\b"):
+        profile.family = "chili powder"; profile.category = profile.category or "pantry"; profile.freshness = "dried"
+    elif text_has(detection_text, r"\bpaprika\b"):
+        profile.family = "paprika"; profile.category = profile.category or "pantry"; profile.freshness = "dried"
+    elif text_has(detection_text, r"\bcumin\b"):
+        profile.family = "cumin"; profile.category = profile.category or "pantry"; profile.freshness = "dried"
+    elif text_has(detection_text, r"\bcinnamon\b"):
+        profile.family = "cinnamon"; profile.category = profile.category or "pantry"; profile.freshness = "dried"
+    elif text_has(detection_text, r"\bnutmeg\b"):
+        profile.family = "nutmeg"; profile.category = profile.category or "pantry"; profile.freshness = "dried"
+    elif text_has(detection_text, r"\ballspice\b"):
+        profile.family = "allspice"; profile.category = profile.category or "pantry"; profile.freshness = "dried"
     if text_has(normalized, r"\bbaking powder\b"):
         profile.family = "baking powder"
     elif text_has(normalized, r"\bbaking soda\b"):
@@ -685,6 +713,8 @@ def compatibility_signals(query: IngredientProfile, product: IngredientProfile) 
             signals.append(CompatibilitySignal("base_family", COMPATIBLE, f"family {query.family} matches"))
         elif query.family == "chicken" and product.family == "meat cut" and product.meat_species == "chicken":
             signals.append(CompatibilitySignal("base_family", COMPATIBLE, "chicken cut satisfies generic chicken"))
+        elif query.family == "beef" and product.meat_species == "beef":
+            signals.append(CompatibilitySignal("base_family", COMPATIBLE, "beef meat satisfies generic beef"))
         elif {query.family, product.family} <= {"broth", "stock"}:
             signals.append(CompatibilitySignal("base_family", SOFT_PREFERENCE, "broth and stock are close substitutions"))
         else:
@@ -739,6 +769,12 @@ def compatibility_signals(query: IngredientProfile, product: IngredientProfile) 
             signals.append(CompatibilitySignal("ground_meat", HARD_REJECT, "whole cuts are not ground meat"))
         elif query.meat_species and product.meat_species and query.meat_species != product.meat_species:
             signals.append(CompatibilitySignal("meat_species", HARD_REJECT, "meat species differs"))
+    if query.category == "meat" and product.category == "meat" and query.meat_species and product.meat_species and query.meat_species != product.meat_species:
+        signals.append(CompatibilitySignal("meat_species", HARD_REJECT, "meat species differs"))
+    if query.family == "beef" and product.family in {"sausage", "pork"}:
+        signals.append(CompatibilitySignal("beef_identity", HARD_REJECT, f"{product.family} is not beef"))
+    if query.family == "beef" and product.category and product.category != "meat":
+        signals.append(CompatibilitySignal("beef_identity", HARD_REJECT, f"{product.category} product is not beef meat"))
     if query.family == "meat cut" and product.family == "meat cut":
         if query.meat_species and product.meat_species and query.meat_species != product.meat_species:
             signals.append(CompatibilitySignal("meat_species", HARD_REJECT, "meat species differs"))
@@ -803,6 +839,8 @@ def compatibility_signals(query: IngredientProfile, product: IngredientProfile) 
         if query.flavor and query.flavor != "plain" and product.flavor and product.flavor != query.flavor:
             signals.append(CompatibilitySignal("yogurt_flavor", HARD_REJECT, f"{product.flavor} yogurt is not {query.flavor}"))
     if product.family == "prepared meal" and query.family != "prepared meal":
+        signals.append(CompatibilitySignal("prepared_food", HARD_REJECT, "prepared food is not a raw grocery ingredient match"))
+    if product.category == "prepared" and query.category != "prepared":
         signals.append(CompatibilitySignal("prepared_food", HARD_REJECT, "prepared food is not a raw grocery ingredient match"))
 
     if not signals:

@@ -172,6 +172,40 @@ class CompatibilityRuleTests(unittest.TestCase):
         signals = compatibility_signals(query, product)
         self.assertTrue(any(signal.classification == HARD_REJECT for signal in signals))
 
+    def test_nuts_olives_and_spices_remain_buyable(self):
+        cases = [
+            ("walnuts", "walnuts", ["cookies"], [feature("cookies", "Walnut Chocolate Chip Cookies", None, "snacks"), feature("walnuts", "Fisher Chopped Walnuts", "walnuts", "pantry")]),
+            ("pitted Kalamata olives", "olives", ["oil"], [feature("oil", "Extra Virgin Olive Oil", "olive oil", "pantry"), feature("olives", "Bowl & Basket Kalamata Olives", "olives", "pantry")]),
+            ("cumin", "cumin", ["curry"], [feature("curry", "Chicken Curry with Cumin Rice", None, "prepared"), feature("cumin", "Simply Organic Cumin", "cumin", "pantry")]),
+            ("chili powder", "chili", ["garlic"], [feature("garlic", "McCormick Garlic Powder", "garlic powder", "pantry"), feature("chili", "McCormick Chili Powder", "chili powder", "pantry")]),
+            ("paprika", "paprika", ["hummus"], [feature("hummus", "Roasted Red Pepper Paprika Hummus", None, "prepared"), feature("paprika", "Simply Organic Paprika", "paprika", "pantry")]),
+        ]
+        for query, expected, rejected, features in cases:
+            with self.subTest(query=query):
+                result = service(features).match_recipe_ingredient(query)
+                self.assertEqual(result.selected_match.product_id, expected)
+                self.assertTrue(set(rejected) <= {item.product_id for item in result.rejected_candidates})
+
+    def test_beef_does_not_accept_pork_sausage(self):
+        result = service(
+            [
+                feature("pork_sausage", "Fresh Pork Sausage", "pork sausage", "meat"),
+                feature("beef", "Beef For Stew", "beef stew meat", "meat"),
+            ]
+        ).match_recipe_ingredient("beef")
+        self.assertEqual(result.selected_match.product_id, "beef")
+        self.assertIn("pork_sausage", {item.product_id for item in result.rejected_candidates})
+
+    def test_beef_sausage_and_pork_sausage_stay_distinct(self):
+        result = service(
+            [
+                feature("pork_sausage", "Fresh Pork Sausage", "pork sausage", "meat"),
+                feature("beef_sausage", "Hillshire Farm Beef Smoked Sausage", "beef sausage", "meat"),
+            ]
+        ).match_recipe_ingredient("beef sausage")
+        self.assertEqual(result.selected_match.product_id, "beef_sausage")
+        self.assertIn("pork_sausage", {item.product_id for item in result.rejected_candidates})
+
     def test_milk_fat_and_kind_regressions(self):
         svc = service(
             [

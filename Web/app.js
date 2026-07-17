@@ -1130,6 +1130,132 @@ async function updateScheduledMealPlacement(scheduleId, day, slot) {
   }
 }
 
+const PANTRY_SPICE_PATTERN = /\b(salt|pepper|black pepper|white pepper|red pepper flakes|cayenne|paprika|cumin|cinnamon|nutmeg|allspice|chili powder|curry powder|garlic powder|onion powder|basil|oregano|thyme|rosemary|parsley|bay leaves?|sage|dill|cilantro|mint)\b/i;
+
+function normalizePantryText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\b(chopped|minced|sliced|diced|fresh|dried|ground|large|medium|small|cloves?|cups?|cup|tbsp|tablespoons?|tsp|teaspoons?|oz|ounce|ounces|lb|lbs|pound|pounds|grams?|g|kg|ml|l)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function pantryItemMatchesIngredient(pantryItem, ingredient) {
+  const pantryName = normalizePantryText(pantryItem.name);
+  const ingredientText = normalizePantryText(
+    [
+      ingredient?.recipe_ingredient,
+      ingredient?.recipe_measure,
+      ingredient?.display,
+      ingredient?.measure,
+      ingredient?.name,
+    ].filter(Boolean).join(" ")
+  );
+  return Boolean(
+    pantryName &&
+      ingredientText &&
+      (ingredientText.includes(pantryName) || pantryName.includes(ingredientText))
+  );
+}
+
+function parseSimpleQuantity(value) {
+  const text = String(value || "").toLowerCase();
+  const match = text.match(/(\d+(?:\.\d+)?)\s*(cups?|tbsp|tablespoons?|tsp|teaspoons?|oz|ounces?|lb|lbs|pounds?|g|grams?|kg|ml|l|count|ct|items?)?\b/);
+  if (!match) return null;
+  const unit = (match[2] || "count")
+    .replace(/^tablespoons?$/, "tbsp")
+    .replace(/^teaspoons?$/, "tsp")
+    .replace(/^ounces?$/, "oz")
+    .replace(/^pounds?$|^lbs?$/, "lb")
+    .replace(/^grams?$/, "g")
+    .replace(/^items?$/, "count");
+  return { amount: Number(match[1]), unit };
+}
+
+function recipeIngredientQuantity(ingredient) {
+  return parseSimpleQuantity(
+    ingredient?.recipe_measure ||
+      ingredient?.display ||
+      ingredient?.measure ||
+      ingredient?.quantity ||
+      ingredient?.name ||
+      ""
+  );
+}
+
+async function persistPantryItemsAfterConsumption(consumedItems) {
+  if (!consumedItems.length) return;
+  if (!supabaseClient || !currentUser) {
+    pantryItems = pantryItems.filter(
+      (item) => !consumedItems.some((consumed) => consumed.id === item.id && consumed.remove)
+    ).map((item) => {
+      const consumed = consumedItems.find((entry) => entry.id === item.id);
+      return consumed?.quantity ? { ...item, quantity: consumed.quantity } : item;
+    });
+    renderPantryItems();
+    return;
+  }
+
+  await Promise.all(consumedItems.map(async (item) => {
+    if (item.remove) {
+      return supabaseClient
+        .from("user_pantry_items")
+        .delete()
+        .eq("user_id", currentUser.id)
+        .eq("id", item.id);
+    }
+    return supabaseClient
+      .from("user_pantry_items")
+      .update({ quantity: item.quantity })
+      .eq("user_id", currentUser.id)
+      .eq("id", item.id);
+  }));
+  await loadPantryItems();
+}
+
+async function consumePantryForScheduledDish(dish) {
+  const recipeIngredients = dish.recipe?.ingredients || dish.ingredients || [];
+  if (!recipeIngredients.length || !pantryItems.length) return;
+  const consumed = [];
+  const consumedIds = new Set();
+
+  recipeIngredients.forEach((ingredient) => {
+    const ingredientText = [
+      ingredient?.recipe_ingredient,
+      ingredient?.recipe_measure,
+      ingredient?.display,
+      ingredient?.measure,
+      ingredient?.name,
+    ].filter(Boolean).join(" ");
+    if (PANTRY_SPICE_PATTERN.test(ingredientText)) return;
+
+    const pantryItem = pantryItems.find(
+      (item) => !consumedIds.has(item.id) && !PANTRY_SPICE_PATTERN.test(item.name) && pantryItemMatchesIngredient(item, ingredient)
+    );
+    if (!pantryItem) return;
+
+    consumedIds.add(pantryItem.id);
+    const pantryQuantity = parseSimpleQuantity(pantryItem.quantity);
+    const requiredQuantity = recipeIngredientQuantity(ingredient);
+    if (
+      pantryQuantity &&
+      requiredQuantity &&
+      pantryQuantity.unit === requiredQuantity.unit &&
+      pantryQuantity.amount > requiredQuantity.amount
+    ) {
+      consumed.push({
+        id: pantryItem.id,
+        quantity: `${Number((pantryQuantity.amount - requiredQuantity.amount).toFixed(2))} ${pantryQuantity.unit}`,
+      });
+    } else {
+      consumed.push({ id: pantryItem.id, remove: true });
+    }
+  });
+
+  await persistPantryItemsAfterConsumption(consumed);
+}
+
 async function addMealToSchedule(dish) {
   const identity = dish.recipe_id || dish.name;
   const isAlreadyScheduled = scheduledMeals.some(
@@ -1162,6 +1288,7 @@ async function addMealToSchedule(dish) {
     if (!error && data) {
       scheduledMeals.push(normalizeScheduledMeal(data));
       saveScheduledMealsToStorage();
+      await consumePantryForScheduledDish(dish);
       renderSchedule();
       showPanel("schedule");
       return;
@@ -1170,6 +1297,7 @@ async function addMealToSchedule(dish) {
 
   scheduledMeals.push(scheduledMeal);
   saveScheduledMealsToStorage();
+  await consumePantryForScheduledDish(dish);
   renderSchedule();
   showPanel("schedule");
 }
@@ -1296,6 +1424,7 @@ async function fetchStores(zipCode, options = {}) {
   for (const endpoint of getApiEndpoints("/grocery-stores")) {
     try {
       const params = new URLSearchParams({ zip: zipCode });
+      params.set("snap_only", "1");
       if (options.radiusMiles) {
         params.set("radius_miles", options.radiusMiles);
       }
@@ -1583,6 +1712,11 @@ function renderStores(stores) {
     name.textContent = store.name;
     address.textContent = store.address;
     item.append(name, address);
+    if (store.accepts_snap) {
+      const snapNote = document.createElement("p");
+      snapNote.textContent = `SNAP accepted${store.snap_source ? ` (${store.snap_source})` : ""}`;
+      item.appendChild(snapNote);
+    }
 
     const links = document.createElement("div");
     links.className = "store-links";

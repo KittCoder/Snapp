@@ -58,6 +58,7 @@ WEB_RECIPE_SEARCH_RESULT_COUNT = 8
 WEB_RECIPE_FETCH_LIMIT = 5
 HTTP_TIMEOUT_SECONDS = 10
 HTTP_RETRY_ATTEMPTS = 2
+STORE_LOOKUP_TIMEOUT_SECONDS = float(os.getenv("STORE_LOOKUP_TIMEOUT_SECONDS", "4"))
 USER_AGENT = "SNAPP/1.0 (https://github.com/KittCoder/Snapp)"
 STORE_CACHE_TTL_SECONDS = 15 * 60
 FOOD_CACHE_TTL_SECONDS = 60 * 60
@@ -85,6 +86,27 @@ ingredient_generalization_cache = {}
 robots_cache = {}
 FDC_SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
 FDC_API_KEY = os.getenv("FDC_API_KEY") or os.getenv("FOODDATA_CENTRAL_API_KEY") or "DEMO_KEY"
+SNAP_ACCEPTING_CHAIN_PATTERNS = (
+    r"\baldi\b",
+    r"\bbravo\b",
+    r"\bcostco\b",
+    r"\bcvs\b",
+    r"\bdollar general\b",
+    r"\bfairway\b",
+    r"\bfood bazaar\b",
+    r"\bfoodtown\b",
+    r"\bkey food\b",
+    r"\bkroger\b",
+    r"\bmarket basket\b",
+    r"\bmorton williams\b",
+    r"\bshoprite\b",
+    r"\bstop\s*&\s*shop\b",
+    r"\btarget\b",
+    r"\btrader joe'?s\b",
+    r"\bwalmart\b",
+    r"\bwegmans\b",
+    r"\bwhole foods\b",
+)
 US_STATE_CODES = {
     "alabama": "al",
     "alaska": "ak",
@@ -477,7 +499,7 @@ def generate_reply(message):
     return reply, response.usage.total_tokens
 
 
-def fetch_json(url, data=None, json_data=None, service_name="data service"):
+def fetch_json(url, data=None, json_data=None, service_name="data service", timeout_seconds=None, retry_attempts=None):
     headers = {
         "Accept": "application/json",
         "User-Agent": USER_AGENT,
@@ -489,11 +511,13 @@ def fetch_json(url, data=None, json_data=None, service_name="data service"):
         headers["Content-Type"] = "application/x-www-form-urlencoded"
         data = urlencode(data).encode("utf-8")
 
+    timeout_seconds = timeout_seconds if timeout_seconds is not None else HTTP_TIMEOUT_SECONDS
+    retry_attempts = retry_attempts if retry_attempts is not None else HTTP_RETRY_ATTEMPTS
     last_error = None
-    for attempt in range(HTTP_RETRY_ATTEMPTS):
+    for attempt in range(retry_attempts):
         request_object = Request(url, data=data, headers=headers)
         try:
-            with urlopen(request_object, timeout=HTTP_TIMEOUT_SECONDS) as response:
+            with urlopen(request_object, timeout=timeout_seconds) as response:
                 return json.load(response)
         except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
             last_error = exc
@@ -501,7 +525,7 @@ def fetch_json(url, data=None, json_data=None, service_name="data service"):
                 f"{service_name} request failed on attempt {attempt + 1}: {exc}",
                 flush=True,
             )
-            if attempt + 1 < HTTP_RETRY_ATTEMPTS:
+            if attempt + 1 < retry_attempts:
                 time.sleep(1)
 
     raise RuntimeError("The grocery store data service is unavailable.") from last_error
@@ -3189,6 +3213,16 @@ SPICE_PANTRY_TERMS = {
     "cumin",
     "cinnamon",
     "nutmeg",
+    "allspice",
+    "chili powder",
+    "curry powder",
+    "cayenne",
+    "red pepper flakes",
+    "white pepper",
+    "sage",
+    "dill",
+    "cilantro",
+    "mint",
     "garlic powder",
     "onion powder",
 }
@@ -4074,7 +4108,7 @@ def format_store(element):
     center = element.get("center", {})
     latitude = element.get("lat", center.get("lat"))
     longitude = element.get("lon", center.get("lon"))
-    return {
+    store = {
         "name": name,
         "address": address or "Address not available",
         "latitude": latitude,
@@ -4085,6 +4119,9 @@ def format_store(element):
             or tags.get("brand:website")
         ),
     }
+    snap_status = store_snap_status(store, tags)
+    store.update(snap_status)
+    return store
 
 
 def format_nominatim_store(place):
@@ -4095,12 +4132,46 @@ def format_nominatim_store(place):
     if not name:
         return None
 
-    return {
+    store = {
         "name": name,
         "address": place.get("display_name") or "Address not available",
         "latitude": place.get("lat"),
         "longitude": place.get("lon"),
         "website": None,
+    }
+    store.update(store_snap_status(store, {}))
+    return store
+
+
+def truthy_osm_tag(value):
+    return str(value or "").casefold() in {"yes", "true", "1", "only"}
+
+
+def store_snap_status(store, tags):
+    name = store.get("name") or tags.get("name") or tags.get("brand") or ""
+    explicit_snap = any(
+        truthy_osm_tag(tags.get(key))
+        for key in (
+            "payment:ebt",
+            "payment:snap",
+            "payment:food_stamps",
+            "payment:food_stamps_card",
+            "payment:wic",
+        )
+    )
+    if explicit_snap:
+        return {
+            "accepts_snap": True,
+            "snap_source": "OpenStreetMap payment tag",
+        }
+    if any(re.search(pattern, name, re.IGNORECASE) for pattern in SNAP_ACCEPTING_CHAIN_PATTERNS):
+        return {
+            "accepts_snap": True,
+            "snap_source": "Known SNAP-accepting grocery chain",
+        }
+    return {
+        "accepts_snap": False,
+        "snap_source": "SNAP acceptance not verified",
     }
 
 
@@ -4123,6 +4194,8 @@ def find_stores_with_nominatim(zip_code, boundingbox):
         places = fetch_json(
             f"{NOMINATIM_URL}?{params}",
             service_name="Nominatim store fallback",
+            timeout_seconds=STORE_LOOKUP_TIMEOUT_SECONDS,
+            retry_attempts=1,
         )
         for place in places:
             if place.get("category") != "shop":
@@ -4297,6 +4370,36 @@ def find_trader_joes_store(zip_code):
 
 
 def find_zip_location(zip_code):
+    try:
+        zip_data = fetch_json(
+            f"{ZIPPOPOTAM_URL}/{zip_code}",
+            service_name="Zippopotam",
+            timeout_seconds=STORE_LOOKUP_TIMEOUT_SECONDS,
+            retry_attempts=1,
+        )
+        places = zip_data.get("places") or []
+        if places:
+            place = places[0]
+            latitude = float(place["latitude"])
+            longitude = float(place["longitude"])
+            radius_degrees = 0.14
+            place_name = place.get("place name") or zip_code
+            state = place.get("state abbreviation") or place.get("state")
+            return {
+                "display_name": ", ".join(value for value in (place_name, state, zip_code) if value),
+                "lat": latitude,
+                "lon": longitude,
+                "address": {"state_code": place.get("state abbreviation")},
+                "boundingbox": [
+                    str(latitude - radius_degrees),
+                    str(latitude + radius_degrees),
+                    str(longitude - radius_degrees),
+                    str(longitude + radius_degrees),
+                ],
+            }
+    except (RuntimeError, KeyError, TypeError, ValueError):
+        print("Zippopotam ZIP lookup unavailable; trying Nominatim.", flush=True)
+
     location_params = urlencode(
         {
             "postalcode": zip_code,
@@ -4311,42 +4414,14 @@ def find_zip_location(zip_code):
         locations = fetch_json(
             f"{NOMINATIM_URL}?{location_params}",
             service_name="Nominatim",
+            timeout_seconds=STORE_LOOKUP_TIMEOUT_SECONDS,
+            retry_attempts=1,
         )
         if locations:
             return locations[0]
     except RuntimeError:
-        print("Nominatim ZIP lookup unavailable; trying Zippopotam.", flush=True)
-
-    zip_data = fetch_json(
-        f"{ZIPPOPOTAM_URL}/{zip_code}",
-        service_name="Zippopotam",
-    )
-    places = zip_data.get("places") or []
-    if not places:
         return None
-
-    place = places[0]
-    try:
-        latitude = float(place["latitude"])
-        longitude = float(place["longitude"])
-    except (KeyError, TypeError, ValueError) as exc:
-        raise RuntimeError("The ZIP code data service returned invalid location data.") from exc
-
-    radius_degrees = 0.14
-    place_name = place.get("place name") or zip_code
-    state = place.get("state abbreviation") or place.get("state")
-    return {
-        "display_name": ", ".join(value for value in (place_name, state, zip_code) if value),
-        "lat": latitude,
-        "lon": longitude,
-        "address": {"state_code": place.get("state abbreviation")},
-        "boundingbox": [
-            str(latitude - radius_degrees),
-            str(latitude + radius_degrees),
-            str(longitude - radius_degrees),
-            str(longitude + radius_degrees),
-        ],
-    }
+    return None
 
 
 def find_stores_with_overpass(zip_code, boundingbox, require_postcode=True):
@@ -4357,7 +4432,7 @@ def find_stores_with_overpass(zip_code, boundingbox, require_postcode=True):
         else ""
     )
     overpass_query = f"""
-        [out:json][timeout:20];
+        [out:json][timeout:5];
         (
           nwr["shop"~"^(supermarket|grocery)$"]
              {postcode_filter}
@@ -4369,6 +4444,8 @@ def find_stores_with_overpass(zip_code, boundingbox, require_postcode=True):
         OVERPASS_URL,
         {"data": overpass_query},
         service_name="Overpass",
+        timeout_seconds=STORE_LOOKUP_TIMEOUT_SECONDS,
+        retry_attempts=1,
     )
     stores = []
     seen = set()
@@ -4401,8 +4478,9 @@ def store_with_distance(store, latitude, longitude):
     return store
 
 
-def find_grocery_stores(zip_code, radius_miles=None):
-    cached_result = store_search_cache.get(zip_code)
+def find_grocery_stores(zip_code, radius_miles=None, snap_only=False):
+    cache_key = (zip_code, bool(snap_only))
+    cached_result = store_search_cache.get(cache_key)
     now = time.time()
     if cached_result and now - cached_result["cached_at"] < STORE_CACHE_TTL_SECONDS:
         location_name = cached_result["location"]
@@ -4440,8 +4518,10 @@ def find_grocery_stores(zip_code, radius_miles=None):
             )
         )
         location_name = location.get("display_name", zip_code)
+        if snap_only:
+            stores = [store for store in stores if store.get("accepts_snap")]
         stores = stores[:30]
-        store_search_cache[zip_code] = {
+        store_search_cache[cache_key] = {
             "cached_at": now,
             "location": location_name,
             "center": center,
@@ -4542,11 +4622,12 @@ def chat_options():
 def grocery_stores():
     zip_code = request.args.get("zip", "").strip()
     radius_miles = parse_store_radius_miles(request.args.get("radius_miles"))
+    snap_only = str(request.args.get("snap_only") or "1").casefold() not in {"0", "false", "no"}
     if not ZIP_CODE_PATTERN.fullmatch(zip_code):
         return jsonify({"error": "Enter a valid 5-digit US ZIP code."}), 400
 
     try:
-        location, stores, center = find_grocery_stores(zip_code, radius_miles)
+        location, stores, center = find_grocery_stores(zip_code, radius_miles, snap_only=snap_only)
     except RuntimeError as exc:
         return jsonify({"error": str(exc)}), 503
 
@@ -4559,6 +4640,7 @@ def grocery_stores():
             "location": location,
             "center": center,
             "radius_miles": radius_miles,
+            "snap_only": snap_only,
             "stores": stores,
             "source": "OpenStreetMap contributors",
         }
