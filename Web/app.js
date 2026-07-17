@@ -70,6 +70,7 @@ let pantryItems = [];
 let savedMyStores = [];
 const selectedMyStoreIds = new Set();
 const selectedShoppingIngredientIds = new Set();
+const pantryHandledShoppingIngredientIds = new Set();
 const SCHEDULE_DAYS = [
   "Monday",
   "Tuesday",
@@ -831,7 +832,7 @@ function getShoppingIngredients() {
             (ingredient.unavailable ||
               ingredient.availability_status === "unavailable")
         ),
-    }));
+    })).filter((item) => !pantryHandledShoppingIngredientIds.has(item.id));
   });
 }
 
@@ -901,9 +902,14 @@ function renderShoppingList() {
       addButton.disabled = true;
       shoppingStatus.textContent = `Adding ${item.name} to pantry...`;
       const wasAdded = await addPantryItem(item.name, item.quantity);
-      shoppingStatus.textContent = wasAdded
-        ? `${item.name} added to pantry.`
-        : "Could not add ingredient to pantry.";
+      if (wasAdded) {
+        pantryHandledShoppingIngredientIds.add(item.id);
+        selectedShoppingIngredientIds.delete(item.id);
+        shoppingStatus.textContent = `${item.name} added to pantry.`;
+        renderShoppingList();
+        return;
+      }
+      shoppingStatus.textContent = "Could not add ingredient to pantry.";
       addButton.disabled = false;
     });
 
@@ -1938,6 +1944,7 @@ shoppingAddPantryButton.addEventListener("click", async () => {
 
   const wasAdded = await addPantryItems(itemsToAdd);
   if (wasAdded) {
+    itemsToAdd.forEach((item) => pantryHandledShoppingIngredientIds.add(item.id));
     selectedShoppingIngredientIds.clear();
     shoppingStatus.textContent = `${itemsToAdd.length} ingredient${itemsToAdd.length === 1 ? "" : "s"} added to pantry.`;
     renderShoppingList();

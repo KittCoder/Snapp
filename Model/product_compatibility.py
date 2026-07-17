@@ -21,7 +21,7 @@ from product_retrieval import (
 )
 
 
-MATCHER_VERSION = "ingredient-product-matcher-v1.2"
+MATCHER_VERSION = "ingredient-product-matcher-v1.3"
 DEFAULT_OVERRIDES_PATH = Path(__file__).resolve().parent / "product_match_overrides.json"
 DEFAULT_EVALUATION_FIXTURE = Path(__file__).resolve().parent / "evaluation" / "product_match_cases.jsonl"
 
@@ -550,6 +550,10 @@ def classify_identity(
     elif text_has(normalized, r"\bpotato pancake\b|\blatkes?\b"):
         profile.family = "potato pancake mix"
 
+    if text_has(normalized, r"\bcurry powder\b"):
+        profile.family = "curry powder"; profile.category = "pantry"
+    if text_has(normalized, r"\bcorn starch\b|\bcornflour\b|\bcorn flour\b"):
+        profile.family = "corn starch"; profile.category = "pantry"
     if text_has(normalized, r"\bbaking powder\b"):
         profile.family = "baking powder"
     elif text_has(normalized, r"\bbaking soda\b"):
@@ -605,6 +609,10 @@ def classify_identity(
             profile.produce_type = "apple"
     elif text_has(detection_text, r"\bapples?\b"):
         profile.family = "apple"; profile.category = profile.category or "produce"; profile.produce_type = "apple"
+    elif text_has(detection_text, r"\bpineapple\b") and profile.family not in {"prepared meal", "yogurt"}:
+        profile.family = "pineapple"; profile.category = profile.category or "pantry"
+        if text_has(detection_text, r"\btinned\b|\bcanned\b|\bcan\b|\bslices?\b|\bchunks?\b|\bcrushed\b"):
+            profile.freshness = profile.freshness or "canned"
 
     if text_has(detection_text, r"\bcelery salt\b|\bcelery seed\b|\bgarlic powder\b|\bgranulated garlic\b|\bgarlic salt\b"):
         profile.family = "seasoning"; profile.category = "pantry"; profile.freshness = "dried"
@@ -620,6 +628,7 @@ def classify_identity(
     generic_pepper = (
         canonical == "peppers"
         and text_has(normalized_raw_text, r"\bpepper\b")
+        and not text_has(normalized_raw_text, r"^\s*\d")
         and not text_has(normalized_raw_text, r"\b(green|red|yellow|orange|bell|sweet|jalapeno|jalapeño|chili|chile)\s+pepper\b")
     )
     if text_has(detection_text, r"\bmarinade\b"):
@@ -628,6 +637,8 @@ def classify_identity(
         pass
     elif text_has(detection_text, r"\bjalapeno(?:s)?\b|\bjalapeño(?:s)?\b|\bchili peppers?\b|\bchile peppers?\b|\bchipotle pepper\b|\bajicito\b|\bpepper paste\b|\bpepper sauce\b|\bhot sauce\b"):
         profile.family = "hot pepper"; profile.category = profile.category or "produce"; profile.produce_type = "hot pepper"
+    elif text_has(normalized_raw_text, r"^\s*\d+(?:\.\d+)?(?:\s+\d+)?\s+peppers?\b"):
+        profile.family = "bell pepper"; profile.category = "produce"; profile.produce_type = "bell pepper"
     elif generic_pepper or text_has(detection_text, r"\bcayenne pepper\b|\bblack pepper\b|\bcrushed red pepper\b|\bred pepper flakes\b|^pepper$|\bpeppercorns?\b"):
         profile.family = "pepper spice"; profile.category = profile.category or "pantry"
         if generic_pepper or text_has(detection_text, r"\bblack pepper\b|\bpeppercorns?\b"):

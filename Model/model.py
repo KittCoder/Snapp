@@ -3251,7 +3251,7 @@ def pantry_quantity_buckets(pantry_items):
     return buckets
 
 
-def pantry_adjusted_ingredient_text(ingredient, pantry_buckets, spice_keys):
+def pantry_adjusted_ingredient_text(ingredient, pantry_buckets, spice_keys, servings=None):
     from basket_quantity import Quantity, canonical_quantity, convert_quantity
     from ingredient_normalization import parse_ingredient
 
@@ -3261,6 +3261,16 @@ def pantry_adjusted_ingredient_text(ingredient, pantry_buckets, spice_keys):
         return None
     key = ingredient_identity_key(text)
     parsed = parse_ingredient(text)
+    if servings and parsed.quantity is not None and re.search(r"\bper person\b", normalize_cuisine_text(text)):
+        parsed.quantity *= max(1, int(servings))
+        name = parsed.canonical_name or ingredient.get("name") or ""
+        unit = parsed.unit or ""
+        if unit and name and normalize_cuisine_text(name).startswith(normalize_cuisine_text(unit)):
+            text = f"{parsed.quantity:g} {name}".strip()
+        elif unit:
+            text = f"{parsed.quantity:g} {unit} {name}".strip()
+        else:
+            text = f"{parsed.quantity:g} {name}".strip()
     required = canonical_quantity(parsed.quantity, parsed.unit, parsed.canonical_name)
     bucket = pantry_buckets.get(key)
     if not bucket or required.base_quantity is None:
@@ -3304,7 +3314,7 @@ def pantry_adjusted_ingredient_text(ingredient, pantry_buckets, spice_keys):
     return f"{remaining.quantity:g} {remaining.unit or ''} {name}".strip()
 
 
-def pantry_adjusted_recipe_ingredients(recipe, pantry_items=None):
+def pantry_adjusted_recipe_ingredients(recipe, pantry_items=None, servings=None):
     pantry_buckets = pantry_quantity_buckets(pantry_items or [])
     spice_keys = pantry_spice_keys(pantry_items or [])
     adjusted = []
@@ -3312,7 +3322,7 @@ def pantry_adjusted_recipe_ingredients(recipe, pantry_items=None):
     for ingredient in spoonacular_ingredients(recipe):
         if not should_buy_recipe_ingredient(ingredient):
             continue
-        adjusted_text = pantry_adjusted_ingredient_text(ingredient, pantry_buckets, spice_keys)
+        adjusted_text = pantry_adjusted_ingredient_text(ingredient, pantry_buckets, spice_keys, servings=servings)
         if not adjusted_text:
             continue
         adjusted.append(adjusted_text)
@@ -3374,10 +3384,10 @@ def basket_item_to_morton_williams_product(item, feature):
     return product
 
 
-def match_recipe_ingredients_to_morton_williams(recipe, pantry_items=None):
+def match_recipe_ingredients_to_morton_williams(recipe, pantry_items=None, servings=None):
     from basket_quantity import build_recipe_basket
 
-    ingredient_texts, original_by_text = pantry_adjusted_recipe_ingredients(recipe, pantry_items)
+    ingredient_texts, original_by_text = pantry_adjusted_recipe_ingredients(recipe, pantry_items, servings=servings)
     if not ingredient_texts:
         return []
     basket_recipe = {
@@ -3401,6 +3411,27 @@ def match_recipe_ingredients_to_morton_williams(recipe, pantry_items=None):
             },
         )
         matches.append((ingredient, basket_item_to_morton_williams_product(item, feature)))
+    covered_ingredients = {ingredient for item in basket.shopping_basket for ingredient in item.ingredients}
+    for matched in getattr(basket, "matched_ingredients", []):
+        if matched.raw_ingredient in covered_ingredients:
+            continue
+        if not matched.product_id or matched.match_confidence in {"low", "no_safe_match", "substitution_only"}:
+            continue
+        feature = service.feature_by_id.get(matched.product_id)
+        if not feature:
+            continue
+        product = morton_williams_feature_to_demo_product(feature)
+        product["pricing_source"] = "morton_williams_match_fallback"
+        product["quantity_optimization_warnings"] = matched.warnings
+        ingredient = original_by_text.get(
+            matched.raw_ingredient,
+            {
+                "name": ingredient_identity_key(matched.raw_ingredient),
+                "measure": matched.raw_ingredient,
+                "display": matched.raw_ingredient,
+            },
+        )
+        matches.append((ingredient, product))
     return matches
 
 
@@ -3945,7 +3976,11 @@ def build_real_recipe_results(
         if not spoonacular_ingredients(recipe):
             continue
         if products is None:
-            matches = match_recipe_ingredients_to_morton_williams(recipe, pantry_items=pantry_items)
+            matches = match_recipe_ingredients_to_morton_williams(
+                recipe,
+                pantry_items=pantry_items,
+                servings=filters.get("servings"),
+            )
         else:
             matches = match_recipe_ingredients_to_products(recipe, products)
         if not matches:

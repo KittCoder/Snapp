@@ -227,6 +227,10 @@ class CompatibilityRuleTests(unittest.TestCase):
             ("2 large carrots", "carrots", ["cake"], [feature("cake", "Carlo's Carrot Cake", "carrots", "bakery"), feature("carrots", "Wholesome Pantry Whole Carrots", "carrots", "produce")]),
             ("2 medium onions", "onions", ["rolls"], [feature("rolls", "Miami Onion Roll Company Challah Rolls", "onions", "bakery"), feature("onions", "Bowl & Basket Yellow Onions", "onions", "produce")]),
             ("chicken", "breast", ["broth", "parm"], [feature("broth", "Campbell's Chicken Broth", "broth", "pantry"), feature("parm", "Pasquale Chicken Parmesan", "chicken", "prepared"), feature("breast", "Boneless Chicken Breast", "chicken breast", "meat")]),
+            ("1/2 pepper, per person", "bell", ["black"], [feature("black", "ShopRite Black Pepper", "peppers", "pantry"), feature("bell", "Red Bell Pepper", "peppers", "produce")]),
+            ("3 slices tinned pineapple, per person", "pineapple", ["cake"], [feature("cake", "Pineapple Cheesecake Slice", "pineapple", "bakery"), feature("pineapple", "Dole Pineapple Slices", "pineapple", "pantry")]),
+            ("curry powder", "curry", ["garlic"], [feature("garlic", "McCormick Garlic Powder", None, "pantry"), feature("curry", "McCormick Curry Powder", "curry powder", "pantry")]),
+            ("cornflour", "cornstarch", ["chips"], [feature("chips", "Fritos Corn Chips", None, "snacks"), feature("cornstarch", "Argo Corn Starch", "corn starch", "pantry")]),
             ("pepper", "black", ["jalapeno", "jack"], [feature("jalapeno", "Jalapeno Pepper Bag", "peppers", "produce"), feature("jack", "Sargento Pepper Jack Slices", "peppers", "produce"), feature("black", "ShopRite Black Pepper", "peppers", "pantry")]),
             ("1 onion, minced", "white", ["dip", "rings"], [feature("dip", "Utz Creamy Onion Dip", "onions", "produce"), feature("rings", "Funyuns Onion Flavored Rings", "onions", "produce"), feature("white", "White Onion", "onions", "produce")]),
             ("celery", "celery", ["pasta", "salt"], [feature("pasta", "Colavita Cut Ziti Pasta", "pasta", "pantry"), feature("salt", "McCormick Celery Salt", "celery", "produce"), feature("celery", "Celery Package", None, None)]),
@@ -368,6 +372,18 @@ class OverrideCacheBatchEndpointTests(unittest.TestCase):
             ],
         )
         self.assertEqual(adjusted, ["2 carrots"])
+
+    def test_per_person_recipe_quantities_are_scaled_for_matching(self):
+        import model
+
+        recipe = {
+            "extendedIngredients": [
+                {"name": "chicken thighs", "original": "2 chicken, thighs per person"},
+                {"name": "pepper", "original": "1/2 pepper, per person"},
+            ]
+        }
+        adjusted, _originals = model.pantry_adjusted_recipe_ingredients(recipe, [], servings=4)
+        self.assertEqual(adjusted, ["8 chicken thighs", "2 peppers"])
 
     def test_demo_dish_does_not_emit_unavailable_buy_rows(self):
         import model
