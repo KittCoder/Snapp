@@ -10,7 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from basket_quantity import BasketBuilder
-from matcher_warmup import warmup_matcher, warmup_status
+import matcher_warmup
 
 
 RECIPES_PATH = Path(__file__).resolve().parent / "USDA recipes.json"
@@ -71,7 +71,7 @@ def main() -> int:
     output: list[dict[str, object]] = []
     if not args.skip_cold:
         started = time.perf_counter()
-        state = warmup_matcher(force=True)
+        state = matcher_warmup.warmup_matcher(force=True)
         output.append(
             {
                 "label": "cold_start_to_readiness",
@@ -80,8 +80,8 @@ def main() -> int:
                 "rss_mb": rss_mb(),
             }
         )
-    elif warmup_status().status not in {"ready", "degraded"}:
-        warmup_matcher()
+    elif matcher_warmup.get_warmup_status().status not in {"ready", "degraded"}:
+        matcher_warmup.warmup_matcher()
 
     builder = BasketBuilder()
     for count in args.recipes:

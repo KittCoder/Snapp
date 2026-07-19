@@ -4582,7 +4582,7 @@ def health():
 
 @app.get("/ready")
 def ready():
-    state = matcher_warmup.warmup_status()
+    state = matcher_warmup.get_warmup_status()
     artifact_validation = validate_runtime_artifacts().safe_dict()
     allow_degraded = os.getenv("SNAPP_ALLOW_LEXICAL_ONLY", "").lower() in {"1", "true", "yes"}
     is_ready = state.status == "ready" and artifact_validation["ok"]
@@ -4615,7 +4615,7 @@ def internal_diagnostics():
         {
             "request_id": request.snapp_request_id,
             "health": "ok",
-            "ready": matcher_warmup.warmup_status().safe_dict(),
+            "ready": matcher_warmup.get_warmup_status().safe_dict(),
             "artifact_validation": validate_runtime_artifacts().safe_dict(),
             "warmup_module": matcher_warmup.module_diagnostics(include_private_ids=True),
             "override_summary": override_summary(),
