@@ -1,3 +1,4 @@
+import importlib
 import sys
 import unittest
 from pathlib import Path
@@ -66,6 +67,9 @@ class FakeValidation:
     errors = []
     manifest = {"index_hash": "test-index"}
 
+    def safe_dict(self):
+        return {"ok": self.ok, "status": self.status, "errors": [], "warnings": [], "manifest": self.manifest}
+
 
 class MatcherWarmupTests(unittest.TestCase):
     def setUp(self):
@@ -94,6 +98,69 @@ class MatcherWarmupTests(unittest.TestCase):
         self.assertEqual(service.retriever.load_index_count, 1)
         self.assertEqual(service.retriever.backend.load_count, 1)
         self.assertEqual(service.match_calls, 1)
+
+    def test_status_returns_fresh_copy_not_shared_state(self):
+        service = FakeService()
+        first_state_id = id(matcher_warmup._state)
+        with patch.object(matcher_warmup, "validate_runtime_artifacts", return_value=FakeValidation()), patch.object(
+            matcher_warmup, "get_product_match_service", return_value=service
+        ), patch.object(matcher_warmup, "get_basket_builder", return_value=object()):
+            ready_snapshot = matcher_warmup.warmup_matcher()
+        self.assertEqual(id(matcher_warmup._state), first_state_id)
+        self.assertNotEqual(id(ready_snapshot), first_state_id)
+        ready_snapshot.status = "mutated"
+        self.assertEqual(matcher_warmup.warmup_status().status, "ready")
+
+    def test_ready_route_reads_same_warmup_module_state(self):
+        with patch.dict("os.environ", {"SNAPP_DISABLE_MATCHER_WARMUP": "1"}):
+            app_module = importlib.import_module("model")
+        self.assertIs(app_module.matcher_warmup, matcher_warmup)
+        service = FakeService()
+        with patch.object(matcher_warmup, "validate_runtime_artifacts", return_value=FakeValidation()), patch.object(
+            matcher_warmup, "get_product_match_service", return_value=service
+        ), patch.object(matcher_warmup, "get_basket_builder", return_value=object()), patch.object(
+            app_module, "validate_runtime_artifacts", return_value=FakeValidation()
+        ):
+            matcher_warmup.warmup_matcher()
+            response = app_module.app.test_client().get("/ready")
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertEqual(payload["status"], "ready")
+        self.assertEqual(payload["semantic_readiness"], "ready")
+        self.assertTrue(payload["artifact_validation_ok"])
+        self.assertTrue(payload["artifact_validation"]["ok"])
+
+    def test_gunicorn_style_model_import_does_not_create_duplicate_warmup_module(self):
+        with patch.dict("os.environ", {"SNAPP_DISABLE_MATCHER_WARMUP": "1"}):
+            app_module = importlib.import_module("model")
+        self.assertIs(app_module.matcher_warmup, matcher_warmup)
+        self.assertNotIn("Model.matcher_warmup", sys.modules)
+        self.assertEqual(matcher_warmup.module_diagnostics()["duplicate_module_keys"], [])
+
+    def test_application_import_order_does_not_split_state_or_reset_ready(self):
+        with patch.dict("os.environ", {"SNAPP_DISABLE_MATCHER_WARMUP": "1"}):
+            app_module = importlib.import_module("model")
+        service = FakeService()
+        with patch.object(matcher_warmup, "validate_runtime_artifacts", return_value=FakeValidation()), patch.object(
+            matcher_warmup, "get_product_match_service", return_value=service
+        ), patch.object(matcher_warmup, "get_basket_builder", return_value=object()):
+            matcher_warmup.warmup_matcher()
+        state_id = id(matcher_warmup._state)
+        app_module.matcher_warmup.start_background_warmup()
+        self.assertEqual(id(matcher_warmup._state), state_id)
+        self.assertEqual(matcher_warmup.warmup_status().status, "ready")
+
+    def test_duplicate_module_condition_is_detected(self):
+        original = sys.modules.get("Model.matcher_warmup")
+        sys.modules["Model.matcher_warmup"] = matcher_warmup
+        try:
+            diagnostics = matcher_warmup.module_diagnostics(include_private_ids=True)
+        finally:
+            if original is None:
+                sys.modules.pop("Model.matcher_warmup", None)
+            else:
+                sys.modules["Model.matcher_warmup"] = original
+        self.assertIn("Model.matcher_warmup", diagnostics["duplicate_module_keys"])
 
 
 if __name__ == "__main__":

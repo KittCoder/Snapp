@@ -19,6 +19,7 @@ from urllib.request import Request, urlopen
 from flask import Flask, jsonify, request
 from openai import OpenAI
 from artifact_manifest import validate_runtime_artifacts
+import matcher_warmup
 from ops_metrics import log_event, metrics, request_id
 from review_workflow import mutate_override, override_summary, require_admin
 
@@ -4581,9 +4582,7 @@ def health():
 
 @app.get("/ready")
 def ready():
-    from matcher_warmup import warmup_status
-
-    state = warmup_status()
+    state = matcher_warmup.warmup_status()
     artifact_validation = validate_runtime_artifacts().safe_dict()
     allow_degraded = os.getenv("SNAPP_ALLOW_LEXICAL_ONLY", "").lower() in {"1", "true", "yes"}
     is_ready = state.status == "ready" and artifact_validation["ok"]
@@ -4591,7 +4590,16 @@ def ready():
     status_code = 200 if is_ready or is_degraded_allowed else 503
     payload = state.safe_dict()
     payload["artifact_validation"] = artifact_validation
-    payload["semantic_readiness"] = "full" if is_ready else ("lexical_only" if is_degraded_allowed else "unavailable")
+    payload["semantic_readiness"] = state.semantic_readiness if is_ready or is_degraded_allowed else "unavailable"
+    log_event(
+        "ready_request",
+        request_id=request.snapp_request_id,
+        status=state.status,
+        status_code=status_code,
+        artifact_validation_ok=artifact_validation["ok"],
+        state_artifact_validation_ok=state.artifact_validation_ok,
+        **matcher_warmup.module_diagnostics(include_private_ids=True),
+    )
     return jsonify(payload), status_code
 
 
@@ -4600,7 +4608,6 @@ def internal_diagnostics():
     auth_error = admin_required()
     if auth_error:
         return auth_error
-    from matcher_warmup import warmup_status
     from product_compatibility import get_product_match_service
 
     service = get_product_match_service()
@@ -4608,8 +4615,9 @@ def internal_diagnostics():
         {
             "request_id": request.snapp_request_id,
             "health": "ok",
-            "ready": warmup_status().safe_dict(),
+            "ready": matcher_warmup.warmup_status().safe_dict(),
             "artifact_validation": validate_runtime_artifacts().safe_dict(),
+            "warmup_module": matcher_warmup.module_diagnostics(include_private_ids=True),
             "override_summary": override_summary(),
             "retrieval_stats": service.retriever.stats.to_dict(),
             "match_cache_size": len(service.cache),
@@ -4955,9 +4963,7 @@ def dishes_options():
 
 if os.getenv("SNAPP_DISABLE_MATCHER_WARMUP", "").lower() not in {"1", "true", "yes"}:
     try:
-        from matcher_warmup import start_background_warmup
-
-        start_background_warmup()
+        matcher_warmup.start_background_warmup()
     except Exception as exc:
         print(f"Matcher warmup could not start: {exc}", flush=True)
 
