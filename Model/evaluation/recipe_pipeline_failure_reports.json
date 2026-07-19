@@ -1,0 +1,4885 @@
+{
+  "top_basket_cost_impact_failures": [
+    {
+      "canonical_ingredient": "lean beef brisket",
+      "checkout_cost": 231.71,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "5 pound lean beef brisket",
+      "recipe_id": "1083cc145a4e7360",
+      "recipe_title": "Beef Stewed with French Beans",
+      "selected_product": "Wholesome Pantry Beef Jerky"
+    },
+    {
+      "canonical_ingredient": "uncooked smoked ham",
+      "checkout_cost": 99.9,
+      "confidence": "medium",
+      "failure_categories": [
+        "raw versus cooked distinction",
+        "selected product identity requires review"
+      ],
+      "ingredient": "5 pound uncooked smoked ham",
+      "recipe_id": "d0f48c6120981b57",
+      "recipe_title": "Baked Ham",
+      "selected_product": "Boar's Head Smoked Uncured Ham"
+    },
+    {
+      "canonical_ingredient": "watermelon",
+      "checkout_cost": 89.94,
+      "confidence": "low",
+      "failure_categories": [
+        "legitimate no-match or non-purchase ingredient",
+        "low confidence"
+      ],
+      "ingredient": "2 cup watermelon cut into pieces",
+      "recipe_id": "f486be9ac41b79fd",
+      "recipe_title": "Fruit Salad with Jicama",
+      "selected_product": "Watermelon"
+    },
+    {
+      "canonical_ingredient": "celery stock",
+      "checkout_cost": 64.87,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "3 quart celery stock",
+      "recipe_id": "4e0d5a80fcc6ec68",
+      "recipe_title": "Peanut Butter Soup",
+      "selected_product": "Sunnyside Fresh Sunnyalde Fresh Celery Sticks"
+    },
+    {
+      "canonical_ingredient": "4 pound of beef heart",
+      "checkout_cost": 63.96,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "3 pound -4 pound of beef heart",
+      "recipe_id": "19c04cbe10fb6f12",
+      "recipe_title": "Baked Stuffed Beef Heart",
+      "selected_product": "Grass Run Farms Beef, Ground, 92/8"
+    },
+    {
+      "canonical_ingredient": "cheddar cheese cut in cubes",
+      "checkout_cost": 50.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 pound cheddar cheese cut in cubes",
+      "recipe_id": "8e8c9921c27ac0bc",
+      "recipe_title": "Cheese Noodle Casserole",
+      "selected_product": "Quaker Rice Crisps, Cheddar Cheese"
+    },
+    {
+      "canonical_ingredient": "watermelon",
+      "checkout_cost": 44.97,
+      "confidence": "low",
+      "failure_categories": [
+        "legitimate no-match or non-purchase ingredient",
+        "low confidence"
+      ],
+      "ingredient": "1 cup watermelon",
+      "recipe_id": "fc26ccf82e37d06c",
+      "recipe_title": "Flavored Water",
+      "selected_product": "Watermelon"
+    },
+    {
+      "canonical_ingredient": "watermelon",
+      "checkout_cost": 44.97,
+      "confidence": "low",
+      "failure_categories": [
+        "legitimate no-match or non-purchase ingredient",
+        "low confidence"
+      ],
+      "ingredient": "1 cup watermelon",
+      "recipe_id": "fc26ccf82e37d06c",
+      "recipe_title": "Flavored Water",
+      "selected_product": "Watermelon"
+    },
+    {
+      "canonical_ingredient": "brown rice cooked in water",
+      "checkout_cost": 41.69,
+      "confidence": "medium",
+      "failure_categories": [
+        "legitimate no-match or non-purchase ingredient",
+        "raw versus cooked distinction",
+        "selected product identity requires review"
+      ],
+      "ingredient": "4.5 cup brown rice cooked in unsalted water",
+      "recipe_id": "ac0963aa86f40119",
+      "recipe_title": "Scallion Rice",
+      "selected_product": "Edward & Sons Unsalted Sesame Brown Rice Snaps"
+    },
+    {
+      "canonical_ingredient": "chicken pieces skin removed",
+      "checkout_cost": 35.96,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 pound chicken pieces skin removed",
+      "recipe_id": "3e3bd66bbbc70f80",
+      "recipe_title": "Chicken Noodle Soup",
+      "selected_product": "Daring Cajun Plant Chicken Pieces, Gluten-Free"
+    },
+    {
+      "canonical_ingredient": "cheese well-ripened cheddar",
+      "checkout_cost": 29.95,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 pound cheese well-ripened Cheddar",
+      "recipe_id": "21d96106c6b99030",
+      "recipe_title": "Deviled Cheese Salad",
+      "selected_product": "Somerdale Extra Sharp Cheddar Cheese"
+    },
+    {
+      "canonical_ingredient": "well-cured salt salmon",
+      "checkout_cost": 27.93,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 pound well-cured salt salmon",
+      "recipe_id": "651527dc16b3490c",
+      "recipe_title": "Pickled Salmon",
+      "selected_product": "Morton All-Natural Sea Salt"
+    },
+    {
+      "canonical_ingredient": "stewing beef",
+      "checkout_cost": 26.97,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 pound stewing beef",
+      "recipe_id": "4db7bd05c9ec3c34",
+      "recipe_title": "Beef Soup with Dumplings",
+      "selected_product": "Yellowstone Bunkhouse Braised Beef Stew"
+    },
+    {
+      "canonical_ingredient": "lean beef",
+      "checkout_cost": 23.97,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.5 pound ground lean beef",
+      "recipe_id": "d2b87cb6ade4f69a",
+      "recipe_title": "Pinto or Great Northern Beans with Ground Beef",
+      "selected_product": "Wholesome Pantry Beef Jerky"
+    },
+    {
+      "canonical_ingredient": "red kidney beans",
+      "checkout_cost": 23.97,
+      "confidence": "medium",
+      "failure_categories": [
+        "fresh/frozen/canned/dried distinction",
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 pound canned red kidney beans",
+      "recipe_id": "aef7d745f91e2524",
+      "recipe_title": "Monterey Jack",
+      "selected_product": "WENDY'S Canned Chili With Beans"
+    },
+    {
+      "canonical_ingredient": "rump roast of beef",
+      "checkout_cost": 23.96,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "3.5 pound rump roast of beef",
+      "recipe_id": "af7f780ee9b7e147",
+      "recipe_title": "Roast Beef",
+      "selected_product": "IBP Sliced Beef Feet"
+    },
+    {
+      "canonical_ingredient": "dry milk powder",
+      "checkout_cost": 23.67,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "4 cup dry fat-free milk powder",
+      "recipe_id": "f665d4910dcad294",
+      "recipe_title": "Sweetened Condensed Milk",
+      "selected_product": "Swiss Miss Nonfat Dry Milk With Vitamins A and D"
+    },
+    {
+      "canonical_ingredient": "water to soften yeast cake",
+      "checkout_cost": 22.99,
+      "confidence": "low",
+      "failure_categories": [
+        "legitimate no-match or non-purchase ingredient",
+        "low confidence"
+      ],
+      "ingredient": "0.25 cup water to soften yeast cake",
+      "recipe_id": "d49e21fe067b325e",
+      "recipe_title": "Oatmeal Bread II",
+      "selected_product": "Morton Williams Cake"
+    },
+    {
+      "canonical_ingredient": "lean beef cubed",
+      "checkout_cost": 20.97,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "32 ounce lean beef cubed",
+      "recipe_id": "0f2ce214fdfb5116",
+      "recipe_title": "Beef Pozole Soup",
+      "selected_product": "Bowl & Basket Corned Beef"
+    },
+    {
+      "canonical_ingredient": "pecan meats",
+      "checkout_cost": 20.97,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 pound pecan meats",
+      "recipe_id": "34c4a4711713e9e7",
+      "recipe_title": "Brown Candy",
+      "selected_product": "Bowl & Basket Pecan"
+    },
+    {
+      "canonical_ingredient": "shelled pecans",
+      "checkout_cost": 20.97,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 pound shelled pecans",
+      "recipe_id": "abd17a5a7a6ab0bb",
+      "recipe_title": "Dark Fruit Cake",
+      "selected_product": "Valued Naturals Pecan Halves"
+    },
+    {
+      "canonical_ingredient": "turkey 85 percent lean",
+      "checkout_cost": 14.98,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1.25 pound ground turkey 85% lean",
+      "recipe_id": "277675aa48903616",
+      "recipe_title": "Turkey Patties",
+      "selected_product": "Butterball Fresh Ground Turkey 93%/7% Tray"
+    },
+    {
+      "canonical_ingredient": "scraps of salt beef",
+      "checkout_cost": 14.37,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 pound scraps of salt beef",
+      "recipe_id": "7d5f060ddfbfde4e",
+      "recipe_title": "Stew Soup No. 1",
+      "selected_product": "Snyder's of Hanover Sea Salt Mini Pretzel Balls"
+    },
+    {
+      "canonical_ingredient": "sausage in casing",
+      "checkout_cost": 14.36,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "1 pound sausage in casing",
+      "recipe_id": "eb1b5342f93e5fc6",
+      "recipe_title": "Pork Pot Pie with Dumplings",
+      "selected_product": "Red's Burrito, Sausage & Egg"
+    },
+    {
+      "canonical_ingredient": "beef coarsely if available",
+      "checkout_cost": 13.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 pound ground beef coarsely ground, if available",
+      "recipe_id": "193b2bc6c1ac9601",
+      "recipe_title": "Kibbeh Khamoustah",
+      "selected_product": "Strassburger Prime Ground Beef Prime Ground Beef"
+    },
+    {
+      "canonical_ingredient": "butternut squash 1 small squash about",
+      "checkout_cost": 13.98,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2.75 cup butternut squash 1 small squash, about",
+      "recipe_id": "3e7a8a11a8838949",
+      "recipe_title": "Butternut Squash with Black Beans",
+      "selected_product": "Sunnyside Fresh Butternut Squash"
+    },
+    {
+      "canonical_ingredient": "beef round roast thawed",
+      "checkout_cost": 13.98,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 pound beef round roast thawed",
+      "recipe_id": "86038c5adb009abb",
+      "recipe_title": "Pot Roasted Beef",
+      "selected_product": "Bowl & Basket Corned Beef"
+    },
+    {
+      "canonical_ingredient": "ripe olives cut in pieces",
+      "checkout_cost": 13.77,
+      "confidence": "low",
+      "failure_categories": [
+        "fresh/frozen/canned/dried distinction",
+        "low confidence"
+      ],
+      "ingredient": "16 ounce canned ripe olives cut in pieces",
+      "recipe_id": "8e8c9921c27ac0bc",
+      "recipe_title": "Cheese Noodle Casserole",
+      "selected_product": "Goya Pitted Ripe Black Large Olives"
+    },
+    {
+      "canonical_ingredient": "round steak",
+      "checkout_cost": 13.16,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 pound ground round steak",
+      "recipe_id": "b64af5fbc938bce8",
+      "recipe_title": "Chili Con Carne II",
+      "selected_product": "Bowl & Basket Steak Sauce"
+    },
+    {
+      "canonical_ingredient": "90 percent lean beef",
+      "checkout_cost": 12.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "1 pound 90% lean ground beef",
+      "recipe_id": "86e3e59c331e7c96",
+      "recipe_title": "Enchilada Rice",
+      "selected_product": "Suzy Sirloin 90% Lean 10% Fat Ground Beef"
+    },
+    {
+      "canonical_ingredient": "beef 90 percent lean",
+      "checkout_cost": 12.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 pound ground beef 90% lean",
+      "recipe_id": "b9dd5cc21c59c1d6",
+      "recipe_title": "Lentil Spaghetti Sauce",
+      "selected_product": "Suzy Sirloin 90% Lean 10% Fat Ground Beef"
+    },
+    {
+      "canonical_ingredient": "leg of beef",
+      "checkout_cost": 11.98,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 pound leg of beef",
+      "recipe_id": "8710533ee98f6c82",
+      "recipe_title": "A-la-mode Beef",
+      "selected_product": "IBP Sliced Beef Feet"
+    },
+    {
+      "canonical_ingredient": "water from potatoes mixed",
+      "checkout_cost": 11.98,
+      "confidence": "medium",
+      "failure_categories": [
+        "legitimate no-match or non-purchase ingredient",
+        "selected product identity requires review"
+      ],
+      "ingredient": "3.75 quart water from potatoes mixed",
+      "recipe_id": "4b50b9a70469c232",
+      "recipe_title": "Potato Onion Soup",
+      "selected_product": "Bowl & Basket Eastern Potatoes"
+    },
+    {
+      "canonical_ingredient": "apples",
+      "checkout_cost": 11.98,
+      "confidence": "exact",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 pound apples",
+      "recipe_id": "a215bc0956c1da7c",
+      "recipe_title": "Baked Apples II",
+      "selected_product": "Grain Berry Apple Cinnamon"
+    },
+    {
+      "canonical_ingredient": "sharp cheddar cheese grated",
+      "checkout_cost": 11.98,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.5 pound sharp cheddar cheese grated",
+      "recipe_id": "aef7d745f91e2524",
+      "recipe_title": "Monterey Jack",
+      "selected_product": "Snack Factory Cheddar Cheese Pretzel Crisps"
+    },
+    {
+      "canonical_ingredient": "low-sodium chicken broth",
+      "checkout_cost": 11.97,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "8 cup low-sodium chicken broth or vegetable broth",
+      "recipe_id": "1a9cf7df027ae6fa",
+      "recipe_title": "Lentil Soup",
+      "selected_product": "Progresso Reduced Sodium Chicken Broth"
+    },
+    {
+      "canonical_ingredient": "rich milk",
+      "checkout_cost": 11.97,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "4 cup rich milk",
+      "recipe_id": "62ef32334e5ee0f1",
+      "recipe_title": "Clam Chowder",
+      "selected_product": "Betty Crocker Rich and Creamy Milk Chocolate Frosting"
+    },
+    {
+      "canonical_ingredient": "compressed yeast",
+      "checkout_cost": 10.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "4 ounce compressed yeast",
+      "recipe_id": "011c0f86ef68d3dc",
+      "recipe_title": "Rolls",
+      "selected_product": "VEGEMITE Yeast Extract"
+    },
+    {
+      "canonical_ingredient": "cooked chicken breast",
+      "checkout_cost": 10.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "raw versus cooked distinction",
+        "selected product identity requires review"
+      ],
+      "ingredient": "12 ounce cooked chicken breast cut into chunks",
+      "recipe_id": "fd4697e1bf9f61fb",
+      "recipe_title": "Asparagus, Mandarin Orange, Chicken, and Rice",
+      "selected_product": "Perdue Chicken Breast Tenders"
+    },
+    {
+      "canonical_ingredient": "cooked lean ham",
+      "checkout_cost": 9.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "legitimate no-match or non-purchase ingredient",
+        "raw versus cooked distinction",
+        "selected product identity requires review"
+      ],
+      "ingredient": "3 ounce sliced cooked lean ham",
+      "recipe_id": "ad91691880476290",
+      "recipe_title": "Venetian Ham Horns",
+      "selected_product": "Boar's Head Cooked Uncured Ham"
+    },
+    {
+      "canonical_ingredient": "apple cider vinegar",
+      "checkout_cost": 9.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "1 tablespoon apple cider vinegar",
+      "recipe_id": "a3d4b09a0e254b62",
+      "recipe_title": "Orange and Honey Glazed Brussel Sprouts",
+      "selected_product": "Bragg Apple Cider Vinegar, Organic"
+    },
+    {
+      "canonical_ingredient": "apple cider vinegar",
+      "checkout_cost": 9.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "0.333333 cup apple cider vinegar",
+      "recipe_id": "180001f4056835a7",
+      "recipe_title": "Tomato and Cucumber Salad",
+      "selected_product": "Bragg Apple Cider Vinegar, Organic"
+    },
+    {
+      "canonical_ingredient": "smoked salmon",
+      "checkout_cost": 9.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1.5 ounce smoked salmon",
+      "recipe_id": "b7c44487dc2be1d2",
+      "recipe_title": "Risotto Tartlets",
+      "selected_product": "Acme Smoked Fish Baked Salmon Salad"
+    },
+    {
+      "canonical_ingredient": "can smoked salmon",
+      "checkout_cost": 9.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "7 ounce can smoked salmon",
+      "recipe_id": "ec294f1e82b75cb0",
+      "recipe_title": "Smoked Salmon Roll-Ups",
+      "selected_product": "Acme Smoked Fish Baked Salmon Salad"
+    },
+    {
+      "canonical_ingredient": "apple cider vinegar",
+      "checkout_cost": 9.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "0.25 cup apple cider vinegar",
+      "recipe_id": "e50660326de63f91",
+      "recipe_title": "Grilled Pineapple Ginger Glazed Chicken with Zucchini and Peppers",
+      "selected_product": "Bragg Apple Cider Vinegar, Organic"
+    },
+    {
+      "canonical_ingredient": "apple cider vinegar",
+      "checkout_cost": 9.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "0.25 cup apple cider vinegar",
+      "recipe_id": "7837b8a2938e7343",
+      "recipe_title": "Spinach Salad with Apples and Raisins",
+      "selected_product": "Bragg Apple Cider Vinegar, Organic"
+    },
+    {
+      "canonical_ingredient": "flank steak 3 4 inch thick",
+      "checkout_cost": 9.87,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1.5 pound flank steak 3/4 inch thick",
+      "recipe_id": "53bb222da190ca82",
+      "recipe_title": "Devilled Steak",
+      "selected_product": "Bowl & Basket Steak Sauce"
+    },
+    {
+      "canonical_ingredient": "round steak",
+      "checkout_cost": 9.87,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1.5 pound round steak",
+      "recipe_id": "2859fe2d8426fb17",
+      "recipe_title": "Meat Rolls (Rollitos de Carne)",
+      "selected_product": "Bowl & Basket Steak Sauce"
+    },
+    {
+      "canonical_ingredient": "flank steak 1 1 4 inches thick",
+      "checkout_cost": 9.87,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1.5 pound flank steak 1 1/4 inches thick",
+      "recipe_id": "230a51d3f7232ebc",
+      "recipe_title": "Flank Steak Braized with Vegetables",
+      "selected_product": "Bowl & Basket Steak Sauce"
+    },
+    {
+      "canonical_ingredient": "patna rice",
+      "checkout_cost": 9.18,
+      "confidence": "medium",
+      "failure_categories": [
+        "legitimate no-match or non-purchase ingredient",
+        "selected product identity requires review"
+      ],
+      "ingredient": "4 ounce Patna rice",
+      "recipe_id": "1614308bdea76939",
+      "recipe_title": "Rice Soup",
+      "selected_product": "Quaker Rice Crisps, Caramel"
+    },
+    {
+      "canonical_ingredient": "pinto beans",
+      "checkout_cost": 9.18,
+      "confidence": "low",
+      "failure_categories": [
+        "fresh/frozen/canned/dried distinction",
+        "low confidence"
+      ],
+      "ingredient": "1 pound pinto beans dried, rinsed",
+      "recipe_id": "4acef780cd38899d",
+      "recipe_title": "Slow Cooker Beans",
+      "selected_product": "Eden Foods Pinto Beans, organic"
+    },
+    {
+      "canonical_ingredient": "dry pinto beans",
+      "checkout_cost": 9.18,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 pound dry pinto beans",
+      "recipe_id": "e2e32b109f8ba9a8",
+      "recipe_title": "Caribbean Pink Beans",
+      "selected_product": "Eden Foods Pinto Beans, organic"
+    },
+    {
+      "canonical_ingredient": "ground beef",
+      "checkout_cost": 8.99,
+      "confidence": "low",
+      "failure_categories": [
+        "fresh/frozen/canned/dried distinction",
+        "low confidence"
+      ],
+      "ingredient": "1 pound ground beef or 1 can, about , canned beef",
+      "recipe_id": "0f0418c285d1a1a0",
+      "recipe_title": "Beef and Vegetables",
+      "selected_product": "Morton Williams Ground Beef"
+    },
+    {
+      "canonical_ingredient": "cheese pastry",
+      "checkout_cost": 8.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 ounce cheese pastry",
+      "recipe_id": "237f673f8d57a699",
+      "recipe_title": "Butterflies",
+      "selected_product": "Castello Havarti Dill Cheese"
+    },
+    {
+      "canonical_ingredient": "sticks part skim mozzarella string cheese",
+      "checkout_cost": 8.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "count unit",
+        "selected product identity requires review"
+      ],
+      "ingredient": "4 stick sticks part skim mozzarella string cheese",
+      "recipe_id": "5247dfbb1eb4e7b3",
+      "recipe_title": "Tic Tac Toe Veggie Pizza",
+      "selected_product": "Galbani Low Moisture Part Skim String Cheese Mozzarella"
+    },
+    {
+      "canonical_ingredient": "cheese pastry",
+      "checkout_cost": 8.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 ounce cheese pastry",
+      "recipe_id": "14cf6dfe703f8efc",
+      "recipe_title": "Cheese Scramble Tartlets",
+      "selected_product": "Castello Havarti Dill Cheese"
+    },
+    {
+      "canonical_ingredient": "processed cheese",
+      "checkout_cost": 8.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.5 pound processed cheese",
+      "recipe_id": "c45f58852ad7f9c3",
+      "recipe_title": "Cheese Apples and Pears",
+      "selected_product": "Rao's Four Cheese Sauce"
+    },
+    {
+      "canonical_ingredient": "85 percent lean turkey",
+      "checkout_cost": 8.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 pound 85% lean ground turkey",
+      "recipe_id": "b30af8549cc7c286",
+      "recipe_title": "One Pan Taco Rice",
+      "selected_product": "Shady Brook Farms\u00ae 93% Lean / 7% Fat Ground Turkey Tray"
+    },
+    {
+      "canonical_ingredient": "ginger ale",
+      "checkout_cost": 8.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 cup ginger ale",
+      "recipe_id": "4ebbe5f1243c2ab5",
+      "recipe_title": "Cranberry Salad II",
+      "selected_product": "Bundaberg Ginger Beer"
+    },
+    {
+      "canonical_ingredient": "85 percent lean turkey",
+      "checkout_cost": 8.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.5 pound 85% lean ground turkey",
+      "recipe_id": "840d7d25575362e3",
+      "recipe_title": "Shepherd's Pie",
+      "selected_product": "Shady Brook Farms\u00ae 93% Lean / 7% Fat Ground Turkey Tray"
+    },
+    {
+      "canonical_ingredient": "cheese pastry",
+      "checkout_cost": 8.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 ounce cheese pastry",
+      "recipe_id": "14cf6dfe703f8efc",
+      "recipe_title": "Cheese Scramble Tartlets",
+      "selected_product": "Castello Havarti Dill Cheese"
+    },
+    {
+      "canonical_ingredient": "roll butter",
+      "checkout_cost": 8.58,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.5 pound roll butter",
+      "recipe_id": "0cebc4678a1bf0a2",
+      "recipe_title": "Old-Fashioned Duten Cake",
+      "selected_product": "Utz Popcorn, Butter"
+    },
+    {
+      "canonical_ingredient": "1 can mushrooms 1 can",
+      "checkout_cost": 8.58,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "10.5 ounce (1 can) mushrooms 1 can",
+      "recipe_id": "2859fe2d8426fb17",
+      "recipe_title": "Meat Rolls (Rollitos de Carne)",
+      "selected_product": "Bowl & Basket Mushrooms"
+    },
+    {
+      "canonical_ingredient": "mushrooms",
+      "checkout_cost": 8.58,
+      "confidence": "low",
+      "failure_categories": [
+        "fresh/frozen/canned/dried distinction",
+        "low confidence"
+      ],
+      "ingredient": "16 ounce canned mushrooms",
+      "recipe_id": "8e8c9921c27ac0bc",
+      "recipe_title": "Cheese Noodle Casserole",
+      "selected_product": "Bowl & Basket Mushrooms"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 8.29,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "0.5 cup extra virgin olive oil",
+      "recipe_id": "6e9a0d2159ca7a7e",
+      "recipe_title": "ACEd Up Ham",
+      "selected_product": "Goya Extra Virgin Olive Oil"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 8.29,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "3 tablespoon extra virgin olive oil",
+      "recipe_id": "e04bd982b29fea77",
+      "recipe_title": "Mango Berry Rotini Salad",
+      "selected_product": "Goya Extra Virgin Olive Oil"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 8.29,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "2 tablespoon extra virgin olive oil",
+      "recipe_id": "fd4697e1bf9f61fb",
+      "recipe_title": "Asparagus, Mandarin Orange, Chicken, and Rice",
+      "selected_product": "Goya Extra Virgin Olive Oil"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 8.29,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "1 tablespoon extra virgin olive oil",
+      "recipe_id": "75a9fe5ba8013458",
+      "recipe_title": "White Bean & Tuna Salad",
+      "selected_product": "Goya Extra Virgin Olive Oil"
+    },
+    {
+      "canonical_ingredient": "salad oil",
+      "checkout_cost": 7.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.75 cup salad oil",
+      "recipe_id": "35a7e277d18360d8",
+      "recipe_title": "Caesar Salad II",
+      "selected_product": "ShopRite Cooking Oil"
+    },
+    {
+      "canonical_ingredient": "eggs separated",
+      "checkout_cost": 7.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "4 egg eggs separated",
+      "recipe_id": "b251c1e27ab49798",
+      "recipe_title": "Cheese fondue",
+      "selected_product": "Nellies Free Range Eggs"
+    },
+    {
+      "canonical_ingredient": "salad oil",
+      "checkout_cost": 7.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 tablespoon salad oil",
+      "recipe_id": "193b2bc6c1ac9601",
+      "recipe_title": "Kibbeh Khamoustah",
+      "selected_product": "ShopRite Cooking Oil"
+    },
+    {
+      "canonical_ingredient": "kilogram strong bread flour",
+      "checkout_cost": 7.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.5 kilogram kilogram strong bread flour",
+      "recipe_id": "10c54052b20d2f52",
+      "recipe_title": "Predictive Analytics Bread",
+      "selected_product": "Pillsbury Best Bread Flour, 5 lb Bag"
+    },
+    {
+      "canonical_ingredient": "salad oil",
+      "checkout_cost": 7.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "3 tablespoon salad oil",
+      "recipe_id": "700bdd0476fc873b",
+      "recipe_title": "A Good Pennsylvania Dutch Salad Dressing",
+      "selected_product": "ShopRite Cooking Oil"
+    },
+    {
+      "canonical_ingredient": "eggs separated",
+      "checkout_cost": 7.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 egg eggs separated",
+      "recipe_id": "19071a217077085e",
+      "recipe_title": "Sour Cherry Fritters",
+      "selected_product": "Nellies Free Range Eggs"
+    },
+    {
+      "canonical_ingredient": "salad oil",
+      "checkout_cost": 7.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 tablespoon salad oil",
+      "recipe_id": "d1ec3c3edc29ec91",
+      "recipe_title": "Salad Cream",
+      "selected_product": "ShopRite Cooking Oil"
+    },
+    {
+      "canonical_ingredient": "salad oil",
+      "checkout_cost": 7.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 tablespoon salad oil",
+      "recipe_id": "0877eee295510ea4",
+      "recipe_title": "Lettuce Salad",
+      "selected_product": "ShopRite Cooking Oil"
+    },
+    {
+      "canonical_ingredient": "kilogram strong bread flour",
+      "checkout_cost": 7.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.5 kilogram kilogram strong bread flour",
+      "recipe_id": "10c54052b20d2f52",
+      "recipe_title": "Predictive Analytics Bread",
+      "selected_product": "Pillsbury Best Bread Flour, 5 lb Bag"
+    },
+    {
+      "canonical_ingredient": "eggs separated",
+      "checkout_cost": 7.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "3 egg eggs separated",
+      "recipe_id": "ce55bda49ca0906a",
+      "recipe_title": "Nut Cake",
+      "selected_product": "Nellies Free Range Eggs"
+    },
+    {
+      "canonical_ingredient": "eggs separated",
+      "checkout_cost": 7.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 egg eggs separated",
+      "recipe_id": "f3fa01e50ce34b8c",
+      "recipe_title": "Lemon Custard Pie",
+      "selected_product": "Nellies Free Range Eggs"
+    },
+    {
+      "canonical_ingredient": "eggs separated",
+      "checkout_cost": 7.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "4 egg eggs separated",
+      "recipe_id": "11021e6feee2e2f0",
+      "recipe_title": "Lemon Pudding",
+      "selected_product": "Nellies Free Range Eggs"
+    },
+    {
+      "canonical_ingredient": "lukewarm water to soften yeast cake",
+      "checkout_cost": 7.98,
+      "confidence": "low",
+      "failure_categories": [
+        "legitimate no-match or non-purchase ingredient",
+        "low confidence"
+      ],
+      "ingredient": "0.5 cup lukewarm water to soften yeast cake",
+      "recipe_id": "8a90f9d843e15b48",
+      "recipe_title": "Bean Bread",
+      "selected_product": "Morton Williams Chocolate Chocolate Cake Slice"
+    },
+    {
+      "canonical_ingredient": "onions",
+      "checkout_cost": 7.98,
+      "confidence": "exact",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.5 pound onions chopped",
+      "recipe_id": "a3baad86b9c8e36a",
+      "recipe_title": "Cream of Celery Soup",
+      "selected_product": "Heavenly Sweet Bites Diced Yellow Onion"
+    },
+    {
+      "canonical_ingredient": "cold salad oil",
+      "checkout_cost": 7.98,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "5 cup cold salad oil",
+      "recipe_id": "0999631fb5c7f428",
+      "recipe_title": "Eggless Mayonnaise",
+      "selected_product": "Bowl & Basket Cooking Oil"
+    },
+    {
+      "canonical_ingredient": "onions",
+      "checkout_cost": 7.98,
+      "confidence": "exact",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.5 pound onions chopped",
+      "recipe_id": "a3baad86b9c8e36a",
+      "recipe_title": "Cream of Celery Soup",
+      "selected_product": "Heavenly Sweet Bites Diced Yellow Onion"
+    },
+    {
+      "canonical_ingredient": "low-sodium chicken broth",
+      "checkout_cost": 7.98,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "5.5 cup of low-sodium chicken broth",
+      "recipe_id": "f14262f90cf3dbe9",
+      "recipe_title": "Chicken Soup for the Soul",
+      "selected_product": "Progresso Reduced Sodium Chicken Broth"
+    },
+    {
+      "canonical_ingredient": "dry milk powder",
+      "checkout_cost": 7.89,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.666667 cup non-fat dry milk powder",
+      "recipe_id": "53d694dbf9f7c2b3",
+      "recipe_title": "Tasty Low-Fat Cream Soup",
+      "selected_product": "Swiss Miss Nonfat Dry Milk With Vitamins A and D"
+    },
+    {
+      "canonical_ingredient": "sugar syrup",
+      "checkout_cost": 7.69,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "4 tablespoon sugar syrup",
+      "recipe_id": "4017ea0cf4f51575",
+      "recipe_title": "Orange Cup",
+      "selected_product": "Torani Sugar Free Vanilla Syrup"
+    },
+    {
+      "canonical_ingredient": "sugar syrup",
+      "checkout_cost": 7.69,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "4 tablespoon sugar syrup",
+      "recipe_id": "4017ea0cf4f51575",
+      "recipe_title": "Orange Cup",
+      "selected_product": "Torani Sugar Free Vanilla Syrup"
+    },
+    {
+      "canonical_ingredient": "any kind of broth",
+      "checkout_cost": 7.47,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 quart of any kind of broth",
+      "recipe_id": "e114f7c13b162f66",
+      "recipe_title": "Potato Stew",
+      "selected_product": "Bowl & Basket Broth"
+    },
+    {
+      "canonical_ingredient": "crunchy peanut butter",
+      "checkout_cost": 7.39,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.5 cup crunchy peanut butter",
+      "recipe_id": "4c8f2b6c89a0dada",
+      "recipe_title": "Chocolate Crunch",
+      "selected_product": "Justin's Crunchy Classic Peanut Butter Jar"
+    },
+    {
+      "canonical_ingredient": "16 oz italian sausage",
+      "checkout_cost": 7.19,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "1 pound (16 oz) Italian sausage",
+      "recipe_id": "d0a428a60031f0b9",
+      "recipe_title": "Dan Hotkey's Pizza Soup",
+      "selected_product": "Premio Hot Italian Sausage"
+    },
+    {
+      "canonical_ingredient": "sultana raisins",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.5 pound sultana raisins",
+      "recipe_id": "0cebc4678a1bf0a2",
+      "recipe_title": "Old-Fashioned Duten Cake",
+      "selected_product": "Bowl & Basket Raisins"
+    },
+    {
+      "canonical_ingredient": "egg yolk beaten",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 egg egg yolk beaten",
+      "recipe_id": "680e57d65070f54c",
+      "recipe_title": "Chicken a la King",
+      "selected_product": "Eggland's Best Jumbo Eggs"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "2 tablespoon olive oil",
+      "recipe_id": "327b45c8bba30689",
+      "recipe_title": "Curried Quinoa and Cauliflower",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "1 tablespoon olive oil",
+      "recipe_id": "ebc083ca6495642c",
+      "recipe_title": "Curried Brown Rice with Pumpkin Seeds, Apricots and Spinach",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "egg yolk",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 egg egg yolk",
+      "recipe_id": "d69df98be07175c6",
+      "recipe_title": "Toffee Squares",
+      "selected_product": "Eggland's Best Jumbo Eggs"
+    },
+    {
+      "canonical_ingredient": "eggs beaten",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 egg eggs beaten",
+      "recipe_id": "da18b3d46d819c65",
+      "recipe_title": "Lebkuchen",
+      "selected_product": "Eggland's Best Jumbo Eggs"
+    },
+    {
+      "canonical_ingredient": "beef suet",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "4 ounce beef suet",
+      "recipe_id": "64afdef0c3cb910c",
+      "recipe_title": "Dormers",
+      "selected_product": "Bowl & Basket Corned Beef"
+    },
+    {
+      "canonical_ingredient": "egg white well beaten",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 egg egg white well beaten",
+      "recipe_id": "f9f2471d9f32bffd",
+      "recipe_title": "Marshmallow Cream",
+      "selected_product": "Eggland's Best Jumbo Eggs"
+    },
+    {
+      "canonical_ingredient": "vegetable oil corn peanut",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 cup vegetable oil corn, peanut",
+      "recipe_id": "d1813047beffe505",
+      "recipe_title": "Soy Marinade",
+      "selected_product": "Bowl & Basket Cooking Oil"
+    },
+    {
+      "canonical_ingredient": "eggs well beaten",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "4 egg eggs well beaten",
+      "recipe_id": "77e1b65812bb1956",
+      "recipe_title": "Indian Pudding The 'Champion'",
+      "selected_product": "Bowl & Basket Eggs"
+    },
+    {
+      "canonical_ingredient": "egg yolks beaten",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "3 egg egg yolks beaten",
+      "recipe_id": "4a95a2e3c846ce4c",
+      "recipe_title": "Smor Krans",
+      "selected_product": "Eggland's Best Jumbo Eggs"
+    },
+    {
+      "canonical_ingredient": "eggs beaten well",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "3 egg eggs beaten well",
+      "recipe_id": "6df1ff4ef9e4d0c5",
+      "recipe_title": "Rice Croquettes",
+      "selected_product": "Eggland's Best Jumbo Eggs"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "0.5 cup olive oil",
+      "recipe_id": "92858f4a4c976780",
+      "recipe_title": "Thousand Island Salad Dressing",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "2 tablespoon olive oil",
+      "recipe_id": "3c35daef62333f65",
+      "recipe_title": "Vegetarian Spaghetti Sauce",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "1 tablespoon olive oil or cooking oil",
+      "recipe_id": "444f62cbe88f9442",
+      "recipe_title": "Gingery Quinoa with Green Beans",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "2 tablespoon olive oil divided",
+      "recipe_id": "fc4790e38483205a",
+      "recipe_title": "Apple Corn Chili",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "1 tablespoon olive oil",
+      "recipe_id": "ebc083ca6495642c",
+      "recipe_title": "Curried Brown Rice with Pumpkin Seeds, Apricots and Spinach",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "eggs beaten",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "4 egg eggs beaten",
+      "recipe_id": "f4d18a98ae84a61a",
+      "recipe_title": "Bran Muffins",
+      "selected_product": "Eggland's Best Jumbo Eggs"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "1 tablespoon olive oil",
+      "recipe_id": "45394682951c707b",
+      "recipe_title": "Plantain Cups with Shredded Chicken | Mofonguitos",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "2 tablespoon olive oil",
+      "recipe_id": "45394682951c707b",
+      "recipe_title": "Plantain Cups with Shredded Chicken | Mofonguitos",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "3 teaspoon olive oil",
+      "recipe_id": "39528e214fc83436",
+      "recipe_title": "Dave\u2019s Herb-Stuffed Mushrooms",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "2 tablespoon olive oil",
+      "recipe_id": "3e1b3ee443ff7e50",
+      "recipe_title": "Oven-Baked Potato Pancakes",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "2 tablespoon olive oil",
+      "recipe_id": "68045e55e13252e3",
+      "recipe_title": "Chicken Salad with Ramen Noodles",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "2 tablespoon olive oil",
+      "recipe_id": "1a9cf7df027ae6fa",
+      "recipe_title": "Lentil Soup",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "3 teaspoon olive oil",
+      "recipe_id": "39528e214fc83436",
+      "recipe_title": "Dave\u2019s Herb-Stuffed Mushrooms",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "eggs slightly beaten",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 egg eggs slightly beaten",
+      "recipe_id": "5f9aaeab3aa8e67d",
+      "recipe_title": "Coconut Drop cookies",
+      "selected_product": "Eggland's Best Jumbo Eggs"
+    },
+    {
+      "canonical_ingredient": "egg yolk",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 egg egg yolk",
+      "recipe_id": "f15fa58565e46981",
+      "recipe_title": "Bechamel Sauce",
+      "selected_product": "Eggland's Best Jumbo Eggs"
+    },
+    {
+      "canonical_ingredient": "best bottle oil",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 pint best bottle oil",
+      "recipe_id": "d91baaf8f4bbad2b",
+      "recipe_title": "Cucumber Pickles",
+      "selected_product": "Bowl & Basket Cooking Oil"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "0.25 cup olive oil",
+      "recipe_id": "b0c736782369e1be",
+      "recipe_title": "Autumn Vegetable Succotash",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "fat-reduced mayonnaise",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 tablespoon fat-reduced mayonnaise",
+      "recipe_id": "8b503471959a12ae",
+      "recipe_title": "Apple Banana Salad with Peanuts",
+      "selected_product": "Wholesome Pantry Mayonnaise, Real"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "1 tablespoon olive oil",
+      "recipe_id": "0f2ce214fdfb5116",
+      "recipe_title": "Beef Pozole Soup",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "eggs beaten",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 egg eggs beaten",
+      "recipe_id": "d63bcb8e1694572f",
+      "recipe_title": "Pancakes (from Better Baking Mix)",
+      "selected_product": "Eggland's Best Jumbo Eggs"
+    },
+    {
+      "canonical_ingredient": "mayonnaise",
+      "checkout_cost": 6.99,
+      "confidence": "exact",
+      "failure_categories": [
+        "raw versus cooked distinction"
+      ],
+      "ingredient": "2 tablespoon mayonnaise or cooked salad dressing",
+      "recipe_id": "21581660aac49035",
+      "recipe_title": "Stuffed Tomato Salad",
+      "selected_product": "Wholesome Pantry Mayonnaise, Real"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "2 teaspoon olive oil",
+      "recipe_id": "53a28dfb102e7ffb",
+      "recipe_title": "Leaf Finger Salad",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "egg white well beaten",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 egg egg white well beaten",
+      "recipe_id": "f9f2471d9f32bffd",
+      "recipe_title": "Marshmallow Cream",
+      "selected_product": "Eggland's Best Jumbo Eggs"
+    },
+    {
+      "canonical_ingredient": "eggs yolks beaten",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "3 egg eggs yolks beaten",
+      "recipe_id": "90735c32dc0e4225",
+      "recipe_title": "Maple Ice Cream",
+      "selected_product": "Eggland's Best Jumbo Eggs"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "legitimate no-match or non-purchase ingredient",
+        "low confidence"
+      ],
+      "ingredient": "2 tablespoon olive oil or oil of choice",
+      "recipe_id": "a3d4b09a0e254b62",
+      "recipe_title": "Orange and Honey Glazed Brussel Sprouts",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "eggs well beaten",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 egg eggs well beaten",
+      "recipe_id": "c942445009e9edd9",
+      "recipe_title": "Dutch Noodle Cheese Ring",
+      "selected_product": "Bowl & Basket Eggs"
+    },
+    {
+      "canonical_ingredient": "eggs well beaten",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "3 egg eggs well beaten",
+      "recipe_id": "b67ed11bea4c4b4e",
+      "recipe_title": "Pressed Beef",
+      "selected_product": "Bowl & Basket Eggs"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "0.5 tablespoon olive oil",
+      "recipe_id": "99e332c9bc3c561b",
+      "recipe_title": "Citrus Vegetables",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "legitimate no-match or non-purchase ingredient",
+        "low confidence"
+      ],
+      "ingredient": "1 tablespoon olive oil (or oil of your choice)",
+      "recipe_id": "180001f4056835a7",
+      "recipe_title": "Tomato and Cucumber Salad",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "1 tablespoon olive oil",
+      "recipe_id": "71d64f702eccfeec",
+      "recipe_title": "Tomato N' Cheese Pasta",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "1 tablespoon olive oil",
+      "recipe_id": "7e542d66335f3e9f",
+      "recipe_title": "Simple Fish Tacos",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "5 tablespoon olive oil",
+      "recipe_id": "73ee6eafd0d0a2dc",
+      "recipe_title": "Bettina\u2019s French Dressing",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "0.25 cup olive oil",
+      "recipe_id": "545ae9502a7ab017",
+      "recipe_title": "Spaghetti Roma",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "brown sugar if liked",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 pound brown sugar if liked",
+      "recipe_id": "d1ec3c3edc29ec91",
+      "recipe_title": "Salad Cream",
+      "selected_product": "Wholesome Light Brown Sugar"
+    },
+    {
+      "canonical_ingredient": "egg slightly beaten",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 egg egg slightly beaten",
+      "recipe_id": "d39f17dc7143c18b",
+      "recipe_title": "Apple Walnut Loaf",
+      "selected_product": "Eggland's Best Jumbo Eggs"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "1 tablespoon olive oil",
+      "recipe_id": "e50660326de63f91",
+      "recipe_title": "Grilled Pineapple Ginger Glazed Chicken with Zucchini and Peppers",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "1 tablespoon olive oil",
+      "recipe_id": "ec5115dcc296120e",
+      "recipe_title": "Cabbage Relish in Green Pepper Cases",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "2 tablespoon olive oil",
+      "recipe_id": "79b270961b61c516",
+      "recipe_title": "Salad a la Philippine",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "egg yolk",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 egg egg yolk",
+      "recipe_id": "f2edc75c5765802e",
+      "recipe_title": "Mutton in Ramekins",
+      "selected_product": "Eggland's Best Jumbo Eggs"
+    },
+    {
+      "canonical_ingredient": "eggs well beaten",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 egg eggs well beaten",
+      "recipe_id": "2592548ae6deeda2",
+      "recipe_title": "Molasses Walnut Cookies",
+      "selected_product": "Bowl & Basket Eggs"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "2 tablespoon olive oil",
+      "recipe_id": "d7ae1dfa41fd6c88",
+      "recipe_title": "Veggie Loaded Mashed Potato Bowl",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "eggs slightly beaten",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "3 egg eggs slightly beaten",
+      "recipe_id": "943dc11015954f08",
+      "recipe_title": "Pecan Pie",
+      "selected_product": "Eggland's Best Jumbo Eggs"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "2 tablespoon olive oil",
+      "recipe_id": "ab67ae1f4335cd70",
+      "recipe_title": "Strawberry Mango Feta Toast Points",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "1 tablespoon olive oil",
+      "recipe_id": "ec89d58851df7617",
+      "recipe_title": "Stove Top Green Chile Chicken Enchiladas",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "cheese grated",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.25 pound cheese grated",
+      "recipe_id": "d55c0826df726bb4",
+      "recipe_title": "Cheese Custard II",
+      "selected_product": "Grated Cheese"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "3 tablespoon olive oil",
+      "recipe_id": "abb7b365518b40c5",
+      "recipe_title": "Oven Baked Sweet Potato Fries",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "2 tablespoon olive oil divided",
+      "recipe_id": "6dd277b43e5cd8de",
+      "recipe_title": "Cumin Lime Shrimp over Creamy Cauliflower Risotto",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "1 tablespoon olive oil",
+      "recipe_id": "4f099b44868d239d",
+      "recipe_title": "Pork Power Bowl",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "3 tablespoon olive oil",
+      "recipe_id": "4f099b44868d239d",
+      "recipe_title": "Pork Power Bowl",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "2 tablespoon olive oil",
+      "recipe_id": "de001c51c904f13f",
+      "recipe_title": "Avocado Veggie Bake",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "0.25 cup olive oil",
+      "recipe_id": "c5b51eddb10b9c65",
+      "recipe_title": "Salata Ma Jibna (Salad with Parmesan Cheese)",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "olive oil",
+      "checkout_cost": 6.99,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "1.5 tablespoon olive oil",
+      "recipe_id": "9c31ca66ebfa20f7",
+      "recipe_title": "Fruit & Feta Salad",
+      "selected_product": "Goya Olive Oil, Light Flavor"
+    },
+    {
+      "canonical_ingredient": "eggs slightly beaten",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "6 egg eggs slightly beaten",
+      "recipe_id": "2b804f47be6f1144",
+      "recipe_title": "Baked Custard",
+      "selected_product": "Eggland's Best Jumbo Eggs"
+    },
+    {
+      "canonical_ingredient": "egg yolk",
+      "checkout_cost": 6.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 egg egg yolk",
+      "recipe_id": "84804230114d3eec",
+      "recipe_title": "Potato Croquettes",
+      "selected_product": "Eggland's Best Jumbo Eggs"
+    },
+    {
+      "canonical_ingredient": "low sodium vegetable stock",
+      "checkout_cost": 6.89,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 cup low sodium vegetable stock",
+      "recipe_id": "4f099b44868d239d",
+      "recipe_title": "Pork Power Bowl",
+      "selected_product": "Kitchen Basics Vegetable Stock"
+    },
+    {
+      "canonical_ingredient": "pineapple juice",
+      "checkout_cost": 6.79,
+      "confidence": "medium",
+      "failure_categories": [
+        "legitimate no-match or non-purchase ingredient",
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.75 cup pineapple juice",
+      "recipe_id": "b46f2500ac4b9775",
+      "recipe_title": "Fruit and Yogurt Breakfast Shake",
+      "selected_product": "Dole 100% Juice, Pineapple"
+    },
+    {
+      "canonical_ingredient": "pineapple juice",
+      "checkout_cost": 6.79,
+      "confidence": "medium",
+      "failure_categories": [
+        "legitimate no-match or non-purchase ingredient",
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.25 cup pineapple juice",
+      "recipe_id": "5ed9fec166dbf4c1",
+      "recipe_title": "Golden Glory Icing",
+      "selected_product": "Dole 100% Juice, Pineapple"
+    },
+    {
+      "canonical_ingredient": "oatmeal",
+      "checkout_cost": 6.69,
+      "confidence": "low",
+      "failure_categories": [
+        "low confidence"
+      ],
+      "ingredient": "2 ounce oatmeal",
+      "recipe_id": "7d5f060ddfbfde4e",
+      "recipe_title": "Stew Soup No. 1",
+      "selected_product": "Wholesome Pantry Oatmeal"
+    },
+    {
+      "canonical_ingredient": "beef round steak",
+      "checkout_cost": 6.58,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "12 ounce beef round steak",
+      "recipe_id": "c5aae5a50d952ea3",
+      "recipe_title": "Marinated Beef",
+      "selected_product": "Bowl & Basket Steak Sauce"
+    },
+    {
+      "canonical_ingredient": "sour milk",
+      "checkout_cost": 6.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "3 cup sour milk",
+      "recipe_id": "e3aec3720a969df4",
+      "recipe_title": "Bran Bread with Sour Milk",
+      "selected_product": "a2 Milk Whole Milk"
+    },
+    {
+      "canonical_ingredient": "cold milk",
+      "checkout_cost": 6.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "4 tablespoon cold milk",
+      "recipe_id": "f9f2471d9f32bffd",
+      "recipe_title": "Marshmallow Cream",
+      "selected_product": "a2 Milk Whole Milk"
+    },
+    {
+      "canonical_ingredient": "scalded milk",
+      "checkout_cost": 6.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 cup scalded milk",
+      "recipe_id": "93e44db421364b08",
+      "recipe_title": "Philadelphia Cinnamon Bun",
+      "selected_product": "a2 Milk Whole Milk"
+    },
+    {
+      "canonical_ingredient": "sour milk",
+      "checkout_cost": 6.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1.5 cup sour milk",
+      "recipe_id": "c367639ee964ca96",
+      "recipe_title": "Sour Milk Doughnut",
+      "selected_product": "a2 Milk Whole Milk"
+    },
+    {
+      "canonical_ingredient": "boiling milk",
+      "checkout_cost": 6.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 quart boiling milk",
+      "recipe_id": "77e1b65812bb1956",
+      "recipe_title": "Indian Pudding The 'Champion'",
+      "selected_product": "a2 Milk Whole Milk"
+    },
+    {
+      "canonical_ingredient": "milk scalded",
+      "checkout_cost": 6.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2.25 cup milk scalded",
+      "recipe_id": "b251c1e27ab49798",
+      "recipe_title": "Cheese fondue",
+      "selected_product": "a2 Milk Whole Milk"
+    },
+    {
+      "canonical_ingredient": "hot milk",
+      "checkout_cost": 6.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 pint hot milk",
+      "recipe_id": "dbc25cff4fc026af",
+      "recipe_title": "Cream Pie",
+      "selected_product": "a2 Milk Whole Milk"
+    },
+    {
+      "canonical_ingredient": "cold milk",
+      "checkout_cost": 6.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "4 tablespoon cold milk",
+      "recipe_id": "f9f2471d9f32bffd",
+      "recipe_title": "Marshmallow Cream",
+      "selected_product": "a2 Milk Whole Milk"
+    },
+    {
+      "canonical_ingredient": "sweet milk",
+      "checkout_cost": 6.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.5 cup sweet milk",
+      "recipe_id": "08cb2daf32847bcb",
+      "recipe_title": "Soda Biscuits",
+      "selected_product": "a2 Milk Whole Milk"
+    },
+    {
+      "canonical_ingredient": "new milk",
+      "checkout_cost": 6.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 pint new milk",
+      "recipe_id": "52b9acd62812d410",
+      "recipe_title": "Frozen Charlotte Russe",
+      "selected_product": "a2 Milk Whole Milk"
+    },
+    {
+      "canonical_ingredient": "hot milk",
+      "checkout_cost": 6.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 pint hot milk",
+      "recipe_id": "d11f850d7b94b281",
+      "recipe_title": "Hot Biscuit",
+      "selected_product": "a2 Milk Whole Milk"
+    },
+    {
+      "canonical_ingredient": "rice",
+      "checkout_cost": 6.49,
+      "confidence": "exact",
+      "failure_categories": [
+        "legitimate no-match or non-purchase ingredient"
+      ],
+      "ingredient": "0.5 pound rice",
+      "recipe_id": "d37572d451c52f50",
+      "recipe_title": "Boiled Rice II",
+      "selected_product": "Bowl & Basket Rice"
+    },
+    {
+      "canonical_ingredient": "cold milk",
+      "checkout_cost": 6.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "4 tablespoon cold milk",
+      "recipe_id": "6c5f4374fb7f9873",
+      "recipe_title": "Prune Blanc Mange",
+      "selected_product": "a2 Milk Whole Milk"
+    },
+    {
+      "canonical_ingredient": "hot milk",
+      "checkout_cost": 6.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.666667 cup hot milk",
+      "recipe_id": "6c5f4374fb7f9873",
+      "recipe_title": "Prune Blanc Mange",
+      "selected_product": "a2 Milk Whole Milk"
+    },
+    {
+      "canonical_ingredient": "hot milk",
+      "checkout_cost": 6.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 pint hot milk",
+      "recipe_id": "dbc25cff4fc026af",
+      "recipe_title": "Cream Pie",
+      "selected_product": "a2 Milk Whole Milk"
+    },
+    {
+      "canonical_ingredient": "hot milk",
+      "checkout_cost": 6.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 cup hot milk",
+      "recipe_id": "90d6671a0a1889e5",
+      "recipe_title": "Scalloped Potatoes II",
+      "selected_product": "a2 Milk Whole Milk"
+    },
+    {
+      "canonical_ingredient": "milk fat free",
+      "checkout_cost": 6.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 cup milk fat free",
+      "recipe_id": "4aec20c697ef59a9",
+      "recipe_title": "Avocado Melon Breakfast Smoothie",
+      "selected_product": "Lactaid Fat Free Milk"
+    },
+    {
+      "canonical_ingredient": "milk plus 2 tablespoons",
+      "checkout_cost": 6.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 cup milk plus 2 tablespoons",
+      "recipe_id": "9f00bde5f4a74e54",
+      "recipe_title": "Brown Sugar Chocolate Cake",
+      "selected_product": "a2 Milk Whole Milk"
+    },
+    {
+      "canonical_ingredient": "sour milk",
+      "checkout_cost": 6.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1.5 cup sour milk",
+      "recipe_id": "d274103c1fc7743c",
+      "recipe_title": "Baked Brown Bread",
+      "selected_product": "a2 Milk Whole Milk"
+    },
+    {
+      "canonical_ingredient": "sour milk",
+      "checkout_cost": 6.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.25 cup sour milk",
+      "recipe_id": "959473d58c1b0dac",
+      "recipe_title": "Banana Cake",
+      "selected_product": "a2 Milk Whole Milk"
+    },
+    {
+      "canonical_ingredient": "sour milk",
+      "checkout_cost": 6.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.25 cup sour milk",
+      "recipe_id": "959473d58c1b0dac",
+      "recipe_title": "Banana Cake",
+      "selected_product": "a2 Milk Whole Milk"
+    },
+    {
+      "canonical_ingredient": "boiled salad dressing",
+      "checkout_cost": 5.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.666667 cup boiled salad dressing",
+      "recipe_id": "97454f93132e253e",
+      "recipe_title": "Bean Salad II",
+      "selected_product": "Marie's Dressing Italian Creamy Garlic"
+    },
+    {
+      "canonical_ingredient": "crumbled blue cheese",
+      "checkout_cost": 5.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.25 cup crumbled blue cheese",
+      "recipe_id": "35a7e277d18360d8",
+      "recipe_title": "Caesar Salad II",
+      "selected_product": "Marie's Super Blue Cheese Dressing"
+    },
+    {
+      "canonical_ingredient": "1 2 pound swiss cheese",
+      "checkout_cost": 5.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.25 pound - 1/2 pound swiss cheese",
+      "recipe_id": "c942445009e9edd9",
+      "recipe_title": "Dutch Noodle Cheese Ring",
+      "selected_product": "Alpine Lace 25% Reduced Fat Swiss Cheese"
+    },
+    {
+      "canonical_ingredient": "cooked chicken",
+      "checkout_cost": 5.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "raw versus cooked distinction",
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 ounce cooked chicken",
+      "recipe_id": "4ffd5531d0b5815c",
+      "recipe_title": "Biscuits \u00c3 la Duchesse",
+      "selected_product": "Perdue Fully cooked spicy chicken cutlets"
+    },
+    {
+      "canonical_ingredient": "cold boiled potatoes",
+      "checkout_cost": 5.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.5 pound cold boiled potatoes",
+      "recipe_id": "9ffce8cd28ac3766",
+      "recipe_title": "Meat Croquettes",
+      "selected_product": "Bowl & Basket Eastern Potatoes"
+    },
+    {
+      "canonical_ingredient": "cooked salad dressing",
+      "checkout_cost": 5.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "raw versus cooked distinction",
+        "selected product identity requires review"
+      ],
+      "ingredient": "1.5 cup cooked salad dressing",
+      "recipe_id": "3b59598614bf26e8",
+      "recipe_title": "Deviled Eggs",
+      "selected_product": "Marie's Dressing Italian Creamy Garlic"
+    },
+    {
+      "canonical_ingredient": "finely grated cheese",
+      "checkout_cost": 5.99,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1.5 ounce finely grated cheese",
+      "recipe_id": "410c770948fb4d74",
+      "recipe_title": "Cheese Pastry",
+      "selected_product": "BelGioioso Freshly Shredded Cheese, Four Cheese"
+    },
+    {
+      "canonical_ingredient": "lettuce mix",
+      "checkout_cost": 5.98,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "12 ounce lettuce mix",
+      "recipe_id": "8b503471959a12ae",
+      "recipe_title": "Apple Banana Salad with Peanuts",
+      "selected_product": "Fresh Express Lettuce Shreds"
+    },
+    {
+      "canonical_ingredient": "lite mayonnaise-type dressing",
+      "checkout_cost": 5.79,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 tablespoon lite mayonnaise-type dressing",
+      "recipe_id": "42fedd4037a50bc1",
+      "recipe_title": "Apple Salad",
+      "selected_product": "Wish-Bone Russian Salad Dressing"
+    },
+    {
+      "canonical_ingredient": "lite italian dressing",
+      "checkout_cost": 5.79,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.5 cup Lite Italian Dressing",
+      "recipe_id": "f02373535b703191",
+      "recipe_title": "Spinach Rice Salad",
+      "selected_product": "Wish-Bone Italian Salad Dressing"
+    },
+    {
+      "canonical_ingredient": "salad dressing mayonnaise-type",
+      "checkout_cost": 5.79,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "1 tablespoon salad dressing mayonnaise-type",
+      "recipe_id": "8bb64776d299501a",
+      "recipe_title": "Curry Vegetable Dip",
+      "selected_product": "Wish-Bone Russian Salad Dressing"
+    },
+    {
+      "canonical_ingredient": "hot peppers freshly",
+      "checkout_cost": 5.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "fresh/frozen/canned/dried distinction",
+        "selected product identity requires review"
+      ],
+      "ingredient": "3 teaspoon hot peppers freshly chopped",
+      "recipe_id": "3f2ae1749e2229be",
+      "recipe_title": "Smothered Greens",
+      "selected_product": "B&G Peppers, Hot"
+    },
+    {
+      "canonical_ingredient": "red pepper 2 tablespoons",
+      "checkout_cost": 5.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.125 cup red pepper 2 Tablespoons",
+      "recipe_id": "133695e8c60b1cff",
+      "recipe_title": "Corn and Cucumber Salad",
+      "selected_product": "B&G Sweet Peppers"
+    },
+    {
+      "canonical_ingredient": "red pepper 2 tablespoons",
+      "checkout_cost": 5.49,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.125 cup red pepper 2 Tablespoons",
+      "recipe_id": "133695e8c60b1cff",
+      "recipe_title": "Corn and Cucumber Salad",
+      "selected_product": "B&G Sweet Peppers"
+    },
+    {
+      "canonical_ingredient": "french beans",
+      "checkout_cost": 5.38,
+      "confidence": "medium",
+      "failure_categories": [
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 pound French beans",
+      "recipe_id": "1083cc145a4e7360",
+      "recipe_title": "Beef Stewed with French Beans",
+      "selected_product": "French Green Beans"
+    },
+    {
+      "canonical_ingredient": "100 percent apple juice",
+      "checkout_cost": 5.29,
+      "confidence": "medium",
+      "failure_categories": [
+        "legitimate no-match or non-purchase ingredient",
+        "selected product identity requires review"
+      ],
+      "ingredient": "2 cup 100% apple juice",
+      "recipe_id": "0e3ba9fbaf279391",
+      "recipe_title": "Baked Beans",
+      "selected_product": "Langers 100% Apple Juice"
+    },
+    {
+      "canonical_ingredient": "100 percent apple juice",
+      "checkout_cost": 5.29,
+      "confidence": "medium",
+      "failure_categories": [
+        "legitimate no-match or non-purchase ingredient",
+        "selected product identity requires review"
+      ],
+      "ingredient": "0.5 cup 100% apple juice or white grape juice",
+      "recipe_id": "4aec20c697ef59a9",
+      "recipe_title": "Avocado Melon Breakfast Smoothie",
+      "selected_product": "Langers 100% Apple Juice"
+    }
+  ],
+  "top_low_confidence_ingredients": [
+    {
+      "count": 134,
+      "value": "water"
+    },
+    {
+      "count": 41,
+      "value": "olive oil"
+    },
+    {
+      "count": 24,
+      "value": "cold water"
+    },
+    {
+      "count": 22,
+      "value": "boiling water"
+    },
+    {
+      "count": 19,
+      "value": "shortening"
+    },
+    {
+      "count": 17,
+      "value": "cloves"
+    },
+    {
+      "count": 16,
+      "value": "lard"
+    },
+    {
+      "count": 16,
+      "value": "fat"
+    },
+    {
+      "count": 16,
+      "value": "cream"
+    },
+    {
+      "count": 15,
+      "value": "hot water"
+    },
+    {
+      "count": 14,
+      "value": "broken ice"
+    },
+    {
+      "count": 12,
+      "value": "margarine"
+    },
+    {
+      "count": 11,
+      "value": "lemon"
+    },
+    {
+      "count": 9,
+      "value": "piece lemon peel"
+    },
+    {
+      "count": 8,
+      "value": "seasoning"
+    },
+    {
+      "count": 7,
+      "value": "ketchup"
+    },
+    {
+      "count": 7,
+      "value": "gin"
+    },
+    {
+      "count": 7,
+      "value": "dripping"
+    },
+    {
+      "count": 7,
+      "value": "italian vermouth"
+    },
+    {
+      "count": 7,
+      "value": "orange juice"
+    },
+    {
+      "count": 6,
+      "value": "warm water"
+    },
+    {
+      "count": 6,
+      "value": "nuts"
+    },
+    {
+      "count": 6,
+      "value": "orange"
+    },
+    {
+      "count": 6,
+      "value": "cocktail cherry"
+    },
+    {
+      "count": 6,
+      "value": "yeast cake"
+    },
+    {
+      "count": 6,
+      "value": "turnips"
+    },
+    {
+      "count": 6,
+      "value": "cracker crumbs"
+    },
+    {
+      "count": 5,
+      "value": "brandy"
+    },
+    {
+      "count": 5,
+      "value": "french vermouth"
+    },
+    {
+      "count": 5,
+      "value": "whipping cream"
+    },
+    {
+      "count": 5,
+      "value": "sour cream"
+    },
+    {
+      "count": 5,
+      "value": "cooking spray"
+    },
+    {
+      "count": 5,
+      "value": "veal"
+    },
+    {
+      "count": 5,
+      "value": "oysters"
+    },
+    {
+      "count": 5,
+      "value": "allspice"
+    },
+    {
+      "count": 4,
+      "value": "coconut"
+    },
+    {
+      "count": 4,
+      "value": "soda water"
+    },
+    {
+      "count": 4,
+      "value": "apricots"
+    },
+    {
+      "count": 4,
+      "value": "gravy"
+    },
+    {
+      "count": 4,
+      "value": "currants"
+    },
+    {
+      "count": 4,
+      "value": "dry sherry"
+    },
+    {
+      "count": 4,
+      "value": "herbs"
+    },
+    {
+      "count": 4,
+      "value": "spareribs"
+    },
+    {
+      "count": 4,
+      "value": "lemon worth of juice"
+    },
+    {
+      "count": 4,
+      "value": "juice of lemon"
+    },
+    {
+      "count": 4,
+      "value": "sage"
+    },
+    {
+      "count": 4,
+      "value": "nonstick cooking spray"
+    },
+    {
+      "count": 4,
+      "value": "dill"
+    },
+    {
+      "count": 4,
+      "value": "italian seasoning"
+    },
+    {
+      "count": 4,
+      "value": "pimento"
+    },
+    {
+      "count": 4,
+      "value": "apple cider vinegar"
+    },
+    {
+      "count": 4,
+      "value": "whipped cream"
+    },
+    {
+      "count": 4,
+      "value": "radishes"
+    },
+    {
+      "count": 3,
+      "value": "pimento cut fine"
+    },
+    {
+      "count": 3,
+      "value": "slices toast"
+    },
+    {
+      "count": 3,
+      "value": "vanilla yogurt"
+    },
+    {
+      "count": 3,
+      "value": "cranberries"
+    },
+    {
+      "count": 3,
+      "value": "paper straws"
+    },
+    {
+      "count": 3,
+      "value": "sherry"
+    },
+    {
+      "count": 3,
+      "value": "cherries"
+    },
+    {
+      "count": 3,
+      "value": "lukewarm water to soften yeast cake"
+    },
+    {
+      "count": 3,
+      "value": "angostura bitters"
+    },
+    {
+      "count": 3,
+      "value": "sauerkraut"
+    },
+    {
+      "count": 3,
+      "value": "apricot syrup"
+    },
+    {
+      "count": 3,
+      "value": "blueberries"
+    },
+    {
+      "count": 3,
+      "value": "for the vinaigrette"
+    },
+    {
+      "count": 3,
+      "value": "lime"
+    },
+    {
+      "count": 3,
+      "value": "watermelon"
+    },
+    {
+      "count": 3,
+      "value": "pumpkin pie spice"
+    },
+    {
+      "count": 3,
+      "value": "figs"
+    },
+    {
+      "count": 3,
+      "value": "cilantro"
+    },
+    {
+      "count": 3,
+      "value": "beans"
+    },
+    {
+      "count": 3,
+      "value": "oatmeal"
+    },
+    {
+      "count": 3,
+      "value": "dates cut fine"
+    },
+    {
+      "count": 3,
+      "value": "pimiento"
+    },
+    {
+      "count": 3,
+      "value": "vegetable white sauce"
+    },
+    {
+      "count": 3,
+      "value": "ice"
+    },
+    {
+      "count": 3,
+      "value": "lukewarm water"
+    },
+    {
+      "count": 3,
+      "value": "lime juiced"
+    },
+    {
+      "count": 3,
+      "value": "pumpkin"
+    },
+    {
+      "count": 3,
+      "value": "nut meats"
+    },
+    {
+      "count": 3,
+      "value": "mint"
+    },
+    {
+      "count": 3,
+      "value": "mushroom soup"
+    },
+    {
+      "count": 3,
+      "value": "pearl barley"
+    },
+    {
+      "count": 2,
+      "value": "bran"
+    },
+    {
+      "count": 2,
+      "value": "poultry seasoning"
+    },
+    {
+      "count": 2,
+      "value": "mixed fruit"
+    },
+    {
+      "count": 2,
+      "value": "grape juice"
+    },
+    {
+      "count": 2,
+      "value": "dash angostura bitters"
+    },
+    {
+      "count": 2,
+      "value": "pumpkin seeds toasted pepitas pepitas"
+    },
+    {
+      "count": 2,
+      "value": "applesauce"
+    },
+    {
+      "count": 2,
+      "value": "nuts as topping"
+    },
+    {
+      "count": 2,
+      "value": "slices grain bread thin slice"
+    },
+    {
+      "count": 2,
+      "value": "15-oz can of peaches"
+    },
+    {
+      "count": 2,
+      "value": "cold mutton"
+    },
+    {
+      "count": 2,
+      "value": "ice cube tray"
+    },
+    {
+      "count": 2,
+      "value": "marshmallows cut in one-fourth cubes"
+    },
+    {
+      "count": 2,
+      "value": "toasted marshmallows"
+    },
+    {
+      "count": 2,
+      "value": "monosodium glutamate"
+    },
+    {
+      "count": 2,
+      "value": "tongue"
+    },
+    {
+      "count": 2,
+      "value": "tomato juice"
+    },
+    {
+      "count": 2,
+      "value": "stiff aspic jelly"
+    },
+    {
+      "count": 2,
+      "value": "gelatine"
+    },
+    {
+      "count": 2,
+      "value": "orange worth of juice"
+    },
+    {
+      "count": 2,
+      "value": "a few dashes of orange-flower water"
+    },
+    {
+      "count": 2,
+      "value": "a little fruit"
+    },
+    {
+      "count": 2,
+      "value": "rose petals to decorate"
+    },
+    {
+      "count": 2,
+      "value": "piece of ice"
+    },
+    {
+      "count": 2,
+      "value": "strained orange juice"
+    },
+    {
+      "count": 2,
+      "value": "iced water"
+    },
+    {
+      "count": 2,
+      "value": "thin slices of orange"
+    },
+    {
+      "count": 2,
+      "value": "cod fillets"
+    },
+    {
+      "count": 2,
+      "value": "slices wheat bread"
+    },
+    {
+      "count": 2,
+      "value": "taco shells"
+    },
+    {
+      "count": 2,
+      "value": "taco sauce"
+    },
+    {
+      "count": 2,
+      "value": "topping"
+    },
+    {
+      "count": 2,
+      "value": "sprays of cooking spray"
+    },
+    {
+      "count": 2,
+      "value": "red"
+    },
+    {
+      "count": 2,
+      "value": "sun-tomatoes fine"
+    },
+    {
+      "count": 2,
+      "value": "mango"
+    },
+    {
+      "count": 2,
+      "value": "raspberries"
+    },
+    {
+      "count": 2,
+      "value": "poppy seeds"
+    },
+    {
+      "count": 2,
+      "value": "semolina"
+    },
+    {
+      "count": 2,
+      "value": "dry roasted peanuts"
+    },
+    {
+      "count": 2,
+      "value": "lentils"
+    },
+    {
+      "count": 2,
+      "value": "can white cherries"
+    },
+    {
+      "count": 2,
+      "value": "marshmallows cut in small pieces"
+    },
+    {
+      "count": 2,
+      "value": "clams"
+    },
+    {
+      "count": 2,
+      "value": "wheat buns"
+    },
+    {
+      "count": 2,
+      "value": "milliliter tepid water"
+    },
+    {
+      "count": 2,
+      "value": "yeast"
+    },
+    {
+      "count": 2,
+      "value": "orange juice juice from 1 2 orange"
+    },
+    {
+      "count": 2,
+      "value": "fruit"
+    },
+    {
+      "count": 2,
+      "value": "for the salad"
+    },
+    {
+      "count": 2,
+      "value": "crumbs"
+    },
+    {
+      "count": 2,
+      "value": "meat"
+    },
+    {
+      "count": 2,
+      "value": "chives"
+    },
+    {
+      "count": 2,
+      "value": "maple syrup"
+    },
+    {
+      "count": 2,
+      "value": "low-sodium tomato juice"
+    },
+    {
+      "count": 2,
+      "value": "whisky"
+    },
+    {
+      "count": 2,
+      "value": "orange curacao"
+    },
+    {
+      "count": 2,
+      "value": "cardamom"
+    },
+    {
+      "count": 2,
+      "value": "mixed candied fruit"
+    },
+    {
+      "count": 2,
+      "value": "capers"
+    },
+    {
+      "count": 2,
+      "value": "grated lemon rind"
+    },
+    {
+      "count": 2,
+      "value": "cake yeast"
+    },
+    {
+      "count": 2,
+      "value": "chili and spice seasoning"
+    },
+    {
+      "count": 2,
+      "value": "marshmallows"
+    },
+    {
+      "count": 2,
+      "value": "salad"
+    },
+    {
+      "count": 2,
+      "value": "shortening half butter half lard"
+    },
+    {
+      "count": 2,
+      "value": "salad greens"
+    },
+    {
+      "count": 2,
+      "value": "parsnips"
+    },
+    {
+      "count": 2,
+      "value": "can salmon"
+    },
+    {
+      "count": 2,
+      "value": "leftsp over cooked vegetables peas beans celery"
+    },
+    {
+      "count": 2,
+      "value": "cold cooked meat"
+    },
+    {
+      "count": 2,
+      "value": "4 clove"
+    },
+    {
+      "count": 2,
+      "value": "dashes absinthe"
+    },
+    {
+      "count": 2,
+      "value": "dash plain syrup"
+    },
+    {
+      "count": 2,
+      "value": "dash orange bitters"
+    },
+    {
+      "count": 2,
+      "value": "liver"
+    },
+    {
+      "count": 2,
+      "value": "fruit try a mixture-apples try a mixture-apples bananas raisins berries peaches"
+    },
+    {
+      "count": 2,
+      "value": "dates"
+    },
+    {
+      "count": 2,
+      "value": "egg mix"
+    },
+    {
+      "count": 2,
+      "value": "mushrooms"
+    },
+    {
+      "count": 2,
+      "value": "oranges"
+    },
+    {
+      "count": 2,
+      "value": "ready-to-cook duckling 5"
+    },
+    {
+      "count": 2,
+      "value": "recipe bread stuffing"
+    },
+    {
+      "count": 2,
+      "value": "6-ounce orange juice 6-ounce"
+    },
+    {
+      "count": 1,
+      "value": "pitted dates"
+    },
+    {
+      "count": 1,
+      "value": "square chocolate"
+    },
+    {
+      "count": 1,
+      "value": "farina"
+    },
+    {
+      "count": 1,
+      "value": "pastry for 9 shell"
+    },
+    {
+      "count": 1,
+      "value": "slices wheat bread cubed"
+    },
+    {
+      "count": 1,
+      "value": "orange juice 1 tablespoon"
+    },
+    {
+      "count": 1,
+      "value": "low-sodium pizza sauce"
+    },
+    {
+      "count": 1,
+      "value": "12-inch italian pizza shell 12-inch"
+    },
+    {
+      "count": 1,
+      "value": "tumbler broken ice"
+    },
+    {
+      "count": 1,
+      "value": "slices grape"
+    },
+    {
+      "count": 1,
+      "value": "navy dry sorted and"
+    },
+    {
+      "count": 1,
+      "value": "mushrooms cans"
+    },
+    {
+      "count": 1,
+      "value": "water chestnuts can"
+    },
+    {
+      "count": 1,
+      "value": "grapefruits sectioned and"
+    },
+    {
+      "count": 1,
+      "value": "us fluid ounces grapefruit juice"
+    },
+    {
+      "count": 1,
+      "value": "meat scraps cooked"
+    },
+    {
+      "count": 1,
+      "value": "lettuces"
+    },
+    {
+      "count": 1,
+      "value": "piece dripping"
+    },
+    {
+      "count": 1,
+      "value": "imperial maple syrup"
+    },
+    {
+      "count": 1,
+      "value": "squares bitter chocolate"
+    },
+    {
+      "count": 1,
+      "value": "3.5 cup fresh or canned (No 2 1/2 can) tomatoes No 2 1/2 can"
+    },
+    {
+      "count": 1,
+      "value": "pickle relish"
+    },
+    {
+      "count": 1,
+      "value": "one-inch blocks of left-over cereal such as fine hominy cream of wheat"
+    },
+    {
+      "count": 1,
+      "value": "anchovy"
+    },
+    {
+      "count": 1,
+      "value": "fried toast"
+    },
+    {
+      "count": 1,
+      "value": "citron fine"
+    },
+    {
+      "count": 1,
+      "value": "ground beef"
+    },
+    {
+      "count": 1,
+      "value": "no salt added tomato sauce about 15 ounces about"
+    },
+    {
+      "count": 1,
+      "value": "zwieback"
+    },
+    {
+      "count": 1,
+      "value": "squeeze lemon juice"
+    },
+    {
+      "count": 1,
+      "value": "tabasco sauce"
+    },
+    {
+      "count": 1,
+      "value": "or 2 yeast cakes"
+    }
+  ],
+  "top_no_inventory_candidate_ingredients": [],
+  "top_parsing_warnings": [
+    {
+      "count": 4424,
+      "value": "source quantity trusted; raw text not reparsed for main quantity"
+    },
+    {
+      "count": 2082,
+      "value": "unknown conversions"
+    },
+    {
+      "count": 1021,
+      "value": "No safe exact match selected."
+    },
+    {
+      "count": 818,
+      "value": "unknown required quantity"
+    },
+    {
+      "count": 347,
+      "value": "package size unavailable"
+    },
+    {
+      "count": 275,
+      "value": "package metadata excluded from optimization"
+    },
+    {
+      "count": 100,
+      "value": "multiple packages required"
+    },
+    {
+      "count": 28,
+      "value": "quantity range parsed from raw text"
+    },
+    {
+      "count": 16,
+      "value": "variable weight package"
+    },
+    {
+      "count": 9,
+      "value": "large ounce package should be verified before optimization"
+    },
+    {
+      "count": 3,
+      "value": "container unit has no ingredient name"
+    }
+  ],
+  "top_quantity_failures": [
+    {
+      "count": 62,
+      "value": "salt"
+    },
+    {
+      "count": 50,
+      "value": "pepper"
+    },
+    {
+      "count": 43,
+      "value": "garlic"
+    },
+    {
+      "count": 18,
+      "value": "salt to taste"
+    },
+    {
+      "count": 15,
+      "value": "water"
+    },
+    {
+      "count": 13,
+      "value": "pepper to taste"
+    },
+    {
+      "count": 9,
+      "value": "flour"
+    },
+    {
+      "count": 9,
+      "value": "apples"
+    },
+    {
+      "count": 9,
+      "value": "celery"
+    },
+    {
+      "count": 8,
+      "value": "nutmeg"
+    },
+    {
+      "count": 8,
+      "value": "salt and pepper to taste"
+    },
+    {
+      "count": 8,
+      "value": "seasoning"
+    },
+    {
+      "count": 7,
+      "value": "apple"
+    },
+    {
+      "count": 7,
+      "value": "bay leaf"
+    },
+    {
+      "count": 7,
+      "value": "egg"
+    },
+    {
+      "count": 7,
+      "value": "butter"
+    },
+    {
+      "count": 7,
+      "value": "parsley"
+    },
+    {
+      "count": 6,
+      "value": "tomatoe tomatoes"
+    },
+    {
+      "count": 6,
+      "value": "green pepper"
+    },
+    {
+      "count": 6,
+      "value": "bread crumbs"
+    },
+    {
+      "count": 6,
+      "value": "orange"
+    },
+    {
+      "count": 6,
+      "value": "sugar"
+    },
+    {
+      "count": 6,
+      "value": "cloves"
+    },
+    {
+      "count": 6,
+      "value": "yeast cake"
+    },
+    {
+      "count": 6,
+      "value": "paprika"
+    },
+    {
+      "count": 5,
+      "value": "cayenne pepper"
+    },
+    {
+      "count": 5,
+      "value": "tomatoe medium tomatoes"
+    },
+    {
+      "count": 5,
+      "value": "cooking spray"
+    },
+    {
+      "count": 5,
+      "value": "red bell pepper"
+    },
+    {
+      "count": 5,
+      "value": "black pepper to taste"
+    },
+    {
+      "count": 5,
+      "value": "dash black pepper"
+    },
+    {
+      "count": 4,
+      "value": "vinegar"
+    },
+    {
+      "count": 4,
+      "value": "lemon juice"
+    },
+    {
+      "count": 4,
+      "value": "banana"
+    },
+    {
+      "count": 4,
+      "value": "nonstick cooking spray"
+    },
+    {
+      "count": 4,
+      "value": "cucumber"
+    },
+    {
+      "count": 4,
+      "value": "pinch of salt"
+    },
+    {
+      "count": 4,
+      "value": "hard-cooked eggs"
+    },
+    {
+      "count": 4,
+      "value": "red pepper"
+    },
+    {
+      "count": 3,
+      "value": "sweet potatoes"
+    },
+    {
+      "count": 3,
+      "value": "slices toast"
+    },
+    {
+      "count": 3,
+      "value": "strawberries"
+    },
+    {
+      "count": 3,
+      "value": "paper straws"
+    },
+    {
+      "count": 3,
+      "value": "almonds"
+    },
+    {
+      "count": 3,
+      "value": "bacon"
+    },
+    {
+      "count": 3,
+      "value": "pork feet"
+    },
+    {
+      "count": 3,
+      "value": "cinnamon"
+    },
+    {
+      "count": 3,
+      "value": "soda water"
+    },
+    {
+      "count": 3,
+      "value": "eggs"
+    },
+    {
+      "count": 3,
+      "value": "green onion"
+    },
+    {
+      "count": 3,
+      "value": "for the vinaigrette"
+    },
+    {
+      "count": 3,
+      "value": "green onions"
+    },
+    {
+      "count": 3,
+      "value": "zucchini"
+    },
+    {
+      "count": 3,
+      "value": "can pineapple"
+    },
+    {
+      "count": 3,
+      "value": "14 5 ounces low-sodium tomatoes"
+    },
+    {
+      "count": 3,
+      "value": "pieces of lettuce"
+    },
+    {
+      "count": 3,
+      "value": "pinch salt"
+    },
+    {
+      "count": 3,
+      "value": "cold water"
+    },
+    {
+      "count": 3,
+      "value": "few grains pepper"
+    },
+    {
+      "count": 3,
+      "value": "slices bacon"
+    },
+    {
+      "count": 3,
+      "value": "dressing"
+    },
+    {
+      "count": 3,
+      "value": "bananas"
+    },
+    {
+      "count": 3,
+      "value": "mushroom soup"
+    },
+    {
+      "count": 3,
+      "value": "lemon"
+    },
+    {
+      "count": 3,
+      "value": "few grains salt"
+    },
+    {
+      "count": 2,
+      "value": "ham bone"
+    },
+    {
+      "count": 2,
+      "value": "dash angostura bitters"
+    },
+    {
+      "count": 2,
+      "value": "green pepper cut fine"
+    },
+    {
+      "count": 2,
+      "value": "garlic cloves"
+    },
+    {
+      "count": 2,
+      "value": "red onion peeled and"
+    },
+    {
+      "count": 2,
+      "value": "dessertspoon flour"
+    },
+    {
+      "count": 2,
+      "value": "hard boiled eggs"
+    },
+    {
+      "count": 2,
+      "value": "slices grain bread thin slice"
+    },
+    {
+      "count": 2,
+      "value": "15-oz can of peaches"
+    },
+    {
+      "count": 2,
+      "value": "slices reduced fat cheddar cheese"
+    },
+    {
+      "count": 2,
+      "value": "10-oz bag spinach"
+    },
+    {
+      "count": 2,
+      "value": "ice cube tray"
+    },
+    {
+      "count": 2,
+      "value": "pecans"
+    },
+    {
+      "count": 2,
+      "value": "cherries"
+    },
+    {
+      "count": 2,
+      "value": "tongue"
+    },
+    {
+      "count": 2,
+      "value": "thyme"
+    },
+    {
+      "count": 2,
+      "value": "baking powder"
+    },
+    {
+      "count": 2,
+      "value": "herbs"
+    },
+    {
+      "count": 2,
+      "value": "a few dashes of orange-flower water"
+    },
+    {
+      "count": 2,
+      "value": "slice pineapple"
+    },
+    {
+      "count": 2,
+      "value": "a little fruit"
+    },
+    {
+      "count": 2,
+      "value": "rose petals to decorate"
+    },
+    {
+      "count": 2,
+      "value": "bay leaves"
+    },
+    {
+      "count": 2,
+      "value": "iced water"
+    },
+    {
+      "count": 2,
+      "value": "thin slices of orange"
+    },
+    {
+      "count": 2,
+      "value": "mushrooms"
+    },
+    {
+      "count": 2,
+      "value": "yellow onion"
+    },
+    {
+      "count": 2,
+      "value": "slices wheat bread"
+    },
+    {
+      "count": 2,
+      "value": "head of lettuce"
+    },
+    {
+      "count": 2,
+      "value": "topping"
+    },
+    {
+      "count": 2,
+      "value": "sprays of cooking spray"
+    },
+    {
+      "count": 2,
+      "value": "summer squash"
+    },
+    {
+      "count": 2,
+      "value": "mushrooms approx 3 in diameter"
+    },
+    {
+      "count": 2,
+      "value": "mango"
+    },
+    {
+      "count": 2,
+      "value": "avocado"
+    },
+    {
+      "count": 2,
+      "value": "cream cheese"
+    },
+    {
+      "count": 2,
+      "value": "paprika pepper"
+    },
+    {
+      "count": 2,
+      "value": "a little milk"
+    },
+    {
+      "count": 2,
+      "value": "hard-cooked egg"
+    },
+    {
+      "count": 2,
+      "value": "nuts"
+    },
+    {
+      "count": 2,
+      "value": "butter size of walnut"
+    },
+    {
+      "count": 2,
+      "value": "egg whites"
+    },
+    {
+      "count": 2,
+      "value": "salt added to eggs before whipping"
+    },
+    {
+      "count": 2,
+      "value": "flour tortillas 8 inch"
+    },
+    {
+      "count": 2,
+      "value": "packet active dry yeast"
+    },
+    {
+      "count": 2,
+      "value": "no 2 cans corn"
+    },
+    {
+      "count": 2,
+      "value": "tomatoes"
+    },
+    {
+      "count": 2,
+      "value": "cold milk"
+    },
+    {
+      "count": 2,
+      "value": "fruit"
+    },
+    {
+      "count": 2,
+      "value": "for the salad"
+    },
+    {
+      "count": 2,
+      "value": "beaten egg"
+    },
+    {
+      "count": 2,
+      "value": "green peppers"
+    },
+    {
+      "count": 2,
+      "value": "lard"
+    },
+    {
+      "count": 2,
+      "value": "vanilla"
+    },
+    {
+      "count": 2,
+      "value": "white beans and"
+    },
+    {
+      "count": 2,
+      "value": "stick butter"
+    },
+    {
+      "count": 2,
+      "value": "salt as needed"
+    },
+    {
+      "count": 2,
+      "value": "pepper as needed"
+    },
+    {
+      "count": 2,
+      "value": "scrambled egg"
+    },
+    {
+      "count": 2,
+      "value": "pickled walnuts"
+    },
+    {
+      "count": 2,
+      "value": "garlic peeled and"
+    },
+    {
+      "count": 2,
+      "value": "potatoes"
+    },
+    {
+      "count": 2,
+      "value": "cake yeast"
+    },
+    {
+      "count": 2,
+      "value": "english cucumber"
+    },
+    {
+      "count": 2,
+      "value": "jalape o pepper"
+    },
+    {
+      "count": 2,
+      "value": "salad"
+    },
+    {
+      "count": 2,
+      "value": "enough flour to make mixture stiff"
+    },
+    {
+      "count": 2,
+      "value": "dash pepper"
+    },
+    {
+      "count": 2,
+      "value": "pumpkin"
+    },
+    {
+      "count": 2,
+      "value": "radishes"
+    },
+    {
+      "count": 2,
+      "value": "walnuts"
+    },
+    {
+      "count": 2,
+      "value": "dash cayenne pepper"
+    },
+    {
+      "count": 2,
+      "value": "firm good-sized tomatoes"
+    },
+    {
+      "count": 2,
+      "value": "4 clove"
+    },
+    {
+      "count": 2,
+      "value": "dashes absinthe"
+    },
+    {
+      "count": 2,
+      "value": "dash plain syrup"
+    },
+    {
+      "count": 2,
+      "value": "dash orange bitters"
+    },
+    {
+      "count": 2,
+      "value": "hard cooked eggs"
+    },
+    {
+      "count": 2,
+      "value": "low-sodium cream style corn about"
+    },
+    {
+      "count": 2,
+      "value": "black pepper"
+    },
+    {
+      "count": 2,
+      "value": "slices of bacon"
+    },
+    {
+      "count": 2,
+      "value": "ripe avocado halved pitted peeled and"
+    },
+    {
+      "count": 2,
+      "value": "chicken fat"
+    },
+    {
+      "count": 2,
+      "value": "6-ounce orange juice 6-ounce"
+    },
+    {
+      "count": 1,
+      "value": "well-beaten eggs"
+    },
+    {
+      "count": 1,
+      "value": "tart apples"
+    },
+    {
+      "count": 1,
+      "value": "pastry for 9 shell"
+    },
+    {
+      "count": 1,
+      "value": "slices wheat bread cubed"
+    },
+    {
+      "count": 1,
+      "value": "cent worth bakers yeast"
+    },
+    {
+      "count": 1,
+      "value": "nutmeg grated"
+    },
+    {
+      "count": 1,
+      "value": "12-inch italian pizza shell 12-inch"
+    },
+    {
+      "count": 1,
+      "value": "chicken cut up skin removed"
+    },
+    {
+      "count": 1,
+      "value": "a little sugar syrup"
+    },
+    {
+      "count": 1,
+      "value": "slices grape"
+    },
+    {
+      "count": 1,
+      "value": "15 5 ounces each low-sodium black beans each"
+    },
+    {
+      "count": 1,
+      "value": "chicken thighs trimmed"
+    },
+    {
+      "count": 1,
+      "value": "mushrooms cans"
+    },
+    {
+      "count": 1,
+      "value": "head of cauliflower about"
+    },
+    {
+      "count": 1,
+      "value": "salt pinch"
+    },
+    {
+      "count": 1,
+      "value": "piece dripping"
+    },
+    {
+      "count": 1,
+      "value": "anchovy"
+    },
+    {
+      "count": 1,
+      "value": "fried toast"
+    },
+    {
+      "count": 1,
+      "value": "no salt added tomato sauce about 15 ounces about"
+    },
+    {
+      "count": 1,
+      "value": "oil"
+    },
+    {
+      "count": 1,
+      "value": "gravy"
+    },
+    {
+      "count": 1,
+      "value": "cherry gelatin"
+    },
+    {
+      "count": 1,
+      "value": "avocado pear"
+    },
+    {
+      "count": 1,
+      "value": "celery heart"
+    },
+    {
+      "count": 1,
+      "value": "a little mayonnaise"
+    },
+    {
+      "count": 1,
+      "value": "small bay leaf"
+    },
+    {
+      "count": 1,
+      "value": "cocktail cherry"
+    },
+    {
+      "count": 1,
+      "value": "piece of fat bacon"
+    },
+    {
+      "count": 1,
+      "value": "or 2 yeast cakes"
+    },
+    {
+      "count": 1,
+      "value": "boiling water"
+    },
+    {
+      "count": 1,
+      "value": "head lettuce"
+    },
+    {
+      "count": 1,
+      "value": "bread flour"
+    },
+    {
+      "count": 1,
+      "value": "currants"
+    },
+    {
+      "count": 1,
+      "value": "to 3 lbs beef chuck"
+    },
+    {
+      "count": 1,
+      "value": "a little grated nutmeg"
+    },
+    {
+      "count": 1,
+      "value": "leeks"
+    },
+    {
+      "count": 1,
+      "value": "handful hops"
+    },
+    {
+      "count": 1,
+      "value": "smoked salmon"
+    },
+    {
+      "count": 1,
+      "value": "green grape"
+    },
+    {
+      "count": 1,
+      "value": "drippings"
+    },
+    {
+      "count": 1,
+      "value": "lime juice and zest"
+    },
+    {
+      "count": 1,
+      "value": "powdered sugar"
+    },
+    {
+      "count": 1,
+      "value": "mint sprigs"
+    },
+    {
+      "count": 1,
+      "value": "fully cooked ham"
+    },
+    {
+      "count": 1,
+      "value": "freshly black pepper"
+    },
+    {
+      "count": 1,
+      "value": "slices of stale cake three by three by one inch"
+    },
+    {
+      "count": 1,
+      "value": "potato-6 medium potatoes"
+    },
+    {
+      "count": 1,
+      "value": "few drops tabasco sauce"
+    },
+    {
+      "count": 1,
+      "value": "flavoring"
+    },
+    {
+      "count": 1,
+      "value": "stiff aspic jelly"
+    },
+    {
+      "count": 1,
+      "value": "small amount flour"
+    }
+  ],
+  "top_unmatched_normalized_ingredients": [
+    {
+      "count": 134,
+      "value": "water"
+    },
+    {
+      "count": 24,
+      "value": "cold water"
+    },
+    {
+      "count": 22,
+      "value": "boiling water"
+    },
+    {
+      "count": 19,
+      "value": "shortening"
+    },
+    {
+      "count": 16,
+      "value": "lard"
+    },
+    {
+      "count": 16,
+      "value": "fat"
+    },
+    {
+      "count": 15,
+      "value": "hot water"
+    },
+    {
+      "count": 15,
+      "value": "cloves"
+    },
+    {
+      "count": 14,
+      "value": "broken ice"
+    },
+    {
+      "count": 9,
+      "value": "piece lemon peel"
+    },
+    {
+      "count": 7,
+      "value": "gin"
+    },
+    {
+      "count": 7,
+      "value": "dripping"
+    },
+    {
+      "count": 7,
+      "value": "italian vermouth"
+    },
+    {
+      "count": 6,
+      "value": "warm water"
+    },
+    {
+      "count": 6,
+      "value": "cocktail cherry"
+    },
+    {
+      "count": 6,
+      "value": "turnips"
+    },
+    {
+      "count": 5,
+      "value": "brandy"
+    },
+    {
+      "count": 5,
+      "value": "french vermouth"
+    },
+    {
+      "count": 5,
+      "value": "whipping cream"
+    },
+    {
+      "count": 5,
+      "value": "veal"
+    },
+    {
+      "count": 5,
+      "value": "oysters"
+    },
+    {
+      "count": 5,
+      "value": "allspice"
+    },
+    {
+      "count": 4,
+      "value": "coconut"
+    },
+    {
+      "count": 4,
+      "value": "soda water"
+    },
+    {
+      "count": 4,
+      "value": "apricots"
+    },
+    {
+      "count": 4,
+      "value": "gravy"
+    },
+    {
+      "count": 4,
+      "value": "currants"
+    },
+    {
+      "count": 4,
+      "value": "dry sherry"
+    },
+    {
+      "count": 4,
+      "value": "herbs"
+    },
+    {
+      "count": 4,
+      "value": "lemon worth of juice"
+    },
+    {
+      "count": 4,
+      "value": "juice of lemon"
+    },
+    {
+      "count": 4,
+      "value": "pimento"
+    },
+    {
+      "count": 4,
+      "value": "whipped cream"
+    },
+    {
+      "count": 4,
+      "value": "radishes"
+    },
+    {
+      "count": 3,
+      "value": "pimento cut fine"
+    },
+    {
+      "count": 3,
+      "value": "slices toast"
+    },
+    {
+      "count": 3,
+      "value": "cranberries"
+    },
+    {
+      "count": 3,
+      "value": "paper straws"
+    },
+    {
+      "count": 3,
+      "value": "sherry"
+    },
+    {
+      "count": 3,
+      "value": "angostura bitters"
+    },
+    {
+      "count": 3,
+      "value": "sauerkraut"
+    },
+    {
+      "count": 3,
+      "value": "apricot syrup"
+    },
+    {
+      "count": 3,
+      "value": "for the vinaigrette"
+    },
+    {
+      "count": 3,
+      "value": "lime"
+    },
+    {
+      "count": 3,
+      "value": "dill"
+    },
+    {
+      "count": 3,
+      "value": "pumpkin pie spice"
+    },
+    {
+      "count": 3,
+      "value": "figs"
+    },
+    {
+      "count": 3,
+      "value": "cilantro"
+    },
+    {
+      "count": 3,
+      "value": "beans"
+    },
+    {
+      "count": 3,
+      "value": "dates cut fine"
+    },
+    {
+      "count": 3,
+      "value": "pimiento"
+    },
+    {
+      "count": 3,
+      "value": "vegetable white sauce"
+    },
+    {
+      "count": 3,
+      "value": "lukewarm water"
+    },
+    {
+      "count": 3,
+      "value": "lime juiced"
+    },
+    {
+      "count": 3,
+      "value": "pumpkin"
+    },
+    {
+      "count": 3,
+      "value": "nut meats"
+    },
+    {
+      "count": 3,
+      "value": "mushroom soup"
+    },
+    {
+      "count": 3,
+      "value": "pearl barley"
+    },
+    {
+      "count": 2,
+      "value": "bran"
+    },
+    {
+      "count": 2,
+      "value": "mixed fruit"
+    },
+    {
+      "count": 2,
+      "value": "grape juice"
+    },
+    {
+      "count": 2,
+      "value": "dash angostura bitters"
+    },
+    {
+      "count": 2,
+      "value": "pumpkin seeds toasted pepitas pepitas"
+    },
+    {
+      "count": 2,
+      "value": "applesauce"
+    },
+    {
+      "count": 2,
+      "value": "nuts as topping"
+    },
+    {
+      "count": 2,
+      "value": "slices grain bread thin slice"
+    },
+    {
+      "count": 2,
+      "value": "15-oz can of peaches"
+    },
+    {
+      "count": 2,
+      "value": "cold mutton"
+    },
+    {
+      "count": 2,
+      "value": "ice cube tray"
+    },
+    {
+      "count": 2,
+      "value": "marshmallows cut in one-fourth cubes"
+    },
+    {
+      "count": 2,
+      "value": "toasted marshmallows"
+    },
+    {
+      "count": 2,
+      "value": "monosodium glutamate"
+    },
+    {
+      "count": 2,
+      "value": "tongue"
+    },
+    {
+      "count": 2,
+      "value": "tomato juice"
+    },
+    {
+      "count": 2,
+      "value": "stiff aspic jelly"
+    },
+    {
+      "count": 2,
+      "value": "gelatine"
+    },
+    {
+      "count": 2,
+      "value": "orange worth of juice"
+    },
+    {
+      "count": 2,
+      "value": "a few dashes of orange-flower water"
+    },
+    {
+      "count": 2,
+      "value": "a little fruit"
+    },
+    {
+      "count": 2,
+      "value": "rose petals to decorate"
+    },
+    {
+      "count": 2,
+      "value": "piece of ice"
+    },
+    {
+      "count": 2,
+      "value": "strained orange juice"
+    },
+    {
+      "count": 2,
+      "value": "iced water"
+    },
+    {
+      "count": 2,
+      "value": "thin slices of orange"
+    },
+    {
+      "count": 2,
+      "value": "cod fillets"
+    },
+    {
+      "count": 2,
+      "value": "slices wheat bread"
+    },
+    {
+      "count": 2,
+      "value": "taco shells"
+    },
+    {
+      "count": 2,
+      "value": "taco sauce"
+    },
+    {
+      "count": 2,
+      "value": "topping"
+    },
+    {
+      "count": 2,
+      "value": "poppy seeds"
+    },
+    {
+      "count": 2,
+      "value": "semolina"
+    },
+    {
+      "count": 2,
+      "value": "dry roasted peanuts"
+    },
+    {
+      "count": 2,
+      "value": "lentils"
+    },
+    {
+      "count": 2,
+      "value": "blueberries"
+    },
+    {
+      "count": 2,
+      "value": "can white cherries"
+    },
+    {
+      "count": 2,
+      "value": "marshmallows cut in small pieces"
+    },
+    {
+      "count": 2,
+      "value": "wheat buns"
+    },
+    {
+      "count": 2,
+      "value": "milliliter tepid water"
+    },
+    {
+      "count": 2,
+      "value": "orange juice juice from 1 2 orange"
+    },
+    {
+      "count": 2,
+      "value": "for the salad"
+    },
+    {
+      "count": 2,
+      "value": "crumbs"
+    },
+    {
+      "count": 2,
+      "value": "meat"
+    },
+    {
+      "count": 2,
+      "value": "chives"
+    },
+    {
+      "count": 2,
+      "value": "low-sodium tomato juice"
+    },
+    {
+      "count": 2,
+      "value": "whisky"
+    },
+    {
+      "count": 2,
+      "value": "orange curacao"
+    },
+    {
+      "count": 2,
+      "value": "cardamom"
+    },
+    {
+      "count": 2,
+      "value": "mixed candied fruit"
+    },
+    {
+      "count": 2,
+      "value": "capers"
+    },
+    {
+      "count": 2,
+      "value": "grated lemon rind"
+    },
+    {
+      "count": 2,
+      "value": "marshmallows"
+    },
+    {
+      "count": 2,
+      "value": "shortening half butter half lard"
+    },
+    {
+      "count": 2,
+      "value": "parsnips"
+    },
+    {
+      "count": 2,
+      "value": "can salmon"
+    },
+    {
+      "count": 2,
+      "value": "leftsp over cooked vegetables peas beans celery"
+    },
+    {
+      "count": 2,
+      "value": "cold cooked meat"
+    },
+    {
+      "count": 2,
+      "value": "4 clove"
+    },
+    {
+      "count": 2,
+      "value": "dashes absinthe"
+    },
+    {
+      "count": 2,
+      "value": "dash plain syrup"
+    },
+    {
+      "count": 2,
+      "value": "dash orange bitters"
+    },
+    {
+      "count": 2,
+      "value": "liver"
+    },
+    {
+      "count": 2,
+      "value": "fruit try a mixture-apples try a mixture-apples bananas raisins berries peaches"
+    },
+    {
+      "count": 2,
+      "value": "dates"
+    },
+    {
+      "count": 2,
+      "value": "egg mix"
+    },
+    {
+      "count": 2,
+      "value": "oranges"
+    },
+    {
+      "count": 2,
+      "value": "ready-to-cook duckling 5"
+    },
+    {
+      "count": 2,
+      "value": "recipe bread stuffing"
+    },
+    {
+      "count": 2,
+      "value": "6-ounce orange juice 6-ounce"
+    },
+    {
+      "count": 1,
+      "value": "pitted dates"
+    },
+    {
+      "count": 1,
+      "value": "square chocolate"
+    },
+    {
+      "count": 1,
+      "value": "farina"
+    },
+    {
+      "count": 1,
+      "value": "pastry for 9 shell"
+    },
+    {
+      "count": 1,
+      "value": "slices wheat bread cubed"
+    },
+    {
+      "count": 1,
+      "value": "orange juice 1 tablespoon"
+    },
+    {
+      "count": 1,
+      "value": "tumbler broken ice"
+    },
+    {
+      "count": 1,
+      "value": "slices grape"
+    },
+    {
+      "count": 1,
+      "value": "navy dry sorted and"
+    },
+    {
+      "count": 1,
+      "value": "water chestnuts can"
+    },
+    {
+      "count": 1,
+      "value": "grapefruits sectioned and"
+    },
+    {
+      "count": 1,
+      "value": "us fluid ounces grapefruit juice"
+    },
+    {
+      "count": 1,
+      "value": "meat scraps cooked"
+    },
+    {
+      "count": 1,
+      "value": "lettuces"
+    },
+    {
+      "count": 1,
+      "value": "piece dripping"
+    },
+    {
+      "count": 1,
+      "value": "imperial maple syrup"
+    },
+    {
+      "count": 1,
+      "value": "squares bitter chocolate"
+    },
+    {
+      "count": 1,
+      "value": "3.5 cup fresh or canned (No 2 1/2 can) tomatoes No 2 1/2 can"
+    },
+    {
+      "count": 1,
+      "value": "pickle relish"
+    },
+    {
+      "count": 1,
+      "value": "one-inch blocks of left-over cereal such as fine hominy cream of wheat"
+    },
+    {
+      "count": 1,
+      "value": "anchovy"
+    },
+    {
+      "count": 1,
+      "value": "fried toast"
+    },
+    {
+      "count": 1,
+      "value": "citron fine"
+    },
+    {
+      "count": 1,
+      "value": "zwieback"
+    },
+    {
+      "count": 1,
+      "value": "squeeze lemon juice"
+    },
+    {
+      "count": 1,
+      "value": "1 4 bread squares"
+    },
+    {
+      "count": 1,
+      "value": "boiled water"
+    },
+    {
+      "count": 1,
+      "value": "pounded mace to taste"
+    },
+    {
+      "count": 1,
+      "value": "handful hops"
+    },
+    {
+      "count": 1,
+      "value": "orange bitters"
+    },
+    {
+      "count": 1,
+      "value": "green grape"
+    },
+    {
+      "count": 1,
+      "value": "drippings"
+    },
+    {
+      "count": 1,
+      "value": "mango peeled"
+    },
+    {
+      "count": 1,
+      "value": "mint sprigs"
+    },
+    {
+      "count": 1,
+      "value": "bbq sauce"
+    },
+    {
+      "count": 1,
+      "value": "cherry juice"
+    },
+    {
+      "count": 1,
+      "value": "marshmallows cut in cubes"
+    },
+    {
+      "count": 1,
+      "value": "cherries"
+    },
+    {
+      "count": 1,
+      "value": "flavoring"
+    },
+    {
+      "count": 1,
+      "value": "aspic jelly"
+    },
+    {
+      "count": 1,
+      "value": "vegetable macedoine"
+    },
+    {
+      "count": 1,
+      "value": "lemon peel grated fine"
+    },
+    {
+      "count": 1,
+      "value": "lemon"
+    },
+    {
+      "count": 1,
+      "value": "6 ounces low-sodium tomato"
+    },
+    {
+      "count": 1,
+      "value": "cut to 1 2 cubes"
+    },
+    {
+      "count": 1,
+      "value": "yellow corn can"
+    },
+    {
+      "count": 1,
+      "value": "can green chiles"
+    },
+    {
+      "count": 1,
+      "value": "if desired"
+    },
+    {
+      "count": 1,
+      "value": "dill weed"
+    },
+    {
+      "count": 1,
+      "value": "red"
+    },
+    {
+      "count": 1,
+      "value": "15 25 ounces peach halves about"
+    },
+    {
+      "count": 1,
+      "value": "for the fish"
+    },
+    {
+      "count": 1,
+      "value": "tilapia fillets about"
+    },
+    {
+      "count": 1,
+      "value": "plantain cups"
+    },
+    {
+      "count": 1,
+      "value": "green plantains"
+    },
+    {
+      "count": 1,
+      "value": "slices of grain bread"
+    },
+    {
+      "count": 1,
+      "value": "peach slices and"
+    },
+    {
+      "count": 1,
+      "value": "0.25 cup nonfat or low-fat milk"
+    },
+    {
+      "count": 1,
+      "value": "cooked about"
+    },
+    {
+      "count": 1,
+      "value": "6 1 2-inch wheat pita pockets"
+    },
+    {
+      "count": 1,
+      "value": "zucchinis"
+    },
+    {
+      "count": 1,
+      "value": "4-inch wheat mini pitas 4-inch"
+    },
+    {
+      "count": 1,
+      "value": "ripe mango"
+    },
+    {
+      "count": 1,
+      "value": "matzo meal"
+    },
+    {
+      "count": 1,
+      "value": "swiss chard 2 bunches"
+    },
+    {
+      "count": 1,
+      "value": "berries and thawed"
+    },
+    {
+      "count": 1,
+      "value": "firm mango"
+    },
+    {
+      "count": 1,
+      "value": "1 cup canned or cooked beans any type"
+    },
+    {
+      "count": 1,
+      "value": "cereal"
+    },
+    {
+      "count": 1,
+      "value": "walleye fillets 2 8-ounce fillets"
+    },
+    {
+      "count": 1,
+      "value": "note means cut up into tiny pieces"
+    },
+    {
+      "count": 1,
+      "value": "3 ounces ramen noodles any flavor"
+    }
+  ]
+}

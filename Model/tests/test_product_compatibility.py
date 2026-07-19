@@ -164,7 +164,8 @@ class CompatibilityRuleTests(unittest.TestCase):
             with self.subTest(query=query):
                 result = service(features).match_recipe_ingredient(query)
                 self.assertEqual(result.selected_match.product_id, expected)
-                self.assertTrue(set(rejected) <= {item.product_id for item in result.rejected_candidates})
+                unsafe_ids = {item.product_id for item in result.rejected_candidates + result.substitution_candidates}
+                self.assertTrue(set(rejected) <= unsafe_ids)
 
     def test_compatibility_signal_classification(self):
         query, _ = profile_from_query("gluten-free flour")
@@ -175,16 +176,23 @@ class CompatibilityRuleTests(unittest.TestCase):
     def test_nuts_olives_and_spices_remain_buyable(self):
         cases = [
             ("walnuts", "walnuts", ["cookies"], [feature("cookies", "Walnut Chocolate Chip Cookies", None, "snacks"), feature("walnuts", "Fisher Chopped Walnuts", "walnuts", "pantry")]),
+            ("pecans", "pecans", ["tarte"], [feature("tarte", "Chambord Pecan Tarte", None, "prepared"), feature("pecans", "Diamond Chopped Pecans", "pecans", "pantry")]),
+            ("almonds", "almonds", ["milk"], [feature("milk", "Almond Milk", "almond milk", "dairy"), feature("almonds", "Bowl & Basket Almonds", "almonds", "pantry")]),
             ("pitted Kalamata olives", "olives", ["oil"], [feature("oil", "Extra Virgin Olive Oil", "olive oil", "pantry"), feature("olives", "Bowl & Basket Kalamata Olives", "olives", "pantry")]),
             ("cumin", "cumin", ["curry"], [feature("curry", "Chicken Curry with Cumin Rice", None, "prepared"), feature("cumin", "Simply Organic Cumin", "cumin", "pantry")]),
             ("chili powder", "chili", ["garlic"], [feature("garlic", "McCormick Garlic Powder", "garlic powder", "pantry"), feature("chili", "McCormick Chili Powder", "chili powder", "pantry")]),
             ("paprika", "paprika", ["hummus"], [feature("hummus", "Roasted Red Pepper Paprika Hummus", None, "prepared"), feature("paprika", "Simply Organic Paprika", "paprika", "pantry")]),
+            ("vanilla", "vanilla", ["syrup"], [feature("syrup", "Vanilla Syrup", None, "beverage"), feature("vanilla", "Pure Vanilla Extract", "vanilla extract", "pantry")]),
+            ("lime juice", "lime", ["apple"], [feature("apple", "Apple Juice", "apple juice", "beverage"), feature("lime", "ReaLime 100% Lime Juice", "lime juice", "pantry")]),
+            ("mustard", "mustard", ["crackers"], [feature("crackers", "Honey Mustard Pretzel Crackers", None, "snacks"), feature("mustard", "Gulden's Spicy Brown Mustard", "mustard", "pantry")]),
+            ("honey", "honey", ["ham"], [feature("ham", "Honey Ham", "ham", "meat"), feature("honey", "Bowl & Basket Honey", "honey", "pantry")]),
         ]
         for query, expected, rejected, features in cases:
             with self.subTest(query=query):
                 result = service(features).match_recipe_ingredient(query)
                 self.assertEqual(result.selected_match.product_id, expected)
-                self.assertTrue(set(rejected) <= {item.product_id for item in result.rejected_candidates})
+                unsafe_ids = {item.product_id for item in result.rejected_candidates + result.substitution_candidates}
+                self.assertTrue(set(rejected) <= unsafe_ids)
 
     def test_beef_does_not_accept_pork_sausage(self):
         result = service(
@@ -231,6 +239,48 @@ class CompatibilityRuleTests(unittest.TestCase):
         fatfree = svc.match_recipe_ingredient("fat-free milk")
         self.assertEqual(fatfree.selected_match.product_id, "fatfree")
         self.assertIn("reduced", {item.product_id for item in fatfree.rejected_candidates})
+
+    def test_unrequested_evaporated_milk_variant_does_not_outrank_plain(self):
+        svc = service(
+            [
+                feature("lowfat", "Carnation Evaporated Lowfat Milk", "milk", "dairy", fat_level="low-fat"),
+                feature("plain", "Bowl & Basket Evaporated Milk", "milk", "dairy"),
+            ]
+        )
+        self.assertEqual(svc.match_recipe_ingredient("evaporated milk").selected_match.product_id, "plain")
+
+    def test_margarine_is_not_reclassified_as_cooking_oil(self):
+        svc = service(
+            [
+                feature("oil", "Bowl & Basket Vegetable Oil", "vegetable oil", "pantry"),
+                feature("margarine", "Land O Lakes Margarine Sticks, Made with Vegetable Oil", "margarine", "dairy"),
+            ]
+        )
+        result = svc.match_recipe_ingredient("margarine")
+        self.assertEqual(result.selected_match.product_id, "margarine")
+        self.assertIn("oil", {item.product_id for item in result.rejected_candidates})
+
+    def test_canned_tuna_can_match_tuna_inventory_with_canned_metadata(self):
+        svc = service(
+            [
+                feature("fresh", "Fresh Tuna Steak", "tuna", "meat", freshness="fresh"),
+                feature("canned", "Bumble Bee Chunk Light Tuna In Water 5 Oz Can", "tuna", "pantry", freshness="canned"),
+            ]
+        )
+        result = svc.match_recipe_ingredient("canned tuna")
+        self.assertEqual(result.selected_match.product_id, "canned")
+        self.assertIn("fresh", {item.product_id for item in result.rejected_candidates + result.substitution_candidates})
+
+    def test_canned_tuna_allows_unmarked_shelf_stable_tuna_but_not_prepared_tuna(self):
+        svc = service(
+            [
+                feature("salad", "Store Prepared Tuna Salad", "tuna", "prepared"),
+                feature("oil", "Genova Solid White Tuna In Olive Oil", "tuna", "pantry"),
+            ]
+        )
+        result = svc.match_recipe_ingredient("canned tuna")
+        self.assertEqual(result.selected_match.product_id, "oil")
+        self.assertIn("salad", {item.product_id for item in result.rejected_candidates})
 
     def test_beef_cut_regressions(self):
         svc = service(

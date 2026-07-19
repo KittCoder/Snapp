@@ -1951,22 +1951,17 @@ def build_demo_grocery_dishes(dish_candidates, products_by_id, stores):
 
 
 def spoonacular_ingredients(recipe):
+    from recipe_ingredient_adapter import canonical_recipe_ingredients
+
     ingredients = []
     seen = set()
-    for ingredient in recipe.get("extendedIngredients") or []:
-        name = re.sub(
-            r"\s+",
-            " ",
-            ingredient.get("nameClean")
-            or ingredient.get("name")
-            or ingredient.get("originalName")
-            or "",
-        ).strip()
+    for canonical in canonical_recipe_ingredients(recipe):
+        name = re.sub(r"\s+", " ", canonical.ingredient_name or "").strip()
         if not name:
             continue
-        measure = re.sub(r"\s+", " ", ingredient.get("original") or "").strip()
-        display = measure or name
-        identity = name.casefold()
+        measure = canonical.matcher_text
+        display = canonical.raw_text or measure or name
+        identity = f"{name}|{measure}".casefold()
         if identity in seen:
             continue
         seen.add(identity)
@@ -1975,6 +1970,7 @@ def spoonacular_ingredients(recipe):
                 "name": name,
                 "measure": measure,
                 "display": display,
+                "canonical_ingredient": canonical.to_dict(),
             }
         )
     return ingredients

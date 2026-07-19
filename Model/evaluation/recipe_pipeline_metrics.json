@@ -1,0 +1,77 @@
+{
+  "embedding_benchmark_comparison": {
+    "alternatives_tested": [],
+    "changed": false,
+    "current_model": "BAAI/bge-small-en-v1.5",
+    "reason": "Retrieval audit did not justify changing the embedding model during this pass."
+  },
+  "golden_evaluation": {
+    "compatibility_safe_recall": 0.52,
+    "final_top_1_accuracy": 0.31,
+    "final_top_3_recall": 0.52,
+    "hard_conflict_selection_count": 0,
+    "lexical_top_10_recall": 0.5267,
+    "lexical_top_30_recall": 0.54,
+    "merged_top_30_recall": 0.5467,
+    "semantic_top_10_recall": 0.5233,
+    "semantic_top_30_recall": 0.5467
+  },
+  "metadata": {
+    "elapsed_ms": 149255.39,
+    "ingredient_count": 5000,
+    "recipe_count": 800,
+    "schema_counts": {
+      "structured_ingredient_dict": 5000
+    },
+    "source_counts": {
+      "Public Domain Recipes": 460,
+      "USDA MyPlate Kitchen": 234
+    }
+  },
+  "performance": {
+    "memory": {
+      "max_rss_kb": 959397888
+    },
+    "one_ingredient": {
+      "basket_reported_cached_ms": 0.1,
+      "basket_reported_uncached_ms": 794.24,
+      "checkout_cost": null,
+      "ingredient_count": 1,
+      "warm_cached_ms": 0.1,
+      "warm_uncached_ms": 794.33
+    },
+    "one_recipe": {
+      "basket_reported_cached_ms": 8.95,
+      "basket_reported_uncached_ms": 485.27,
+      "checkout_cost": 6.99,
+      "ingredient_count": 8,
+      "warm_cached_ms": 8.95,
+      "warm_uncached_ms": 494.08
+    },
+    "sixty_recipes": {
+      "basket_reported_cached_ms": 486.78,
+      "basket_reported_uncached_ms": 11257.09,
+      "checkout_cost": 417.59,
+      "ingredient_count": 480,
+      "warm_cached_ms": 487.59,
+      "warm_uncached_ms": 11471.67
+    },
+    "ten_recipes": {
+      "basket_reported_cached_ms": 58.27,
+      "basket_reported_uncached_ms": 1921.75,
+      "checkout_cost": 68.46,
+      "ingredient_count": 80,
+      "warm_cached_ms": 58.42,
+      "warm_uncached_ms": 1980.0
+    }
+  },
+  "stage_metrics": {
+    "compatibility_safe_candidate_presence": 0.9986,
+    "hard_conflict_selection_count": 0,
+    "lexical_candidate_presence": 0.9914,
+    "quantity_known_or_intentionally_absent_rate": 0.895,
+    "selected_match_rate": 0.7958,
+    "semantic_candidate_presence": 1.0,
+    "unmatched_rate": 0.2042
+  }
+}
