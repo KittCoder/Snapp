@@ -68,6 +68,7 @@ let myStoreMap = null;
 let myStoreMarkers = [];
 let pantryItems = [];
 let savedMyStores = [];
+let activeAuthUserId = null;
 const selectedMyStoreIds = new Set();
 const selectedShoppingIngredientIds = new Set();
 const pantryHandledShoppingIngredientIds = new Set();
@@ -198,6 +199,21 @@ function renderNavigationForAuthState() {
 function setAuthStatus(message, type = "neutral") {
   authStatus.textContent = message;
   authStatus.dataset.type = type;
+}
+
+function clearDishSession() {
+  dishResults.replaceChildren();
+  dishEmptyState.hidden = false;
+  dishInput.value = "";
+  dishStatus.textContent = "";
+  dishSource.hidden = true;
+}
+
+function clearUserScopedTransientState() {
+  selectedShoppingIngredientIds.clear();
+  pantryHandledShoppingIngredientIds.clear();
+  scheduledMeals.splice(0, scheduledMeals.length);
+  clearDishSession();
 }
 
 function setSettingsStatus(message, type = "neutral") {
@@ -678,6 +694,11 @@ function showAuthMode(mode) {
 
 async function renderAuthState(user) {
   const wasSignedIn = Boolean(currentUser);
+  const nextUserId = user?.id || null;
+  if (activeAuthUserId !== nextUserId) {
+    clearUserScopedTransientState();
+  }
+  activeAuthUserId = nextUserId;
   currentUser = user;
   currentUserInfo = null;
   document.body.classList.toggle("signed-in", Boolean(user));
@@ -738,13 +759,19 @@ function renderBudget() {
 }
 
 function scheduledMealStorageKey() {
-  return `snapp:scheduled-meals:${currentUser?.id || "guest"}`;
+  return currentUser ? `snapp:scheduled-meals:${currentUser.id}` : null;
 }
 
 function loadScheduledMealsFromStorage() {
+  const storageKey = scheduledMealStorageKey();
+  if (!storageKey) {
+    scheduledMeals.splice(0, scheduledMeals.length);
+    return;
+  }
+
   try {
     const storedMeals = JSON.parse(
-      window.localStorage.getItem(scheduledMealStorageKey()) || "[]"
+      window.localStorage.getItem(storageKey) || "[]"
     );
     scheduledMeals.splice(
       0,
@@ -757,8 +784,11 @@ function loadScheduledMealsFromStorage() {
 }
 
 function saveScheduledMealsToStorage() {
+  const storageKey = scheduledMealStorageKey();
+  if (!storageKey) return;
+
   window.localStorage.setItem(
-    scheduledMealStorageKey(),
+    storageKey,
     JSON.stringify(scheduledMeals)
   );
 }
