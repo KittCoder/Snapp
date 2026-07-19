@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import platform
 import threading
 import time
 from dataclasses import asdict, dataclass
@@ -43,6 +44,26 @@ _lock = threading.Lock()
 _thread: threading.Thread | None = None
 
 
+def _runtime_context() -> dict[str, Any]:
+    return {
+        "pid": os.getpid(),
+        "thread": threading.current_thread().name,
+        "python": platform.python_version(),
+        "warmup_thread_alive": bool(_thread and _thread.is_alive()),
+    }
+
+
+def _log_warmup_return(reason: str, state: WarmupState) -> None:
+    log_event(
+        "matcher_warmup_return",
+        reason=reason,
+        status=state.status,
+        warmup_completed=state.warmup_completed,
+        artifact_validation_ok=state.artifact_validation_ok,
+        **_runtime_context(),
+    )
+
+
 def warmup_status() -> WarmupState:
     return _state
 
@@ -51,8 +72,10 @@ def warmup_matcher(force: bool = False) -> WarmupState:
     global _state
     with _lock:
         if _state.warmup_completed and not force:
+            _log_warmup_return("already_completed", _state)
             return _state
         if _state.status == "warming" and not force:
+            _log_warmup_return("already_warming", _state)
             return _state
         _state = WarmupState(status="warming", started_at=time.time())
 
@@ -89,6 +112,7 @@ def warmup_matcher(force: bool = False) -> WarmupState:
             metrics.set_startup_readiness(_state.startup_ms)
             metrics.set_artifact_version((validation.manifest or {}).get("index_hash"))
             log_event("matcher_warmup_complete", status=_state.status, startup_ms=_state.startup_ms)
+            _log_warmup_return("completed", _state)
     except Exception as exc:
         with _lock:
             _state.status = "failed"
@@ -97,6 +121,7 @@ def warmup_matcher(force: bool = False) -> WarmupState:
             _state.startup_ms = round((time.perf_counter() - started) * 1000, 2)
             metrics.increment("startup_failures")
             log_event("matcher_warmup_failed", status=_state.status, startup_ms=_state.startup_ms, error_type=type(exc).__name__)
+            _log_warmup_return("failed", _state)
     return _state
 
 
@@ -104,7 +129,9 @@ def start_background_warmup() -> WarmupState:
     global _thread
     with _lock:
         if _state.status in {"warming", "ready", "degraded"}:
+            log_event("matcher_background_warmup_return", reason="already_started", status=_state.status, **_runtime_context())
             return _state
         _thread = threading.Thread(target=warmup_matcher, name="snapp-matcher-warmup", daemon=True)
         _thread.start()
+        log_event("matcher_background_warmup_return", reason="thread_started", status=_state.status, **_runtime_context())
         return _state

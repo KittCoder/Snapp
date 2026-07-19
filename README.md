@@ -12,7 +12,7 @@ The backend is configured for Render with [render.yaml](/Users/2027kstarkie/Desk
    - Root directory: `Model`
    - Runtime: Python
    - Build command: `pip install -r requirements.txt`
-   - Start command: `gunicorn --workers 1 --threads 2 --timeout 120 model:app`
+   - Start command: `gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 120 model:app`
    - Health check path: `/health`
 4. Set these environment variables in Render:
    - `OPENAI_API_KEY`: your OpenAI API key
