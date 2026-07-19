@@ -60,6 +60,13 @@ class FakeService:
         return []
 
 
+class FakeValidation:
+    ok = True
+    status = "ready"
+    errors = []
+    manifest = {"index_hash": "test-index"}
+
+
 class MatcherWarmupTests(unittest.TestCase):
     def setUp(self):
         matcher_warmup._state = matcher_warmup.WarmupState()
@@ -68,9 +75,9 @@ class MatcherWarmupTests(unittest.TestCase):
     def test_readiness_false_before_warmup_and_true_after(self):
         service = FakeService()
         self.assertEqual(matcher_warmup.warmup_status().status, "not_started")
-        with patch.object(matcher_warmup, "get_product_match_service", return_value=service), patch.object(
-            matcher_warmup, "get_basket_builder", return_value=object()
-        ):
+        with patch.object(matcher_warmup, "validate_runtime_artifacts", return_value=FakeValidation()), patch.object(
+            matcher_warmup, "get_product_match_service", return_value=service
+        ), patch.object(matcher_warmup, "get_basket_builder", return_value=object()):
             state = matcher_warmup.warmup_matcher()
         self.assertEqual(state.status, "ready")
         self.assertTrue(state.warmup_completed)
@@ -79,9 +86,9 @@ class MatcherWarmupTests(unittest.TestCase):
 
     def test_repeated_warmup_does_not_reload_components(self):
         service = FakeService()
-        with patch.object(matcher_warmup, "get_product_match_service", return_value=service), patch.object(
-            matcher_warmup, "get_basket_builder", return_value=object()
-        ):
+        with patch.object(matcher_warmup, "validate_runtime_artifacts", return_value=FakeValidation()), patch.object(
+            matcher_warmup, "get_product_match_service", return_value=service
+        ), patch.object(matcher_warmup, "get_basket_builder", return_value=object()):
             matcher_warmup.warmup_matcher()
             matcher_warmup.warmup_matcher()
         self.assertEqual(service.retriever.load_index_count, 1)
@@ -91,4 +98,3 @@ class MatcherWarmupTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

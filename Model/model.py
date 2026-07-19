@@ -18,6 +18,9 @@ from urllib.request import Request, urlopen
 
 from flask import Flask, jsonify, request
 from openai import OpenAI
+from artifact_manifest import validate_runtime_artifacts
+from ops_metrics import log_event, metrics, request_id
+from review_workflow import mutate_override, override_summary, require_admin
 
 app = Flask(__name__)
 
@@ -31,6 +34,10 @@ DISH_SYSTEM_PROMPT = (
 OPENAI_DISH_MODEL = os.getenv("OPENAI_DISH_MODEL", "gpt-4.1-nano")
 MAX_TURNS = 6
 conversation_history = []
+MAX_JSON_PAYLOAD_BYTES = int(os.getenv("SNAPP_MAX_JSON_PAYLOAD_BYTES", "524288"))
+MAX_DISH_PROMPT_CHARS = int(os.getenv("SNAPP_MAX_DISH_PROMPT_CHARS", "500"))
+MAX_PANTRY_ITEMS_PER_REQUEST = int(os.getenv("SNAPP_MAX_PANTRY_ITEMS_PER_REQUEST", "200"))
+MAX_REVIEW_REPORT_ITEMS = int(os.getenv("SNAPP_MAX_REVIEW_REPORT_ITEMS", "200"))
 ZIP_CODE_PATTERN = re.compile(r"^\d{5}$")
 MIN_HOUSEHOLD_SIZE = 1
 MAX_HOUSEHOLD_SIZE = 12
@@ -448,6 +455,33 @@ CORS_ORIGINS = {
 }
 
 
+@app.before_request
+def attach_request_context():
+    request.snapp_request_id = request.headers.get("X-Request-ID") or request_id()
+
+
+def json_error(message, status_code=400, **extra):
+    return jsonify({"error": message, "request_id": getattr(request, "snapp_request_id", None), **extra}), status_code
+
+
+def validated_json_payload(max_bytes: int = MAX_JSON_PAYLOAD_BYTES):
+    if request.content_length and request.content_length > max_bytes:
+        return None, json_error("Request payload is too large.", 413)
+    data = request.get_json(silent=True)
+    if data is None:
+        return None, json_error("Request body must be valid JSON.", 400)
+    if not isinstance(data, dict):
+        return None, json_error("Request body must be a JSON object.", 400)
+    return data, None
+
+
+def admin_required():
+    ok, message = require_admin(request.headers)
+    if ok:
+        return None
+    return json_error(message, 401)
+
+
 @app.after_request
 def add_cors_headers(response):
     origin = request.headers.get("Origin", "").rstrip("/")
@@ -467,15 +501,15 @@ def add_cors_headers(response):
             "*" if "*" in CORS_ORIGINS else origin
         )
         response.headers["Vary"] = "Origin"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type,X-SNAPP-Admin-Token,X-Request-ID"
         response.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS"
     return response
 
 
 @app.errorhandler(Exception)
 def handle_unexpected_error(exc):
-    print(f"Unhandled backend error: {exc}", flush=True)
-    return jsonify({"error": "Backend request failed.", "details": str(exc)}), 500
+    log_event("unhandled_backend_error", error_type=type(exc).__name__)
+    return jsonify({"error": "Backend request failed.", "details": str(exc), "request_id": getattr(request, "snapp_request_id", None)}), 500
 
 
 def generate_reply(message):
@@ -4550,8 +4584,152 @@ def ready():
     from matcher_warmup import warmup_status
 
     state = warmup_status()
-    status_code = 200 if state.status in {"ready", "degraded"} else 503
-    return jsonify(state.safe_dict()), status_code
+    artifact_validation = validate_runtime_artifacts().safe_dict()
+    allow_degraded = os.getenv("SNAPP_ALLOW_LEXICAL_ONLY", "").lower() in {"1", "true", "yes"}
+    is_ready = state.status == "ready" and artifact_validation["ok"]
+    is_degraded_allowed = state.status == "degraded" and allow_degraded and artifact_validation["ok"]
+    status_code = 200 if is_ready or is_degraded_allowed else 503
+    payload = state.safe_dict()
+    payload["artifact_validation"] = artifact_validation
+    payload["semantic_readiness"] = "full" if is_ready else ("lexical_only" if is_degraded_allowed else "unavailable")
+    return jsonify(payload), status_code
+
+
+@app.get("/internal/diagnostics")
+def internal_diagnostics():
+    auth_error = admin_required()
+    if auth_error:
+        return auth_error
+    from matcher_warmup import warmup_status
+    from product_compatibility import get_product_match_service
+
+    service = get_product_match_service()
+    return jsonify(
+        {
+            "request_id": request.snapp_request_id,
+            "health": "ok",
+            "ready": warmup_status().safe_dict(),
+            "artifact_validation": validate_runtime_artifacts().safe_dict(),
+            "override_summary": override_summary(),
+            "retrieval_stats": service.retriever.stats.to_dict(),
+            "match_cache_size": len(service.cache),
+            "query_cache_size": len(service.retriever.query_cache),
+            "metrics": metrics.snapshot(),
+        }
+    )
+
+
+@app.get("/internal/metrics")
+def internal_metrics():
+    auth_error = admin_required()
+    if auth_error:
+        return auth_error
+    return jsonify(metrics.snapshot())
+
+
+@app.post("/internal/cache/clear")
+def internal_cache_clear():
+    auth_error = admin_required()
+    if auth_error:
+        return auth_error
+    from basket_quantity import get_basket_builder
+    from product_compatibility import get_product_match_service
+
+    data, error = validated_json_payload()
+    if error:
+        return error
+    service = get_product_match_service()
+    service.cache.clear()
+    service.retriever.query_cache.clear()
+    builder = get_basket_builder()
+    builder.clear_caches()
+    metrics.increment("cache_clear_requests")
+    return jsonify({"status": "cleared", "request_id": request.snapp_request_id})
+
+
+@app.get("/internal/review/queues")
+def internal_review_queues():
+    auth_error = admin_required()
+    if auth_error:
+        return auth_error
+    report_path = Path(__file__).resolve().parent / "evaluation" / "recipe_pipeline_failure_reports.json"
+    if not report_path.exists():
+        return json_error("Failure report artifact is missing. Run audit_recipe_pipeline.py first.", 503)
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    limit = max(1, min(int(request.args.get("limit", MAX_REVIEW_REPORT_ITEMS)), MAX_REVIEW_REPORT_ITEMS))
+    return jsonify(
+        {
+            "request_id": request.snapp_request_id,
+            "unmatched": report.get("top_unmatched_normalized_ingredients", [])[:limit],
+            "low_confidence": report.get("top_low_confidence_ingredients", [])[:limit],
+            "parsing_warnings": report.get("top_parsing_warnings", [])[:limit],
+            "quantity_warnings": report.get("top_quantity_failures", [])[:limit],
+            "suspicious_cost": report.get("top_basket_cost_impact_failures", [])[:limit],
+        }
+    )
+
+
+@app.get("/internal/review/inspect")
+def internal_review_inspect():
+    auth_error = admin_required()
+    if auth_error:
+        return auth_error
+    ingredient = request.args.get("ingredient", "").strip()
+    if not ingredient:
+        return json_error("ingredient query parameter is required.", 400)
+    if len(ingredient) > MAX_DISH_PROMPT_CHARS:
+        return json_error("ingredient query is too long.", 400)
+    from basket_quantity import canonical_quantity, parse_package_info, parse_price_info
+    from ingredient_normalization import parse_ingredient
+    from product_compatibility import get_product_match_service, profile_from_query
+
+    service = get_product_match_service()
+    profile, parsed = profile_from_query(ingredient, service.overrides)
+    retrieval = service.retriever.retrieve_product_candidates(profile.normalized_signature, limit=30)
+    match = service._match_from_retrieval(ingredient, profile, parsed, retrieval, time.perf_counter(), 5, 30)
+    package = None
+    price = None
+    if match.selected_match:
+        feature = service.feature_by_id.get(match.selected_match.product_id, {})
+        package = parse_package_info(feature).__dict__
+        price = parse_price_info(feature.get("raw_price") or feature.get("price"), feature).__dict__
+    parsed_ingredient = parse_ingredient(ingredient)
+    required = canonical_quantity(parsed_ingredient.quantity, parsed_ingredient.unit, parsed_ingredient.canonical_name)
+    return jsonify(
+        {
+            "request_id": request.snapp_request_id,
+            "ingredient": ingredient,
+            "parsed": parsed,
+            "required_quantity": required.__dict__,
+            "top_candidates": [candidate.to_dict() for candidate in retrieval.candidates[:10]],
+            "match": match.to_dict(),
+            "selected_package": package,
+            "selected_price": price,
+        }
+    )
+
+
+@app.post("/internal/review/overrides")
+def internal_review_overrides():
+    auth_error = admin_required()
+    if auth_error:
+        return auth_error
+    data, error = validated_json_payload()
+    if error:
+        return error
+    action = str(data.get("action") or "").strip()
+    actor = str(data.get("actor") or "internal-admin").strip()[:80]
+    try:
+        result = mutate_override(action, data, actor=actor)
+    except ValueError as exc:
+        return json_error(str(exc), 400)
+    except Exception as exc:
+        metrics.increment("override_mutation_failures")
+        log_event("override_mutation_failed", error_type=type(exc).__name__)
+        return json_error("Override mutation failed.", 500)
+    metrics.increment("override_mutations")
+    log_event("override_mutated", action=action, actor=actor)
+    return jsonify({"request_id": request.snapp_request_id, **result})
 
 
 @app.get("/dev/product-candidates")
@@ -4598,10 +4776,14 @@ def dev_product_match():
 
 @app.post("/chat")
 def chat():
-    data = request.get_json(silent=True) or {}
+    data, error = validated_json_payload()
+    if error:
+        return error
     message = (data.get("message") or "").strip()
     if not message:
-        return jsonify({"error": "Message is required."}), 400
+        return json_error("Message is required.", 400)
+    if len(message) > 1000:
+        return json_error("Message is too long.", 400)
     try:
         reply, total_tokens = generate_reply(message)
     except Exception as exc:
@@ -4673,18 +4855,27 @@ def trader_joes_store_options():
 
 @app.post("/dishes")
 def dishes():
-    data = request.get_json(silent=True) or {}
+    request_started = time.perf_counter()
+    rid = request.snapp_request_id
+    data, error = validated_json_payload()
+    if error:
+        return error
     meal_prompt = (data.get("meal_prompt") or data.get("ingredients") or data.get("message") or "").strip()
+    if len(meal_prompt) > MAX_DISH_PROMPT_CHARS:
+        return json_error("Meal prompt is too long.", 400)
     household_size = parse_household_size(data.get("household_size"))
     dietary_restrictions = re.sub(
         r"\s+", " ", (data.get("dietary_restrictions") or "").strip()
     )[:500]
     pantry_items = parse_pantry_items(data.get("pantry_items"))
+    if len(pantry_items) > MAX_PANTRY_ITEMS_PER_REQUEST:
+        return json_error("Too many pantry items in request.", 400)
     filters = parse_recipe_filters(data, household_size, dietary_restrictions)
     if not meal_prompt:
-        return jsonify({"error": "Describe the meal you want."}), 400
+        return json_error("Describe the meal you want.", 400)
 
     try:
+        metrics.increment("match_requests")
         stores = morton_williams_store_lookup()
         grocery_label = "Morton Williams"
         recipe_ideas = [{"name": meal_prompt, "query": meal_prompt, "cuisine": ""}]
@@ -4697,8 +4888,36 @@ def dishes():
             grocery_label=grocery_label,
             pantry_items=pantry_items,
         )
+        ingredient_count = sum(len(dish.get("recipe", {}).get("ingredients", [])) for dish in dishes)
+        unmatched_count = sum(
+            1
+            for dish in dishes
+            for ingredient in dish.get("ingredients_to_buy", [])
+            if ingredient.get("availability_status") == "unavailable" or ingredient.get("unavailable")
+        )
+        low_confidence_count = sum(
+            1
+            for dish in dishes
+            for ingredient in dish.get("ingredients_to_buy", [])
+            if ingredient.get("match_confidence") in {"low", "no_safe_match", "substitution_only"}
+        )
+        elapsed_ms = round((time.perf_counter() - request_started) * 1000, 2)
+        metrics.observe_latency("dishes", elapsed_ms)
+        metrics.increment("dish_ingredient_lines", ingredient_count)
+        metrics.increment("dish_unmatched_ingredients", unmatched_count)
+        metrics.increment("dish_low_confidence_ingredients", low_confidence_count)
+        log_event(
+            "dishes_request_complete",
+            request_id=rid,
+            recipe_count=len(dishes),
+            ingredient_line_count=ingredient_count,
+            unmatched_count=unmatched_count,
+            low_confidence_count=low_confidence_count,
+            total_ms=elapsed_ms,
+        )
         return jsonify(
             {
+                "request_id": rid,
                 "meal_prompt": meal_prompt,
                 "household_size": household_size,
                 "dietary_restrictions": dietary_restrictions,
@@ -4720,11 +4939,13 @@ def dishes():
             }
         )
     except RuntimeError as exc:
-        print(f"Dish generation runtime error: {exc}", flush=True)
-        return jsonify({"error": str(exc)}), 503
+        metrics.increment("dish_request_failures")
+        log_event("dishes_request_failed", request_id=rid, error_type=type(exc).__name__)
+        return jsonify({"error": str(exc), "request_id": rid}), 503
     except Exception as exc:
-        print(f"Dish generation failed: {exc}", flush=True)
-        return jsonify({"error": "Dish generation failed.", "details": str(exc)}), 503
+        metrics.increment("dish_request_failures")
+        log_event("dishes_request_failed", request_id=rid, error_type=type(exc).__name__)
+        return jsonify({"error": "Dish generation failed.", "details": str(exc), "request_id": rid}), 503
 
 
 @app.route("/dishes", methods=["OPTIONS"])

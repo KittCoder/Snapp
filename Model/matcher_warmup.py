@@ -7,6 +7,8 @@ from dataclasses import asdict, dataclass
 from typing import Any
 
 from basket_quantity import get_basket_builder
+from artifact_manifest import validate_runtime_artifacts
+from ops_metrics import log_event, metrics
 from product_compatibility import get_product_match_service
 
 
@@ -25,6 +27,8 @@ class WarmupState:
     lexical_index_loaded: bool = False
     warmup_completed: bool = False
     startup_ms: float | None = None
+    artifact_validation_ok: bool = False
+    artifact_validation_status: str | None = None
 
     def safe_dict(self) -> dict[str, Any]:
         payload = asdict(self)
@@ -54,6 +58,11 @@ def warmup_matcher(force: bool = False) -> WarmupState:
 
     started = time.perf_counter()
     try:
+        validation = validate_runtime_artifacts()
+        _state.artifact_validation_ok = validation.ok
+        _state.artifact_validation_status = validation.status
+        if not validation.ok:
+            raise RuntimeError("; ".join(validation.errors))
         service = get_product_match_service()
         retriever = service.retriever
         _ = service.overrides.version
@@ -77,12 +86,17 @@ def warmup_matcher(force: bool = False) -> WarmupState:
             _state.warmup_completed = True
             _state.finished_at = time.time()
             _state.startup_ms = round((time.perf_counter() - started) * 1000, 2)
+            metrics.set_startup_readiness(_state.startup_ms)
+            metrics.set_artifact_version((validation.manifest or {}).get("index_hash"))
+            log_event("matcher_warmup_complete", status=_state.status, startup_ms=_state.startup_ms)
     except Exception as exc:
         with _lock:
             _state.status = "failed"
             _state.error = str(exc)
             _state.finished_at = time.time()
             _state.startup_ms = round((time.perf_counter() - started) * 1000, 2)
+            metrics.increment("startup_failures")
+            log_event("matcher_warmup_failed", status=_state.status, startup_ms=_state.startup_ms, error_type=type(exc).__name__)
     return _state
 
 
@@ -94,4 +108,3 @@ def start_background_warmup() -> WarmupState:
         _thread = threading.Thread(target=warmup_matcher, name="snapp-matcher-warmup", daemon=True)
         _thread.start()
         return _state
-

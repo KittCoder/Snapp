@@ -20,6 +20,8 @@ from product_compatibility import (
     profile_from_query,
 )
 
+OPTIMIZER_VERSION = "basket-optimizer-v1"
+
 
 UNKNOWN = "UNKNOWN"
 
@@ -708,6 +710,10 @@ class BasketBuilder:
         self._package_cache: dict[str, PackageInfo] = {}
         self._basket_cache: dict[str, RecipeBasket] = {}
 
+    def clear_caches(self) -> None:
+        self._package_cache.clear()
+        self._basket_cache.clear()
+
     def build_recipe_basket(self, recipe: Any, optimization_mode: str = "balanced") -> RecipeBasket:
         return self.build_multi_recipe_basket([recipe], optimization_mode=optimization_mode)
 
@@ -845,7 +851,7 @@ class BasketBuilder:
         payload = json.dumps(recipes, sort_keys=True, default=str, separators=(",", ":"))
         version = "|".join(
             [
-                "basket-optimizer-v1",
+                OPTIMIZER_VERSION,
                 optimization_mode,
                 self.match_service.product_index_version() or "no-index",
                 self.match_service.overrides.version,

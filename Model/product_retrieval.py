@@ -394,6 +394,9 @@ class LruEmbeddingCache:
     def __len__(self) -> int:
         return len(self._items)
 
+    def clear(self) -> None:
+        self._items.clear()
+
 
 @dataclass
 class RetrievalStats:

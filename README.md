@@ -12,13 +12,16 @@ The backend is configured for Render with [render.yaml](/Users/2027kstarkie/Desk
    - Root directory: `Model`
    - Runtime: Python
    - Build command: `pip install -r requirements.txt`
-   - Start command: `gunicorn model:app`
+   - Start command: `gunicorn --workers 1 --threads 2 --timeout 120 model:app`
    - Health check path: `/health`
 4. Set these environment variables in Render:
    - `OPENAI_API_KEY`: your OpenAI API key
    - `FDC_API_KEY`: your USDA FoodData Central API key
    - `APIFY_API_TOKEN`: your Apify API token for running the Trader Joe's scraper
    - `CORS_ORIGINS`: `https://snapp-1d5j.vercel.app`
+   - `SNAPP_ADMIN_TOKEN`: random secret used for protected internal diagnostics/review endpoints
+   - `SNAPP_ENV`: `production`
+   - `SNAPP_LOG_FORMAT`: `json`
 
 Optional:
    - `APIFY_TRADER_JOES_ACTOR_ID`: defaults to `merry_arctic~trader-joes-scraper`
@@ -27,6 +30,8 @@ Optional:
    - `APIFY_TRADER_JOES_MAX_PRODUCTS`: defaults to `500`
  
 Render injects `PORT` automatically. Gunicorn handles the hosted service process.
+
+Use one worker by default. The local embedding model and vector index are loaded per worker, so multiple workers multiply memory usage. The recommended deployment shape is one worker with two threads until measured Render memory shows more workers are safe.
 
 The backend also accepts Vercel deployment URLs that match this project, such as:
 
@@ -182,6 +187,8 @@ python3 Model/build_product_embedding_index.py \
 
 The first run downloads and loads the local `sentence-transformers` model. Later runs reuse unchanged vectors by comparing each product's embedding source-text hash.
 
+The build also writes `Model/runtime_artifact_manifest.json`, which records the feature hash, vector index hash, row counts, embedding model, matcher version, optimizer version, override version, and build command. Startup and `/ready` validate this manifest against the active artifacts.
+
 For an offline smoke test that does not download the model:
 
 ```sh
@@ -232,6 +239,108 @@ Manual overrides live in `Model/product_match_overrides.json`. The file supports
 - `incompatible_families`
 
 Each override entry should include a `query` and the relevant `product_id`, `canonical`, `alias`, or `family` field. Overrides are loaded lazily, do not mutate source product data, and use deterministic precedence: forbidden, forced, approved, aliases/canonical overrides, then automated ranking.
+
+## Production Artifact Map
+
+Render root directory: `Model`
+
+Runtime files required by the Morton Williams matcher:
+
+- `morton_williams_product_features.json`: normalized product feature artifact, committed to Git.
+- `morton_williams_vector_index/metadata.json` and `morton_williams_vector_index/embeddings.npy`: local semantic index, committed to Git as the default production artifact strategy.
+- `runtime_artifact_manifest.json`: manifest for the active product/features/index/override set.
+- `product_match_overrides.json`: deterministic review overrides, committed to Git for durable production behavior.
+- `all_recipes.json`, `all_recipes_search.sqlite`, `recipes.json`, `USDA recipes.json`: recipe data and search artifacts, committed to Git.
+
+`database.merged.json` is ignored and is not required at runtime. It is the source input for refresh jobs. Render does not automatically obtain a new Morton Williams source file; weekly refresh output must be run locally or in a controlled job, validated, and then promoted by committing the generated runtime artifacts. The current default is Git-committed runtime artifacts because the update cadence is low, the active vector index is modest in size, deployment is simple, and rollback is a normal Git redeploy.
+
+Hugging Face model files are downloaded by `sentence-transformers` when the model first loads. Render build/runtime cache may reuse them, but readiness does not assume the cache exists.
+
+## Health, Readiness, And Diagnostics
+
+- `/health` only confirms the Flask process is alive.
+- `/ready` requires warmup, manifest validation, feature/index alignment, model/index compatibility, and a smoke matcher query. It returns `503` for warming, failed, or unavailable semantic readiness. Lexical-only mode is only treated as ready when `SNAPP_ALLOW_LEXICAL_ONLY=1`.
+- `/internal/diagnostics` and `/internal/metrics` require `X-SNAPP-Admin-Token: <SNAPP_ADMIN_TOKEN>`.
+
+Protected review endpoints:
+
+```sh
+curl -H "X-SNAPP-Admin-Token: $SNAPP_ADMIN_TOKEN" \
+  "$BASE_URL/internal/review/queues?limit=50"
+
+curl -H "X-SNAPP-Admin-Token: $SNAPP_ADMIN_TOKEN" \
+  "$BASE_URL/internal/review/inspect?ingredient=unsalted%20butter"
+```
+
+Override mutation endpoint:
+
+```sh
+curl -X POST "$BASE_URL/internal/review/overrides" \
+  -H "Content-Type: application/json" \
+  -H "X-SNAPP-Admin-Token: $SNAPP_ADMIN_TOKEN" \
+  -d '{"action":"define_alias","query":"caster sugar","canonical":"sugar","actor":"reviewer","reason":"common recipe alias"}'
+```
+
+Supported actions are `approve_match`, `forbid_product`, `define_alias`, `assign_canonical`, `acceptable_substitution`, `mark_incompatible_family`, and `remove`. Mutations write a backup and append `Model/product_match_override_audit.jsonl`, then reload overrides and clear caches. On Render's ephemeral filesystem, local override mutations are not durable unless the changed files are committed or a persistent artifact store is configured.
+
+Cache control:
+
+```sh
+curl -X POST "$BASE_URL/internal/cache/clear" \
+  -H "Content-Type: application/json" \
+  -H "X-SNAPP-Admin-Token: $SNAPP_ADMIN_TOKEN" \
+  -d '{}'
+```
+
+## Morton Williams Refresh Workflow
+
+Use the safe refresh command after obtaining a new `database.merged.json`:
+
+```sh
+python3 Model/refresh_morton_williams_artifacts.py \
+  --source Model/database.merged.json \
+  --dry-run
+
+python3 Model/refresh_morton_williams_artifacts.py \
+  --source Model/database.merged.json
+```
+
+The command validates the source schema, backs up active artifacts under `Model/artifact_rollbacks/`, normalizes features, regenerates uncertainty/noise reports, rebuilds the vector index, writes a manifest, validates the staged set, runs the unit suite and matcher evaluation, then atomically promotes the staged files. Failed refreshes leave the active artifact set unchanged.
+
+Use `--force-rebuild` to ignore existing vectors and `--deterministic-test-embeddings` only for offline smoke tests.
+
+After refresh, run:
+
+```sh
+python3 Model/artifact_manifest.py
+python3 -m unittest discover -s Model/tests -v
+python3 Model/evaluate_product_matching.py --fixture Model/evaluation/product_match_cases.jsonl
+python3 -m compileall -q Model
+```
+
+## Deployment Verification
+
+Verify a local or deployed instance:
+
+```sh
+python3 Model/verify_deployment.py --base-url http://localhost:5000
+
+python3 Model/verify_deployment.py \
+  --base-url https://your-render-service.onrender.com \
+  --admin-token "$SNAPP_ADMIN_TOKEN"
+```
+
+The command checks `/health`, `/ready`, a repeated `/dishes` smoke request, response shape, hard-conflict absence, and protected diagnostics when a token is supplied.
+
+## Rollback
+
+Code rollback: redeploy a prior Git commit in Render or revert the commit and redeploy.
+
+Product artifact rollback: restore the previous files from `Model/artifact_rollbacks/<timestamp>/` or redeploy a prior Git commit containing the previous manifest/features/index bundle.
+
+Override rollback: restore `Model/product_match_overrides.json` from its `.bak` file, an audit-log revision, or a prior Git commit. Then clear caches through `/internal/cache/clear` or restart the service.
+
+Failed refresh: the refresh script uses a staging directory and does not promote partial artifacts. The previous active artifact set remains in place.
 
 Run the checked-in matcher evaluation:
 

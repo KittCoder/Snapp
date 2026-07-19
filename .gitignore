@@ -9,4 +9,6 @@ node_modules/
 dist/
 .vercel/
 Model/database.merged.json
-Model/morton_williams_vector_index/
+Model/artifact_rollbacks/
+Model/.product_match_overrides.lock
+Model/product_match_overrides.json.*.bak

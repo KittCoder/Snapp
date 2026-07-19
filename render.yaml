@@ -5,7 +5,7 @@ services:
     plan: free
     rootDir: Model
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn model:app
+    startCommand: gunicorn --workers 1 --threads 2 --timeout 120 model:app
     healthCheckPath: /health
     envVars:
       - key: OPENAI_API_KEY
@@ -16,3 +16,9 @@ services:
         value: merry_arctic~trader-joes-scraper
       - key: CORS_ORIGINS
         value: https://snapp-1d5j.vercel.app
+      - key: SNAPP_ENV
+        value: production
+      - key: SNAPP_LOG_FORMAT
+        value: json
+      - key: SNAPP_ADMIN_TOKEN
+        sync: false

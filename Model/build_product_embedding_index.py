@@ -11,6 +11,7 @@ from product_retrieval import (
     SentenceTransformerEmbeddingBackend,
     build_product_index,
 )
+from artifact_manifest import DEFAULT_MANIFEST_PATH, write_manifest
 
 
 def directory_size(path: Path) -> int:
@@ -28,6 +29,8 @@ def main():
     parser.add_argument("--model", default=os.getenv("SNAPP_EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5"))
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--failed-log", default=str(Path(DEFAULT_INDEX_DIR) / "failed_rows.csv"))
+    parser.add_argument("--manifest", default=str(DEFAULT_MANIFEST_PATH))
+    parser.add_argument("--source", default=str(Path(__file__).with_name("database.merged.json")))
     parser.add_argument(
         "--deterministic-test-embeddings",
         action="store_true",
@@ -61,6 +64,15 @@ def main():
         "build_time_ms": elapsed_ms,
         "index_size_bytes": directory_size(Path(args.index_dir)),
     }
+    manifest = write_manifest(
+        path=Path(args.manifest),
+        source_path=Path(args.source),
+        features_path=Path(args.features),
+        index_dir=Path(args.index_dir),
+        generation_command=" ".join(os.sys.argv),
+    )
+    summary["manifest_path"] = args.manifest
+    summary["manifest_schema_version"] = manifest["schema_version"]
     print(json.dumps(summary, indent=2, sort_keys=True))
 
 
