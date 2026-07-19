@@ -459,6 +459,12 @@ CORS_ORIGINS = {
 @app.before_request
 def attach_request_context():
     request.snapp_request_id = request.headers.get("X-Request-ID") or request_id()
+    if (
+        request.endpoint not in {"health", "static"}
+        and os.getenv("SNAPP_DISABLE_MATCHER_WARMUP", "").lower() not in {"1", "true", "yes"}
+        and matcher_warmup.get_warmup_status().status == "not_started"
+    ):
+        matcher_warmup.start_background_warmup()
 
 
 def json_error(message, status_code=400, **extra):
@@ -4591,16 +4597,62 @@ def ready():
     payload = state.safe_dict()
     payload["artifact_validation"] = artifact_validation
     payload["semantic_readiness"] = state.semantic_readiness if is_ready or is_degraded_allowed else "unavailable"
+    ready_diagnostics = matcher_warmup.module_diagnostics(include_private_ids=True)
+    ready_message = (
+        "ready_request "
+        f"pid={ready_diagnostics.get('pid')} "
+        f"ppid={os.getppid()} "
+        f"thread={ready_diagnostics.get('thread')} "
+        f"module_name={ready_diagnostics.get('module_name')} "
+        f"manager_id={ready_diagnostics.get('manager_id')} "
+        f"state_id={ready_diagnostics.get('state_id')} "
+        f"status={state.status} "
+        f"warmup_completed={state.warmup_completed} "
+        f"model_loaded={state.model_loaded} "
+        f"index_loaded={state.index_loaded} "
+        f"finished_at={state.finished_at}"
+    )
     log_event(
-        "ready_request",
+        ready_message,
+        event_name="ready_request",
         request_id=request.snapp_request_id,
         status=state.status,
         status_code=status_code,
         artifact_validation_ok=artifact_validation["ok"],
         state_artifact_validation_ok=state.artifact_validation_ok,
-        **matcher_warmup.module_diagnostics(include_private_ids=True),
+        **ready_diagnostics,
     )
+    if state.status == "warming" and actual_matcher_components_ready():
+        log_event(
+            ready_message.replace("ready_request", "ready_state_invariant_violation"),
+            level=40,
+            event_name="ready_state_invariant_violation",
+            request_id=request.snapp_request_id,
+            status=state.status,
+            status_code=status_code,
+            artifact_validation_ok=artifact_validation["ok"],
+            state_artifact_validation_ok=state.artifact_validation_ok,
+            **ready_diagnostics,
+        )
     return jsonify(payload), status_code
+
+
+def actual_matcher_components_ready():
+    try:
+        import product_compatibility
+
+        service = getattr(product_compatibility, "_match_service_singleton", None)
+        if service is None:
+            return False
+        retriever = service.retriever
+        return (
+            getattr(retriever, "_features", None) is not None
+            and getattr(retriever, "_lexical_docs", None) is not None
+            and getattr(retriever, "_index_embeddings", None) is not None
+            and getattr(retriever.backend, "_model", None) is not None
+        )
+    except Exception:
+        return False
 
 
 @app.get("/internal/diagnostics")
@@ -4959,13 +5011,6 @@ def dishes():
 @app.route("/dishes", methods=["OPTIONS"])
 def dishes_options():
     return ("", 204)
-
-
-if os.getenv("SNAPP_DISABLE_MATCHER_WARMUP", "").lower() not in {"1", "true", "yes"}:
-    try:
-        matcher_warmup.start_background_warmup()
-    except Exception as exc:
-        print(f"Matcher warmup could not start: {exc}", flush=True)
 
 
 if __name__ == "__main__":
