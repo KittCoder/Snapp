@@ -22,7 +22,7 @@ from product_retrieval import (
 )
 
 
-MATCHER_VERSION = "ingredient-product-matcher-v1.5"
+MATCHER_VERSION = "ingredient-product-matcher-v1.7"
 DEFAULT_OVERRIDES_PATH = Path(__file__).resolve().parent / "product_match_overrides.json"
 DEFAULT_EVALUATION_FIXTURE = Path(__file__).resolve().parent / "evaluation" / "product_match_cases.jsonl"
 
@@ -467,6 +467,7 @@ def classify_identity(
         profile.family = "peanut butter"; profile.category = profile.category or "pantry"
 
     flour_patterns = {
+        "corn flour": r"\bcorn\s+masa\s+flour\b|\bmasa\s+harina\b|\bmasa\s+flour\b|\bcorn flour\b",
         "all-purpose flour": r"\ball[-\s]?purpose flour\b|\bplain flour\b",
         "bread flour": r"\bbread flour\b",
         "cake flour": r"\bcake flour\b",
@@ -476,7 +477,8 @@ def classify_identity(
     }
     for flour_type, pattern in flour_patterns.items():
         if text_has(detection_text, pattern) or canonical == flour_type:
-            profile.family = "flour"; profile.flour_type = flour_type
+            profile.family = "corn flour" if flour_type == "corn flour" else "flour"
+            profile.flour_type = flour_type
     if profile.family != "flour" and text_has(detection_text, r"\bflour\b"):
         profile.family = "flour"
         profile.category = profile.category or "pantry"
@@ -542,7 +544,7 @@ def classify_identity(
     elif profile.family in {"sauce", "pet food", "prepared meal"}:
         pass
     elif text_has(detection_text, r"\bbeef\s+(?:for\s+)?stew\b|\bstew(?:ing)?\s+(?:beef|meat)\b|\bbeef stew meat\b|\bstew meat\b"):
-        profile.family = "meat cut"; profile.meat_species = "beef"; profile.meat_cut = "stew meat"
+        profile.family = "meat cut"; profile.category = profile.category or "meat"; profile.meat_species = "beef"; profile.meat_cut = "stew meat"
     elif text_has(detection_text, r"\bground beef\b|\bbeef,?\s+ground\b"):
         profile.family = "ground meat"; profile.meat_species = "beef"; profile.ground = True
     elif text_has(detection_text, r"\bbeef burgers?\b|\bground beef burgers?\b"):
@@ -556,7 +558,7 @@ def classify_identity(
     elif text_has(detection_text, r"\bsausage\b"):
         profile.family = "sausage"; profile.category = profile.category or "meat"
     elif text_has(detection_text, r"\b(shaved|sliced|thin sliced)\s+(?:steak\s+)?beef\b|\b(?:beef\s+)?(shaved|sliced)\s+steak\b|\bshaved steak beef\b"):
-        profile.family = "meat cut"; profile.meat_species = "beef"; profile.meat_cut = "shaved beef"
+        profile.family = "meat cut"; profile.category = profile.category or "meat"; profile.meat_species = "beef"; profile.meat_cut = "shaved beef"
     elif text_has(detection_text, r"\bground turkey\b"):
         profile.family = "ground meat"; profile.meat_species = "turkey"; profile.ground = True
     elif text_has(detection_text, r"\bpork\b"):
@@ -582,21 +584,21 @@ def classify_identity(
         else:
             profile.family = "lamb"
     elif text_has(detection_text, r"\bchicken breast\b"):
-        profile.family = "meat cut"; profile.meat_species = "chicken"; profile.meat_cut = "breast"
+        profile.family = "meat cut"; profile.category = profile.category or "meat"; profile.meat_species = "chicken"; profile.meat_cut = "breast"
     elif text_has(detection_text, r"\bchicken thighs?\b"):
-        profile.family = "meat cut"; profile.meat_species = "chicken"; profile.meat_cut = "thigh"
+        profile.family = "meat cut"; profile.category = profile.category or "meat"; profile.meat_species = "chicken"; profile.meat_cut = "thigh"
     elif text_has(detection_text, r"\bchicken\b") and profile.family not in {"broth", "stock", "soup", "bouillon"}:
         profile.family = "chicken"; profile.category = profile.category or "meat"; profile.meat_species = "chicken"
     elif text_has(detection_text, r"\bskirt steak\b"):
-        profile.family = "meat cut"; profile.meat_species = "beef"; profile.meat_cut = "skirt steak"
+        profile.family = "meat cut"; profile.category = profile.category or "meat"; profile.meat_species = "beef"; profile.meat_cut = "skirt steak"
     elif text_has(detection_text, r"\bribeye\b"):
-        profile.family = "meat cut"; profile.meat_species = "beef"; profile.meat_cut = "ribeye steak"
+        profile.family = "meat cut"; profile.category = profile.category or "meat"; profile.meat_species = "beef"; profile.meat_cut = "ribeye steak"
     elif text_has(detection_text, r"\bsirloin\b"):
-        profile.family = "meat cut"; profile.meat_species = "beef"; profile.meat_cut = "sirloin steak"
+        profile.family = "meat cut"; profile.category = profile.category or "meat"; profile.meat_species = "beef"; profile.meat_cut = "sirloin steak"
     elif text_has(detection_text, r"\bhanger\b"):
-        profile.family = "meat cut"; profile.meat_species = "beef"; profile.meat_cut = "hanger steak"
+        profile.family = "meat cut"; profile.category = profile.category or "meat"; profile.meat_species = "beef"; profile.meat_cut = "hanger steak"
     elif text_has(detection_text, r"\bsteak\b"):
-        profile.family = "meat cut"; profile.meat_species = "beef"; profile.meat_cut = "steak"
+        profile.family = "meat cut"; profile.category = profile.category or "meat"; profile.meat_species = "beef"; profile.meat_cut = "steak"
     elif text_has(detection_text, r"\btuna\b") and text_has(detection_text, r"\bcan|canned\b"):
         profile.family = "tuna"; profile.meat_species = "tuna"; profile.freshness = profile.freshness or "canned"
     elif text_has(detection_text, r"\btuna\b"):
@@ -653,7 +655,7 @@ def classify_identity(
         profile.family = "curry powder"; profile.category = profile.category or "pantry"
     if text_has(normalized, r"\bcorn starch\b|\bcornstarch\b|\bcornflour\b"):
         profile.family = "corn starch"; profile.category = "pantry"
-    elif text_has(normalized, r"\bcorn flour\b"):
+    elif text_has(normalized, r"\bcorn\s+masa\s+flour\b|\bmasa\s+harina\b|\bmasa\s+flour\b|\bcorn flour\b"):
         profile.family = "corn flour"; profile.category = "pantry"
     if text_has(detection_text, r"\bwalnuts?\b"):
         profile.family = "walnuts"; profile.category = profile.category or "pantry"
@@ -1094,6 +1096,15 @@ def query_tokens_present(query: IngredientProfile, product: IngredientProfile) -
 
 def explicit_attribute_bonus(query: IngredientProfile, product: IngredientProfile) -> float:
     bonus = 0.0
+    if (
+        query.family == "meat cut"
+        and product.family == "meat cut"
+        and query.meat_species
+        and query.meat_species == product.meat_species
+        and query.meat_cut
+        and query.meat_cut == product.meat_cut
+    ):
+        bonus += 0.12
     if query.freshness and query.freshness == product.freshness:
         patterns = {
             "dried": r"\bdried\b|\bflakes\b",

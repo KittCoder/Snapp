@@ -3871,10 +3871,28 @@ def recipe_ready_minutes(recipe):
     return None
 
 
-def recipe_servings(recipe, fallback_servings):
+def parse_recipe_servings_value(value):
+    text = normalize_cuisine_text(str(value or ""))
+    if not text:
+        return None
+    range_match = re.search(r"\b(\d+)\s*(?:-|to)\s*(\d+)\s+servings?\b", text)
+    if range_match:
+        return int(range_match.group(2))
+    match = re.search(r"\b(\d+)\s+(?:one half cup\s+)?servings?\b", text)
+    if match:
+        return int(match.group(1))
     try:
-        servings = int(recipe.get("servings"))
+        return int(value)
     except (TypeError, ValueError):
+        return None
+
+
+def recipe_servings(recipe, fallback_servings):
+    servings = parse_recipe_servings_value(recipe.get("servings"))
+    if servings is None:
+        database_recipe = recipe.get("_snapp_database_recipe") or recipe
+        servings = parse_recipe_servings_value(database_recipe.get("yield"))
+    if servings is None:
         servings = fallback_servings
     return max(MIN_HOUSEHOLD_SIZE, min(servings, MAX_HOUSEHOLD_SIZE))
 

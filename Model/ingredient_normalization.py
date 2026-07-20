@@ -209,6 +209,8 @@ IDENTITY_PHRASES = {
     "all-purpose flour",
     "corn starch",
     "corn flour",
+    "corn masa flour",
+    "masa flour",
     "pita bread",
     "chili sauce",
 }
@@ -285,7 +287,7 @@ COMMON_PRODUCE_CANONICALS = (
 
 CANONICAL_PATTERNS = (
     (r"\bcorn\s*starch\b|\bcornstarch\b|\bcornflour\b", "corn starch"),
-    (r"\bcorn\s+flour\b", "corn flour"),
+    (r"\bcorn\s+masa\s+flour\b|\bmasa\s+harina\b|\bmasa\s+flour\b|\bcorn\s+flour\b", "corn flour"),
     (r"\ball[-\s]?purpose flour\b|\bplain flour\b|\bap flour\b", "all-purpose flour"),
     (r"\bwhole wheat flour\b", "whole wheat flour"),
     (r"\bbread flour\b", "bread flour"),

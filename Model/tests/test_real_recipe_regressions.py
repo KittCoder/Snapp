@@ -38,6 +38,7 @@ class RealRecipeRegressionTests(unittest.TestCase):
     def test_beef_steak_pudding_matcher_cases(self):
         for case_id in (
             "beef-steak-pudding-beef",
+            "beef-stew-meat-cut",
             "beef-steak-pudding-suet",
             "beef-steak-pudding-flour",
             "beef-steak-pudding-baking-powder",
@@ -46,6 +47,7 @@ class RealRecipeRegressionTests(unittest.TestCase):
             "beef-steak-pie-dripping",
             "corn-starch-identity",
             "corn-flour-identity",
+            "chicken-hawaii-corn-flour",
             "lamb-in-pitas-minced-lamb",
             "lamb-in-pitas-fresh-mint",
             "lamb-in-pitas-pita-bread",
@@ -140,3 +142,49 @@ class RealRecipeRegressionTests(unittest.TestCase):
                 self.assertIn(expected_text, by_raw[raw].product_name.casefold())
         self.assertNotIn("dog food", by_raw["1 pound minced lamb"].product_name.casefold())
         self.assertNotIn("chips", by_raw["4 whole meal pita breads"].product_name.casefold())
+
+    def test_chicken_hawaii_corn_flour_uses_maseca_not_corn_starch(self):
+        result = self.service.match_recipe_ingredient("corn flour", limit=10, candidate_limit=80)
+        self.assertIsNotNone(result.selected_match)
+        selected = result.selected_match.product_name.casefold()
+        self.assertIn("maseca", selected)
+        self.assertIn("masa flour", selected)
+        self.assertNotIn("starch", selected)
+
+    def test_dishes_api_path_keeps_beef_purchase_rows(self):
+        import model
+
+        recipe = {
+            "id": "beef-steak-pudding-regression",
+            "title": "Beef Steak Pudding",
+            "extendedIngredients": [
+                {"name": "beef", "original": "1 pound beef"},
+                {"name": "flour", "original": "3/4 pound flour"},
+                {"name": "water", "original": "3/4 cup water"},
+                {"name": "baking powder", "original": "1 teaspoon baking powder"},
+            ],
+        }
+        matches = model.match_recipe_ingredients_to_morton_williams(recipe, pantry_items=[], servings=4)
+        product_names = [product["product_name"].casefold() for _ingredient, product in matches]
+        self.assertTrue(any("beef" in name for name in product_names), product_names)
+        self.assertFalse(any("water" in name for name in product_names), product_names)
+
+    def test_dishes_api_path_matches_stew_meat_to_raw_beef(self):
+        import model
+
+        recipe = {
+            "id": "slow-cooker-beef-stew-regression",
+            "title": "Slow Cooker Beef Stew",
+            "extendedIngredients": [
+                {"name": "stew meat", "original": "2 pounds stew meat, cut into 1-inch cubes"},
+                {"name": "carrots", "original": "3 medium carrots, sliced"},
+                {"name": "water", "original": "2 cups water"},
+            ],
+        }
+        matches = model.match_recipe_ingredients_to_morton_williams(recipe, pantry_items=[], servings=4)
+        product_names = [product["product_name"].casefold() for _ingredient, product in matches]
+        self.assertTrue(
+            any("beef for stew" in name or "beef chuck shoulder stew" in name for name in product_names),
+            product_names,
+        )
+        self.assertFalse(any("soup" in name or "burrito" in name for name in product_names), product_names)

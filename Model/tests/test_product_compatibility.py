@@ -497,6 +497,13 @@ class OverrideCacheBatchEndpointTests(unittest.TestCase):
         adjusted, _originals = model.pantry_adjusted_recipe_ingredients(recipe, [], servings=4)
         self.assertEqual(adjusted, ["8 chicken thighs", "2 peppers"])
 
+    def test_recipe_servings_parses_database_yield(self):
+        import model
+
+        self.assertEqual(model.recipe_servings({"yield": "3 - 4 servings"}, 2), 4)
+        self.assertEqual(model.recipe_servings({"servings": "6 servings"}, 2), 6)
+        self.assertEqual(model.recipe_servings({"yield": ""}, 4), 4)
+
     def test_demo_dish_does_not_emit_unavailable_buy_rows(self):
         import model
 
