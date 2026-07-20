@@ -603,7 +603,12 @@ class ProductCandidateRetriever:
             vectors[text] = vector
         return vectors, latency, []
 
-    def retrieve_product_candidates(self, ingredient_text: str, limit: int = 30) -> CandidateRetrievalResult:
+    def retrieve_product_candidates(
+        self,
+        ingredient_text: str,
+        limit: int = 30,
+        use_semantic: bool = True,
+    ) -> CandidateRetrievalResult:
         started_at = time.perf_counter()
         normalized_query, parsed = query_embedding_text(ingredient_text)
         query_category, _ = infer_category(normalized_query)
@@ -619,7 +624,7 @@ class ProductCandidateRetriever:
         semantic_candidates = []
         semantic_latency = None
         query_embedding_latency = None
-        index_available = self.load_index()
+        index_available = self.load_index() if use_semantic else False
         semantic_failed = False
         if index_available:
             vector, query_embedding_latency, error = self.query_vector(normalized_query)
@@ -654,6 +659,8 @@ class ProductCandidateRetriever:
                         )
                 semantic_latency = round((time.perf_counter() - semantic_started) * 1000, 2)
                 self.stats.vector_ms += semantic_latency
+        elif not use_semantic:
+            errors.append("Semantic retrieval skipped while embedding model warms up.")
         else:
             errors.append(self._index_error or "Persisted vector index unavailable.")
 
@@ -681,6 +688,7 @@ class ProductCandidateRetriever:
         limit: int = 30,
         embedding_batch_size: int = 64,
         vector_batch_size: int = 128,
+        use_semantic: bool = True,
     ) -> list[CandidateRetrievalResult]:
         started_at = time.perf_counter()
         normalized_items = [query_embedding_text(text) for text in ingredient_texts]
@@ -700,7 +708,7 @@ class ProductCandidateRetriever:
         semantic_results: list[list[Candidate]] = [[] for _ in ingredient_texts]
         semantic_latencies: list[float | None] = [None for _ in ingredient_texts]
         query_embedding_latency: float | None = None
-        index_available = self.load_index()
+        index_available = self.load_index() if use_semantic else False
         semantic_failed = False
         if index_available:
             vectors_by_text, query_embedding_latency, errors = self.query_vectors(normalized_queries, batch_size=embedding_batch_size)
@@ -753,6 +761,9 @@ class ProductCandidateRetriever:
                 candidates, latency = semantic_by_query.get(query, ([], None))
                 semantic_results[index] = candidates
                 semantic_latencies[index] = latency
+        elif not use_semantic:
+            for bucket in errors_by_query:
+                bucket.append("Semantic retrieval skipped while embedding model warms up.")
         else:
             error = self._index_error or "Persisted vector index unavailable."
             for bucket in errors_by_query:

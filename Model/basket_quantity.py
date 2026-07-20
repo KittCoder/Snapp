@@ -761,12 +761,22 @@ class BasketBuilder:
         self._package_cache.clear()
         self._basket_cache.clear()
 
-    def build_recipe_basket(self, recipe: Any, optimization_mode: str = "balanced") -> RecipeBasket:
-        return self.build_multi_recipe_basket([recipe], optimization_mode=optimization_mode)
+    def build_recipe_basket(
+        self,
+        recipe: Any,
+        optimization_mode: str = "balanced",
+        use_semantic: bool = True,
+    ) -> RecipeBasket:
+        return self.build_multi_recipe_basket([recipe], optimization_mode=optimization_mode, use_semantic=use_semantic)
 
-    def build_multi_recipe_basket(self, recipes: list[Any], optimization_mode: str = "balanced") -> RecipeBasket:
+    def build_multi_recipe_basket(
+        self,
+        recipes: list[Any],
+        optimization_mode: str = "balanced",
+        use_semantic: bool = True,
+    ) -> RecipeBasket:
         started = time.perf_counter()
-        cache_key = self._basket_cache_key(recipes, optimization_mode)
+        cache_key = self._basket_cache_key(recipes, optimization_mode, use_semantic=use_semantic)
         cached = self._basket_cache.get(cache_key)
         if cached is not None:
             result = copy.deepcopy(cached)
@@ -783,7 +793,16 @@ class BasketBuilder:
             recipe_refs.append({"recipe_id": recipe_id, "ingredient_count": len(ingredients)})
             prepared_recipes.append((recipe_index, recipe_id, ingredients))
             all_ingredients.extend(ingredients)
-        all_results = self.match_service.match_recipe_ingredients(all_ingredients, limit=15)
+        try:
+            all_results = self.match_service.match_recipe_ingredients(
+                all_ingredients,
+                limit=15,
+                use_semantic=use_semantic,
+            )
+        except TypeError as exc:
+            if "use_semantic" not in str(exc):
+                raise
+            all_results = self.match_service.match_recipe_ingredients(all_ingredients, limit=15)
         result_offset = 0
         for _recipe_index, recipe_id, ingredients in prepared_recipes:
             results = all_results[result_offset : result_offset + len(ingredients)]
@@ -894,12 +913,13 @@ class BasketBuilder:
             self._basket_cache.pop(next(iter(self._basket_cache)))
         return result
 
-    def _basket_cache_key(self, recipes: list[Any], optimization_mode: str) -> str:
+    def _basket_cache_key(self, recipes: list[Any], optimization_mode: str, use_semantic: bool = True) -> str:
         payload = json.dumps(recipes, sort_keys=True, default=str, separators=(",", ":"))
         version = "|".join(
             [
                 OPTIMIZER_VERSION,
                 optimization_mode,
+                "semantic" if use_semantic else "lexical",
                 self.match_service.product_index_version() or "no-index",
                 self.match_service.overrides.version,
             ]
@@ -1017,9 +1037,13 @@ def get_basket_builder() -> BasketBuilder:
     return _basket_builder_singleton
 
 
-def build_recipe_basket(recipe: Any, optimization_mode: str = "balanced") -> RecipeBasket:
-    return get_basket_builder().build_recipe_basket(recipe, optimization_mode=optimization_mode)
+def build_recipe_basket(recipe: Any, optimization_mode: str = "balanced", use_semantic: bool = True) -> RecipeBasket:
+    return get_basket_builder().build_recipe_basket(recipe, optimization_mode=optimization_mode, use_semantic=use_semantic)
 
 
-def build_multi_recipe_basket(recipes: list[Any], optimization_mode: str = "balanced") -> RecipeBasket:
-    return get_basket_builder().build_multi_recipe_basket(recipes, optimization_mode=optimization_mode)
+def build_multi_recipe_basket(
+    recipes: list[Any],
+    optimization_mode: str = "balanced",
+    use_semantic: bool = True,
+) -> RecipeBasket:
+    return get_basket_builder().build_multi_recipe_basket(recipes, optimization_mode=optimization_mode, use_semantic=use_semantic)

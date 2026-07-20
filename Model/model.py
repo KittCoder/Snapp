@@ -3465,7 +3465,12 @@ def match_recipe_ingredients_to_morton_williams(recipe, pantry_items=None, servi
         "id": spoonacular_recipe_id(recipe) or recipe.get("title") or "recipe",
         "ingredients": ingredient_texts,
     }
-    basket = build_recipe_basket(basket_recipe, optimization_mode="balanced")
+    warmup_state = matcher_warmup.get_warmup_status()
+    basket = build_recipe_basket(
+        basket_recipe,
+        optimization_mode="balanced",
+        use_semantic=bool(warmup_state.model_loaded),
+    )
     service = basket_builder_match_service()
     matches = []
     for item in basket.shopping_basket:
@@ -4059,11 +4064,37 @@ def build_real_recipe_results(
         filters["dietary_restrictions"],
         recipe_ideas=recipe_ideas,
     )
-    exact_results = []
-    closest_results = []
+    ranked_candidates = []
     for recipe in candidates:
         if not spoonacular_ingredients(recipe):
             continue
+        relevance_score = recipe_constraint_score(recipe, meal_prompt, filters)
+        exact_match = recipe_passes_hard_filters(recipe, filters)
+        ranked_candidates.append((recipe, relevance_score, exact_match))
+
+    ranked_candidates.sort(
+        key=lambda item: (
+            0 if item[2] else 1,
+            -item[1],
+            (item[0].get("title") or item[0].get("name") or "").casefold(),
+        )
+    )
+    if len(ranked_candidates) > result_limit:
+        exact_ranked = [item for item in ranked_candidates if item[2]]
+        if len(exact_ranked) >= result_limit:
+            selected = exact_ranked[: max(result_limit * 2, 6)]
+            selected_ids = {spoonacular_recipe_id(item[0]) for item in selected}
+            fallback = [
+                item for item in ranked_candidates
+                if spoonacular_recipe_id(item[0]) not in selected_ids
+            ][: max(result_limit, 3)]
+            ranked_candidates = selected + fallback
+        else:
+            ranked_candidates = ranked_candidates[: max(result_limit * 2, 6)]
+
+    exact_results = []
+    closest_results = []
+    for recipe, relevance_score, exact_match in ranked_candidates:
         if products is None:
             matches = match_recipe_ingredients_to_morton_williams(
                 recipe,
@@ -4074,8 +4105,6 @@ def build_real_recipe_results(
             matches = match_recipe_ingredients_to_products(recipe, products)
         if not matches:
             continue
-        relevance_score = recipe_constraint_score(recipe, meal_prompt, filters)
-        exact_match = recipe_passes_hard_filters(recipe, filters)
         result = recipe_result_from_recipe(
             recipe,
             matches,

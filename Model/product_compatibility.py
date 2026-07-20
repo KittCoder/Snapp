@@ -1299,11 +1299,12 @@ class ProductMatchService:
                 self._product_profile_cache[product_id] = cached
         return cached
 
-    def cache_key(self, profile: IngredientProfile) -> str:
+    def cache_key(self, profile: IngredientProfile, use_semantic: bool = True) -> str:
         index_version = self.product_index_version() or "no-index"
         return "|".join(
             [
                 MATCHER_VERSION,
+                "semantic" if use_semantic else "lexical",
                 index_version,
                 self.overrides.version,
                 profile.normalized_signature,
@@ -1314,10 +1315,16 @@ class ProductMatchService:
             ]
         )
 
-    def match_recipe_ingredient(self, ingredient_text: str, limit: int = 5, candidate_limit: int = 50) -> MatchResult:
+    def match_recipe_ingredient(
+        self,
+        ingredient_text: str,
+        limit: int = 5,
+        candidate_limit: int = 50,
+        use_semantic: bool = True,
+    ) -> MatchResult:
         started = time.perf_counter()
         query_profile, parsed = profile_from_query(ingredient_text, self.overrides)
-        key = self.cache_key(query_profile)
+        key = self.cache_key(query_profile, use_semantic=use_semantic)
         cached = self.cache.get(key)
         if cached and self._cached_selection_is_valid(cached):
             result = copy.deepcopy(cached)
@@ -1330,7 +1337,16 @@ class ProductMatchService:
             self.cache.set(key, forced)
             return forced
 
-        retrieval = self.retriever.retrieve_product_candidates(query_profile.normalized_signature, limit=candidate_limit)
+        try:
+            retrieval = self.retriever.retrieve_product_candidates(
+                query_profile.normalized_signature,
+                limit=candidate_limit,
+                use_semantic=use_semantic,
+            )
+        except TypeError as exc:
+            if "use_semantic" not in str(exc):
+                raise
+            retrieval = self.retriever.retrieve_product_candidates(query_profile.normalized_signature, limit=candidate_limit)
         result = self._match_from_retrieval(ingredient_text, query_profile, parsed, retrieval, started, limit, candidate_limit)
         self.cache.set(key, result)
         return result
@@ -1494,7 +1510,12 @@ class ProductMatchService:
             )
         return None
 
-    def match_recipe_ingredients(self, ingredients: list[str | dict[str, Any]], limit: int = 5) -> list[MatchResult]:
+    def match_recipe_ingredients(
+        self,
+        ingredients: list[str | dict[str, Any]],
+        limit: int = 5,
+        use_semantic: bool = True,
+    ) -> list[MatchResult]:
         texts = []
         for ingredient in ingredients:
             if isinstance(ingredient, dict):
@@ -1513,7 +1534,7 @@ class ProductMatchService:
         misses: list[tuple[str, IngredientProfile, dict[str, Any], str]] = []
         for text in texts:
             query_profile, parsed = profile_from_query(text, self.overrides)
-            key = self.cache_key(query_profile)
+            key = self.cache_key(query_profile, use_semantic=use_semantic)
             profiles[text] = (query_profile, parsed, key)
             cached = self.cache.get(key)
             if cached and self._cached_selection_is_valid(cached):
@@ -1532,10 +1553,19 @@ class ProductMatchService:
                 misses.append((text, query_profile, parsed, key))
 
         if misses:
-            retrievals = self.retriever.retrieve_product_candidates_batch(
-                [query for _text, query_profile, _parsed, _key in misses for query in [query_profile.normalized_signature]],
-                limit=50,
-            )
+            try:
+                retrievals = self.retriever.retrieve_product_candidates_batch(
+                    [query for _text, query_profile, _parsed, _key in misses for query in [query_profile.normalized_signature]],
+                    limit=50,
+                    use_semantic=use_semantic,
+                )
+            except TypeError as exc:
+                if "use_semantic" not in str(exc):
+                    raise
+                retrievals = self.retriever.retrieve_product_candidates_batch(
+                    [query for _text, query_profile, _parsed, _key in misses for query in [query_profile.normalized_signature]],
+                    limit=50,
+                )
             for (text, query_profile, parsed, key), retrieval in zip(misses, retrievals):
                 result = self._match_from_retrieval(text, query_profile, parsed, retrieval, started_by_text[text], limit, 50)
                 self.cache.set(key, result)
