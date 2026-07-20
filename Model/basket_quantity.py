@@ -28,7 +28,7 @@ from product_compatibility import (
     profile_from_query,
 )
 
-OPTIMIZER_VERSION = "basket-optimizer-v1"
+OPTIMIZER_VERSION = "basket-optimizer-v2"
 
 
 UNKNOWN = "UNKNOWN"
@@ -125,10 +125,34 @@ COUNT_ALIASES = {
 
 DENSITY_G_PER_ML = {
     "milk": 1.03,
+    "non-fat milk": 1.03,
+    "reduced-fat milk": 1.03,
+    "whole milk": 1.03,
+    "evaporated milk": 1.08,
+    "coconut milk": 0.97,
     "water": 1.0,
+    "juice": 1.04,
+    "pineapple juice": 1.04,
+    "tomato juice": 1.04,
+    "tomato puree": 1.04,
+    "tomato sauce": 1.04,
+    "crushed tomatoes": 1.04,
+    "pineapple": 1.0,
+    "crushed pineapple": 1.0,
     "heavy cream": 0.99,
+    "cream": 0.99,
     "olive oil": 0.91,
     "vegetable oil": 0.92,
+    "oil": 0.92,
+    "vinegar": 1.01,
+    "soy sauce": 1.16,
+    "hot sauce": 1.03,
+    "chili sauce": 1.08,
+    "sweet chili sauce": 1.08,
+    "honey": 1.42,
+    "maple syrup": 1.33,
+    "molasses": 1.45,
+    "corn syrup": 1.38,
     "butter": 0.96,
     "broth": 1.0,
     "chicken broth": 1.0,
@@ -139,6 +163,9 @@ DENSITY_G_PER_ML = {
     "vegetable stock": 1.0,
     "beef stock": 1.0,
     "baking powder": 0.9,
+    "corn flour": 0.52,
+    "masa harina": 0.52,
+    "corn masa flour": 0.52,
 }
 
 

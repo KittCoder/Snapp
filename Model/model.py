@@ -2195,7 +2195,7 @@ def all_recipe_to_spoonacular_recipe(recipe):
         "image": recipe.get("image"),
         "sourceUrl": source_url,
         "spoonacularSourceUrl": source_url,
-        "servings": recipe.get("yield"),
+        "servings": recipe.get("servings"),
         "_snapp_recipe_provider": provider,
         "_snapp_database_recipe": recipe,
         "_snapp_original_usda_url": recipe.get("original_usda_url"),
@@ -3455,6 +3455,29 @@ def basket_item_to_morton_williams_product(item, feature):
     return product
 
 
+def estimated_grams_from_required_quantity(required_quantity, ingredient_name=None):
+    if not isinstance(required_quantity, dict):
+        return None
+    base_quantity = required_quantity.get("base_quantity")
+    base_unit = required_quantity.get("base_unit")
+    if base_quantity is None:
+        return None
+    try:
+        base_quantity = float(base_quantity)
+    except (TypeError, ValueError):
+        return None
+    if base_unit == "gram":
+        return max(1, int(round(base_quantity)))
+    if base_unit == "milliliter":
+        from basket_quantity import density_for_ingredient
+
+        density = density_for_ingredient(ingredient_name)
+        if density:
+            return max(1, int(round(base_quantity * density)))
+        return max(1, int(round(base_quantity)))
+    return None
+
+
 def match_recipe_ingredients_to_morton_williams(recipe, pantry_items=None, servings=None):
     from basket_quantity import build_recipe_basket
 
@@ -3543,7 +3566,12 @@ def spoonacular_recipe_to_demo_dish(
         if not product:
             continue
         package_grams = int(product.get("package_grams") or 0)
-        grams_total = min(package_grams, max(80, household_size * 125))
+        grams_total = estimated_grams_from_required_quantity(
+            product.get("required_quantity"),
+            recipe_ingredient.get("name") or product.get("ingredient"),
+        )
+        if grams_total is None:
+            grams_total = package_grams if package_grams > 0 else 0
         if grams_total < 1:
             continue
 
@@ -3570,7 +3598,7 @@ def spoonacular_recipe_to_demo_dish(
                 "required_quantity": product.get("required_quantity"),
                 "leftover_quantity": product.get("leftover_quantity"),
                 "grams_total": grams_total,
-                "grams_per_person": round(grams_total / household_size),
+                "grams_per_person": round(grams_total / max(1, household_size)),
                 "calories_total": 0,
                 "calories_per_person": 0,
                 "estimated_price_total": package_price,
@@ -3586,6 +3614,7 @@ def spoonacular_recipe_to_demo_dish(
     return {
         "name": recipe["name"],
         "servings": household_size,
+        "servings_display": str(household_size),
         "calories_total": 0,
         "calories_per_person": 0,
         "estimated_price_total": round(total_price, 2),
@@ -3877,12 +3906,18 @@ def recipe_ready_minutes(recipe):
 
 
 def parse_recipe_servings_value(value):
-    text = normalize_cuisine_text(str(value or ""))
-    if not text:
-        return None
-    range_match = re.search(r"\b(\d+)\s*(?:-|to)\s*(\d+)\s+servings?\b", text)
+    if isinstance(value, int):
+        return value if value > 0 else None
+    raw_text = str(value or "").casefold().replace("\u2013", "-").replace("\u2014", "-")
+    range_match = re.search(r"\b(\d+)\s*(?:-|to)\s*(\d+)(?:\s+servings?)?\b", raw_text)
     if range_match:
         return int(range_match.group(2))
+    text = normalize_cuisine_text(raw_text)
+    if not text:
+        return None
+    serves_match = re.search(r"\bserves\s+(\d+)\b", text)
+    if serves_match:
+        return int(serves_match.group(1))
     match = re.search(r"\b(\d+)\s+(?:one half cup\s+)?servings?\b", text)
     if match:
         return int(match.group(1))
@@ -3900,6 +3935,38 @@ def recipe_servings(recipe, fallback_servings):
     if servings is None:
         servings = fallback_servings
     return max(MIN_HOUSEHOLD_SIZE, min(servings, MAX_HOUSEHOLD_SIZE))
+
+
+def source_recipe_servings(recipe):
+    servings = parse_recipe_servings_value(recipe.get("servings"))
+    if servings is None:
+        database_recipe = recipe.get("_snapp_database_recipe") or recipe
+        servings = parse_recipe_servings_value(database_recipe.get("servings"))
+    if servings is None:
+        database_recipe = recipe.get("_snapp_database_recipe") or recipe
+        servings = parse_recipe_servings_value(database_recipe.get("yield"))
+    return servings if servings and servings > 0 else None
+
+
+def source_recipe_servings_display(recipe):
+    database_recipe = recipe.get("_snapp_database_recipe") or recipe
+    for value in (
+        database_recipe.get("servings"),
+        recipe.get("servings"),
+        database_recipe.get("yield"),
+    ):
+        if isinstance(value, int) and value > 0:
+            return str(value)
+        text = str(value or "").strip()
+        if not text:
+            continue
+        range_match = re.search(r"\b(\d+)\s*(?:-|to)\s*(\d+)\b", text.casefold())
+        if range_match:
+            return f"{range_match.group(1)}-{range_match.group(2)}"
+        servings = parse_recipe_servings_value(text)
+        if servings:
+            return str(servings)
+    return None
 
 
 def recipe_dietary_tags(recipe):
@@ -4026,10 +4093,12 @@ def recipe_result_from_recipe(
     )
     recipe_details = dish.get("recipe") or {}
     recipe_details["servings"] = recipe_servings(recipe, servings)
+    recipe_details["servings_display"] = source_recipe_servings_display(recipe) or str(recipe_details["servings"])
     recipe_details["cook_time_minutes"] = recipe_ready_minutes(recipe)
     recipe_details["dietary_tags"] = recipe_dietary_tags(recipe)
     recipe_details["source_link"] = recipe_details.get("source")
     dish["servings"] = recipe_details["servings"]
+    dish["servings_display"] = recipe_details["servings_display"]
     dish["estimated_price_per_serving"] = round(
         dish["estimated_price_total"] / max(1, dish["servings"]), 2
     )
@@ -4099,7 +4168,7 @@ def build_real_recipe_results(
             matches = match_recipe_ingredients_to_morton_williams(
                 recipe,
                 pantry_items=pantry_items,
-                servings=filters.get("servings"),
+                servings=source_recipe_servings(recipe),
             )
         else:
             matches = match_recipe_ingredients_to_products(recipe, products)

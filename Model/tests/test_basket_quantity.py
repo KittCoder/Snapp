@@ -298,6 +298,9 @@ class QuantityEngineTests(unittest.TestCase):
     def test_density_conversion_when_explicit(self):
         converted = convert_quantity(canonical_quantity(1, "cup"), "gram", "milk")
         self.assertAlmostEqual(converted.quantity, 243.7, places=1)
+        self.assertAlmostEqual(convert_quantity(canonical_quantity(1, "cup"), "fluid ounce", "milk").quantity, 8.0, places=2)
+        self.assertAlmostEqual(convert_quantity(canonical_quantity(1, "cup"), "ounce", "tomato puree").quantity, 8.68, places=2)
+        self.assertAlmostEqual(convert_quantity(canonical_quantity(1, "cup"), "ounce", "corn flour").quantity, 4.34, places=2)
 
     def test_package_parsing(self):
         package = parse_package_info({"original_product_name": "Soda 12 x 12 oz cans"})
@@ -347,6 +350,36 @@ class QuantityEngineTests(unittest.TestCase):
         bogo = parse_price_info("Buy One Get One $4.00")
         self.assertTrue(bogo.bogo)
         self.assertEqual(bogo.unit_price, 2.0)
+
+    def test_multiple_fixed_packages_are_purchased_when_recipe_requires_more(self):
+        coverage = calculate_coverage(
+            canonical_quantity(2.25, "pound", "beef"),
+            parse_package_info({"package_quantity": 1, "package_unit": "pound"}),
+            "beef",
+        )
+        cost = calculate_cost(coverage, parse_price_info("$7.99"))
+        self.assertEqual(coverage.packages_required, 3)
+        self.assertIn("multiple packages required", coverage.warnings)
+        self.assertEqual(cost.checkout_cost, 23.97)
+
+    def test_known_liquid_cups_can_compare_to_weight_labeled_package(self):
+        coverage = calculate_coverage(
+            canonical_quantity(2, "cup", "tomato puree"),
+            parse_package_info({"package_quantity": 29, "package_unit": "ounce"}),
+            "tomato puree",
+        )
+        self.assertEqual(coverage.packages_required, 1)
+        self.assertAlmostEqual(coverage.used.quantity, 17.36, places=2)
+        self.assertGreater(coverage.leftover.quantity, 11)
+
+    def test_corn_flour_cups_can_compare_to_maseca_weight_package(self):
+        coverage = calculate_coverage(
+            canonical_quantity(1, "cup", "corn flour"),
+            parse_package_info({"package_quantity": 4, "package_unit": "pound"}),
+            "corn flour",
+        )
+        self.assertEqual(coverage.packages_required, 1)
+        self.assertAlmostEqual(coverage.used.quantity, 0.27, places=2)
 
     def test_weight_pricing(self):
         package = parse_package_info({"original_product_name": "Ground Beef $8.99/lb variable weight"})

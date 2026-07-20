@@ -123,6 +123,20 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
 });
+
+function formatServings(dish) {
+  const recipe = dish?.recipe || {};
+  const value = dish?.servings_display || recipe.servings_display || recipe.servings || dish?.servings;
+  if (value === null || value === undefined || value === "") {
+    return "";
+  }
+  const text = String(value).trim();
+  if (!text) {
+    return "";
+  }
+  return `${text} serving${text === "1" ? "" : "s"}`;
+}
+
 const RESTRICTION_WARNING_RULES = [
   {
     restrictionPattern: /\b(lactose|dairy|milk|cheese|cream|yogurt|butter)\b/i,
@@ -1340,7 +1354,7 @@ function openDishModal(dish) {
   const summary = document.createElement("p");
   summary.className = "dish-modal-summary";
   summary.textContent = [
-    dish.servings ? `${dish.servings} serving${dish.servings === 1 ? "" : "s"}` : "",
+    formatServings(dish),
     dish.estimated_price_total
       ? `${currencyFormatter.format(dish.estimated_price_total)} estimated groceries`
       : "",
@@ -1846,7 +1860,7 @@ function createDishCard(dish) {
       : "No grocery price match";
     metadata.className = "dish-metadata";
     metadata.textContent = [
-      `${dish.servings} serving${dish.servings === 1 ? "" : "s"}`,
+      formatServings(dish),
       dish.cook_time_minutes ? `${dish.cook_time_minutes} min` : "",
       ...(dish.dietary_tags || []),
     ].filter(Boolean).join(" | ");

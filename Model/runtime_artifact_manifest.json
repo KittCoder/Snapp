@@ -1,5 +1,5 @@
 {
-  "build_timestamp": "2026-07-20T17:16:09Z",
+  "build_timestamp": "2026-07-20T18:50:54Z",
   "eligible_product_count": 10647,
   "embedding_dimension": 384,
   "embedding_index_version": "product-candidate-index-v1",
@@ -11,7 +11,7 @@
   "normalized_feature_count": 10703,
   "normalized_feature_hash": "76bf2642d4d830a68c27036d33ef7ef606c7f3a97010da2e0e96a7c5f7fbcfb8",
   "normalized_feature_version": "ingredient-foundation-v1",
-  "optimizer_version": "basket-optimizer-v1",
+  "optimizer_version": "basket-optimizer-v2",
   "override_hash": "6b7fce49006487d408fb92f9f5d641f7d056655a0edd437176a7191ee975ac9c",
   "override_version": "snapp-product-overrides-v1",
   "product_row_count": 10703,

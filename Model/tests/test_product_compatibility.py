@@ -541,7 +541,36 @@ class OverrideCacheBatchEndpointTests(unittest.TestCase):
 
         self.assertEqual(model.recipe_servings({"yield": "3 - 4 servings"}, 2), 4)
         self.assertEqual(model.recipe_servings({"servings": "6 servings"}, 2), 6)
+        self.assertEqual(model.recipe_servings({"servings": 5}, 2), 5)
+        self.assertEqual(model.recipe_servings({"servings": "6-8"}, 2), 8)
+        self.assertEqual(model.recipe_servings({"yield": "Serves 3"}, 2), 3)
         self.assertEqual(model.recipe_servings({"yield": ""}, 4), 4)
+        self.assertEqual(model.source_recipe_servings({"servings": "6-8"}), 8)
+        self.assertIsNone(model.source_recipe_servings({"yield": ""}))
+
+    def test_required_quantity_drives_display_grams_not_household_size(self):
+        import model
+
+        self.assertEqual(
+            model.estimated_grams_from_required_quantity(
+                {
+                    "base_quantity": 473.176,
+                    "base_unit": "milliliter",
+                },
+                "milk",
+            ),
+            487,
+        )
+        self.assertEqual(
+            model.estimated_grams_from_required_quantity(
+                {
+                    "base_quantity": 907.184,
+                    "base_unit": "gram",
+                },
+                "beef",
+            ),
+            907,
+        )
 
     def test_demo_dish_does_not_emit_unavailable_buy_rows(self):
         import model
@@ -591,6 +620,55 @@ class OverrideCacheBatchEndpointTests(unittest.TestCase):
         product_names = [ingredient["product_name"].casefold() for ingredient in dish["ingredients_to_buy"]]
         self.assertTrue(any("beef" in name for name in product_names), product_names)
         self.assertGreater(dish["estimated_price_total"], 4.38)
+
+    def test_recipe_result_displays_source_serving_range(self):
+        import model
+
+        recipe = {
+            "id": "range-recipe",
+            "title": "Range Recipe",
+            "servings": "6-8",
+            "_snapp_database_recipe": {
+                "servings": "6-8",
+                "yield": "6-8 servings",
+                "source": "Public Domain Recipes",
+                "source_url": "https://example.test/range",
+            },
+            "extendedIngredients": [{"name": "milk", "original": "2 cups milk"}],
+            "instructions": "Cook.",
+        }
+        filters = {
+            "servings": 4,
+            "dietary_restrictions": "",
+            "avoid_ingredients": [],
+            "include_ingredients": [],
+            "dietary_preference": "",
+            "max_cook_time": None,
+            "max_budget": None,
+        }
+        matches = [
+            (
+                {"name": "milk", "measure": "2 cups milk"},
+                {
+                    "id": "milk",
+                    "ingredient": "milk",
+                    "product_name": "Milk",
+                    "store_id": "morton-williams",
+                    "package_size": "64 fl oz",
+                    "package_grams": 1893,
+                    "estimated_price_total": 4.0,
+                    "required_quantity": {
+                        "base_quantity": 473.176,
+                        "base_unit": "milliliter",
+                    },
+                },
+            )
+        ]
+
+        dish = model.recipe_result_from_recipe(recipe, matches, {}, filters, 10, True)
+        self.assertEqual(dish["servings"], 8)
+        self.assertEqual(dish["servings_display"], "6-8")
+        self.assertEqual(dish["recipe"]["servings_display"], "6-8")
 
     def test_real_recipe_results_sample_three_exact_candidates(self):
         import model
