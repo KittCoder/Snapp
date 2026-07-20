@@ -348,6 +348,7 @@ CANONICAL_PATTERNS = (
     (r"\bchicken thighs?\b", "chicken thighs"),
     (r"\bchicken\b", "chicken"),
     (r"\bground beef\b", "ground beef"),
+    (r"\b(?:round|flank|blade|round bone)\b.*\b(?:chuck\s+)?steak\b|\b(?:chuck\s+)?steak\b.*\b(?:round|flank|blade|round bone)\b", "beef steak"),
     (r"\bground lamb\b|\bminced lamb\b", "lamb"),
     (r"\bbeef sausage\b", "beef sausage"),
     (r"\bpork sausage\b|\bpork sausages\b", "pork sausage"),
@@ -705,6 +706,18 @@ def parse_ingredient(raw_text: str) -> ParsedIngredient:
         quantity, quantity_min, quantity_max, unit, rest = None, None, None, None, raw
     else:
         quantity, quantity_min, quantity_max, unit, rest = extract_quantity_and_unit(raw)
+    if quantity is not None and unit is None:
+        parenthetical_weight = re.search(
+            r"\(\s*about\s+(?P<amount>[\d\s./]+)\s+(?P<unit>pounds?|lbs?|ounces?|oz)\b",
+            raw,
+            flags=re.I,
+        )
+        if parenthetical_weight:
+            parsed_weight = parse_number(parenthetical_weight.group("amount"))
+            parsed_unit = normalize_unit(parenthetical_weight.group("unit"))
+            if parsed_weight is not None and parsed_unit:
+                quantity = parsed_weight
+                unit = parsed_unit
     rest, alternatives = split_alternatives(rest)
     rest, preparation = extract_preparation(rest)
     rest, brand = extract_brand(rest)
@@ -714,6 +727,9 @@ def parse_ingredient(raw_text: str) -> ParsedIngredient:
     canonical_source, features = extract_modifiers(normalized_rest, preserve_identity=True)
     canonical_source = re.sub(r"\bcut into\b.*$", " ", canonical_source).strip()
     canonical_source = re.sub(r"^of\s+", "", canonical_source).strip()
+    normalized_raw = normalize_text(raw)
+    if re.search(r"\b(?:round|flank|blade|round bone)\b.*\b(?:chuck\s+)?steak\b", normalized_raw):
+        canonical_source = "beef chuck steak" if "chuck steak" in normalized_raw else "beef steak"
     canonical_words = canonical_source.split()
     if quantity is not None and unit is None and canonical_words:
         if canonical_words[0] in COUNT_CONTAINER_UNITS and len(canonical_words) > 1:

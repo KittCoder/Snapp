@@ -188,3 +188,56 @@ class RealRecipeRegressionTests(unittest.TestCase):
             product_names,
         )
         self.assertFalse(any("soup" in name or "burrito" in name for name in product_names), product_names)
+
+    def test_beef_shank_soup_keeps_raw_beef_and_carrots_distinct_from_juice(self):
+        basket = self.builder.build_recipe_basket(
+            {
+                "id": "beef-shank-barley-soup-regression",
+                "ingredients": [
+                    "2 pound beef, shank",
+                    "1/3 cup julienne carrots",
+                    "2 cup water",
+                    "1/3 cup onions, chopped",
+                ],
+            },
+            optimization_mode="balanced",
+        )
+        by_raw = {
+            raw: item
+            for item in basket.shopping_basket
+            for raw in item.ingredients
+        }
+        self.assertIn("2 pound beef, shank", by_raw)
+        beef_name = by_raw["2 pound beef, shank"].product_name.casefold()
+        self.assertIn("beef", beef_name)
+        self.assertNotIn("frank", beef_name)
+        self.assertNotIn("roast beef", beef_name)
+        self.assertIn("1/3 cup julienne carrots", by_raw)
+        carrot_name = by_raw["1/3 cup julienne carrots"].product_name.casefold()
+        self.assertIn("carrot", carrot_name)
+        self.assertNotIn("juice", carrot_name)
+
+    def test_beef_pot_roast_keeps_raw_beef_roast_requirement(self):
+        basket = self.builder.build_recipe_basket(
+            {
+                "id": "beef-pot-roast-regression",
+                "ingredients": [
+                    "1/16 cup orange juice",
+                    "1/2 cup onion, chopped",
+                    "2 1/2 pounds boneless lean beef chuck roast",
+                ],
+            },
+            optimization_mode="balanced",
+        )
+        by_raw = {
+            raw: item
+            for item in basket.shopping_basket
+            for raw in item.ingredients
+        }
+        self.assertIn("1/16 cup orange juice", by_raw)
+        self.assertIn("juice", by_raw["1/16 cup orange juice"].product_name.casefold())
+        self.assertIn("2 1/2 pounds boneless lean beef chuck roast", by_raw)
+        beef_name = by_raw["2 1/2 pounds boneless lean beef chuck roast"].product_name.casefold()
+        self.assertIn("beef", beef_name)
+        self.assertNotIn("roast beef", beef_name)
+        self.assertNotIn("frank", beef_name)

@@ -325,6 +325,47 @@ class CompatibilityRuleTests(unittest.TestCase):
         self.assertEqual(ground.selected_match.product_id, "ground")
         self.assertTrue({"shaved", "skirt"} <= {item.product_id for item in ground.rejected_candidates})
 
+    def test_beef_shank_prefers_raw_shank_and_rejects_processed_beef(self):
+        svc = service(
+            [
+                feature("frank", "Sabrett Skinless Beef Frankfurters Bun Size", "beef", "meat"),
+                feature("deli", "Black Bear London Broil Roast Beef", "beef", "meat"),
+                feature("shank", "USDA Choice Beef Hindshank, Bone In, Average Weight 1 lb Pack", "beef", "meat"),
+                feature("stew", "Beef For Stew", "beef stew meat", "meat"),
+            ]
+        )
+        result = svc.match_recipe_ingredient("2 pound beef, shank")
+        self.assertEqual(result.selected_match.product_id, "shank")
+        rejected_ids = {item.product_id for item in result.rejected_candidates}
+        self.assertTrue({"frank", "deli"} <= rejected_ids)
+
+    def test_beef_chuck_roast_can_fallback_to_raw_slow_cooking_beef_cut(self):
+        svc = service(
+            [
+                feature("coffee", "Folgers Half Caff Medium Roast Coffee", None, "pantry"),
+                feature("frank", "Sabrett Skinless Beef Frankfurters Bun Size", "beef", "meat"),
+                feature("deli", "Black Bear London Broil Roast Beef", "beef", "meat"),
+                feature("stew", "USDA choice boneless beef for stew", "beef stew meat", "meat"),
+                feature("chuck", "Fresh Beef 1st Cut Chuck Steak", "beef", "meat"),
+            ]
+        )
+        result = svc.match_recipe_ingredient("2 1/2 pounds boneless lean beef chuck roast")
+        self.assertIn(result.selected_match.product_id, {"stew", "chuck"})
+        rejected_ids = {item.product_id for item in result.rejected_candidates}
+        self.assertTrue({"coffee", "frank", "deli"} <= rejected_ids)
+
+    def test_old_recipe_steak_wording_retrieves_raw_beef_not_steak_sauce(self):
+        svc = service(
+            [
+                feature("sauce", "Peter Luger Steak House Sauce, Old Fashioned", None, "pantry"),
+                feature("round", "Certified angus beef top round london broil", "beef", "meat"),
+                feature("sirloin", "Sirloin Steak (Palomilla)", "beef", "meat"),
+            ]
+        )
+        result = svc.match_recipe_ingredient("1 1/2 pound round or flank steak")
+        self.assertIn(result.selected_match.product_id, {"round", "sirloin"})
+        self.assertIn("sauce", {item.product_id for item in result.rejected_candidates})
+
     def test_stewing_meat_accepts_raw_beef_or_lamb_but_not_prepared_food(self):
         svc = service(
             [
@@ -364,6 +405,25 @@ class CompatibilityRuleTests(unittest.TestCase):
         rejected_ids = {item.product_id for item in result.rejected_candidates}
         self.assertTrue({"deli", "sandwich"} <= rejected_ids)
 
+    def test_juice_only_matches_when_recipe_asks_for_juice(self):
+        carrots = service(
+            [
+                feature("juice", "Bolthouse Farms 100% Carrot Juice", "carrots", "produce"),
+                feature("carrots", "Wholesome Pantry Whole Carrots", "carrots", "produce"),
+            ]
+        ).match_recipe_ingredient("1/3 cup julienne carrots")
+        self.assertEqual(carrots.selected_match.product_id, "carrots")
+        self.assertIn("juice", {item.product_id for item in carrots.rejected_candidates})
+
+        orange_juice = service(
+            [
+                feature("orange", "Navel Oranges", "orange", "produce"),
+                feature("juice", "Florida's Natural 100% Premium Florida Orange Juice", None, "beverage"),
+            ]
+        ).match_recipe_ingredient("1/16 cup orange juice")
+        self.assertEqual(orange_juice.selected_match.product_id, "juice")
+        self.assertIn("orange", {item.product_id for item in orange_juice.rejected_candidates})
+
     def test_demo_identity_regressions(self):
         cases = [
             ("apples", "apple", ["juice"], [feature("juice", "Snapple Juice Drink, Apple", None, "beverage"), feature("apple", "Bowl & Basket Macintosh Apples", "apple", "produce")]),
@@ -383,6 +443,7 @@ class CompatibilityRuleTests(unittest.TestCase):
             ("curry powder", "curry", ["garlic"], [feature("garlic", "McCormick Garlic Powder", None, "pantry"), feature("curry", "McCormick Curry Powder", "curry powder", "pantry")]),
             ("cornflour", "cornstarch", ["chips"], [feature("chips", "Fritos Corn Chips", None, "snacks"), feature("cornstarch", "Argo Corn Starch", "corn starch", "pantry")]),
             ("pepper", "black", ["jalapeno", "jack"], [feature("jalapeno", "Jalapeno Pepper Bag", "peppers", "produce"), feature("jack", "Sargento Pepper Jack Slices", "peppers", "produce"), feature("black", "ShopRite Black Pepper", "peppers", "pantry")]),
+            ("1/8 teaspoon pepper", "black", ["roasted"], [feature("roasted", "Cento Roasted Peppers", "peppers", "pantry"), feature("black", "ShopRite Black Pepper", "peppers", "pantry")]),
             ("1 onion, minced", "white", ["dip", "rings"], [feature("dip", "Utz Creamy Onion Dip", "onions", "produce"), feature("rings", "Funyuns Onion Flavored Rings", "onions", "produce"), feature("white", "White Onion", "onions", "produce")]),
             ("celery", "celery", ["pasta", "salt"], [feature("pasta", "Colavita Cut Ziti Pasta", "pasta", "pantry"), feature("salt", "McCormick Celery Salt", "celery", "produce"), feature("celery", "Celery Package", None, None)]),
             ("garlic", "garlic", ["powder", "salt"], [feature("powder", "McCormick Garlic Powder", "garlic", "produce"), feature("salt", "McCormick Garlic Salt", "garlic", "produce"), feature("garlic", "Garlic", None, None)]),

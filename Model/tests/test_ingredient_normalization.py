@@ -32,6 +32,12 @@ class IngredientParserTests(unittest.TestCase):
         self.assertEqual(parsed.quantity_max, 2)
         self.assertEqual(parsed.unit, "cup")
 
+    def test_parenthetical_about_weight_overrides_count_quantity(self):
+        parsed = parse_ingredient("1 flank steak, (about 2 pounds)")
+        self.assertEqual(parsed.quantity, 2)
+        self.assertEqual(parsed.unit, "pound")
+        self.assertEqual(parsed.canonical_name, "beef steak")
+
     def test_aliases(self):
         self.assertEqual(apply_alias("AP flour"), "all-purpose flour")
         self.assertEqual(apply_alias("plain flour"), "all-purpose flour")
