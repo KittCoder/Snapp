@@ -22,7 +22,7 @@ from product_retrieval import (
 )
 
 
-MATCHER_VERSION = "ingredient-product-matcher-v1.9"
+MATCHER_VERSION = "ingredient-product-matcher-v1.10"
 DEFAULT_OVERRIDES_PATH = Path(__file__).resolve().parent / "product_match_overrides.json"
 DEFAULT_EVALUATION_FIXTURE = Path(__file__).resolve().parent / "evaluation" / "product_match_cases.jsonl"
 
@@ -296,9 +296,9 @@ def detect_yogurt_flavor(text: str) -> str | None:
 def prepared_meat_product_text(text: str) -> bool:
     return text_has(
         text,
-        r"\bstore prepared\b|\bsandwich(?:es)?\b|\bwraps?\b|\bdinners?\b|\bburritos?\b|\btaquitos?\b|\bempanadas?\b"
+        r"\bstore prepared\b|\bsandwich(?:es)?\b|\bwraps?\b|\bdinners?\b|\bentr[eé]es?\b|\bfrozen entr[eé]es?\b|\bburritos?\b|\btaquitos?\b|\bempanadas?\b"
         r"|\b(?:beef|lamb|chicken)?\s*stew\s+soup\b|\bbeef stew with\b|\blamb stew with\b|\bbraised beef stew\b"
-        r"|\bdinty moore\b|\bmade for home\b.*\bbeef stew\b|\bprepared\b.*\bbeef\b|\bprepared\b.*\blamb\b|\bbeef\b.*\bpatties\b",
+        r"|\bbeef\s+(?:and|&)\s+broccoli\b|\bsteak\b.*\b(?:canned\s+)?soup\b|\bdinty moore\b|\bmade for home\b.*\bbeef stew\b|\bprepared\b.*\bbeef\b|\bprepared\b.*\blamb\b|\bbeef\b.*\bpatties\b",
     )
 
 
@@ -326,8 +326,75 @@ JUICE_PRODUCE_TYPES = {
 }
 
 
-SLOW_COOKING_BEEF_CUTS = {"roast", "shank", "stew meat", "chuck steak"}
-RAW_BEEF_FALLBACK_CUTS = {"roast", "shank", "stew meat", "chuck steak", "steak"}
+BEEF_CUT_SUBSTITUTES = {
+    "tenderloin": {"strip steak", "ribeye steak", "top sirloin"},
+    "ribeye steak": {"strip steak", "top sirloin", "flat iron"},
+    "strip steak": {"ribeye steak", "top sirloin", "flat iron"},
+    "top sirloin": {"flat iron", "strip steak", "ribeye steak", "tri-tip"},
+    "flat iron": {"top sirloin", "hanger steak", "flank steak"},
+    "hanger steak": {"flat iron", "skirt steak", "flank steak"},
+    "skirt steak": {"flank steak", "hanger steak", "flat iron"},
+    "flank steak": {"skirt steak", "hanger steak", "flat iron"},
+    "tri-tip": {"top sirloin", "sirloin tip roast"},
+    "chuck roast": {"bottom round", "brisket", "shoulder clod", "stew meat", "chuck steak"},
+    "brisket": {"chuck roast", "short ribs"},
+    "short ribs": {"chuck roast", "brisket"},
+    "bottom round": {"top round", "chuck roast", "eye of round"},
+    "top round": {"bottom round", "eye of round"},
+    "eye of round": {"top round", "bottom round"},
+    "sirloin tip roast": {"tri-tip", "top round"},
+    "shank": {"oxtail", "chuck roast"},
+    "oxtail": {"shank", "short ribs"},
+    "stew meat": {"chuck roast", "bottom round", "brisket", "chuck steak"},
+    "ground chuck": {"ground beef", "ground sirloin"},
+    "ground sirloin": {"ground chuck", "ground round"},
+    "ground round": {"ground sirloin", "ground chuck"},
+    "beef strips": {"flank steak", "skirt steak", "hanger steak", "flat iron", "strip steak", "shaved beef"},
+}
+ROAST_COMPATIBLE_BEEF_CUTS = {
+    "ribeye steak",
+    "chuck roast",
+    "bottom round",
+    "top round",
+    "eye of round",
+    "sirloin tip roast",
+    "tri-tip",
+}
+
+BEEF_CUT_PATTERNS = [
+    ("top round", r"\bround\s+or\s+flank\s+steak\b"),
+    ("beef strips", r"\bbeef\b.*\b(?:strips|stir[-\s]?fry)\b|\b(?:strips|stir[-\s]?fry)\b.*\bbeef\b|\bpepper steak\b"),
+    ("stew meat", r"\bbeef\s+(?:for\s+)?stew\b|\bbeef\s+stew(?:ing)?\s+meat\b|\bstew(?:ing)?\s+beef\b|\bbeef stew meat\b|\bstew beef\b|\bbeef\b.*\b(?:shoulder\s+)?stew\b|\bbeef\b.*\bsoup meat\b"),
+    ("shank", r"\bbeef\s+(?:hind)?shank\b|\b(?:hind)?shank\b.*\bbeef\b"),
+    ("oxtail", r"\boxtails?\b"),
+    ("short ribs", r"\bshort ribs?\b|\bflanken\b"),
+    ("brisket", r"\bbrisket\b"),
+    ("chuck roast", r"\bchuck roast\b|\bchuck shoulder roast\b"),
+    ("chuck steak", r"\bchuck steak\b|\bchuck filet steak\b|\bchuck shoulder steak\b|\b1st cut chuck steak\b"),
+    ("bottom round", r"\bbottom round\b"),
+    ("top round", r"\btop round\b|\blondon broil\b|\bbraciole\b|\bbracciole\b|\bcube steak\b"),
+    ("eye of round", r"\beye (?:of )?round\b"),
+    ("sirloin tip roast", r"\bsirloin tip roast\b"),
+    ("tri-tip", r"\btri[-\s]?tip\b"),
+    ("tenderloin", r"\btenderloin\b|\bfilet mignon\b|\bfilet\b"),
+    ("ribeye steak", r"\bribeye\b|\brib eye\b|\bstanding rib roast\b|\brib roast\b|\bprime rib\b|\brib steak\b"),
+    ("strip steak", r"\bnew york strip\b|\bny strip\b|\bstrip steak\b|\bshell steak\b|\bclub steak\b"),
+    ("top sirloin", r"\btop sirloin\b|\bsirloin steak\b|\bpalomilla\b"),
+    ("flat iron", r"\bflat iron\b"),
+    ("hanger steak", r"\bhanger\b"),
+    ("skirt steak", r"\bskirt steak\b"),
+    ("flank steak", r"\bflank steak\b"),
+    ("porterhouse steak", r"\bporterhouse\b"),
+    ("shaved beef", r"\b(shaved|thin sliced)\s+(?:steak\s+)?beef\b|\bsliced\s+steak\s+beef\b|\bbeef\s+(?:shaved|sliced)\s+steak\b|\bshaved steak beef\b"),
+    ("steak", r"\bsteak\b"),
+]
+
+
+def detect_beef_cut(text: str) -> str | None:
+    for cut, pattern in BEEF_CUT_PATTERNS:
+        if text_has(text, pattern):
+            return cut
+    return None
 
 
 def detect_juice_produce_type(text: str) -> str | None:
@@ -348,7 +415,13 @@ def is_slow_cooking_beef_cut_substitution(query: IngredientProfile, product: Ing
         return False
     if query.meat_cut == "steak" and "steak" in product.meat_cut:
         return False
-    return query.meat_cut in SLOW_COOKING_BEEF_CUTS and product.meat_cut in RAW_BEEF_FALLBACK_CUTS
+    if (
+        text_has(query.raw_text, r"\broast\b")
+        and query.meat_cut in ROAST_COMPATIBLE_BEEF_CUTS
+        and product.meat_cut in ROAST_COMPATIBLE_BEEF_CUTS
+    ):
+        return True
+    return product.meat_cut in BEEF_CUT_SUBSTITUTES.get(query.meat_cut, set())
 
 
 def beef_cut_substitution_signal(query: IngredientProfile, product: IngredientProfile) -> CompatibilitySignal | None:
@@ -596,7 +669,9 @@ def classify_identity(
         elif text_has(detection_text, r"\bcream(?:y)? tomato soup\b|\btomato soup\b"):
             profile.soup_type = "tomato"
 
-    if prepared_meat_product_text(detection_text):
+    if text_has(detection_text, r"\bbacon\b") and not text_has(detection_text, r"\bbean with bacon\b"):
+        profile.family = "bacon"; profile.category = profile.category or "meat"; profile.meat_species = "pork"
+    elif prepared_meat_product_text(detection_text):
         profile.family = "prepared meal"; profile.category = "prepared"
     elif text_has(
         detection_text,
@@ -611,14 +686,15 @@ def classify_identity(
         profile.family = "processed meat"; profile.category = profile.category or "meat"; profile.meat_species = "beef"
     elif text_has(detection_text, r"\bbeef liver\b|\bfresh beef liver\b"):
         profile.family = "organ meat"; profile.category = profile.category or "meat"; profile.meat_species = "beef"; profile.meat_cut = "liver"
-    elif text_has(detection_text, r"\bbeef\s+(?:hind)?shank\b|\b(?:hind)?shank\b.*\bbeef\b"):
-        profile.family = "meat cut"; profile.category = profile.category or "meat"; profile.meat_species = "beef"; profile.meat_cut = "shank"
-    elif text_has(detection_text, r"\bbeef (?:feet|foot|bones?|marrow bones?|neck bones?|back bones?)\b|\b(?:feet|foot|bones?|marrow bones?|neck bones?|back bones?)\b.*\bbeef\b"):
-        profile.family = "meat bones"; profile.category = profile.category or "meat"; profile.meat_species = "beef"
-    elif profile.family in {"sauce", "pet food", "prepared meal"}:
+    elif profile.family in {"sauce", "pet food", "prepared meal", "marinade"}:
         pass
-    elif text_has(detection_text, r"\bbeef\s+(?:for\s+)?stew\b|\bbeef\s+stew(?:ing)?\s+meat\b|\bstew(?:ing)?\s+beef\b|\bbeef stew meat\b|\bstew beef\b|\bbeef\b.*\b(?:shoulder\s+)?stew\b|\bbeef\b.*\bsoup meat\b"):
-        profile.family = "meat cut"; profile.category = profile.category or "meat"; profile.meat_species = "beef"; profile.meat_cut = "stew meat"
+    elif text_has(detection_text, r"\bbeef (?:feet|foot|marrow bones?|neck bones?|back bones?|bones\b(?!\s*in))\b|\b(?:feet|foot|marrow bones?|neck bones?|back bones?)\b.*\bbeef\b"):
+        profile.family = "meat bones"; profile.category = profile.category or "meat"; profile.meat_species = "beef"
+    elif (beef_cut := detect_beef_cut(detection_text)) and (
+        text_has(detection_text, r"\bbeef\b|\bsteak\b|\bbrisket\b|\boxtails?\b|\bshort ribs?\b|\bflanken\b")
+        or beef_cut in {"oxtail", "brisket", "short ribs"}
+    ):
+        profile.family = "meat cut"; profile.category = profile.category or "meat"; profile.meat_species = "beef"; profile.meat_cut = beef_cut
     elif text_has(detection_text, r"\blamb\s+(?:for\s+)?stew\b|\blamb\s+stew(?:ing)?\s+meat\b|\bstew(?:ing)?\s+lamb\b|\blamb stew meat\b|\bstew lamb\b"):
         profile.family = "meat cut"; profile.category = profile.category or "meat"; profile.meat_species = "lamb"; profile.meat_cut = "stew meat"
     elif text_has(detection_text, r"\bstew(?:ing)?\s+meat\b|\bstew meat\b"):
@@ -635,8 +711,6 @@ def classify_identity(
         profile.family = "sausage"; profile.category = profile.category or "meat"; profile.meat_species = "chicken"
     elif text_has(detection_text, r"\bsausage\b"):
         profile.family = "sausage"; profile.category = profile.category or "meat"
-    elif text_has(detection_text, r"\b(shaved|sliced|thin sliced)\s+(?:steak\s+)?beef\b|\b(?:beef\s+)?(shaved|sliced)\s+steak\b|\bshaved steak beef\b"):
-        profile.family = "meat cut"; profile.category = profile.category or "meat"; profile.meat_species = "beef"; profile.meat_cut = "shaved beef"
     elif text_has(detection_text, r"\bground turkey\b"):
         profile.family = "ground meat"; profile.meat_species = "turkey"; profile.ground = True
     elif text_has(detection_text, r"\bpork\b"):
@@ -667,22 +741,6 @@ def classify_identity(
         profile.family = "meat cut"; profile.category = profile.category or "meat"; profile.meat_species = "chicken"; profile.meat_cut = "thigh"
     elif text_has(detection_text, r"\bchicken\b") and profile.family not in {"broth", "stock", "soup", "bouillon"}:
         profile.family = "chicken"; profile.category = profile.category or "meat"; profile.meat_species = "chicken"
-    elif text_has(detection_text, r"\bstanding rib roast\b|\brib roast\b|\bprime rib\b|\beye round roast\b|\bround roast\b|\bchuck roast\b|\bbeef roast\b"):
-        profile.family = "meat cut"; profile.category = profile.category or "meat"; profile.meat_species = "beef"; profile.meat_cut = "roast"
-    elif text_has(detection_text, r"\bchuck steak\b|\bchuck filet steak\b|\bchuck shoulder steak\b"):
-        profile.family = "meat cut"; profile.category = profile.category or "meat"; profile.meat_species = "beef"; profile.meat_cut = "chuck steak"
-    elif text_has(detection_text, r"\bskirt steak\b"):
-        profile.family = "meat cut"; profile.category = profile.category or "meat"; profile.meat_species = "beef"; profile.meat_cut = "skirt steak"
-    elif text_has(detection_text, r"\bribeye\b"):
-        profile.family = "meat cut"; profile.category = profile.category or "meat"; profile.meat_species = "beef"; profile.meat_cut = "ribeye steak"
-    elif text_has(detection_text, r"\bsirloin\b"):
-        profile.family = "meat cut"; profile.category = profile.category or "meat"; profile.meat_species = "beef"; profile.meat_cut = "sirloin steak"
-    elif text_has(detection_text, r"\bhanger\b"):
-        profile.family = "meat cut"; profile.category = profile.category or "meat"; profile.meat_species = "beef"; profile.meat_cut = "hanger steak"
-    elif text_has(detection_text, r"\blondon broil\b|\btop round\b|\bflank steak\b|\bround steak\b"):
-        profile.family = "meat cut"; profile.category = profile.category or "meat"; profile.meat_species = "beef"; profile.meat_cut = "steak"
-    elif text_has(detection_text, r"\bsteak\b"):
-        profile.family = "meat cut"; profile.category = profile.category or "meat"; profile.meat_species = "beef"; profile.meat_cut = "steak"
     elif text_has(detection_text, r"\btuna\b") and text_has(detection_text, r"\bcan|canned\b"):
         profile.family = "tuna"; profile.meat_species = "tuna"; profile.freshness = profile.freshness or "canned"
     elif text_has(detection_text, r"\btuna\b"):
@@ -889,7 +947,7 @@ def classify_identity(
 
     if text_has(
         detection_text,
-        r"\bpot pie\b|\bfrozen meal\b|\bfrozen dinners?\b|\balfredo\b|\bmacaroni (?:and|&) (?:cheese|beef)\b|\bbeef barley vegetable\b|\bbeef chili\b|\bchili\b.*\bbeef\b|\bbeef flavor\b|\bflavor noodles?\b|\bramen\b|\bpho bowl\b|\bgerber\b|\bcovered raisins\b|\bmashed potatoes\b|\bcakes?\b|\bcheesecake\b|\bcupcakes?\b|\bdips?\b|\bpizza\b|\bravioli\b|\btortelloni\b|\bpierogi\b|\btortillas?\b|\bwraps?\b|\bbaby food\b|\bpouch\b|\bbeef stew with\b|\bdinty moore\b|\bchicken parmesan\b|\btaquitos?\b|\bburritos?\b|\bempanadas?\b|\bbiryani\b|\bchallah\b|\brolls?\b|\bonion rings?\b|\bfunyuns?\b|\bfrench onion\b.*\bdip\b|\bdip\b.*\bfrench onion\b|\bonion dip\b|\bonion gravy\b|\bonion bagels?\b|\bpopcorn\b|\bcrackers?\b|\bchips?\b|\bmrs ts\b",
+        r"\bpot pie\b|\bfrozen meal\b|\bfrozen dinners?\b|\bentr[eé]es?\b|\balfredo\b|\bmacaroni (?:and|&) (?:cheese|beef)\b|\bbeef\s+(?:and|&)\s+broccoli\b|\bbeef barley vegetable\b|\bbeef chili\b|\bchili\b.*\bbeef\b|\bbeef flavor\b|\bflavor noodles?\b|\bramen\b|\bpho bowl\b|\bgerber\b|\bcovered raisins\b|\bmashed potatoes\b|\bcakes?\b|\bcheesecake\b|\bcupcakes?\b|\bdips?\b|\bpizza\b|\bravioli\b|\btortelloni\b|\bpierogi\b|\btortillas?\b|\bwraps?\b|\bbaby food\b|\bpouch\b|\bbeef stew with\b|\bdinty moore\b|\bchicken parmesan\b|\btaquitos?\b|\bburritos?\b|\bempanadas?\b|\bbiryani\b|\bchallah\b|\brolls?\b|\bonion rings?\b|\bfunyuns?\b|\bfrench onion\b.*\bdip\b|\bdip\b.*\bfrench onion\b|\bonion dip\b|\bonion gravy\b|\bonion bagels?\b|\bpopcorn\b|\bcrackers?\b|\bchips?\b|\bmrs ts\b",
     ) and profile.family not in {"hummus", "pita bread"}:
         profile.family = "prepared meal"
         profile.category = "prepared"
@@ -1064,6 +1122,8 @@ def compatibility_signals(query: IngredientProfile, product: IngredientProfile) 
         signals.append(CompatibilitySignal("beef_identity", HARD_REJECT, f"{product.category} product is not beef meat"))
     if query.family == "beef" and product.family == "ground meat":
         signals.append(CompatibilitySignal("beef_form", STRONG_PENALTY, "ground or formed beef is not a whole beef cut"))
+    if query.family == "beef" and product.family == "meat cut" and not text_has(product.normalized_signature, r"\bbeef\b"):
+        signals.append(CompatibilitySignal("beef_name_specificity", STRONG_PENALTY, "raw beef cut does not explicitly name beef"))
     if query.family == "meat cut" and product.family == "meat cut":
         if query.meat_species and product.meat_species and query.meat_species != product.meat_species:
             signals.append(CompatibilitySignal("meat_species", HARD_REJECT, "meat species differs"))

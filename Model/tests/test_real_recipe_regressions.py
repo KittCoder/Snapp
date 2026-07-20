@@ -102,7 +102,9 @@ class RealRecipeRegressionTests(unittest.TestCase):
         }
         self.assertIn("1 pound beef", by_raw)
         self.assertNotIn("sauce", by_raw["1 pound beef"].product_name.casefold())
-        self.assertIn("beef", by_raw["1 pound beef"].product_name.casefold())
+        self.assertTrue(
+            any(term in by_raw["1 pound beef"].product_name.casefold() for term in ("beef", "steak"))
+        )
         self.assertIn("1 teaspoon baking powder", by_raw)
         self.assertNotEqual(by_raw["1 teaspoon baking powder"].package.package_quantity, 81.0)
 
@@ -166,7 +168,7 @@ class RealRecipeRegressionTests(unittest.TestCase):
         }
         matches = model.match_recipe_ingredients_to_morton_williams(recipe, pantry_items=[], servings=4)
         product_names = [product["product_name"].casefold() for _ingredient, product in matches]
-        self.assertTrue(any("beef" in name for name in product_names), product_names)
+        self.assertTrue(any("beef" in name or "steak" in name for name in product_names), product_names)
         self.assertFalse(any("water" in name for name in product_names), product_names)
 
     def test_dishes_api_path_matches_stew_meat_to_raw_beef(self):
@@ -241,3 +243,53 @@ class RealRecipeRegressionTests(unittest.TestCase):
         self.assertIn("beef", beef_name)
         self.assertNotIn("roast beef", beef_name)
         self.assertNotIn("frank", beef_name)
+
+    def test_beef_and_broccoli_buys_raw_cut_beef_not_prepared_entree(self):
+        basket = self.builder.build_recipe_basket(
+            {
+                "id": "beef-and-broccoli-regression",
+                "ingredients": [
+                    "1/2 lb Beef, cut into strips",
+                    "1 cup Broccoli Pieces",
+                    "1 Tbsp Corn starch",
+                ],
+            },
+            optimization_mode="balanced",
+        )
+        by_raw = {
+            raw: item
+            for item in basket.shopping_basket
+            for raw in item.ingredients
+        }
+        self.assertIn("1/2 lb Beef, cut into strips", by_raw)
+        beef_item = by_raw["1/2 lb Beef, cut into strips"]
+        beef_name = beef_item.product_name.casefold()
+        self.assertTrue(any(term in beef_name for term in ("beef", "steak")))
+        self.assertNotIn("broccoli frozen", beef_name)
+        self.assertNotIn("entree", beef_name)
+        self.assertNotIn("entrée", beef_name)
+        self.assertEqual(round(beef_item.total_required.base_quantity, 1), 226.8)
+        self.assertGreater(beef_item.checkout_cost or 0, 0)
+
+    def test_beef_shank_recipe_buys_two_pounds_of_shank(self):
+        basket = self.builder.build_recipe_basket(
+            {
+                "id": "crosscut-beef-shank-stew-regression",
+                "ingredients": [
+                    "2 pound beef shank, (cut in 2-inch pieces)",
+                    "1 cup cooked tomatoes",
+                    "1 onion",
+                ],
+            },
+            optimization_mode="balanced",
+        )
+        by_raw = {
+            raw: item
+            for item in basket.shopping_basket
+            for raw in item.ingredients
+        }
+        self.assertIn("2 pound beef shank, (cut in 2-inch pieces)", by_raw)
+        item = by_raw["2 pound beef shank, (cut in 2-inch pieces)"]
+        self.assertIn("shank", item.product_name.casefold())
+        self.assertEqual(round(item.total_required.base_quantity, 1), 907.2)
+        self.assertEqual(item.packages_required, 2)

@@ -405,6 +405,25 @@ class CompatibilityRuleTests(unittest.TestCase):
         rejected_ids = {item.product_id for item in result.rejected_candidates}
         self.assertTrue({"deli", "sandwich"} <= rejected_ids)
 
+    def test_beef_cut_table_prefers_raw_cut_substitutes_and_rejects_prepared_items(self):
+        svc = service(
+            [
+                feature("entree", "Ajinomoto Tai Pei Beef & Broccoli Frozen Asian Entrée", "beef", "prepared"),
+                feature("bacon", "Peter Luger Steak House extra thick cut bacon, 12oz package", "bacon", "meat"),
+                feature("soup", "Progresso Pitmaster Steak and Potatoes with Roasted Vegetables Canned Soup", "beef", "pantry"),
+                feature("hanger", "Beef Hanger Steak", "beef", "meat"),
+                feature("strip", "Certified Angus Beef New York Strip Steak, Bone In", "beef", "meat"),
+                feature("stew", "Beef For Stew", "beef stew meat", "meat"),
+            ]
+        )
+        strips = svc.match_recipe_ingredient("1/2 lb Beef, cut into strips")
+        self.assertIn(strips.selected_match.product_id, {"hanger", "strip"})
+        self.assertTrue({"entree", "bacon", "soup"} <= {item.product_id for item in strips.rejected_candidates})
+
+        stew = svc.match_recipe_ingredient("2 pounds beef, stew meat")
+        self.assertEqual(stew.selected_match.product_id, "stew")
+        self.assertTrue({"entree", "bacon", "soup"} <= {item.product_id for item in stew.rejected_candidates})
+
     def test_juice_only_matches_when_recipe_asks_for_juice(self):
         carrots = service(
             [

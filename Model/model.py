@@ -3448,6 +3448,13 @@ def basket_item_to_morton_williams_product(item, feature):
         product["package_size"] = f"{item.package.package_quantity:g} {item.package.package_unit}"
     product["packages_purchased"] = item.packages_required
     product["required_quantity"] = item.total_required.to_dict()
+    required_quantity = getattr(item.total_required, "quantity", None)
+    required_unit = getattr(item.total_required, "unit", None)
+    if required_quantity is not None:
+        product["required_quantity_display"] = f"{required_quantity:g} {required_unit or ''}".strip()
+    else:
+        product["required_quantity_display"] = None
+    product["source_ingredients"] = list(item.ingredients)
     product["leftover_quantity"] = item.leftover.to_dict()
     product["estimated_price_total"] = round(float(checkout_cost), 2) if checkout_cost is not None else product.get("price")
     product["quantity_optimization_warnings"] = item.warnings
@@ -3588,6 +3595,8 @@ def spoonacular_recipe_to_demo_dish(
                 "name": product.get("ingredient"),
                 "recipe_ingredient": recipe_ingredient["name"],
                 "recipe_measure": recipe_ingredient["measure"],
+                "required_quantity_display": product.get("required_quantity_display"),
+                "source_ingredients": product.get("source_ingredients") or [recipe_ingredient["measure"]],
                 "product_name": product.get("product_name"),
                 "matched_food": product.get("product_name"),
                 "food_group": product.get("food_group"),

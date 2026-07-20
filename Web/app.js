@@ -1364,15 +1364,17 @@ function openDishModal(dish) {
   appendModalSection("Recipe ingredients", recipe.ingredients || [], (ingredient) =>
     ingredient.display || ingredient.measure || ingredient.name
   );
-  appendModalSection("Ingredients to buy", (dish.ingredients_to_buy || dish.ingredients || []).filter(
-    (ingredient) => !(ingredient.unavailable || ingredient.availability_status === "unavailable")
-  ), (ingredient) => {
-    const storeText = ingredient.store_name ? ` at ${ingredient.store_name}` : "";
-    const priceText = ingredient.estimated_price_total
-      ? ` - ${currencyFormatter.format(ingredient.estimated_price_total)}`
-      : "";
-    return `${ingredient.product_name || ingredient.name}${ingredient.package_size ? ` (${ingredient.package_size})` : ""}${storeText}${priceText}`;
-  });
+	  appendModalSection("Ingredients to buy", (dish.ingredients_to_buy || dish.ingredients || []).filter(
+	    (ingredient) => !(ingredient.unavailable || ingredient.availability_status === "unavailable")
+	  ), (ingredient) => {
+	    const storeText = ingredient.store_name ? ` at ${ingredient.store_name}` : "";
+	    const priceText = ingredient.estimated_price_total
+	      ? ` - ${currencyFormatter.format(ingredient.estimated_price_total)}`
+	      : "";
+	    const sourceText = ingredient.recipe_measure || ingredient.required_quantity_display;
+	    const requirementText = sourceText ? `${sourceText} -> ` : "";
+	    return `${requirementText}${ingredient.product_name || ingredient.name}${ingredient.package_size ? ` (${ingredient.package_size})` : ""}${storeText}${priceText}`;
+	  });
 
   const instructionsHeading = document.createElement("h4");
   const instructions = document.createElement("p");
