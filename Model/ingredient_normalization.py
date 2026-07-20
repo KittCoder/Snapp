@@ -352,7 +352,9 @@ CANONICAL_PATTERNS = (
     (r"\bbeef sausage\b", "beef sausage"),
     (r"\bpork sausage\b|\bpork sausages\b", "pork sausage"),
     (r"\bchicken sausage\b|\bchicken sausages\b", "chicken sausage"),
-    (r"\bbeef\s+for\s+stew\b|\bbeef stew meat\b|\bstew meat\b", "beef stew meat"),
+    (r"\bbeef\s+for\s+stew\b|\bbeef stew meat\b", "beef stew meat"),
+    (r"\blamb\s+for\s+stew\b|\blamb stew meat\b", "lamb stew meat"),
+    (r"\bstew(?:ing)? meat\b|\bstewing beef\b|\bstew beef\b", "stew meat"),
     (r"\b(beef|hanger steak|rib steak|ribeye steak|sirloin steak|short ribs?|steak)\b", "beef"),
     (r"\blamb\b", "lamb"),
     (r"\bpork\b", "pork"),
@@ -712,8 +714,6 @@ def parse_ingredient(raw_text: str) -> ParsedIngredient:
     canonical_source, features = extract_modifiers(normalized_rest, preserve_identity=True)
     canonical_source = re.sub(r"\bcut into\b.*$", " ", canonical_source).strip()
     canonical_source = re.sub(r"^of\s+", "", canonical_source).strip()
-    if re.search(r"\bstew meat\b", canonical_source) and "beef" not in canonical_source:
-        canonical_source = "beef stew meat"
     canonical_words = canonical_source.split()
     if quantity is not None and unit is None and canonical_words:
         if canonical_words[0] in COUNT_CONTAINER_UNITS and len(canonical_words) > 1:

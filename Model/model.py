@@ -4101,7 +4101,17 @@ def build_real_recipe_results(
         )
     )
     if len(exact_results) >= result_limit:
-        return random.sample(exact_results, result_limit), False
+        best_score = exact_results[0]["relevance_score"]
+        high_relevance_results = [
+            result for result in exact_results
+            if result["relevance_score"] >= best_score - 20
+        ]
+        if normalized_recipe_name(exact_results[0].get("name")) == normalized_recipe_name(meal_prompt):
+            remaining = high_relevance_results[1:] or exact_results[1:]
+            return [exact_results[0]] + random.sample(remaining, min(result_limit - 1, len(remaining))), False
+        if len(high_relevance_results) >= result_limit:
+            return random.sample(high_relevance_results, result_limit), False
+        return exact_results[:result_limit], False
 
     target_budget = filters["max_budget"]
     closest_results.sort(

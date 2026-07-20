@@ -325,6 +325,45 @@ class CompatibilityRuleTests(unittest.TestCase):
         self.assertEqual(ground.selected_match.product_id, "ground")
         self.assertTrue({"shaved", "skirt"} <= {item.product_id for item in ground.rejected_candidates})
 
+    def test_stewing_meat_accepts_raw_beef_or_lamb_but_not_prepared_food(self):
+        svc = service(
+            [
+                feature("prepared", "Yellowstone Bunkhouse Braised Beef Stew", "beef", "meat"),
+                feature("soup", "Rao's Made For Home Tuscan Style Beef Stew Soup", "beef", "meat"),
+                feature("pork", "Pork For Stew", "pork", "meat"),
+                feature("beef", "Beef For Stew", "beef stew meat", "meat"),
+                feature("lamb", "Lamb For Stew", "lamb stew meat", "meat"),
+            ]
+        )
+        result = svc.match_recipe_ingredient("stewing meat")
+        self.assertIn(result.selected_match.product_id, {"beef", "lamb"})
+        rejected_ids = {item.product_id for item in result.rejected_candidates}
+        self.assertTrue({"prepared", "soup", "pork"} <= rejected_ids)
+
+    def test_specified_lamb_stew_meat_does_not_become_beef(self):
+        svc = service(
+            [
+                feature("beef", "Beef For Stew", "beef stew meat", "meat"),
+                feature("lamb", "Lamb For Stew", "lamb stew meat", "meat"),
+            ]
+        )
+        result = svc.match_recipe_ingredient("lamb stew meat")
+        self.assertEqual(result.selected_match.product_id, "lamb")
+        self.assertIn("beef", {item.product_id for item in result.rejected_candidates})
+
+    def test_raw_beef_roast_rejects_deli_or_premade_roast_beef(self):
+        svc = service(
+            [
+                feature("deli", "Black Bear London Broil Roast Beef", "beef", "meat"),
+                feature("sandwich", "Morton Williams Roast Beef and Tillamook Cheddar Sandwich", "beef", "meat"),
+                feature("raw", "Certified Angus Beef Eye Round Roast, Boneless", "beef", "meat"),
+            ]
+        )
+        result = svc.match_recipe_ingredient("standing rib roast beef")
+        self.assertEqual(result.selected_match.product_id, "raw")
+        rejected_ids = {item.product_id for item in result.rejected_candidates}
+        self.assertTrue({"deli", "sandwich"} <= rejected_ids)
+
     def test_demo_identity_regressions(self):
         cases = [
             ("apples", "apple", ["juice"], [feature("juice", "Snapple Juice Drink, Apple", None, "beverage"), feature("apple", "Bowl & Basket Macintosh Apples", "apple", "produce")]),
