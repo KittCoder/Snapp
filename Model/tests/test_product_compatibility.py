@@ -204,6 +204,34 @@ class CompatibilityRuleTests(unittest.TestCase):
         self.assertEqual(result.selected_match.product_id, "beef")
         self.assertIn("pork_sausage", {item.product_id for item in result.rejected_candidates})
 
+    def test_generic_beef_rejects_sauces_and_processed_meat_when_raw_beef_exists(self):
+        result = service(
+            [
+                feature("sauce", "Bowl & Basket Steak Sauce", "beef", "meat"),
+                feature("franks", "Hebrew National Beef Franks Hot Dogs", "beef", "meat"),
+                feature("jerky", "Wholesome Pantry Beef Jerky", "beef", "meat"),
+                feature("burger", "Beef Burgers", "beef", "meat"),
+                feature("bones", "USDA Choice Beef Marrow Bones", "beef", "meat"),
+                feature("pet", "Milk-Bone Original Biscuits Original Beef Flavor", "beef", "meat"),
+                feature("stew", "Beef For Stew", "beef stew meat", "meat"),
+            ]
+        ).match_recipe_ingredient("1 pound beef")
+        self.assertEqual(result.selected_match.product_id, "stew")
+        rejected_ids = {item.product_id for item in result.rejected_candidates}
+        self.assertTrue({"sauce", "franks", "jerky", "bones", "pet"} <= rejected_ids)
+        self.assertIn("burger", {item.product_id for item in result.compatible_alternatives})
+
+    def test_suet_absent_inventory_does_not_force_fat_substitute(self):
+        result = service(
+            [
+                feature("shortening", "Crisco Shortening", "shortening", "pantry"),
+                feature("lard", "Lard", "lard", "pantry"),
+                feature("butter", "Bowl & Basket Butter", "butter", "dairy"),
+            ]
+        ).match_recipe_ingredient("4 ounce suet")
+        self.assertIsNone(result.selected_match)
+        self.assertEqual(result.confidence, NO_SAFE_MATCH)
+
     def test_beef_sausage_and_pork_sausage_stay_distinct(self):
         result = service(
             [

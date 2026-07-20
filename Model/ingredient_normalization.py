@@ -6,6 +6,7 @@ import re
 import unicodedata
 from dataclasses import asdict, dataclass, field
 from fractions import Fraction
+from functools import lru_cache
 from typing import Any
 
 
@@ -531,6 +532,7 @@ def normalize_unicode(value: str) -> str:
     return unicodedata.normalize("NFKC", text).replace("\u2044", "/")
 
 
+@lru_cache(maxsize=32768)
 def normalize_text(value: str, *, keep_percent_word: bool = True) -> str:
     text = normalize_unicode(value).casefold()
     text = text.replace("\u2019", "'").replace("\u2018", "'")
@@ -936,6 +938,12 @@ def validate_package_parse(
     ):
         warnings.append("adjacent numeric tokens may indicate decimal-loss or merged source text")
     if unit in {"ounce", "fluid ounce"} and quantity >= 128:
+        warnings.append("large ounce package should be verified before optimization")
+    if (
+        unit == "ounce"
+        and quantity >= 64
+        and re.search(r"\b(baking powder|baking soda|yeast|spices?|seasoning|extract)\b", text)
+    ):
         warnings.append("large ounce package should be verified before optimization")
     if unit == "gram" and quantity > 10000:
         warnings.append("large gram package should be verified before optimization")

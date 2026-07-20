@@ -138,6 +138,42 @@ class FakeMatchService:
                 "normalized_name": "ground beef variable weight",
                 "raw_price": "$8.99/lb",
             },
+            "beef_cut": {
+                "product_id": "beef_cut",
+                "original_product_name": "Beef For Stew 16 oz",
+                "normalized_name": "beef for stew 16 oz",
+                "price": 7.99,
+                "package_quantity": 16.0,
+                "package_unit": "ounce",
+            },
+            "steak_sauce": {
+                "product_id": "steak_sauce",
+                "original_product_name": "Bowl & Basket Steak Sauce 10 oz",
+                "normalized_name": "bowl and basket steak sauce 10 oz",
+                "price": 3.29,
+                "package_quantity": 10.0,
+                "package_unit": "ounce",
+            },
+            "baking_powder_bad": {
+                "product_id": "baking_powder_bad",
+                "original_product_name": "Baking Powder",
+                "normalized_name": "baking powder",
+                "price": 4.99,
+                "package_quantity": 81.0,
+                "package_unit": "ounce",
+                "raw_unit_text": "81 oz",
+                "package_parse_confidence": "high",
+            },
+            "baking_powder_good": {
+                "product_id": "baking_powder_good",
+                "original_product_name": "Bowl & Basket Baking Powder",
+                "normalized_name": "bowl and basket baking powder",
+                "price": 2.39,
+                "package_quantity": 8.1,
+                "package_unit": "ounce",
+                "raw_unit_text": "8.1 oz",
+                "package_parse_confidence": "high",
+            },
             "dry_milk": {
                 "product_id": "dry_milk",
                 "original_product_name": "Swiss Miss Nonfat Dry Milk 12.98 oz",
@@ -208,6 +244,8 @@ class FakeMatchService:
                 key = "eggs"
             elif "beef" in raw:
                 key = "beef"
+            elif "baking powder" in raw:
+                key = "baking_powder_bad"
             elif "dry milk" in raw:
                 key = "dry_milk"
             elif "skirt steak" in raw:
@@ -234,6 +272,11 @@ class FakeMatchService:
                 rejected = [ranked("whole_milk", self.feature_by_id["whole_milk"]["original_product_name"], conflicts=[{"rule": "milk_fat_level", "classification": "hard_reject", "message": "whole does not satisfy fat-free"}])]
             if key == "steak":
                 rejected = [ranked("shaved", self.feature_by_id["shaved"]["original_product_name"], conflicts=[{"rule": "meat_cut", "classification": "hard_reject", "message": "meat cut differs"}])]
+            if key == "beef":
+                alternatives = [ranked("beef_cut", self.feature_by_id["beef_cut"]["original_product_name"], score=0.88)]
+                rejected = [ranked("steak_sauce", self.feature_by_id["steak_sauce"]["original_product_name"], conflicts=[{"rule": "beef_identity", "classification": "hard_reject", "message": "sauce is not beef"}])]
+            if key == "baking_powder_bad":
+                alternatives = [ranked("baking_powder_good", self.feature_by_id["baking_powder_good"]["original_product_name"], score=0.88)]
             results.append(match_result(raw, ranked(key, feature["original_product_name"]), alternatives, rejected))
         return results
 
@@ -312,6 +355,13 @@ class QuantityEngineTests(unittest.TestCase):
         cost = calculate_cost(coverage, price)
         self.assertEqual(cost.checkout_cost, 13.49)
         self.assertEqual(parse_price_info("$1.29 per lb").price_unit, "pound")
+        source_package = parse_package_info({"original_product_name": "Beef For Stew", "raw_unit_text": "lb"})
+        source_price = parse_price_info("$7.99", {"raw_unit_text": "lb"})
+        self.assertTrue(source_package.sold_by_weight)
+        self.assertEqual(source_price.unit_price, 7.99)
+        source_coverage = calculate_coverage(canonical_quantity(1, "pound"), source_package)
+        self.assertEqual(source_coverage.packages_required, 1)
+        self.assertEqual(calculate_cost(source_coverage, source_price).checkout_cost, 7.99)
 
     def test_variable_weight_volume_requirement_does_not_become_package_count(self):
         package = parse_package_info({"original_product_name": "Green Onions Package per lb"})
@@ -414,6 +464,20 @@ class QuantityEngineTests(unittest.TestCase):
         item = basket.shopping_basket[0]
         self.assertEqual(item.product_id, "steak")
         self.assertIn("shaved", {candidate.product_id for candidate in item.optimized_purchase.rejected})
+
+    def test_beef_basket_never_optimizes_to_steak_sauce(self):
+        basket = BasketBuilder(FakeMatchService()).build_recipe_basket({"ingredients": ["1 pound beef"]})
+        item = basket.shopping_basket[0]
+        self.assertEqual(item.product_id, "beef_cut")
+        self.assertIn("steak_sauce", {candidate.product_id for candidate in item.optimized_purchase.rejected})
+
+    def test_baking_powder_avoids_untrusted_giant_package_when_trusted_package_exists(self):
+        basket = BasketBuilder(FakeMatchService()).build_recipe_basket({"ingredients": ["1 teaspoon baking powder"]})
+        item = basket.shopping_basket[0]
+        self.assertEqual(item.product_id, "baking_powder_good")
+        self.assertEqual(item.package.confidence, "high")
+        self.assertEqual(item.packages_required, 1)
+        self.assertIn("baking_powder_bad", {candidate.product_id for candidate in item.optimized_purchase.rejected})
 
     def test_materially_different_ingredients_are_not_aggregated(self):
         basket = BasketBuilder(FakeMatchService()).build_multi_recipe_basket(

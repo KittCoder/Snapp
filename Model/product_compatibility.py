@@ -6,6 +6,7 @@ import re
 import time
 from collections import OrderedDict
 from dataclasses import asdict, dataclass, field
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -246,8 +247,13 @@ def default_overrides() -> dict[str, Any]:
     }
 
 
+@lru_cache(maxsize=4096)
+def compiled_pattern(pattern: str) -> re.Pattern[str]:
+    return re.compile(pattern)
+
+
 def text_has(text: str, *patterns: str) -> bool:
-    return any(re.search(pattern, text) for pattern in patterns)
+    return any(compiled_pattern(pattern).search(text) for pattern in patterns)
 
 
 def normalize_fat(value: str | None, text: str) -> str | None:
@@ -439,6 +445,16 @@ def classify_identity(
     elif text_has(detection_text, r"\bbuttermilk\b"):
         profile.family = "buttermilk"; profile.category = profile.category or "dairy"
 
+    if text_has(
+        detection_text,
+        r"\bsteak sauce\b|\bbeef marinade\b|\bbeef gravy\b|\bgravy granules\b|\bdressing\b|\bgravy\b",
+    ):
+        profile.family = "sauce"; profile.category = profile.category or "pantry"
+    if text_has(detection_text, r"\bdog food\b|\bcat food\b|\bdog treats?\b|\bcat treats?\b|\bmilk-bone\b|\bpurina\b|\bfriskies\b|\bfancy feast\b|\bmeow mix\b|\bpedigree\b|\bcesar\b"):
+        profile.family = "pet food"; profile.category = "pet"
+    if text_has(detection_text, r"\bsteak fries\b"):
+        profile.family = "prepared meal"; profile.category = "prepared"
+
     if text_has(detection_text, r"\balmond butter\b|\bcashew butter\b|\bsunflower butter\b"):
         profile.family = "nut butter"; profile.category = profile.category or "pantry"
     elif text_has(detection_text, r"\bpeanut butter\b"):
@@ -489,6 +505,8 @@ def classify_identity(
         profile.family = "broth"; profile.broth_type = "stock"
     elif text_has(detection_text, r"\bbouillon\b"):
         profile.family = "bouillon"; profile.broth_type = "bouillon"
+    elif text_has(detection_text, r"\bconsomm[eé]\b|\bconsomme\b"):
+        profile.family = "broth"; profile.broth_type = "consomme"; profile.broth_species = broth_species
     elif text_has(detection_text, r"\bsoup\b"):
         profile.family = "soup"; profile.broth_type = "soup"
         if text_has(detection_text, r"\bcream(?:y)? of chicken soup\b|\bcream of chicken\b"):
@@ -498,9 +516,28 @@ def classify_identity(
         elif text_has(detection_text, r"\bcream(?:y)? tomato soup\b|\btomato soup\b"):
             profile.soup_type = "tomato"
 
-    if text_has(detection_text, r"\bbeef\s+(?:for\s+)?stew\b|\bstew(?:ing)?\s+(?:beef|meat)\b|\bbeef stew meat\b|\bstew meat\b"):
+    if text_has(
+        detection_text,
+        r"\bbeef\s+(?:franks?|hot dogs?|wieners?|knockwurst|bologna|salami)\b|\b(?:franks?|hot dogs?|wieners?|knockwurst|bologna|salami)\b.*\bbeef\b",
+    ):
+        profile.family = "processed meat"; profile.category = profile.category or "meat"; profile.meat_species = "beef"
+    elif text_has(detection_text, r"\bbeef jerky\b|\bjerky\b.*\bbeef\b"):
+        profile.family = "processed meat"; profile.category = profile.category or "meat"; profile.meat_species = "beef"
+    elif text_has(detection_text, r"\bcorned beef\b|\bpastrami\b|\broast beef\b.*\bsliced\b|\bsliced\b.*\broast beef\b|\blunch meat\b") or normalized == "roast beef":
+        profile.family = "processed meat"; profile.category = profile.category or "meat"; profile.meat_species = "beef"
+    elif text_has(detection_text, r"\bchipped beef\b|\bcreamed chipped beef\b"):
+        profile.family = "processed meat"; profile.category = profile.category or "meat"; profile.meat_species = "beef"
+    elif text_has(detection_text, r"\bbeef liver\b|\bfresh beef liver\b"):
+        profile.family = "organ meat"; profile.category = profile.category or "meat"; profile.meat_species = "beef"; profile.meat_cut = "liver"
+    elif text_has(detection_text, r"\bbeef (?:feet|foot|bones?|marrow bones?|neck bones?|back bones?|hindshank)\b|\b(?:feet|foot|bones?|marrow bones?|neck bones?|back bones?|hindshank)\b.*\bbeef\b"):
+        profile.family = "meat bones"; profile.category = profile.category or "meat"; profile.meat_species = "beef"
+    elif profile.family in {"sauce", "pet food", "prepared meal"}:
+        pass
+    elif text_has(detection_text, r"\bbeef\s+(?:for\s+)?stew\b|\bstew(?:ing)?\s+(?:beef|meat)\b|\bbeef stew meat\b|\bstew meat\b"):
         profile.family = "meat cut"; profile.meat_species = "beef"; profile.meat_cut = "stew meat"
-    elif text_has(detection_text, r"\bground beef\b"):
+    elif text_has(detection_text, r"\bground beef\b|\bbeef,?\s+ground\b"):
+        profile.family = "ground meat"; profile.meat_species = "beef"; profile.ground = True
+    elif text_has(detection_text, r"\bbeef burgers?\b|\bground beef burgers?\b"):
         profile.family = "ground meat"; profile.meat_species = "beef"; profile.ground = True
     elif text_has(detection_text, r"\bbeef sausage\b"):
         profile.family = "sausage"; profile.category = profile.category or "meat"; profile.meat_species = "beef"
@@ -518,6 +555,8 @@ def classify_identity(
         profile.family = "pork"; profile.category = profile.category or "meat"; profile.meat_species = "pork"
     elif text_has(detection_text, r"\bham\b"):
         profile.family = "ham"; profile.category = profile.category or "meat"; profile.meat_species = "pork"
+    elif text_has(detection_text, r"\bswordfish\b|\bsalmon\b|\bfish steak\b"):
+        profile.family = "fish"; profile.category = profile.category or "meat"; profile.meat_species = "fish"
     elif text_has(detection_text, r"\bchicken breast\b"):
         profile.family = "meat cut"; profile.meat_species = "chicken"; profile.meat_cut = "breast"
     elif text_has(detection_text, r"\bchicken thighs?\b"):
@@ -538,7 +577,21 @@ def classify_identity(
         profile.family = "tuna"; profile.meat_species = "tuna"; profile.freshness = profile.freshness or "canned"
     elif text_has(detection_text, r"\btuna\b"):
         profile.family = "tuna"; profile.meat_species = "tuna"
-    elif text_has(detection_text, r"\bbeef\b") and profile.family not in {"broth", "stock", "soup", "bouillon", "sausage", "meat cut", "ground meat"}:
+    elif text_has(detection_text, r"\bbeef\b") and profile.family not in {
+        "broth",
+        "stock",
+        "soup",
+        "bouillon",
+        "sausage",
+        "meat cut",
+        "ground meat",
+        "sauce",
+        "processed meat",
+        "organ meat",
+        "meat bones",
+        "prepared meal",
+        "pet food",
+    }:
         profile.family = "beef"; profile.category = profile.category or "meat"; profile.meat_species = "beef"
 
     if text_has(detection_text, r"\bfresh\b"):
@@ -698,7 +751,7 @@ def classify_identity(
 
     if text_has(
         detection_text,
-        r"\bpot pie\b|\bfrozen meal\b|\bfrozen dinners?\b|\balfredo\b|\bmacaroni (?:and|&) (?:cheese|beef)\b|\bcovered raisins\b|\bmashed potatoes\b|\bcakes?\b|\bcheesecake\b|\bcupcakes?\b|\bdips?\b|\bpizza\b|\bravioli\b|\btortelloni\b|\bpierogi\b|\btortillas?\b|\bwraps?\b|\bbaby food\b|\bpouch\b|\bbeef stew with\b|\bdinty moore\b|\bchicken parmesan\b|\bchallah\b|\brolls?\b|\bonion rings?\b|\bfunyuns?\b|\bfrench onion\b.*\bdip\b|\bdip\b.*\bfrench onion\b|\bonion dip\b|\bonion gravy\b|\bonion bagels?\b|\bhummus\b|\bpopcorn\b|\bcrackers?\b|\bchips?\b|\bmrs ts\b",
+        r"\bpot pie\b|\bfrozen meal\b|\bfrozen dinners?\b|\balfredo\b|\bmacaroni (?:and|&) (?:cheese|beef)\b|\bbeef barley vegetable\b|\bbeef chili\b|\bchili\b.*\bbeef\b|\bbeef flavor\b|\bflavor noodles?\b|\bramen\b|\bpho bowl\b|\bgerber\b|\bcovered raisins\b|\bmashed potatoes\b|\bcakes?\b|\bcheesecake\b|\bcupcakes?\b|\bdips?\b|\bpizza\b|\bravioli\b|\btortelloni\b|\bpierogi\b|\btortillas?\b|\bwraps?\b|\bbaby food\b|\bpouch\b|\bbeef stew with\b|\bdinty moore\b|\bchicken parmesan\b|\btaquitos?\b|\bchallah\b|\brolls?\b|\bonion rings?\b|\bfunyuns?\b|\bfrench onion\b.*\bdip\b|\bdip\b.*\bfrench onion\b|\bonion dip\b|\bonion gravy\b|\bonion bagels?\b|\bhummus\b|\bpopcorn\b|\bcrackers?\b|\bchips?\b|\bmrs ts\b",
     ):
         profile.family = "prepared meal"
         profile.category = "prepared"
@@ -857,10 +910,12 @@ def compatibility_signals(query: IngredientProfile, product: IngredientProfile) 
             signals.append(CompatibilitySignal("meat_species", HARD_REJECT, "meat species differs"))
     if query.category == "meat" and product.category == "meat" and query.meat_species and product.meat_species and query.meat_species != product.meat_species:
         signals.append(CompatibilitySignal("meat_species", HARD_REJECT, "meat species differs"))
-    if query.family == "beef" and product.family in {"sausage", "pork"}:
+    if query.family == "beef" and product.family in {"sausage", "pork", "sauce", "processed meat", "broth", "stock", "soup", "bouillon", "prepared meal", "pet food", "organ meat", "meat bones"}:
         signals.append(CompatibilitySignal("beef_identity", HARD_REJECT, f"{product.family} is not beef"))
     if query.family == "beef" and product.category and product.category != "meat":
         signals.append(CompatibilitySignal("beef_identity", HARD_REJECT, f"{product.category} product is not beef meat"))
+    if query.family == "beef" and product.family == "ground meat":
+        signals.append(CompatibilitySignal("beef_form", STRONG_PENALTY, "ground or formed beef is not a whole beef cut"))
     if query.family == "meat cut" and product.family == "meat cut":
         if query.meat_species and product.meat_species and query.meat_species != product.meat_species:
             signals.append(CompatibilitySignal("meat_species", HARD_REJECT, "meat species differs"))
@@ -1112,6 +1167,8 @@ class ProductMatchService:
         self.config = config or MatchScoringConfig()
         self.cache = cache or MatchCache()
         self._feature_by_id: dict[str, dict[str, Any]] | None = None
+        self._product_profile_cache: dict[str, IngredientProfile] = {}
+        self._product_index_version_cache: str | None = None
 
     @property
     def feature_by_id(self) -> dict[str, dict[str, Any]]:
@@ -1120,13 +1177,27 @@ class ProductMatchService:
         return self._feature_by_id
 
     def product_index_version(self) -> str | None:
+        if self._product_index_version_cache is not None:
+            return self._product_index_version_cache
         if self.retriever._index_metadata:
-            return self.retriever._index_metadata.get("index_version")
+            self._product_index_version_cache = self.retriever._index_metadata.get("index_version") or "no-index"
+            return self._product_index_version_cache
         try:
             _embeddings, metadata = load_existing_index(self.retriever.index_dir)
-            return (metadata or {}).get("index_version")
+            self._product_index_version_cache = (metadata or {}).get("index_version") or "no-index"
+            return self._product_index_version_cache
         except Exception:
+            self._product_index_version_cache = "no-index"
             return None
+
+    def product_profile(self, feature: dict[str, Any]) -> IngredientProfile:
+        product_id = str(feature.get("product_id") or "")
+        cached = self._product_profile_cache.get(product_id)
+        if cached is None:
+            cached = profile_from_feature(feature)
+            if product_id:
+                self._product_profile_cache[product_id] = cached
+        return cached
 
     def cache_key(self, profile: IngredientProfile) -> str:
         index_version = self.product_index_version() or "no-index"
@@ -1199,7 +1270,7 @@ class ProductMatchService:
             feature = self.feature_by_id.get(candidate.product_id)
             if not feature or not feature.get("eligible_for_retrieval"):
                 continue
-            product_profile = profile_from_feature(feature)
+            product_profile = self.product_profile(feature)
             signals = compatibility_signals(query_profile, product_profile)
             if candidate.product_id in forbidden_ids:
                 signals.append(CompatibilitySignal("manual_forbidden", HARD_REJECT, "product is manually forbidden"))

@@ -114,6 +114,9 @@ class ProductFeatureTests(unittest.TestCase):
         confidence, source, warnings = validate_package_parse(253.0, "ounce", "253 oz", "Extra Virgin Olive Oil")
         self.assertEqual(confidence, "low")
         self.assertIn("large ounce package should be verified before optimization", warnings)
+        confidence, source, warnings = validate_package_parse(81.0, "ounce", "81 oz", "Baking Powder")
+        self.assertEqual(confidence, "low")
+        self.assertIn("large ounce package should be verified before optimization", warnings)
 
     def test_attribute_extraction(self):
         product = {

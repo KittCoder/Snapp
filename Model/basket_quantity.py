@@ -10,13 +10,21 @@ from dataclasses import asdict, dataclass, field
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Any
 
-from ingredient_normalization import normalize_package_text, normalize_text, normalize_unit, parse_ingredient, parse_number
+from ingredient_normalization import (
+    normalize_package_text,
+    normalize_text,
+    normalize_unit,
+    parse_ingredient,
+    parse_number,
+    validate_package_parse,
+)
 from product_compatibility import (
     LOW,
     NO_SAFE_MATCH,
     SUBSTITUTION_ONLY,
     ProductMatchService,
     RankedCandidate,
+    get_product_match_service,
     profile_from_query,
 )
 
@@ -127,6 +135,7 @@ DENSITY_G_PER_ML = {
     "chicken stock": 1.0,
     "vegetable stock": 1.0,
     "beef stock": 1.0,
+    "baking powder": 0.9,
 }
 
 
@@ -402,6 +411,15 @@ def parse_package_info(feature: dict[str, Any] | None) -> PackageInfo:
     structured_quantity = feature.get("package_quantity")
     structured_unit = feature.get("package_unit")
     if structured_quantity and structured_unit:
+        runtime_confidence, _runtime_source, runtime_warnings = validate_package_parse(
+            float(structured_quantity),
+            structured_unit,
+            source_text,
+            feature.get("original_product_name") or feature.get("normalized_name"),
+        )
+        if runtime_confidence == "low":
+            warnings = sorted(set(warnings + runtime_warnings))
+            confidence = "low"
         quantity = canonical_quantity(float(structured_quantity), structured_unit)
         if quantity.base_quantity is not None:
             return PackageInfo(
@@ -413,6 +431,8 @@ def parse_package_info(feature: dict[str, Any] | None) -> PackageInfo:
                 source="structured",
                 confidence=confidence if confidence != "unknown" else "high",
                 source_text=source_text,
+                eligible_for_optimization=confidence != "low",
+                warnings=warnings,
             )
 
     text = normalize_package_text(
@@ -427,6 +447,22 @@ def parse_package_info(feature: dict[str, Any] | None) -> PackageInfo:
             )
         )
     )
+    normalized_source_text = normalize_package_text(source_text or "")
+    if normalized_source_text in {"lb", "pound", "per lb", "per pound"}:
+        return PackageInfo(
+            None,
+            "pound",
+            1.0,
+            None,
+            "gram",
+            sold_by_weight=True,
+            variable_weight=True,
+            source="structured",
+            confidence="medium",
+            source_text=source_text,
+            eligible_for_optimization=False,
+            warnings=["sold by weight"],
+        )
     if not text:
         return PackageInfo(None, None, confidence="none", source_text=source_text, eligible_for_optimization=False, warnings=["missing package size"])
     if re.search(r"\b(sold by weight|variable weight|per pound|per lb|lb avg|average weight|family pack)\b", text):
@@ -478,6 +514,9 @@ def parse_price_info(value: Any, feature: dict[str, Any] | None = None) -> Price
         return PriceInfo(None, round(float(per.group(1)), 4), unit, source=raw)
     match = re.search(r"\$(\d+(?:\.\d{1,2})?)", text)
     if match:
+        unit_text = normalize_package_text(str((feature or {}).get("raw_unit_text") or (feature or {}).get("unit") or ""))
+        if unit_text in {"lb", "pound", "per lb", "per pound"}:
+            return PriceInfo(None, round(float(match.group(1)), 4), "pound", source=raw)
         price = round(float(match.group(1)), 2)
         return PriceInfo(price, price, source=raw)
     return PriceInfo(None, None, source=raw, warnings=["price unavailable"])
@@ -502,7 +541,12 @@ def calculate_coverage(required: Quantity, package: PackageInfo, ingredient_key:
         warnings.append("unknown required quantity")
         return QuantityCoverage(required, package, None, None, required, Quantity(None, required.unit, status=UNKNOWN), None, warnings)
     if package.sold_by_weight or package.variable_weight:
-        return QuantityCoverage(required, package, required.base_quantity, 1.0, required, Quantity(0, required.unit, required.dimension, 0, required.base_unit), 0.0, warnings)
+        purchase_amount = required.base_quantity
+        if package.package_unit:
+            converted = convert_quantity(required, package.package_unit, ingredient_key)
+            if converted.quantity is not None:
+                purchase_amount = converted.quantity
+        return QuantityCoverage(required, package, purchase_amount, 1.0, required, Quantity(0, required.unit, required.dimension, 0, required.base_unit), 0.0, warnings)
     if not package.eligible_for_optimization:
         warnings.append("package metadata excluded from optimization")
         return QuantityCoverage(required, package, None, None, required, Quantity(None, required.unit, status=UNKNOWN, reason="low-confidence package metadata"), None, warnings)
@@ -706,7 +750,7 @@ def recipe_ingredients(recipe: Any, recipe_index: int = 0) -> tuple[str, list[st
 
 class BasketBuilder:
     def __init__(self, match_service: ProductMatchService | None = None):
-        self.match_service = match_service or ProductMatchService()
+        self.match_service = match_service or get_product_match_service()
         self._package_cache: dict[str, PackageInfo] = {}
         self._basket_cache: dict[str, RecipeBasket] = {}
 
@@ -736,7 +780,7 @@ class BasketBuilder:
             recipe_refs.append({"recipe_id": recipe_id, "ingredient_count": len(ingredients)})
             prepared_recipes.append((recipe_index, recipe_id, ingredients))
             all_ingredients.extend(ingredients)
-        all_results = self.match_service.match_recipe_ingredients(all_ingredients, limit=5)
+        all_results = self.match_service.match_recipe_ingredients(all_ingredients, limit=15)
         result_offset = 0
         for _recipe_index, recipe_id, ingredients in prepared_recipes:
             results = all_results[result_offset : result_offset + len(ingredients)]
