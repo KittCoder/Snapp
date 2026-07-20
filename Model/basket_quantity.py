@@ -73,6 +73,7 @@ COUNT_UNITS = {
     "stalk",
     "pack",
     "jar",
+    "tub",
 }
 
 COUNT_ALIASES = {
@@ -118,6 +119,8 @@ COUNT_ALIASES = {
     "packs": "pack",
     "jar": "jar",
     "jars": "jar",
+    "tub": "tub",
+    "tubs": "tub",
 }
 
 DENSITY_G_PER_ML = {

@@ -41,6 +41,16 @@ class RealRecipeRegressionTests(unittest.TestCase):
             "beef-steak-pudding-suet",
             "beef-steak-pudding-flour",
             "beef-steak-pudding-baking-powder",
+            "beef-tongue-smoked",
+            "beef-steak-pie-steak",
+            "beef-steak-pie-dripping",
+            "corn-starch-identity",
+            "corn-flour-identity",
+            "lamb-in-pitas-minced-lamb",
+            "lamb-in-pitas-fresh-mint",
+            "lamb-in-pitas-pita-bread",
+            "lamb-in-pitas-rocket",
+            "lamb-in-pitas-sweet-chili-sauce",
         ):
             case = self.cases[case_id]
             with self.subTest(case_id=case_id):
@@ -93,3 +103,40 @@ class RealRecipeRegressionTests(unittest.TestCase):
         self.assertIn("beef", by_raw["1 pound beef"].product_name.casefold())
         self.assertIn("1 teaspoon baking powder", by_raw)
         self.assertNotEqual(by_raw["1 teaspoon baking powder"].package.package_quantity, 81.0)
+
+    def test_lamb_in_pitas_core_ingredients_match_real_inventory(self):
+        basket = self.builder.build_recipe_basket(
+            {
+                "id": "lamb-in-pitas-regression",
+                "ingredients": [
+                    "1 pound minced lamb",
+                    "1 tablespoon fresh mint, chopped",
+                    "1 small onion, finely chopped",
+                    "1 garlic clove, crushed",
+                    "1 tablespoon sweet chili sauce",
+                    "1 tub hummus",
+                    "4 whole meal pita breads",
+                    "25 gram rockets",
+                ],
+            },
+            optimization_mode="balanced",
+        )
+        by_raw = {
+            raw: item
+            for item in basket.shopping_basket
+            for raw in item.ingredients
+        }
+        expected = {
+            "1 pound minced lamb": "lamb",
+            "1 tablespoon fresh mint, chopped": "mint",
+            "1 tablespoon sweet chili sauce": "chili",
+            "1 tub hummus": "hummus",
+            "4 whole meal pita breads": "pita bread",
+            "25 gram rockets": "arugula",
+        }
+        for raw, expected_text in expected.items():
+            with self.subTest(raw=raw):
+                self.assertIn(raw, by_raw)
+                self.assertIn(expected_text, by_raw[raw].product_name.casefold())
+        self.assertNotIn("dog food", by_raw["1 pound minced lamb"].product_name.casefold())
+        self.assertNotIn("chips", by_raw["4 whole meal pita breads"].product_name.casefold())

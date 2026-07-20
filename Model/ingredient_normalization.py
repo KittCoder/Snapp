@@ -119,8 +119,9 @@ ALIAS_TO_CANONICAL = {
     "all purpose flour": "all-purpose flour",
     "plain flour": "all-purpose flour",
     "cornflour": "corn starch",
-    "corn flour": "corn starch",
     "cornstarch": "corn starch",
+    "rocket": "arugula",
+    "rockets": "arugula",
     "tinned pineapple": "pineapple",
     "double cream": "heavy cream",
     "confectioner sugar": "powdered sugar",
@@ -200,11 +201,16 @@ PREPARATION_TERMS = [
 
 IDENTITY_PHRASES = {
     "ground beef",
+    "ground lamb",
     "crushed tomatoes",
     "tomato paste",
     "powdered sugar",
     "baking powder",
     "all-purpose flour",
+    "corn starch",
+    "corn flour",
+    "pita bread",
+    "chili sauce",
 }
 
 COUNT_UNIT_INGREDIENTS = {
@@ -231,6 +237,8 @@ COUNT_CONTAINER_UNITS = {
     "heads": "head",
     "stalk": "stalk",
     "stalks": "stalk",
+    "tub": "tub",
+    "tubs": "tub",
 }
 
 COUNT_INGREDIENT_UNITS = {
@@ -276,6 +284,8 @@ COMMON_PRODUCE_CANONICALS = (
 )
 
 CANONICAL_PATTERNS = (
+    (r"\bcorn\s*starch\b|\bcornstarch\b|\bcornflour\b", "corn starch"),
+    (r"\bcorn\s+flour\b", "corn flour"),
     (r"\ball[-\s]?purpose flour\b|\bplain flour\b|\bap flour\b", "all-purpose flour"),
     (r"\bwhole wheat flour\b", "whole wheat flour"),
     (r"\bbread flour\b", "bread flour"),
@@ -329,7 +339,6 @@ CANONICAL_PATTERNS = (
     (r"\bsalt\b", "salt"),
     (r"\bshortening\b", "shortening"),
     (r"\bcorn\b", "corn"),
-    (r"\bcorn\s*starch\b|\bcornflour\b|\bcorn flour\b", "corn starch"),
     (r"\bpowdered sugar\b|\bconfectioners sugar\b|\bicing sugar\b", "powdered sugar"),
     (r"\bbrown sugar\b", "brown sugar"),
     (r"\bsugar\b", "sugar"),
@@ -337,11 +346,13 @@ CANONICAL_PATTERNS = (
     (r"\bchicken thighs?\b", "chicken thighs"),
     (r"\bchicken\b", "chicken"),
     (r"\bground beef\b", "ground beef"),
+    (r"\bground lamb\b|\bminced lamb\b", "lamb"),
     (r"\bbeef sausage\b", "beef sausage"),
     (r"\bpork sausage\b|\bpork sausages\b", "pork sausage"),
     (r"\bchicken sausage\b|\bchicken sausages\b", "chicken sausage"),
     (r"\bbeef\s+for\s+stew\b|\bbeef stew meat\b|\bstew meat\b", "beef stew meat"),
     (r"\b(beef|hanger steak|rib steak|ribeye steak|sirloin steak|short ribs?|steak)\b", "beef"),
+    (r"\blamb\b", "lamb"),
     (r"\bpork\b", "pork"),
     (r"\bham\b", "ham"),
     (r"\bbacon\b", "bacon"),
@@ -371,6 +382,7 @@ CANONICAL_PATTERNS = (
     (r"\bparsley\b", "parsley"),
     (r"\bcilantro\b", "cilantro"),
     (r"\bbasil\b", "basil"),
+    (r"\bmint\b", "mint"),
     (r"\bthyme\b", "thyme"),
     (r"\boregano\b", "oregano"),
     (r"\brosemary\b", "rosemary"),
@@ -389,6 +401,7 @@ CANONICAL_PATTERNS = (
     (r"\blettuce\b", "lettuce"),
     (r"\bspinach\b", "spinach"),
     (r"\barugula\b", "arugula"),
+    (r"\brockets?\b", "arugula"),
     (r"\bkale\b", "kale"),
     (r"\bcelery\b", "celery"),
     (r"\bcucumbers?\b", "cucumber"),
@@ -713,6 +726,9 @@ def parse_ingredient(raw_text: str) -> ParsedIngredient:
             canonical_source = COUNT_INGREDIENT_UNITS[canonical_words[0]]
     canonical = apply_alias(canonical_source)
     canonical = re.sub(r"\s+", " ", canonical).strip(" ,-")
+    if quantity is not None and unit is None and re.search(r"\bpita breads?\b|\bpitas?\b", normalize_text(raw)):
+        unit = "count"
+        canonical = "pita bread"
     if not canonical and unit in COUNT_UNIT_INGREDIENTS:
         canonical = unit
     return ParsedIngredient(
