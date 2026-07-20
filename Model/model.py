@@ -2522,13 +2522,13 @@ def all_recipe_candidates_for_prompt(meal_prompt, dietary_restrictions="", recip
     )
     deduped = []
     seen_names = set()
-    for recipe in candidates:
+    for recipe in candidates[:20]:
         name = normalized_recipe_name(recipe.get("title"))
         if name in seen_names:
             continue
         seen_names.add(name)
         deduped.append(recipe)
-        if len(deduped) >= 10:
+        if len(deduped) >= 20:
             break
     return deduped
 
@@ -4101,7 +4101,7 @@ def build_real_recipe_results(
         )
     )
     if len(exact_results) >= result_limit:
-        return exact_results[:result_limit], False
+        return random.sample(exact_results, result_limit), False
 
     target_budget = filters["max_budget"]
     closest_results.sort(
@@ -4114,6 +4114,7 @@ def build_real_recipe_results(
     )
     seen = {result["recipe_id"] for result in exact_results}
     combined = list(exact_results)
+    random.shuffle(closest_results)
     for result in closest_results:
         if result["recipe_id"] in seen:
             continue

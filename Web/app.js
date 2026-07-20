@@ -1780,7 +1780,7 @@ function renderDishes(data) {
   const cards = document.createElement("div");
   botMessage.className = "dish-message bot";
   intro.textContent = data.dishes.length
-    ? "Here are the three best recipe matches I found."
+    ? "Here are three recipe matches I found."
     : "I could not find recipe matches for that request.";
   cards.className = "dish-card-grid";
   botMessage.append(intro, cards);
@@ -2133,7 +2133,7 @@ dishForm.addEventListener("submit", async (event) => {
   try {
     const data = await fetchDishes(mealPrompt);
     renderDishes(data);
-    dishStatus.textContent = `Found ${Math.min(data.dishes.length, 3)} best recipe ${data.dishes.length === 1 ? "match" : "matches"} with grocery price estimates.`;
+    dishStatus.textContent = `Found ${Math.min(data.dishes.length, 3)} recipe ${data.dishes.length === 1 ? "match" : "matches"} with grocery price estimates.`;
     dishSource.hidden = false;
   } catch (error) {
     appendDishMessage("bot", `Dish search error: ${error.message}`);

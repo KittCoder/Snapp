@@ -526,6 +526,72 @@ class OverrideCacheBatchEndpointTests(unittest.TestCase):
         )
         self.assertEqual(dish["ingredients_to_buy"], [])
 
+    def test_demo_dish_keeps_variable_weight_beef_purchase_row(self):
+        import model
+
+        recipe = {
+            "id": "beef-steak-pudding-regression",
+            "title": "Beef Steak Pudding",
+            "sourceUrl": "https://example.test/beef",
+            "extendedIngredients": [
+                {"name": "beef", "original": "1 pound beef"},
+                {"name": "flour", "original": "3/4 pound flour"},
+                {"name": "water", "original": "3/4 cup water"},
+                {"name": "baking powder", "original": "1 teaspoon baking powder"},
+            ],
+            "instructions": "Cook.",
+        }
+        matches = model.match_recipe_ingredients_to_morton_williams(recipe, pantry_items=[], servings=4)
+        dish = model.spoonacular_recipe_to_demo_dish(
+            recipe,
+            matches,
+            model.morton_williams_store_lookup(),
+            4,
+            grocery_label="Morton Williams",
+        )
+        product_names = [ingredient["product_name"].casefold() for ingredient in dish["ingredients_to_buy"]]
+        self.assertTrue(any("beef" in name for name in product_names), product_names)
+        self.assertGreater(dish["estimated_price_total"], 4.38)
+
+    def test_real_recipe_results_sample_three_exact_candidates(self):
+        import model
+
+        recipes = [
+            {"id": f"recipe-{index}", "title": f"Recipe {index}", "extendedIngredients": [{"name": "beef"}]}
+            for index in range(5)
+        ]
+        filters = {
+            "servings": 4,
+            "dietary_restrictions": "",
+            "avoid_ingredients": [],
+            "include_ingredients": [],
+            "dietary_preference": "",
+            "max_cook_time": None,
+            "max_budget": None,
+        }
+        fake_products = [({"name": "beef", "measure": "1 pound beef"}, {"id": "beef", "product_name": "Beef"})]
+
+        def fake_result(recipe, _matches, _stores, _filters, relevance_score, exact_match, grocery_label="grocery database"):
+            return {
+                "recipe_id": recipe["id"],
+                "name": recipe["title"],
+                "estimated_price_total": 1,
+                "relevance_score": relevance_score,
+                "exact_match": exact_match,
+            }
+
+        with patch("model.collect_recipe_candidates", return_value=recipes), patch(
+            "model.match_recipe_ingredients_to_morton_williams", return_value=fake_products
+        ), patch("model.recipe_constraint_score", return_value=10), patch(
+            "model.recipe_passes_hard_filters", return_value=True
+        ), patch("model.recipe_result_from_recipe", side_effect=fake_result), patch(
+            "model.random.sample", return_value=[fake_result(recipes[3], fake_products, {}, filters, 10, True), fake_result(recipes[1], fake_products, {}, filters, 10, True), fake_result(recipes[4], fake_products, {}, filters, 10, True)]
+        ) as sample:
+            results, relaxed = model.build_real_recipe_results("beef", filters, stores={}, result_limit=3)
+        self.assertFalse(relaxed)
+        sample.assert_called_once()
+        self.assertEqual([result["recipe_id"] for result in results], ["recipe-3", "recipe-1", "recipe-4"])
+
     def test_evaluation_helper(self):
         from evaluate_product_matching import evaluate
 
