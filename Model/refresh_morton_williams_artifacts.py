@@ -15,7 +15,7 @@ from ops_metrics import log_event, metrics
 
 
 MODEL_DIR = Path(__file__).resolve().parent
-DEFAULT_SOURCE = MODEL_DIR / "database.merged.json"
+DEFAULT_SOURCE = MODEL_DIR / os.getenv("SNAPP_GROCERY_DB_FILENAME", "database.scrape-20260721-143928.json")
 DEFAULT_FEATURES = MODEL_DIR / "morton_williams_product_features.json"
 DEFAULT_UNCERTAIN = MODEL_DIR / "morton_williams_uncertain_products.csv"
 DEFAULT_INVALID = MODEL_DIR / "morton_williams_invalid_or_noise.csv"

@@ -1,57 +1,16 @@
 product_id,name,price,unit,record_status,source_quality_score,exclusion_reasons
 mw_10af78463b259ad7,The cost is,$5.00,,scraper_navigation_description_noise,45,scraper/navigation/description noise
-mw_3e6847ae1aec5eb4,Rolled in Black Pepper,$10.99,lb,scraper_navigation_description_noise,45,sentence fragment
-mw_f0e26440d7e8f66e,Rolled in Black Pepper.......,$10.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact; sentence fragment
-mw_99338209cc188dcd,For Pepper Steak............................,$7.99,lb,scraper_navigation_description_noise,45,sentence fragment
-mw_98eb5f2a8484fbcd,With Additional,$50.00,155 oz,scraper_navigation_description_noise,45,sentence fragment
-mw_fc4fe7b27112a4a3,With Additional,$100.00,10 pack,scraper_navigation_description_noise,45,sentence fragment
-mw_4d01ea5dd0eb0c1d,With Additional,$25.00,11 oz,scraper_navigation_description_noise,45,sentence fragment
-mw_27ab70827d7b0ab8,Fried Chicken.........................................................,$7.99,ea,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_4bf96d8d297f7d80,Salad...............................................................................,$11.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_3896839d734f976a,Empanadas................................................................,$5.99,8 oz,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_e2013ea516bb47d6,Alla Vodka..................................................................,$8.99,16 oz,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_2e3bd83c9beac059,Swiss-Gouda Style Cheese.......,$8.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_bdf967b6345c4be5,Salad.......................................................................................,$7.99,12 oz,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_ff922982e62eb75f,Feta Crumbles.........................................................,$6.99,12 oz,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_d4860fe6136e1eb0,Cheddar Cheese.............................................,$6.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_d9a46ad965db5cac,Tartar Sauce.........,$3.49,88 oz,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_02b78b274b224cd0,Black Mussels......,$8.99,2 lb,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_eca2de0aac2d0f92,With Additional,$50.00,,scraper_navigation_description_noise,45,sentence fragment
-mw_814a72245f0e82e2,With Additional,$100.00,20 lb,scraper_navigation_description_noise,45,sentence fragment
-mw_61af2cae1425f0fb,With Additional,$25.00,155 oz,scraper_navigation_description_noise,45,sentence fragment
-mw_9a14f55cffaa64fd,Chicken Breast or Tenders...,$7.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_a7576fbc057186cf,Chicken Thighs................................,$3.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_8f0243afa3d4c019,For Pepper Steak...........................,$7.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact; sentence fragment
-mw_6d6d7d0f654fa246,Sausage.................................................,$5.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_a9e5f7aba13a32ed,Breast of Lamb...............................,$6.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_80ec4abcddf3cd3e,Strawberries,$4.49,1 lb,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_2740fb0d34a45ac1,Wings,$3.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_ec1455ee76ba10e9,Strawberries.......,$8.99,14 oz,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_c31a055c9c364b89,Stuffed With Gorgonzola Cheese,$7.99,lb,scraper_navigation_description_noise,45,sentence fragment
-mw_0a9030b85ef5be94,Genoa or Hard Salami..........................,$8.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_7e42e81638741f29,Fontina Cheese................................................,$9.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_d8486ff7b4691a70,Stuffed With Gorgonzola Cheese......,$7.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact; sentence fragment
-mw_26803cb85ca7e91a,"Just heat & serve, fresh store made grilled or poached salmon, by the piece​",$21.99,lb,scraper_navigation_description_noise,45,sentence fragment
-mw_ba2c34a84678c1f2,"Just heat & serve, fresh store made grilled chicken with rice pilaf & vegetables, 16oz portion​",$9.99,16 oz,scraper_navigation_description_noise,45,sentence fragment
-mw_caa5c380ec895cbd,With Additional,$25.00,15 oz,scraper_navigation_description_noise,45,sentence fragment
-mw_be1745194a110c40,Pastrami Round......................................,$13.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_fba96ca502d00f79,Salmon........................................................................,$21.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_f52a295ceb1a830d,Empanadas...................................................................,$5.99,8 oz,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_9f92052f85ba5c8b,Rice Pilaf & Vegetables.........................,$9.99,16 oz,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_bc7fe89b5c49d5e9,Guacamole...................................................................,$8.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_d7c4ce226988b6e9,Feta Crumbles......................................................,$7.99,6 oz,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_119748afc59b0bd8,Blue Cheese..........................................................,$11.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_8c082b25df57525f,Fresh Mozzarella..............................................,$8.99,16 oz,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_fd86addee76a4e5c,Genoa or Hard Salami...............................,$8.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_7d0304421b8c19cf,Vegetable Salad..............................................,$7.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_3dcfa5c5a4402ecd,Tilapia Fillet,$6.99,16 oz,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_fa692fa6fec6215b,Large Shrimp..........,$9.99,40 count,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_850ac8a797a3500f,Scallops.............,$17.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_2bf155d07aa9baa0,Steak..................,$12.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_dd5ac3100c037c49,With Additional,$50.00,10 oz,scraper_navigation_description_noise,45,sentence fragment
-mw_d091b1c31cf72041,With Additional,$25.00,10 oz,scraper_navigation_description_noise,45,sentence fragment
-mw_d6e0091d6545e267,Veal Chops....................................,$11.39,lb,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_dbf1195cdf1fb38d,Tenders..................................................,$3.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_fdd31399e309612d,Sausage................................................,$6.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_09149a70326870eb,Veal Chops.................................,$10.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact
-mw_2cd8f69cb37b2a26,Beef For Stew..................................,$7.99,lb,scraper_navigation_description_noise,45,duplicate scraper artifact
+mw_23215c4e39a363cd,Rolled in Black Pepper,$10.99,1 lb,scraper_navigation_description_noise,45,sentence fragment
+mw_0a1a245d87842b25,For Pepper Steak,$7.99,1 lb,scraper_navigation_description_noise,45,sentence fragment
+mw_2826f56f36fc2e75,With Additional,$50.00,15.5 oz,scraper_navigation_description_noise,45,sentence fragment
+mw_2497ef176794769d,With Additional,$100.00,1 pack,scraper_navigation_description_noise,45,sentence fragment
+mw_a1d88aeef497657c,With Additional,$25.00,11 oz,scraper_navigation_description_noise,45,sentence fragment
+mw_0a993a8d34b649f1,With Additional,$50.00,,scraper_navigation_description_noise,45,sentence fragment
+mw_61f6b67bb8e8ac0f,With Additional,$100.00,2 lb,scraper_navigation_description_noise,45,sentence fragment
+mw_1f188be399437e66,With Additional,$25.00,15.5 oz,scraper_navigation_description_noise,45,sentence fragment
+mw_833560bfa914ec5b,With Additional,$100.00,15 oz,scraper_navigation_description_noise,45,sentence fragment
+mw_97f729d41c3efe45,With Additional,$25.00,15 oz,scraper_navigation_description_noise,45,sentence fragment
+mw_c89ae2b908a8c974,With Additional,$100.00,1 oz,scraper_navigation_description_noise,45,sentence fragment
+mw_95bc3507a3d73e4e,With Additional,$50.00,96 oz,scraper_navigation_description_noise,45,sentence fragment
+mw_cd07e8a5f41e6fc7,Stuffed With Ham & Swiss Cheese,$6.99,1 lb,scraper_navigation_description_noise,45,sentence fragment
+mw_d308552667ad0e70,"Snapple Juice Drink,  Apple",$1.99,16 fl oz,scraper_navigation_description_noise,45,duplicate scraper artifact

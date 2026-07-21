@@ -982,7 +982,7 @@ def validate_package_parse(
     if quantity is None or not unit:
         return "none", source, ["package size unavailable"]
     text = normalize_package_text(" ".join(part for part in (source_text, product_name) if part))
-    if re.search(r"\b(variable weight|sold by weight|average weight|avg weight|per lb|per pound|family pack)\b", text):
+    if re.search(r"\b(variable weight|sold by weight|per lb|per pound|family pack)\b", text):
         warnings.append("variable-weight package; fixed package quantity is not reliable")
     if re.search(r"\b\d+\s+\d+\s*(?:oz|fl oz|lb|ml|l|g|kg)\b", text) and not re.search(
         r"\b\d+\s+\d+/\d+\s*(?:oz|fl oz|lb|ml|l|g|kg)\b", text
@@ -1123,6 +1123,9 @@ def extract_product_features(
         "quality_notes": classification.get("quality_notes", []),
         "eligible_for_retrieval": classification["eligible_for_retrieval"],
         "raw_price": product.get("price"),
+        "raw_original_price": product.get("original_price"),
+        "raw_sale_price": product.get("sale_price"),
+        "is_on_sale": product.get("is_on_sale") is True,
         "raw_unit_text": package_source_text,
         "price": parse_price_value(product.get("price")),
         "canonical_name": canonical_for_product(normalized_name),

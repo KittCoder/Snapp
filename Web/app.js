@@ -61,6 +61,8 @@ const signInUsernameInput = document.getElementById("sign-in-username");
 const signInPasswordInput = document.getElementById("sign-in-password");
 const signUpUsernameInput = document.getElementById("sign-up-username");
 const signUpPasswordInput = document.getElementById("sign-up-password");
+const saleIngredientsGrid = document.getElementById("sale-ingredients-grid");
+const saleIngredientsStatus = document.getElementById("sale-ingredients-status");
 
 const scheduledMeals = [];
 let currentUser = null;
@@ -205,7 +207,7 @@ function getApiEndpoints(path) {
   return [];
 }
 
-const SIGNED_OUT_PANEL_IDS = new Set(["home", "account"]);
+const SIGNED_OUT_PANEL_IDS = new Set(["home", "account", "dishes"]);
 const SIGNED_IN_DEFAULT_PANEL_ID = "dishes";
 const SIGNED_OUT_DEFAULT_PANEL_ID = "home";
 const currencyFormatter = new Intl.NumberFormat("en-US", {
@@ -1912,7 +1914,7 @@ function renderMyStores(data) {
   myStoreSource.hidden = false;
 }
 
-async function fetchDishes(mealPrompt) {
+async function fetchDishes(mealPrompt, options = {}) {
   let lastError = API_BASE_URL
     ? "Unable to reach the dishes backend."
     : "Backend URL is not configured.";
@@ -1934,6 +1936,7 @@ async function fetchDishes(mealPrompt) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           meal_prompt: mealPrompt,
+          sale_ingredient_id: options.saleIngredientId || null,
           household_size: householdSize,
           dietary_restrictions: dietaryRestrictions,
           max_budget: maxBudget,
@@ -1973,6 +1976,143 @@ async function fetchDishes(mealPrompt) {
   }
 
   throw new Error(lastError);
+}
+
+async function fetchSaleIngredients() {
+  let lastError = API_BASE_URL
+    ? "Unable to reach the sale ingredient backend."
+    : "Backend URL is not configured.";
+  for (const endpoint of getApiEndpoints("/sale-ingredients")) {
+    try {
+      const response = await fetch(endpoint);
+      const responseText = await response.text();
+      let data = {};
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch {
+        data = {};
+      }
+      if (!response.ok) {
+        lastError = data.error || `Sale request failed (${response.status}).`;
+        continue;
+      }
+      return data;
+    } catch (error) {
+      lastError = error.message || "Network error while loading sale ingredients.";
+    }
+  }
+  throw new Error(lastError);
+}
+
+function formatSaleMoney(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number) || number <= 0) return "";
+  return currencyFormatter.format(number);
+}
+
+function renderSaleIngredients(items) {
+  saleIngredientsGrid.replaceChildren();
+  if (!items.length) {
+    saleIngredientsStatus.textContent = "No recipe-ready sale ingredients found.";
+    return;
+  }
+  saleIngredientsStatus.textContent = `${items.length} shown from today's ranked pool`;
+  items.forEach((item) => {
+    const card = document.createElement("article");
+    card.className = "sale-ingredient-card";
+
+    const category = document.createElement("span");
+    category.className = "sale-category";
+    category.textContent = item.category || "grocery";
+
+    const title = document.createElement("h3");
+    title.textContent = item.ingredient_name || item.product_name;
+
+    const product = document.createElement("p");
+    product.className = "sale-product-name";
+    product.textContent = item.product_name;
+
+    const priceRow = document.createElement("div");
+    priceRow.className = "sale-price-row";
+    if (item.original_price && item.discount_percent) {
+      const original = document.createElement("span");
+      original.className = "sale-original-price";
+      original.textContent = formatSaleMoney(item.original_price);
+      priceRow.appendChild(original);
+    }
+    const sale = document.createElement("strong");
+    sale.className = "sale-price";
+    sale.textContent = formatSaleMoney(item.sale_price) || item.price_display || "Sale price available";
+    priceRow.appendChild(sale);
+
+    const meta = document.createElement("p");
+    meta.className = "sale-meta";
+    const details = [];
+    if (item.discount_percent) details.push(`${Math.round(item.discount_percent * 100)}% off`);
+    if (item.absolute_savings) details.push(`Save ${formatSaleMoney(item.absolute_savings)}`);
+    if (item.recipe_count) details.push(`${item.recipe_count} matching recipes`);
+    meta.textContent = details.join(" · ");
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "sale-recipe-button";
+    button.textContent = "Generate recipes with this ingredient";
+    button.addEventListener("click", () => generateRecipesForSaleIngredient(item));
+
+    card.append(category, title, product, priceRow, meta, button);
+    saleIngredientsGrid.appendChild(card);
+  });
+}
+
+async function loadSaleIngredients() {
+  if (!saleIngredientsGrid || !saleIngredientsStatus) return;
+  saleIngredientsStatus.textContent = "Loading sales...";
+  try {
+    const data = await fetchSaleIngredients();
+    renderSaleIngredients(data.sale_ingredients || []);
+  } catch (error) {
+    saleIngredientsGrid.replaceChildren();
+    saleIngredientsStatus.textContent = error.message;
+  }
+}
+
+async function generateRecipesForSaleIngredient(item) {
+  const ingredientId = item.ingredient_id;
+  if (!ingredientId) return;
+  const prompt = item.ingredient_name || item.product_name || ingredientId;
+  const params = new URLSearchParams(window.location.search);
+  params.set("panel", "dishes");
+  params.set("sale_ingredient", ingredientId);
+  window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
+  showPanel("dishes");
+  appendDishMessage("user", `Recipes with ${prompt}`);
+  startDishProgress();
+  dishSource.hidden = true;
+  try {
+    const data = await fetchDishes(prompt, { saleIngredientId: ingredientId });
+    renderDishes(data);
+    setDishStatus(`Found ${Math.min(data.dishes.length, 3)} recipe ${data.dishes.length === 1 ? "match" : "matches"} using ${prompt}.`);
+    dishSource.hidden = false;
+  } catch (error) {
+    appendDishMessage("bot", `Dish search error: ${error.message}`);
+    setDishStatus(`Dish search error: ${error.message}`);
+  }
+}
+
+async function handleInitialUrlState() {
+  const params = new URLSearchParams(window.location.search);
+  const panel = params.get("panel");
+  const saleIngredient = params.get("sale_ingredient");
+  if (panel) {
+    showPanel(panel);
+  }
+  if (saleIngredient) {
+    await generateRecipesForSaleIngredient({
+      ingredient_id: saleIngredient,
+      ingredient_name: saleIngredient.replace(/\b\w/g, (letter) => letter.toUpperCase()),
+      product_name: saleIngredient,
+    });
+  }
 }
 
 function renderStores(stores) {
@@ -2022,7 +2162,9 @@ function renderDishes(data) {
   const cards = document.createElement("div");
   botMessage.className = "dish-message bot";
   intro.textContent = data.dishes.length
-    ? "Here are three recipe matches I found."
+    ? data.sale_ingredient_id
+      ? `Here are three recipe matches using ${data.meal_prompt}.`
+      : "Here are three recipe matches I found."
     : "I could not find recipe matches for that request.";
   cards.className = "dish-card-grid";
   botMessage.append(intro, cards);
@@ -2432,3 +2574,5 @@ updatePantryQuantityVisibility();
 renderSchedule();
 showAuthMode("sign-in");
 initializeAuth();
+loadSaleIngredients();
+handleInitialUrlState();

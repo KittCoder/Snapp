@@ -72,11 +72,25 @@ STORE_CACHE_TTL_SECONDS = 15 * 60
 FOOD_CACHE_TTL_SECONDS = 60 * 60
 TRADER_JOES_STORE_CACHE_TTL_SECONDS = 24 * 60 * 60
 TRADER_JOES_PRODUCT_CACHE_TTL_SECONDS = 12 * 60 * 60
-SCRAPED_GROCERY_DB_FILENAME = "data.json"
+SCRAPED_GROCERY_DB_FILENAME = os.getenv(
+    "SNAPP_GROCERY_DB_FILENAME",
+    "database.scrape-20260721-143928.json",
+)
 DEMO_GROCERY_DB_FILENAME = "snapp_demo_grocery_db.json"
 ALL_RECIPES_DB_FILENAME = "all_recipes.json"
 ALL_RECIPES_SEARCH_INDEX_FILENAME = "all_recipes_search_index.json"
 ALL_RECIPES_SEARCH_DB_FILENAME = "all_recipes_search.sqlite"
+SALE_CANDIDATE_POOL_SIZE = 10
+SALE_HOME_SAMPLE_SIZE = 3
+MIN_SALE_RECIPE_COUNT = 3
+MAX_TRUSTED_DISCOUNT_PERCENT = 0.85
+SALE_DESIRABILITY_WEIGHTS = {
+    "discount_percent": 46,
+    "absolute_savings": 14,
+    "ingredient_usefulness": 20,
+    "recipe_availability": 12,
+    "data_confidence": 8,
+}
 store_search_cache = {}
 trader_joes_store_cache = {}
 trader_joes_product_cache = {}
@@ -90,6 +104,8 @@ all_recipes_search_cache = None
 all_recipes_by_id_cache = None
 all_recipes_sqlite_connection = None
 all_recipes_sqlite_vocab_cache = None
+sale_ingredient_pool_cache = None
+sale_recipe_index_cache = None
 ingredient_generalization_cache = {}
 robots_cache = {}
 FDC_SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
@@ -1112,6 +1128,310 @@ def load_snapp_demo_grocery_db():
         grocery_db["pricing_source"] = "demo"
         return grocery_db
     raise RuntimeError("The SNAPP demo grocery database is missing.")
+
+
+def parse_sale_price_amount(value):
+    from basket_quantity import parse_price_info
+
+    price = parse_price_info(value)
+    if price.checkout_price is not None:
+        return round(float(price.checkout_price), 2)
+    if price.unit_price is not None and not price.price_unit:
+        return round(float(price.unit_price), 2)
+    return None
+
+
+def trusted_discount(original_price, sale_price):
+    original = parse_sale_price_amount(original_price)
+    sale = parse_sale_price_amount(sale_price)
+    if original is None or sale is None:
+        return None
+    if original <= 0 or sale <= 0 or sale >= original:
+        return None
+    discount_percent = (original - sale) / original
+    if discount_percent <= 0 or discount_percent > MAX_TRUSTED_DISCOUNT_PERCENT:
+        return None
+    return {
+        "original_price": round(original, 2),
+        "sale_price": round(sale, 2),
+        "discount_percent": round(discount_percent, 4),
+        "absolute_savings": round(original - sale, 2),
+    }
+
+
+NON_INGREDIENT_SALE_PATTERNS = re.compile(
+    r"\b("
+    r"ale|beer|beverage|candy|chips|chocolate|cookie|cookies|cracker|crackers|"
+    r"cake|coffee|dessert|detergent|dressing|drink|fries|ginger ale|ice cream|"
+    r"juice|lager|laundry|marshmallow|paper|pickle|pickles|platter|pretzel|"
+    r"soda|snack|soap|tissue|water"
+    r")\b",
+    re.I,
+)
+USEFUL_INGREDIENT_PATTERNS = re.compile(
+    r"\b("
+    r"avocado|bean|beef|broccoli|butter|carrot|cheese|chicken|cream|egg|fish|"
+    r"flour|fruit|garlic|lettuce|mushroom|oil|onion|pasta|pepper|pork|potato|"
+    r"rice|salmon|shrimp|spinach|tomato|turkey|yogurt"
+    r")s?\b",
+    re.I,
+)
+CATEGORY_USEFULNESS = {
+    "meat": 1.0,
+    "produce": 0.95,
+    "dairy": 0.88,
+    "pantry": 0.82,
+}
+
+
+def sale_ingredient_id_for_feature(feature):
+    from ingredient_normalization import canonical_for_product, normalize_text
+
+    normalized_name = feature.get("normalized_name") or ""
+    if re.search(r"\bolive oil\b", normalized_name):
+        return "olive oil"
+    if re.search(r"\bcottage cheese\b", normalized_name):
+        return "cottage cheese"
+    if re.search(r"\bmozzarella\b", normalized_name):
+        return "mozzarella cheese"
+    if re.search(r"\bcheese\b", normalized_name):
+        return "cheese"
+    if re.search(r"\balmond milk\b", normalized_name):
+        return "almond milk"
+    if re.search(r"\boat milk\b", normalized_name):
+        return "oat milk"
+    if re.search(r"\byogurt\b", normalized_name):
+        return "yogurt"
+    if re.search(r"\b(?:french fries|steak fries|fries)\b", normalized_name):
+        return "potatoes"
+    canonical = feature.get("canonical_name") or canonical_for_product(normalized_name)
+    if not canonical:
+        return ""
+    return normalize_text(canonical)
+
+
+def ingredient_usefulness_score(feature):
+    text = " ".join(
+        str(feature.get(key) or "")
+        for key in ("normalized_name", "canonical_name", "category", "subcategory")
+    )
+    if NON_INGREDIENT_SALE_PATTERNS.search(text):
+        return 0.0
+    category = feature.get("category")
+    score = CATEGORY_USEFULNESS.get(category, 0.45 if category else 0.35)
+    if USEFUL_INGREDIENT_PATTERNS.search(text):
+        score = max(score, 0.82)
+    if feature.get("record_status") == "probably_valid_grocery_product":
+        score -= 0.18
+    return max(0.0, min(score, 1.0))
+
+
+def sale_data_confidence_score(feature, product, discount):
+    score = 0.0
+    if feature.get("record_status") == "valid_grocery_product":
+        score += 0.28
+    elif feature.get("record_status") == "probably_valid_grocery_product":
+        score += 0.14
+    if feature.get("canonical_name"):
+        score += 0.22
+    if feature.get("source_quality_score"):
+        score += min(0.2, float(feature.get("source_quality_score") or 0) / 500)
+    if product.get("is_on_sale") is True:
+        score += 0.12
+    if discount:
+        score += 0.18
+    if feature.get("uncertainty_reasons"):
+        score -= min(0.24, len(feature.get("uncertainty_reasons") or []) * 0.06)
+    return max(0.0, min(score, 1.0))
+
+
+def sale_recipe_index():
+    global sale_recipe_index_cache
+    if sale_recipe_index_cache is not None:
+        return sale_recipe_index_cache
+    index = {}
+    for database_recipe in load_all_recipes_db():
+        recipe = all_recipe_to_spoonacular_recipe(database_recipe)
+        recipe_id = spoonacular_recipe_id(recipe)
+        if not recipe_id:
+            continue
+        keys = set()
+        for ingredient in spoonacular_ingredients(recipe):
+            for value in (
+                ingredient.get("display"),
+                ingredient.get("measure"),
+                ingredient.get("name"),
+            ):
+                key = ingredient_identity_key(value or "")
+                if key:
+                    keys.add(key)
+        for key in keys:
+            index.setdefault(key, []).append(recipe_id)
+    sale_recipe_index_cache = index
+    return sale_recipe_index_cache
+
+
+def recipe_ids_for_sale_ingredient(ingredient_id):
+    index = sale_recipe_index()
+    recipe_ids = list(index.get(ingredient_id, []))
+    if recipe_ids:
+        return recipe_ids
+    tokens = set(ingredient_id.split())
+    if not tokens:
+        return []
+    if len(tokens) > 1:
+        return []
+    matched = []
+    for key, ids in index.items():
+        key_tokens = set(key.split())
+        if tokens <= key_tokens or key_tokens <= tokens:
+            matched.extend(ids)
+    return list(dict.fromkeys(matched))
+
+
+def recipe_uses_sale_ingredient(recipe, ingredient_id):
+    if not ingredient_id:
+        return False
+    target_tokens = set(ingredient_id.split())
+    for ingredient in spoonacular_ingredients(recipe):
+        keys = {
+            ingredient_identity_key(value or "")
+            for value in (
+                ingredient.get("display"),
+                ingredient.get("measure"),
+                ingredient.get("name"),
+            )
+        }
+        keys.discard("")
+        if ingredient_id in keys:
+            return True
+        if len(target_tokens) > 1:
+            continue
+        for key in keys:
+            key_tokens = set(key.split())
+            if target_tokens and (target_tokens <= key_tokens or key_tokens <= target_tokens):
+                return True
+    return False
+
+
+def sale_candidate_score_components(feature, product, recipe_count, discount):
+    usefulness = ingredient_usefulness_score(feature)
+    confidence = sale_data_confidence_score(feature, product, discount)
+    discount_component = discount["discount_percent"] if discount else 0.08 if product.get("is_on_sale") is True else 0.0
+    savings_component = min(1.0, math.log1p(discount["absolute_savings"]) / math.log1p(12)) if discount else 0.0
+    recipe_component = min(1.0, recipe_count / 12)
+    score = (
+        SALE_DESIRABILITY_WEIGHTS["discount_percent"] * discount_component
+        + SALE_DESIRABILITY_WEIGHTS["absolute_savings"] * savings_component
+        + SALE_DESIRABILITY_WEIGHTS["ingredient_usefulness"] * usefulness
+        + SALE_DESIRABILITY_WEIGHTS["recipe_availability"] * recipe_component
+        + SALE_DESIRABILITY_WEIGHTS["data_confidence"] * confidence
+    )
+    return {
+        "discount_component": round(discount_component, 4),
+        "savings_component": round(savings_component, 4),
+        "ingredient_usefulness": round(usefulness, 4),
+        "recipe_availability": round(recipe_component, 4),
+        "data_confidence": round(confidence, 4),
+        "final_score": round(score, 4),
+    }
+
+
+def build_sale_ingredient_pool(grocery_db=None, *, include_diagnostics=False):
+    from ingredient_normalization import extract_product_features
+
+    grocery_db = grocery_db or load_demo_grocery_db()
+    products = grocery_db.get("products") if isinstance(grocery_db, dict) else []
+    by_ingredient = {}
+    exclusions = []
+    seen_fingerprints = set()
+    for index, product in enumerate(products or []):
+        if not isinstance(product, dict):
+            continue
+        if product.get("is_on_sale") is not True and not product.get("sale_price"):
+            continue
+        feature = extract_product_features(product, index, seen_fingerprints)
+        product_name = feature.get("original_product_name") or product.get("name") or ""
+        ingredient_id = sale_ingredient_id_for_feature(feature)
+        discount = trusted_discount(product.get("original_price"), product.get("sale_price") or product.get("price"))
+        recipe_ids = recipe_ids_for_sale_ingredient(ingredient_id) if ingredient_id else []
+        recipe_count = len(recipe_ids)
+        reasons = []
+        if not feature.get("eligible_for_retrieval"):
+            reasons.append("product is not eligible for ingredient retrieval")
+        if not ingredient_id:
+            reasons.append("normalized ingredient type unavailable")
+        usefulness = ingredient_usefulness_score(feature)
+        if usefulness <= 0:
+            reasons.append("not a useful recipe ingredient")
+        if recipe_count < MIN_SALE_RECIPE_COUNT:
+            reasons.append("fewer than three matching recipes")
+        if not discount and not product.get("is_on_sale"):
+            reasons.append("sale status is not verifiable")
+        if reasons:
+            if include_diagnostics:
+                exclusions.append(
+                    {
+                        "product_name": product_name,
+                        "ingredient_id": ingredient_id,
+                        "reasons": reasons,
+                        "raw_price": product.get("price"),
+                        "raw_original_price": product.get("original_price"),
+                    }
+                )
+            continue
+        components = sale_candidate_score_components(feature, product, recipe_count, discount)
+        sale_price = parse_sale_price_amount(product.get("sale_price") or product.get("price"))
+        candidate = {
+            "ingredient_id": ingredient_id,
+            "ingredient_name": ingredient_id,
+            "product_name": product_name,
+            "category": feature.get("category") or "grocery",
+            "original_price": discount["original_price"] if discount else None,
+            "sale_price": discount["sale_price"] if discount else sale_price,
+            "price_display": str(product.get("sale_price") or product.get("price") or "").strip(),
+            "unit": str(product.get("unit") or "").strip(),
+            "discount_percent": discount["discount_percent"] if discount else None,
+            "absolute_savings": discount["absolute_savings"] if discount else None,
+            "recipe_count": recipe_count,
+            "score": components["final_score"],
+            "score_components": components,
+            "source": product.get("source"),
+        }
+        existing = by_ingredient.get(ingredient_id)
+        if not existing or candidate["score"] > existing["score"]:
+            by_ingredient[ingredient_id] = candidate
+    candidates = sorted(
+        by_ingredient.values(),
+        key=lambda item: (-item["score"], item["ingredient_name"].casefold(), item["product_name"].casefold()),
+    )
+    pool = candidates[:SALE_CANDIDATE_POOL_SIZE]
+    if include_diagnostics:
+        return {"candidates": pool, "exclusions": exclusions[:200], "weights": SALE_DESIRABILITY_WEIGHTS}
+    return pool
+
+
+def sale_ingredient_pool():
+    global sale_ingredient_pool_cache
+    if sale_ingredient_pool_cache is None:
+        sale_ingredient_pool_cache = build_sale_ingredient_pool()
+    return sale_ingredient_pool_cache
+
+
+def weighted_sale_sample(candidates, sample_size=SALE_HOME_SAMPLE_SIZE, rng=None):
+    rng = rng or random
+    pool = list(candidates[:SALE_CANDIDATE_POOL_SIZE])
+    selected = []
+    seen = set()
+    while pool and len(selected) < sample_size:
+        weights = [max(0.01, len(pool) - index) * max(1.0, item.get("score", 0)) for index, item in enumerate(pool)]
+        choice = rng.choices(pool, weights=weights, k=1)[0]
+        pool.remove(choice)
+        if choice["ingredient_id"] in seen:
+            continue
+        selected.append(choice)
+        seen.add(choice["ingredient_id"])
+    return selected
 
 
 def load_trader_joes_grocery_db(store_number):
@@ -3557,11 +3877,10 @@ def match_recipe_ingredients_to_morton_williams(recipe, pantry_items=None, servi
         "id": spoonacular_recipe_id(recipe) or recipe.get("title") or "recipe",
         "ingredients": ingredient_texts,
     }
-    warmup_state = matcher_warmup.get_warmup_status()
     basket = build_recipe_basket(
         basket_recipe,
         optimization_mode="balanced",
-        use_semantic=bool(warmup_state.model_loaded),
+        use_semantic=True,
     )
     service = basket_builder_match_service()
     matches = []
@@ -4305,6 +4624,86 @@ def build_real_recipe_results(
     if not combined:
         raise RuntimeError("Recipe sources could not provide real recipe matches.")
     return combined, not exact_results
+
+
+def build_sale_ingredient_recipe_results(
+    ingredient_id,
+    filters,
+    *,
+    stores=None,
+    result_limit=3,
+    grocery_label="Morton Williams",
+    pantry_items=None,
+):
+    ingredient_id = ingredient_identity_key(ingredient_id)
+    recipe_ids = recipe_ids_for_sale_ingredient(ingredient_id)
+    if len(recipe_ids) < MIN_SALE_RECIPE_COUNT:
+        raise RuntimeError("Not enough recipes use that sale ingredient.")
+
+    stores = stores or morton_williams_store_lookup()
+    recipes_by_id = load_all_recipes_by_id()
+    candidates = []
+    for recipe_id in recipe_ids:
+        database_recipe = recipes_by_id.get(str(recipe_id))
+        if not database_recipe:
+            continue
+        recipe = all_recipe_to_spoonacular_recipe(database_recipe)
+        if not recipe_uses_sale_ingredient(recipe, ingredient_id):
+            continue
+        if not spoonacular_respects_restrictions(recipe, filters["dietary_restrictions"]):
+            continue
+        relevance_score = recipe_constraint_score(recipe, ingredient_id, filters)
+        exact_match = recipe_passes_hard_filters(recipe, filters)
+        candidates.append((recipe, relevance_score, exact_match))
+
+    candidates.sort(
+        key=lambda item: (
+            0 if item[2] else 1,
+            -item[1],
+            (item[0].get("title") or item[0].get("name") or "").casefold(),
+        )
+    )
+    results = []
+    relaxed = False
+    seen = set()
+    for recipe, relevance_score, exact_match in candidates[: max(24, result_limit * 6)]:
+        matches = match_recipe_ingredients_to_morton_williams(
+            recipe,
+            pantry_items=pantry_items,
+            servings=source_recipe_servings(recipe),
+        )
+        if not matches:
+            continue
+        matched_ingredient_ids = {
+            ingredient_identity_key(ingredient.get("display") or ingredient.get("measure") or ingredient.get("name") or "")
+            for ingredient, product in matches
+            if product
+        }
+        if ingredient_id not in matched_ingredient_ids and not any(
+            ingredient_id in key or key in ingredient_id for key in matched_ingredient_ids if key
+        ):
+            continue
+        result = recipe_result_from_recipe(
+            recipe,
+            matches,
+            stores,
+            filters,
+            relevance_score,
+            exact_match,
+            grocery_label=grocery_label,
+        )
+        if filters["max_budget"] is not None and result["estimated_price_total"] > filters["max_budget"]:
+            relaxed = True
+        recipe_key = result.get("recipe_id")
+        if recipe_key in seen:
+            continue
+        results.append(result)
+        seen.add(recipe_key)
+        if len(results) == result_limit:
+            return results, relaxed or any(not item.get("exact_match") for item in results)
+    if len(results) < result_limit:
+        raise RuntimeError("Recipe sources could not provide 3 recipes for that sale ingredient.")
+    return results, relaxed
 
 
 def normalize_website(value):
@@ -5112,6 +5511,39 @@ def trader_joes_store_options():
     return ("", 204)
 
 
+@app.get("/sale-ingredients")
+def sale_ingredients():
+    diagnostics = str(request.args.get("diagnostics") or "").casefold() in {"1", "true", "yes"}
+    try:
+        if diagnostics:
+            audit = build_sale_ingredient_pool(include_diagnostics=True)
+            return jsonify(
+                {
+                    "candidate_pool_size": len(audit["candidates"]),
+                    "candidates": audit["candidates"],
+                    "exclusions": audit["exclusions"],
+                    "weights": audit["weights"],
+                }
+            )
+        pool = sale_ingredient_pool()
+        selected = weighted_sale_sample(pool)
+        return jsonify(
+            {
+                "candidate_pool_size": len(pool),
+                "sale_ingredients": selected,
+                "source": "Morton Williams sale database",
+            }
+        )
+    except Exception as exc:
+        log_event("sale_ingredients_failed", request_id=request.snapp_request_id, error_type=type(exc).__name__)
+        return jsonify({"error": "Sale ingredients are temporarily unavailable."}), 503
+
+
+@app.route("/sale-ingredients", methods=["OPTIONS"])
+def sale_ingredients_options():
+    return ("", 204)
+
+
 @app.post("/dishes")
 def dishes():
     request_started = time.perf_counter()
@@ -5119,7 +5551,10 @@ def dishes():
     data, error = validated_json_payload()
     if error:
         return error
+    sale_ingredient_id = ingredient_identity_key(data.get("sale_ingredient_id") or "")
     meal_prompt = (data.get("meal_prompt") or data.get("ingredients") or data.get("message") or "").strip()
+    if sale_ingredient_id and not meal_prompt:
+        meal_prompt = sale_ingredient_id
     if len(meal_prompt) > MAX_DISH_PROMPT_CHARS:
         return json_error("Meal prompt is too long.", 400)
     household_size = parse_household_size(data.get("household_size"))
@@ -5138,15 +5573,25 @@ def dishes():
         stores = morton_williams_store_lookup()
         grocery_label = "Morton Williams"
         recipe_ideas = [{"name": meal_prompt, "query": meal_prompt, "cuisine": ""}]
-        dishes, used_relaxed_matches = build_real_recipe_results(
-            meal_prompt,
-            filters,
-            products=None,
-            stores=stores,
-            recipe_ideas=recipe_ideas,
-            grocery_label=grocery_label,
-            pantry_items=pantry_items,
-        )
+        if sale_ingredient_id:
+            filters["include_ingredients"] = list(dict.fromkeys([sale_ingredient_id] + filters["include_ingredients"]))
+            dishes, used_relaxed_matches = build_sale_ingredient_recipe_results(
+                sale_ingredient_id,
+                filters,
+                stores=stores,
+                grocery_label=grocery_label,
+                pantry_items=pantry_items,
+            )
+        else:
+            dishes, used_relaxed_matches = build_real_recipe_results(
+                meal_prompt,
+                filters,
+                products=None,
+                stores=stores,
+                recipe_ideas=recipe_ideas,
+                grocery_label=grocery_label,
+                pantry_items=pantry_items,
+            )
         ingredient_count = sum(len(dish.get("recipe", {}).get("ingredients", [])) for dish in dishes)
         unmatched_count = sum(
             1
@@ -5178,6 +5623,7 @@ def dishes():
             {
                 "request_id": rid,
                 "meal_prompt": meal_prompt,
+                "sale_ingredient_id": sale_ingredient_id or None,
                 "household_size": household_size,
                 "dietary_restrictions": dietary_restrictions,
                 "pantry_items": pantry_items,

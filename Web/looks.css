@@ -316,6 +316,90 @@ main {
   margin: 0;
 }
 
+.section-heading-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.section-heading-row p,
+.sale-meta,
+.sale-product-name {
+  color: var(--color-muted);
+}
+
+.section-heading-row p {
+  margin: 0;
+}
+
+.sale-ingredients-status {
+  flex: 0 0 auto;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-primary-strong);
+}
+
+.sale-ingredients-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.sale-ingredient-card {
+  display: grid;
+  gap: 0.62rem;
+  align-content: start;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--color-border) 86%, transparent);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--color-panel-strong) 90%, transparent);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+}
+
+.sale-category {
+  justify-self: start;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 34%, transparent);
+  border-radius: 999px;
+  padding: 0.18rem 0.55rem;
+  color: #92400e;
+  background: color-mix(in srgb, var(--color-accent-soft) 18%, transparent);
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.sale-ingredient-card h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.sale-product-name,
+.sale-meta {
+  margin: 0;
+  font-size: 0.86rem;
+}
+
+.sale-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.sale-original-price {
+  color: #b91c1c;
+  font-weight: 700;
+  text-decoration: line-through;
+}
+
+.sale-price {
+  color: var(--color-primary-strong);
+  font-size: 1.35rem;
+}
+
 .food-groups-grid,
 .nutrition-highlights {
   margin-top: 1rem;
@@ -485,6 +569,7 @@ main {
 .auth-form button[type="submit"],
 .dish-form button,
 .add-to-schedule-button,
+.sale-recipe-button,
 .shopping-header button,
 .store-search-form button {
   border: none;
@@ -502,6 +587,7 @@ main {
 .auth-form button[type="submit"]:hover,
 .dish-form button:hover,
 .add-to-schedule-button:hover,
+.sale-recipe-button:hover,
 .shopping-header button:hover,
 .store-search-form button:hover {
   transform: translateY(-1px);
@@ -1468,6 +1554,14 @@ tbody tr:last-child td {
   .home-hero,
   .auth-layout,
   .plate-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .section-heading-row {
+    display: grid;
+  }
+
+  .sale-ingredients-grid {
     grid-template-columns: 1fr;
   }
 

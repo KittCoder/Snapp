@@ -25,7 +25,7 @@ from product_retrieval import (
 
 
 MODEL_DIR = Path(__file__).resolve().parent
-DEFAULT_SOURCE_PATH = MODEL_DIR / "database.merged.json"
+DEFAULT_SOURCE_PATH = MODEL_DIR / os.getenv("SNAPP_GROCERY_DB_FILENAME", "database.scrape-20260721-143928.json")
 DEFAULT_MANIFEST_PATH = MODEL_DIR / "runtime_artifact_manifest.json"
 MANIFEST_SCHEMA_VERSION = "snapp-runtime-artifacts-v1"
 MIN_COMPATIBLE_APP_VERSION = "phase-5"
