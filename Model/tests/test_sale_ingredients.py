@@ -36,10 +36,12 @@ def recipe(recipe_id, name, ingredients):
 class SaleIngredientTests(unittest.TestCase):
     def setUp(self):
         model.sale_ingredient_pool_cache = None
+        model.sale_candidate_artifact_cache = None
         model.sale_recipe_index_cache = None
 
     def tearDown(self):
         model.sale_ingredient_pool_cache = None
+        model.sale_candidate_artifact_cache = None
         model.sale_recipe_index_cache = None
 
     def patch_recipes(self, recipes):
@@ -113,6 +115,36 @@ class SaleIngredientTests(unittest.TestCase):
         source = app_js.read_text(encoding="utf-8")
         self.assertIn("sale_ingredient_id: options.saleIngredientId", source)
         self.assertIn("params.set(\"sale_ingredient\", ingredientId)", source)
+
+    def test_sale_endpoint_uses_artifact_and_hides_recipe_ids(self):
+        artifact = {
+            "candidates": [
+                {
+                    "ingredient_id": "tomatoes",
+                    "ingredient_name": "tomatoes",
+                    "product_name": "Tomatoes",
+                    "sale_price": 2.99,
+                    "score": 50,
+                    "recipe_count": 3,
+                    "recipe_ids": ["r1", "r2", "r3"],
+                }
+            ]
+        }
+        with mock.patch.object(model, "load_sale_candidate_artifact", return_value=artifact):
+            with model.app.test_client() as client:
+                response = client.get("/sale-ingredients")
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertEqual(data["candidate_pool_size"], 1)
+        self.assertEqual(data["sale_ingredients"][0]["ingredient_id"], "tomatoes")
+        self.assertNotIn("recipe_ids", data["sale_ingredients"][0])
+        self.assertEqual(model.matcher_warmup.get_warmup_status().status, "not_started")
+
+    def test_sale_recipe_ids_can_come_from_artifact(self):
+        artifact = {"candidates": [{"ingredient_id": "pork", "recipe_ids": ["p1", "p2", "p3"]}]}
+        with mock.patch.object(model, "load_sale_candidate_artifact", return_value=artifact):
+            with mock.patch.object(model, "sale_recipe_index", side_effect=AssertionError("slow index should not build")):
+                self.assertEqual(model.recipe_ids_for_sale_ingredient("pork"), ["p1", "p2", "p3"])
 
     def test_fallback_when_fewer_than_three_eligible_sale_types(self):
         recipes = [recipe(str(index), f"Egg Recipe {index}", ["eggs"]) for index in range(4)]

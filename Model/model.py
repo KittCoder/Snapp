@@ -80,6 +80,10 @@ DEMO_GROCERY_DB_FILENAME = "snapp_demo_grocery_db.json"
 ALL_RECIPES_DB_FILENAME = "all_recipes.json"
 ALL_RECIPES_SEARCH_INDEX_FILENAME = "all_recipes_search_index.json"
 ALL_RECIPES_SEARCH_DB_FILENAME = "all_recipes_search.sqlite"
+SALE_INGREDIENT_CANDIDATES_FILENAME = os.getenv(
+    "SNAPP_SALE_INGREDIENT_CANDIDATES_FILENAME",
+    "sale_ingredient_candidates.json",
+)
 SALE_CANDIDATE_POOL_SIZE = 10
 SALE_HOME_SAMPLE_SIZE = 3
 MIN_SALE_RECIPE_COUNT = 3
@@ -105,6 +109,7 @@ all_recipes_by_id_cache = None
 all_recipes_sqlite_connection = None
 all_recipes_sqlite_vocab_cache = None
 sale_ingredient_pool_cache = None
+sale_candidate_artifact_cache = None
 sale_recipe_index_cache = None
 ingredient_generalization_cache = {}
 robots_cache = {}
@@ -470,13 +475,14 @@ CORS_ORIGINS = {
     for origin in os.getenv("CORS_ORIGINS", DEFAULT_CORS_ORIGINS).split(",")
     if origin.strip()
 }
+MATCHER_WARMUP_EXEMPT_ENDPOINTS = {"health", "static", "sale_ingredients", "sale_ingredients_options"}
 
 
 @app.before_request
 def attach_request_context():
     request.snapp_request_id = request.headers.get("X-Request-ID") or request_id()
     if (
-        request.endpoint not in {"health", "static"}
+        request.endpoint not in MATCHER_WARMUP_EXEMPT_ENDPOINTS
         and os.getenv("SNAPP_DISABLE_MATCHER_WARMUP", "").lower() not in {"1", "true", "yes"}
         and matcher_warmup.get_warmup_status().status == "not_started"
     ):
@@ -1271,7 +1277,82 @@ def sale_recipe_index():
     return sale_recipe_index_cache
 
 
-def recipe_ids_for_sale_ingredient(ingredient_id):
+def sale_candidate_artifact_path():
+    return Path(__file__).with_name(SALE_INGREDIENT_CANDIDATES_FILENAME)
+
+
+def load_sale_candidate_artifact(path=None):
+    global sale_candidate_artifact_cache
+    if path is None and sale_candidate_artifact_cache is not None:
+        return sale_candidate_artifact_cache
+    path = Path(path) if path else sale_candidate_artifact_path()
+    if not path.exists():
+        return None
+    try:
+        with path.open(encoding="utf-8") as file:
+            payload = json.load(file)
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"Failed to load {path.name}: {exc}", flush=True)
+        return None
+    candidates = payload.get("candidates") if isinstance(payload, dict) else None
+    if not isinstance(candidates, list):
+        return None
+    if path == sale_candidate_artifact_path():
+        sale_candidate_artifact_cache = payload
+    return payload
+
+
+def public_sale_candidate(candidate):
+    return {
+        key: value
+        for key, value in candidate.items()
+        if key not in {"recipe_ids"}
+    }
+
+
+def artifact_recipe_ids_for_sale_ingredient(ingredient_id):
+    artifact = load_sale_candidate_artifact()
+    if not artifact:
+        return []
+    for candidate in artifact.get("candidates") or []:
+        if candidate.get("ingredient_id") == ingredient_id:
+            return list(candidate.get("recipe_ids") or [])
+    return []
+
+
+def write_sale_candidate_artifact(path=None, *, source_path=None):
+    path = Path(path) if path else sale_candidate_artifact_path()
+    source_path = Path(source_path) if source_path else Path(__file__).with_name(SCRAPED_GROCERY_DB_FILENAME)
+    with source_path.open(encoding="utf-8") as file:
+        grocery_db = json.load(file)
+    audit = build_sale_ingredient_pool(grocery_db, include_diagnostics=True)
+    payload = {
+        "metadata": {
+            "source": "SNAPP sale ingredient candidate artifact",
+            "source_database": source_path.name,
+            "source_last_updated": grocery_db.get("last_updated") if isinstance(grocery_db, dict) else None,
+            "candidate_count": len(audit["candidates"]),
+            "exclusion_sample_count": len(audit["exclusions"]),
+            "weights": SALE_DESIRABILITY_WEIGHTS,
+            "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        },
+        "candidates": audit["candidates"],
+        "exclusions": audit["exclusions"],
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = path.with_suffix(f"{path.suffix}.tmp")
+    with temp_path.open("w", encoding="utf-8") as file:
+        json.dump(payload, file, indent=2, sort_keys=True)
+        file.write("\n")
+    os.replace(temp_path, path)
+    return payload
+
+
+def recipe_ids_for_sale_ingredient(ingredient_id, *, use_artifact=True):
+    if use_artifact:
+        artifact_recipe_ids = artifact_recipe_ids_for_sale_ingredient(ingredient_id)
+        if artifact_recipe_ids:
+            return artifact_recipe_ids
     index = sale_recipe_index()
     recipe_ids = list(index.get(ingredient_id, []))
     if recipe_ids:
@@ -1354,7 +1435,7 @@ def build_sale_ingredient_pool(grocery_db=None, *, include_diagnostics=False):
         product_name = feature.get("original_product_name") or product.get("name") or ""
         ingredient_id = sale_ingredient_id_for_feature(feature)
         discount = trusted_discount(product.get("original_price"), product.get("sale_price") or product.get("price"))
-        recipe_ids = recipe_ids_for_sale_ingredient(ingredient_id) if ingredient_id else []
+        recipe_ids = recipe_ids_for_sale_ingredient(ingredient_id, use_artifact=False) if ingredient_id else []
         recipe_count = len(recipe_ids)
         reasons = []
         if not feature.get("eligible_for_retrieval"):
@@ -1396,6 +1477,7 @@ def build_sale_ingredient_pool(grocery_db=None, *, include_diagnostics=False):
             "recipe_count": recipe_count,
             "score": components["final_score"],
             "score_components": components,
+            "recipe_ids": recipe_ids,
             "source": product.get("source"),
         }
         existing = by_ingredient.get(ingredient_id)
@@ -1414,7 +1496,11 @@ def build_sale_ingredient_pool(grocery_db=None, *, include_diagnostics=False):
 def sale_ingredient_pool():
     global sale_ingredient_pool_cache
     if sale_ingredient_pool_cache is None:
-        sale_ingredient_pool_cache = build_sale_ingredient_pool()
+        artifact = load_sale_candidate_artifact()
+        if artifact:
+            sale_ingredient_pool_cache = artifact.get("candidates") or []
+        else:
+            sale_ingredient_pool_cache = build_sale_ingredient_pool()
     return sale_ingredient_pool_cache
 
 
@@ -5530,7 +5616,7 @@ def sale_ingredients():
         return jsonify(
             {
                 "candidate_pool_size": len(pool),
-                "sale_ingredients": selected,
+                "sale_ingredients": [public_sale_candidate(candidate) for candidate in selected],
                 "source": "Morton Williams sale database",
             }
         )

@@ -1,0 +1,3296 @@
+{
+  "candidates": [
+    {
+      "absolute_savings": 2.99,
+      "category": "dairy",
+      "discount_percent": 0.4992,
+      "ingredient_id": "cottage cheese",
+      "ingredient_name": "cottage cheese",
+      "original_price": 5.99,
+      "price_display": "$3.00",
+      "product_name": "Friendship Dairies Cottage Cheese, Low Fat, Small Curd, 1% Milkfat, Whipped",
+      "recipe_count": 25,
+      "recipe_ids": [
+        "31f549251180e6ac",
+        "2ca99102329c9c64",
+        "6b89f20277a7b0b4",
+        "4da7130b7e2c273b",
+        "2d89f1d9839cebf3",
+        "664ec272e9b19366",
+        "595faf87d4fcd1f7",
+        "f845a6081405f68c",
+        "16687cdfdcc2c661",
+        "f9151a200fb15957",
+        "a50d1ded69251c6a",
+        "571a29de1b98620d",
+        "cdb9ff6aecb39124",
+        "a8d82b85e0674c9e",
+        "726745f71a114b54",
+        "979738678a05ae87",
+        "8e17371fbd3f4408",
+        "18ade283a6b30e81",
+        "de67660075ff2cbd",
+        "07ce7d2e172e39bc",
+        "d08be9ab2584461b",
+        "13933c927cebcca3",
+        "947668d4c2651bea",
+        "3767021dff88b513",
+        "5e9181fe46916d12"
+      ],
+      "sale_price": 3.0,
+      "score": 67.1562,
+      "score_components": {
+        "data_confidence": 0.88,
+        "discount_component": 0.4992,
+        "final_score": 67.1562,
+        "ingredient_usefulness": 0.88,
+        "recipe_availability": 1.0,
+        "savings_component": 0.5395
+      },
+      "source": "mortonwilliams-storefront",
+      "unit": "16 oz"
+    },
+    {
+      "absolute_savings": 3.0,
+      "category": "meat",
+      "discount_percent": 0.4292,
+      "ingredient_id": "pork",
+      "ingredient_name": "pork",
+      "original_price": 6.99,
+      "price_display": "$3.99",
+      "product_name": "Fresh Center Cut Pork Loin Chops, Boneless, Thin Sliced, Average Weight 1 lb. Pack",
+      "recipe_count": 53,
+      "recipe_ids": [
+        "3627460272bc1055",
+        "662a07da865f4b69",
+        "2a29e23c797863e0",
+        "bcefcd4e696ad9e7",
+        "bbfb4e2f550d6a92",
+        "c884c22e7e55424d",
+        "2db9609297dd9c38",
+        "24b9b1c75d12a516",
+        "f497e35ab133225e",
+        "211f3549486fad51",
+        "5a68857786cc9d99",
+        "673156bf8b5c3b20",
+        "1153861ff2646b68",
+        "0d8fb6b4457b0bf6",
+        "236584f9a0368832",
+        "18ce52a43247d8e8",
+        "7fd7b4017cbe8c59",
+        "9cbafa39b9f223c9",
+        "56721ade3c48a152",
+        "dc66b41f4abcf49d",
+        "ed5e360232854d3f",
+        "ecfdf38f20262170",
+        "c4e2e10f2751e96c",
+        "8cf60f98297bda39",
+        "bfd1c4fbfe36dd4f",
+        "362ffafe1d250556",
+        "5344232f596d2ad5",
+        "517ec987a0df3415",
+        "81d6e8b3035f76d1",
+        "e85d4aa0d28f7dd8",
+        "d67eecb59802d239",
+        "75a4c5814688ca59",
+        "798236c60c5b1865",
+        "faab9e9a38b84673",
+        "50f377c80088141d",
+        "169805045b0713cd",
+        "3151945034323566",
+        "47ea19a3a3c674fc",
+        "6c2f52f3f071649a",
+        "e296df386c90ae7e",
+        "b8bec427082532fe",
+        "5a678c2364a0b3f7",
+        "50ff780091a7a6ac",
+        "c8edcf2cb31310ed",
+        "7766a1a18483f0a3",
+        "fe491cb46f984575",
+        "bedab4ff0b6f85b3",
+        "48d767c4dd175b73",
+        "eb8100e9a8a8353e",
+        "4f099b44868d239d",
+        "e673f22e5d4c781e",
+        "324c7d6669644f36",
+        "3bf68b107e388566"
+      ],
+      "sale_price": 3.99,
+      "score": 66.3499,
+      "score_components": {
+        "data_confidence": 0.88,
+        "discount_component": 0.4292,
+        "final_score": 66.3499,
+        "ingredient_usefulness": 1.0,
+        "recipe_availability": 1.0,
+        "savings_component": 0.5405
+      },
+      "source": "mortonwilliams-storefront",
+      "unit": "1 lb"
+    },
+    {
+      "absolute_savings": 3.0,
+      "category": "pantry",
+      "discount_percent": 0.5,
+      "ingredient_id": "vinegar",
+      "ingredient_name": "vinegar",
+      "original_price": 6.0,
+      "price_display": "$3.00",
+      "product_name": "Monari Federzoni Balsamic Vinegar of Modena",
+      "recipe_count": 146,
+      "recipe_ids": [
+        "add53d90e37f5e08",
+        "6e55784881bb4683",
+        "2a29e23c797863e0",
+        "236584f9a0368832",
+        "1e15bc1d1929aba4",
+        "6dfb6373e306a5b4",
+        "50477395d54cd339",
+        "6d444d041fbace51",
+        "52297b57bd6ff342",
+        "de8076a08a768647",
+        "cfda44454f8c0cd4",
+        "e46f3a682e7bd04a",
+        "498941c0ef8416ee",
+        "a7250ca05c08b59f",
+        "9dce93b96bd0a8db",
+        "1835f6ea5cb3a979",
+        "fcabac677bbe0d67",
+        "dbcc299cecd5b24a",
+        "9e9122031e928c7e",
+        "c1695c091de1eae9",
+        "cb52f84930b74ed2",
+        "ec5115dcc296120e",
+        "188e010f9448ab9f",
+        "74b3c7ecaa3d2a37",
+        "5884a8b7007932b7",
+        "b2b5e2951b59ec25",
+        "836d9c36d8322f51",
+        "332f56ae3ac9ec81",
+        "495ed8d249965e70",
+        "f9465da12ee175d7",
+        "53bb222da190ca82",
+        "44ce6594f733b759",
+        "19bdbd08ddd2db89",
+        "c87909c6cf49025a",
+        "991a0773e0716933",
+        "73861b204095f407",
+        "f74cc62c442f4793",
+        "517ec987a0df3415",
+        "a5daa8b175479eb6",
+        "d67eecb59802d239",
+        "8ccced16562bf873",
+        "c6284ace24987cd3",
+        "d308352e1bbe19c3",
+        "eac1686404b869d1",
+        "7a46d60bca3de843",
+        "334cb5b62e77eec8",
+        "3f082a0278ad9f40",
+        "da6e95e9d2010032",
+        "d749a542075df3eb",
+        "25f5651999425679",
+        "cf9448e756c3b8b1",
+        "4b4f7ba189af29e6",
+        "94641ed2a7205047",
+        "be788d3b25d178a2",
+        "7964515cee47d2f0",
+        "daec25bc84c050fd",
+        "fd4697e1bf9f61fb",
+        "8c775f89b39a6dd8",
+        "0e3ba9fbaf279391",
+        "494dc88b76d37106",
+        "27ec56297a2ebd93",
+        "15244a35b30ebb45",
+        "14648625b98735ee",
+        "dfb43410554cf321",
+        "4d432a29675a474b",
+        "758899251c04fca3",
+        "d9813dc41b6002a2",
+        "0c143efc1e7131e0",
+        "58e7b41993637cc4",
+        "3e7a8a11a8838949",
+        "d688418015766e8c",
+        "6fb843b127a9a7f9",
+        "e61f5152b7dd3f89",
+        "68045e55e13252e3",
+        "63ffe4c01b1119a9",
+        "73ccd2c371d8d53d",
+        "ee44031f653f3e75",
+        "133695e8c60b1cff",
+        "f6d30e38a846e638",
+        "5564f11c745ebbb7",
+        "2a26e6f0af51a911",
+        "60bb22cdb3d4eda8",
+        "84929ac8a68e290a",
+        "22a7bfa56f54c046",
+        "e21695afbb502ce1",
+        "f961787c43b89db4",
+        "da638649591e7368",
+        "5248e8f4ef25ed93",
+        "9c31ca66ebfa20f7",
+        "c726f9623a54eb3f",
+        "50ff780091a7a6ac",
+        "2de17892b47b8bbb",
+        "159c1c00888b0f89",
+        "c914c8c6dd8b0f05",
+        "97d033ef2ee4dcd3",
+        "b100ec050d1e122b",
+        "c8edcf2cb31310ed",
+        "436a23a6fae6a93d",
+        "e50660326de63f91",
+        "1e89686f808ebf49",
+        "a4bcaf6eef69e0ce",
+        "8ed2be5a39e840b7",
+        "53c307c3f6bf3690",
+        "53a28dfb102e7ffb",
+        "822151bbd102dee1",
+        "53ea800ce6a4e3f5",
+        "0a39fa884cef22ff",
+        "f7c2daf98698534e",
+        "e04bd982b29fea77",
+        "fb7e4605c6598eb0",
+        "5049e84f75020fa9",
+        "dd27ab7bd6cf3e51",
+        "a3d4b09a0e254b62",
+        "6021aadda1d1c5f4",
+        "0420df8d09f773f0",
+        "4f099b44868d239d",
+        "e673f22e5d4c781e",
+        "1db291cc75cb85c0",
+        "99a576aa6c60f2ee",
+        "3a49283d3d5540a4",
+        "04395b97a3a1c65d",
+        "4a52fc7cbfd054dd",
+        "0aec8000fdb906ec",
+        "7837b8a2938e7343",
+        "a7695d7f1730bc0e",
+        "2a621ee9b1a65e04",
+        "d02827403174beae",
+        "ab67ae1f4335cd70",
+        "0baf021565afa0b3",
+        "68c5727b24da18e3",
+        "e5d2417e14cb6937",
+        "5270b0371318ae05",
+        "45be963cde6b81a0",
+        "1b17e9e38fcb52ee",
+        "2b93ded149be9140",
+        "83991d5eed6dcc1a",
+        "180001f4056835a7",
+        "6bce8a0ee369afa3",
+        "6582ab09316e30d0",
+        "be1ebb2a26c47c0c",
+        "cdc5413da9c0d164",
+        "b40734bebf8441d4",
+        "75ab04ecf0158872",
+        "27e7abb722800644",
+        "0ea412be450c3723",
+        "b2cc2c36c9f4b61d"
+      ],
+      "sale_price": 3.0,
+      "score": 66.0067,
+      "score_components": {
+        "data_confidence": 0.88,
+        "discount_component": 0.5,
+        "final_score": 66.0067,
+        "ingredient_usefulness": 0.82,
+        "recipe_availability": 1.0,
+        "savings_component": 0.5405
+      },
+      "source": "mortonwilliams-storefront",
+      "unit": "16.9 fl oz"
+    },
+    {
+      "absolute_savings": 1.24,
+      "category": "produce",
+      "discount_percent": 0.498,
+      "ingredient_id": "tuna",
+      "ingredient_name": "tuna",
+      "original_price": 2.49,
+      "price_display": "$1.25",
+      "product_name": "Bumble Bee Wild Caught Lemon Pepper Tuna",
+      "recipe_count": 26,
+      "recipe_ids": [
+        "75a9fe5ba8013458",
+        "bac8e77bbda5c8c1",
+        "d889a259f610ba94",
+        "f05820e1e34f8b23",
+        "7bb81fe25d60b4fa",
+        "83f83fa93cd70b90",
+        "8da5d7f254cd2744",
+        "a2a5a37b20d78040",
+        "d282f2f2f7f305f4",
+        "25a02e0eec57bac0",
+        "af5fd8feeffa4e73",
+        "5d0bea32f923cc8e",
+        "ad012b146ddcd1db",
+        "31a140720714386a",
+        "3d62f53b50331c1f",
+        "99a576aa6c60f2ee",
+        "96298f4b0608629b",
+        "2e604083a85ae59d",
+        "55f67be8f063cb49",
+        "6b81f6695402709a",
+        "fb3ff6ff49abec8f",
+        "171e254b0a812805",
+        "6582ab09316e30d0",
+        "344addc5a59873f1",
+        "667828e72735369e",
+        "be1ebb2a26c47c0c"
+      ],
+      "sale_price": 1.25,
+      "score": 65.3499,
+      "score_components": {
+        "data_confidence": 0.88,
+        "discount_component": 0.498,
+        "final_score": 65.3499,
+        "ingredient_usefulness": 0.95,
+        "recipe_availability": 1.0,
+        "savings_component": 0.3144
+      },
+      "source": "mortonwilliams-storefront",
+      "unit": "3 oz"
+    },
+    {
+      "absolute_savings": 1.34,
+      "category": "dairy",
+      "discount_percent": 0.5174,
+      "ingredient_id": "yogurt",
+      "ingredient_name": "yogurt",
+      "original_price": 2.59,
+      "price_display": "$1.25",
+      "product_name": "Dannon Light + Fit Dannon Light + Fit Vanilla Greek Fat Free Yogurt, Creamy and Delicious Gluten Free Yogurt, 5.3 oz Cup",
+      "recipe_count": 120,
+      "recipe_ids": [
+        "692d1c8edb673219",
+        "d542b9a6738fba3a",
+        "beb0a6b9561b429b",
+        "b507f61793a2a42c",
+        "7207be9dfd41aeeb",
+        "334cb5b62e77eec8",
+        "023e2e6fee98723c",
+        "7b3d0cd8da87fd1c",
+        "e554ef3e103ee9dc",
+        "a4392d9adbdd8611",
+        "8b503471959a12ae",
+        "b6ce6eab9e42df6e",
+        "910fa9f9464d4cc4",
+        "b8f08fad49563e05",
+        "4aec20c697ef59a9",
+        "8c775f89b39a6dd8",
+        "d8d814e2a9c2fd34",
+        "9ff0907ae13c0d21",
+        "241e7e14330277a0",
+        "45c37bddde4fb5b1",
+        "1aaa2af0b3ee1560",
+        "4b8476057ed0dae8",
+        "687e809fbecabfec",
+        "e30f0878a8c289c1",
+        "3889d51965d15645",
+        "92f9353a7a3c21b1",
+        "e5805b5b11684149",
+        "859a8d37fe60f578",
+        "8a741e2134b876f0",
+        "738769706727c714",
+        "3ee11197dc2516ab",
+        "42e6a1bc179375a2",
+        "e3392af4c72cd60d",
+        "020d2018d56a601f",
+        "82f3a90b1a942ddd",
+        "1d61a744ed8e6550",
+        "32ddcad56713d2fa",
+        "b45ba5eb6bd74a83",
+        "d947ece7a9ade517",
+        "e7f60122af73858a",
+        "0b1990aa09c6c4ae",
+        "2a26e6f0af51a911",
+        "a35ad6572aa37541",
+        "5b0f10989eaefa22",
+        "0a3c8021c0eaa872",
+        "327b45c8bba30689",
+        "f4f6f896d668a87b",
+        "8bb64776d299501a",
+        "e21695afbb502ce1",
+        "a5e37a42e2c4606f",
+        "53cc130a4baea7ea",
+        "c89fab2fcb4a1521",
+        "a068787d74035855",
+        "029812a443c3d94d",
+        "e3848e466b3d2ff4",
+        "b46f2500ac4b9775",
+        "c726f9623a54eb3f",
+        "5696ae8cbc4c701d",
+        "bbbcdfb7b93cfdff",
+        "9c791c0f8de4150f",
+        "75a51d3e12bca298",
+        "12ee1524f6b0b1e7",
+        "2cd16ef563485a51",
+        "7017e143b3f7ce78",
+        "426231d1209451a0",
+        "2ff326d84222882b",
+        "882c3aa7076e39a5",
+        "de67660075ff2cbd",
+        "b69577924186530b",
+        "c961b6ce29e23780",
+        "f333029ad4d65b80",
+        "5ff38dd3b04c52c6",
+        "65c8b5bf27520ba5",
+        "1b562fd91d48049f",
+        "6ce78a2dd5719917",
+        "bb0a8cd66e2ca063",
+        "aa09b27306fb4c6d",
+        "56835934af1d5610",
+        "9b6a61fba76df1b1",
+        "5e164d661aab7140",
+        "053ecf6cc04de732",
+        "3e1b3ee443ff7e50",
+        "b8bda9774a32dcf0",
+        "0c5582875d4985b7",
+        "6021aadda1d1c5f4",
+        "ac85cf5e4ad2e776",
+        "a30c20a418675792",
+        "5836c9ef0e27462b",
+        "ad012b146ddcd1db",
+        "df332ea938f927d3",
+        "bfc64cad5fa9c557",
+        "63ba859773731fcf",
+        "1cf4e10e16f57c43",
+        "d24ac7dfa6de2861",
+        "5c887f144d63b92f",
+        "a858d84a2d511658",
+        "0a3df66f2dca99a9",
+        "c225adc1fe037494",
+        "e8d53067e1b39a0b",
+        "9607c5b9e3e2c2cb",
+        "5a3c9665ad11a41e",
+        "7e25c56f865709a7",
+        "9110b73a8cf17c30",
+        "0b0d87923e2c6b36",
+        "f5e1795211e226a6",
+        "d6414905fed1e141",
+        "aa29b8757cc850ad",
+        "1ed7fdcefd8ed836",
+        "2e604083a85ae59d",
+        "344addc5a59873f1",
+        "fe5a216d993b78ae",
+        "8bfce5a52f3f3927",
+        "af394584e3596d7d",
+        "f273036b6b2b33ad",
+        "d7ae1dfa41fd6c88",
+        "c35923e2fab30baa",
+        "e7851c1642343bb7",
+        "8bf3ecea06b277e1",
+        "21c45ab550bc755c",
+        "45bab8978cdb5408"
+      ],
+      "sale_price": 1.25,
+      "score": 65.0807,
+      "score_components": {
+        "data_confidence": 0.88,
+        "discount_component": 0.5174,
+        "final_score": 65.0807,
+        "ingredient_usefulness": 0.88,
+        "recipe_availability": 1.0,
+        "savings_component": 0.3314
+      },
+      "source": "mortonwilliams-storefront",
+      "unit": "5.3 oz"
+    },
+    {
+      "absolute_savings": 2.0,
+      "category": "produce",
+      "discount_percent": 0.4008,
+      "ingredient_id": "potatoes",
+      "ingredient_name": "potatoes",
+      "original_price": 4.99,
+      "price_display": "$2.99",
+      "product_name": "Bowl & Basket Russet Potatoes",
+      "recipe_count": 210,
+      "recipe_ids": [
+        "37dc7f41a3eebed9",
+        "2c8fe8d22dc06d58",
+        "24b9b1c75d12a516",
+        "a3830db89d7cd468",
+        "d17ca718883e93dc",
+        "015a03c8db9920db",
+        "10aac25d16ba48ec",
+        "61de03c2c6ebed36",
+        "aae862cbbf89eb58",
+        "46b67f756f045768",
+        "24ceb0315369c650",
+        "50dd96ae87db58fa",
+        "ac8d9ae9ffee335a",
+        "8147ac2377cbe6e7",
+        "9cd824959a870b38",
+        "230a51d3f7232ebc",
+        "0112fe031baef4bc",
+        "8cf60f98297bda39",
+        "953612ca79dca9a0",
+        "282fb456fecf16ed",
+        "d6688c57326c1c0f",
+        "f84699fcf591ef32",
+        "c3438d828b99c73e",
+        "d8d34d851571b5d0",
+        "eb318029a5a8ad56",
+        "c388e41fe24442c0",
+        "398f7c5c30cf7cd3",
+        "755e9877119aa047",
+        "b695f6d5aed1c0a9",
+        "b7b5ed0d3db6accf",
+        "84804230114d3eec",
+        "903855d4a9a65b23",
+        "027a1983ab14e324",
+        "d93dea083eaf9ab7",
+        "c0cd811162331fe5",
+        "641636a24d80b602",
+        "5ef78573b3cd16a0",
+        "5884a8b7007932b7",
+        "725c5ab8345f6faa",
+        "0c9ea896af0b5237",
+        "ab7e7e68a6ec21ff",
+        "00cf75c6e0fa656f",
+        "17dbaefe0f415ea4",
+        "92bbd5f22e7f98e1",
+        "c946158a796be5c1",
+        "13434987c70e6298",
+        "f572dcba25159073",
+        "76865661769d685a",
+        "a7e331bfa3b2278d",
+        "01ec6e850feeb812",
+        "33c68cab8464599c",
+        "80deffe411be00dd",
+        "991a0773e0716933",
+        "8c291e3be737cd8d",
+        "175238ea356ca1e1",
+        "1466ac975a21228e",
+        "19d9bbf41e74daa0",
+        "76134a89db04ad5b",
+        "430e1069e5d948b6",
+        "addf54dfb129d36b",
+        "85ae8b5670526454",
+        "5555d1c54740aba1",
+        "ba77e4fc342dc65f",
+        "62ef32334e5ee0f1",
+        "a2a5a37b20d78040",
+        "a5daa8b175479eb6",
+        "038bd9ce219a981b",
+        "e8d1f1ef7fed4614",
+        "937677d31a9191c1",
+        "ebd0a0f202427fa1",
+        "857ccb986b0b45fa",
+        "e85d4aa0d28f7dd8",
+        "11b9c579462a7efa",
+        "0e80d1eec0ce39b0",
+        "813937ca0f8d4842",
+        "99b8e338cc89820a",
+        "4675df01cf182c68",
+        "beb0a6b9561b429b",
+        "6900b894a566453e",
+        "7f2bf3a5c9689100",
+        "2164be2014d13bd0",
+        "a08a65b9a372e869",
+        "af895443bfa75b7e",
+        "14d20cb79194d0d4",
+        "4b2665c13db5be54",
+        "e860bfa6cdc27c24",
+        "50f377c80088141d",
+        "1c3900bc7f7d85b2",
+        "8adfb41cd4bd8b7e",
+        "586b44ebf6e63a94",
+        "4d0ef8210740891b",
+        "63d2c315d5951af7",
+        "cc5f61d49112748b",
+        "7af9863d6f026172",
+        "2917f3eda165dfd4",
+        "b1e04cbf90ebcc5e",
+        "b0dddc7a44cca10f",
+        "8c775f89b39a6dd8",
+        "97b10461db6de760",
+        "8d0df1caa80a59ba",
+        "3cf9dfb2086286b9",
+        "1eddd00e9cb29ffb",
+        "e9b11b2c41127e3b",
+        "6713b6e5618e329a",
+        "8b3ae72883affe45",
+        "ab53d3d5563579f7",
+        "23fd8e741d8bcd6b",
+        "84eb71c033db8017",
+        "e00d220c3d9f108c",
+        "565002dcdaad31bc",
+        "bd680bfb06a9687c",
+        "726745f71a114b54",
+        "d568bf459cec88a3",
+        "82f3a90b1a942ddd",
+        "7356dd8614a30bdd",
+        "d4e2557fd23bca15",
+        "6fd9354e8b4ba6c9",
+        "757b99ad41d0c2b6",
+        "f3082b1855b4cad4",
+        "9399a4fb5a60dca3",
+        "dade9307cd706d9f",
+        "339f3e7da2283e40",
+        "0894c3d8cef0599e",
+        "e1b7959bf4330585",
+        "8601a7fb257e6e75",
+        "fcbb146ab0a9fd3a",
+        "8b295dfa9334a64c",
+        "989af016c8a90fd5",
+        "03599866ec4edeea",
+        "882c3aa7076e39a5",
+        "4839b9304152766b",
+        "b4eb27a56f53056b",
+        "53ea800ce6a4e3f5",
+        "b49df9cbc3ee2975",
+        "56835934af1d5610",
+        "19054ee041dff0a3",
+        "e4a18179b21c77b9",
+        "f2096f278bebfe20",
+        "af719a2eb25c6198",
+        "b56425c7fa48e789",
+        "0b2c7df4df1f7665",
+        "b59461f46518ad61",
+        "820045d134300ac7",
+        "dd27ab7bd6cf3e51",
+        "abb7b365518b40c5",
+        "3e1b3ee443ff7e50",
+        "c4ad45fab748d688",
+        "f9b399245118fb7d",
+        "0420df8d09f773f0",
+        "eb8100e9a8a8353e",
+        "86038c5adb009abb",
+        "4f6e2e44934481f1",
+        "aca3be6fab92d30e",
+        "024819f0ca7a664b",
+        "ac85cf5e4ad2e776",
+        "388de7c98c153ac6",
+        "1a253d9de7b2c3f6",
+        "ddbdd0c1c54c45c5",
+        "b06994c6878b066d",
+        "389c35cb686b2d41",
+        "a30c20a418675792",
+        "df332ea938f927d3",
+        "e87223da769fe68d",
+        "671737bbb0c87b13",
+        "82bad56dcf39f8d2",
+        "a75888f0f974cb38",
+        "63ba859773731fcf",
+        "521a65b129b6df43",
+        "31ecf3effdfd5188",
+        "797a8d971493951c",
+        "148ca0fe57ff654f",
+        "c735eafbe876f8d0",
+        "5c887f144d63b92f",
+        "456236cd4833052e",
+        "e1a342fff9177f95",
+        "724f4af05ce39d92",
+        "7efbfd0d1ba1223e",
+        "5af9907d7306b172",
+        "840d7d25575362e3",
+        "0289de3ff8287756",
+        "5327a725ca9e5a90",
+        "e60c16e3ba63d0f2",
+        "f0a9f71e5f960457",
+        "a0dd1e6a09b5337e",
+        "950edea22bc58a74",
+        "4f27e1eab3874a2f",
+        "abed841a3e50c77a",
+        "2a621ee9b1a65e04",
+        "9210be9d879177cd",
+        "947668d4c2651bea",
+        "1f4984a7521ab130",
+        "a02c508322454e30",
+        "50021a9f310dc55d",
+        "ef2066a0a4423fc3",
+        "ad0980d90b5b4969",
+        "4f2744bd04e963ab",
+        "45be963cde6b81a0",
+        "d3801122ad79d87b",
+        "fe4860d80ab4e3e0",
+        "422ecdccd41cb5af",
+        "5af5436bd802fa6a",
+        "2b93ded149be9140",
+        "7e6cb866aa8f72f4",
+        "b50b65a8af62b5dc",
+        "5f62f3ae5795c28a",
+        "2547536b5b39896f",
+        "961b7bde0a63a9c3",
+        "f0cddedf85bdad28",
+        "0ea412be450c3723",
+        "f1adf8b9c540316a"
+      ],
+      "sale_price": 2.99,
+      "score": 62.9532,
+      "score_components": {
+        "data_confidence": 0.94,
+        "discount_component": 0.4008,
+        "final_score": 62.9532,
+        "ingredient_usefulness": 0.95,
+        "recipe_availability": 1.0,
+        "savings_component": 0.4283
+      },
+      "source": "mortonwilliams-storefront",
+      "unit": "5 lb"
+    },
+    {
+      "absolute_savings": 1.99,
+      "category": "produce",
+      "discount_percent": 0.3625,
+      "ingredient_id": "tomatoes",
+      "ingredient_name": "tomatoes",
+      "original_price": 5.49,
+      "price_display": "$3.50",
+      "product_name": "NatureSweet Cherubs Tomatoes",
+      "recipe_count": 285,
+      "recipe_ids": [
+        "37dc7f41a3eebed9",
+        "1a01d0bace0ffe26",
+        "3627460272bc1055",
+        "c485b2ea902ef2be",
+        "315f353da20b7b06",
+        "bbfb4e2f550d6a92",
+        "c884c22e7e55424d",
+        "673156bf8b5c3b20",
+        "8264b558832f2734",
+        "9cbafa39b9f223c9",
+        "d0a428a60031f0b9",
+        "6dfb6373e306a5b4",
+        "56721ade3c48a152",
+        "4da7130b7e2c273b",
+        "bf94912fe0dad6e9",
+        "f4ef8ad0013a0138",
+        "8b24f8e8bd52fad5",
+        "aef7d745f91e2524",
+        "fb2eb4bb65df6433",
+        "a982ee6e48048acb",
+        "086cc13be0896e17",
+        "859b755762b32684",
+        "75a0749b03a22271",
+        "45c63701d704d96d",
+        "319335591636b950",
+        "9c75497a7960dc28",
+        "f845a6081405f68c",
+        "188e010f9448ab9f",
+        "f9151a200fb15957",
+        "c7e297f5e8f3d3aa",
+        "11adde53863fde39",
+        "b2b5e2951b59ec25",
+        "c7b6fb90615eb1bf",
+        "f71894ba199bbe2e",
+        "2d139165152a7b37",
+        "38cbcf2aa98551ff",
+        "6f565862155cf1ab",
+        "6d956bc988d4b33b",
+        "781355160e8dfaec",
+        "98433e9b1751f007",
+        "addf54dfb129d36b",
+        "76b793ad1580f849",
+        "8da5d7f254cd2744",
+        "56e790c8597beba4",
+        "5f79dbadff91f86c",
+        "0ef983e6b6ba56bc",
+        "2a1da23e46544173",
+        "2bc4865d7608a9c1",
+        "555163255aa631b6",
+        "c9d77f23734e27a0",
+        "687c87bccf2c604e",
+        "6449fa2bc3e6c12d",
+        "038bd9ce219a981b",
+        "a3c39c44ad7806be",
+        "e8d1f1ef7fed4614",
+        "6aace3ac83f36e44",
+        "cded29449c2d32b0",
+        "79026e30c048ac51",
+        "7d75af57d1dcab22",
+        "3965c0608d2d3f64",
+        "8362992f2488faad",
+        "e85d4aa0d28f7dd8",
+        "f03438ff53429c80",
+        "11b9c579462a7efa",
+        "ba6eafd85bab8612",
+        "8265c4f4b5ab38aa",
+        "1c3ff375f8782b03",
+        "4547b53d30a43d02",
+        "e2b6ed7486da9b62",
+        "d308352e1bbe19c3",
+        "7f2bf3a5c9689100",
+        "cbd3fcb4f0fd6b60",
+        "abb59647ce6c7f54",
+        "eac1686404b869d1",
+        "6f2b0fe198ed320d",
+        "b7a047cd1080cc42",
+        "c81806efb6975322",
+        "3f5b749c8678ed48",
+        "6e724706d69b79fe",
+        "2bfb03e737e07b7b",
+        "dd63484b12be424a",
+        "8bcd22e2cc5d6133",
+        "8adfb41cd4bd8b7e",
+        "cf9448e756c3b8b1",
+        "8e9d72fbda9a0d57",
+        "55e35542bdb16ebe",
+        "57e5838f3901851c",
+        "e554ef3e103ee9dc",
+        "82568edaa8a3d837",
+        "f26d0a4f023f98b1",
+        "13a7f8ac46e9ff4f",
+        "28d9af13ea53da07",
+        "60eba052c988b709",
+        "e08df5bece1714ae",
+        "607d58bb93f8f65c",
+        "23183ce595f2c96f",
+        "00e8408520fce93e",
+        "46f89c43845631f1",
+        "b8f08fad49563e05",
+        "dfae969e369decc4",
+        "de001c51c904f13f",
+        "4a21e3e8d011cf62",
+        "5c8e6ccd2f691ca6",
+        "3c27d583a1fea266",
+        "e27dc11bcc49fe9a",
+        "fc1dd477a478f2d6",
+        "ffd9fa84f347a20a",
+        "e30f0878a8c289c1",
+        "4d432a29675a474b",
+        "7f73977d744ee8c7",
+        "bf74129c95df25b0",
+        "a8d82b85e0674c9e",
+        "280ad2d2ae6c526e",
+        "e8199765990dc89d",
+        "95b291a12edd7d67",
+        "d688418015766e8c",
+        "e2e32b109f8ba9a8",
+        "0603f91dbee11ccb",
+        "565002dcdaad31bc",
+        "69e890fd993e4511",
+        "90a93c9f2310b736",
+        "2cf2ba9499fb3c6a",
+        "5cb65dba4b28fbb6",
+        "e61f5152b7dd3f89",
+        "857aa80748c209a3",
+        "ca5b8d728a479f8e",
+        "7768c79027950b90",
+        "d568bf459cec88a3",
+        "beb7c067c19b6000",
+        "1310bd56145827a8",
+        "933b169a94fa1938",
+        "25a02e0eec57bac0",
+        "133695e8c60b1cff",
+        "3c4d91a1aa7440f9",
+        "4356320d7d1f1e8d",
+        "a35163547e9ab735",
+        "edbbcf8755f0dd84",
+        "d947ece7a9ade517",
+        "a7639077d7484468",
+        "310e6be69bdf5559",
+        "5b0f10989eaefa22",
+        "88d1f82a4bc8639b",
+        "39528e214fc83436",
+        "d9c60c8a31a31e08",
+        "942118615f51784d",
+        "f961787c43b89db4",
+        "a5e37a42e2c4606f",
+        "bdc4153b42901b7b",
+        "dc5bfbe00785e8eb",
+        "929cfa352fca14cb",
+        "9a4ad24b1f6eb05b",
+        "37382e19f6a8dce7",
+        "1bf1cfbbbee8b4cc",
+        "393a7f64c604c69e",
+        "71b92b9da29b020f",
+        "d4bda0f7d757b9b0",
+        "caaa7326ce26d06b",
+        "5e2c83c30494bea9",
+        "c52533b8ff7f8097",
+        "595540ccbdcd3db4",
+        "159c1c00888b0f89",
+        "c914c8c6dd8b0f05",
+        "99bf80fc986e931d",
+        "337a4ddd413a5075",
+        "426231d1209451a0",
+        "7deb6c4b7dab7a46",
+        "ae5374894dab4d36",
+        "a9427ec1396f6944",
+        "03599866ec4edeea",
+        "cd4cc932d4116008",
+        "42c26713b3b54b2e",
+        "9094bf86d760e9c8",
+        "f398a37e66f5a836",
+        "5176dba937611460",
+        "fe491cb46f984575",
+        "822151bbd102dee1",
+        "537b53ccb15cf0ad",
+        "86ad93d46bade758",
+        "1a9cf7df027ae6fa",
+        "d91a4f8809c76e7f",
+        "52e6c5f65adffa12",
+        "2c3564bad1018201",
+        "015633ecf53bc6cf",
+        "e3d3f084aefcae34",
+        "07482bd09eef0828",
+        "fb7e4605c6598eb0",
+        "40a6e1fb7e96db79",
+        "b30af8549cc7c286",
+        "b67689164f8578ea",
+        "09ba21a7fb36d196",
+        "f28e6db2c640213d",
+        "5b667d309a18343b",
+        "062b4f11a4e483a3",
+        "c4ad45fab748d688",
+        "4b3f43b505bbc757",
+        "a154bed1a850ebc4",
+        "9c2ef65e068d5354",
+        "f9b399245118fb7d",
+        "82b4c5ccc4e4befd",
+        "024819f0ca7a664b",
+        "1a253d9de7b2c3f6",
+        "d03f8f426be2add3",
+        "ae2ef7a0368fc106",
+        "bf1644b20b58d44b",
+        "d08be9ab2584461b",
+        "2d9c99768db14872",
+        "55dd0982523d4ecb",
+        "7168db70da581788",
+        "f586bc76c4ac7088",
+        "973f2cac5682faf5",
+        "26cc5d5f40cb8b4b",
+        "3bf68b107e388566",
+        "f9c6d75c23325e93",
+        "c735eafbe876f8d0",
+        "c5b51eddb10b9c65",
+        "5c887f144d63b92f",
+        "ade1bd2f0eb026b8",
+        "3d62f53b50331c1f",
+        "a84fd3273d74c538",
+        "9e52f186748dc5c9",
+        "11e45c80953fc62f",
+        "99a576aa6c60f2ee",
+        "acae901fb27efc5c",
+        "5327a725ca9e5a90",
+        "006a5556097a2dc6",
+        "10372a1e50dbe557",
+        "280466d243b89da3",
+        "8e9cdceb46d0d28b",
+        "6cabe9e8f2588b2c",
+        "5ce0692d7443b537",
+        "42dd525c14a2b3b9",
+        "dde6573da3592f4a",
+        "0aec8000fdb906ec",
+        "81c40ffd48c15951",
+        "3bb7e88ce67a7180",
+        "a7695d7f1730bc0e",
+        "911948a383a52744",
+        "2a621ee9b1a65e04",
+        "ed1e4cba9adcccf2",
+        "8891e0bdbac52857",
+        "011e1e95dfcbcec0",
+        "9d9a1fb17b2ec659",
+        "317650e89cb8c401",
+        "3bea6f3c424a1195",
+        "0b0d87923e2c6b36",
+        "a5d8fe21df426f6e",
+        "bea9c323bad26e65",
+        "388bbe82594c7c58",
+        "2b93ded149be9140",
+        "7e6ecebff22a38cd",
+        "7e6cb866aa8f72f4",
+        "7c61480369d73a71",
+        "180001f4056835a7",
+        "569bdbf13a36d963",
+        "6bce8a0ee369afa3",
+        "032790137b0c339b",
+        "cd76ebd63a2340e2",
+        "71d64f702eccfeec",
+        "3182064662412ba6",
+        "a4e1efce9ffe54b5",
+        "ed3558ffa627505c",
+        "fb3ff6ff49abec8f",
+        "6582ab09316e30d0",
+        "47ddea9a0cd4026e",
+        "b50b65a8af62b5dc",
+        "feca0ac27be12c1f",
+        "8bfce5a52f3f3927",
+        "8ef97b53bffe53d3",
+        "6cd998c916bf3785",
+        "b40734bebf8441d4",
+        "5a9bac7a35e2d56f",
+        "806d164f46cff1f5",
+        "f273036b6b2b33ad",
+        "d1c950edb241c256",
+        "5c747d7dc238ab6c",
+        "3c35daef62333f65",
+        "ad66682dfbf42bb8",
+        "d7ae1dfa41fd6c88",
+        "744e23729dfcf061",
+        "052a6ba8f732067f",
+        "27e7abb722800644",
+        "9553a113679bbb77",
+        "6e1c98443984953c",
+        "d898ff9466c2944d",
+        "f1adf8b9c540316a"
+      ],
+      "sale_price": 3.5,
+      "score": 60.6932,
+      "score_components": {
+        "data_confidence": 0.88,
+        "discount_component": 0.3625,
+        "final_score": 60.6932,
+        "ingredient_usefulness": 0.95,
+        "recipe_availability": 1.0,
+        "savings_component": 0.427
+      },
+      "source": "mortonwilliams-storefront",
+      "unit": "1 oz"
+    },
+    {
+      "absolute_savings": 3.0,
+      "category": "dairy",
+      "discount_percent": 0.3337,
+      "ingredient_id": "mozzarella cheese",
+      "ingredient_name": "mozzarella cheese",
+      "original_price": 8.99,
+      "price_display": "$5.99",
+      "product_name": "Polly-O Whole Milk Low Moisture Mozzarella Chunk",
+      "recipe_count": 40,
+      "recipe_ids": [
+        "d0a428a60031f0b9",
+        "68500668c8aea7df",
+        "82608507f6102a75",
+        "e434e658e7ddfeb9",
+        "7d402b9e8f21e21e",
+        "e08df5bece1714ae",
+        "61b9e702db31253f",
+        "12b6a4bba1380ec0",
+        "a1b594f531615b92",
+        "979738678a05ae87",
+        "b3eee124e2b95901",
+        "25524285b7649289",
+        "44bcb9c42c923bfb",
+        "cafa72eea522ff05",
+        "57e554fb43f2bf25",
+        "83806cfb1bf9b63c",
+        "a23cdedc9c51e993",
+        "7a36aa2f5d86ce29",
+        "389c35cb686b2d41",
+        "bf1644b20b58d44b",
+        "d448797e5e3ae5d7",
+        "a66c47ecefcd2b03",
+        "521a65b129b6df43",
+        "4bde9706e338b7a1",
+        "f1348d97bc13e613",
+        "6ae5775528a14d8d",
+        "13933c927cebcca3",
+        "761f3d036d77e9d2",
+        "f0a9f71e5f960457",
+        "a7695d7f1730bc0e",
+        "3767021dff88b513",
+        "9d9a1fb17b2ec659",
+        "5247dfbb1eb4e7b3",
+        "569bdbf13a36d963",
+        "6bce8a0ee369afa3",
+        "71d64f702eccfeec",
+        "332db47b70a087f3",
+        "8a5737a59c74170f",
+        "e13767d3917b3e0a",
+        "7b4caba0059937fc"
+      ],
+      "sale_price": 5.99,
+      "score": 59.5569,
+      "score_components": {
+        "data_confidence": 0.88,
+        "discount_component": 0.3337,
+        "final_score": 59.5569,
+        "ingredient_usefulness": 0.88,
+        "recipe_availability": 1.0,
+        "savings_component": 0.5405
+      },
+      "source": "mortonwilliams-storefront",
+      "unit": "16 oz"
+    },
+    {
+      "absolute_savings": 2.0,
+      "category": "produce",
+      "discount_percent": 0.3339,
+      "ingredient_id": "lettuce",
+      "ingredient_name": "lettuce",
+      "original_price": 5.99,
+      "price_display": "$3.99",
+      "product_name": "Romaine Lettuce Hearts",
+      "recipe_count": 79,
+      "recipe_ids": [
+        "ef59507a58642186",
+        "8264b558832f2734",
+        "8a302af8f11ef0d5",
+        "2ca99102329c9c64",
+        "6b89f20277a7b0b4",
+        "af09e5fe1a69af48",
+        "4da7130b7e2c273b",
+        "b5b5f41b726a54e9",
+        "99b9a67bf3c8b1f6",
+        "2d89f1d9839cebf3",
+        "bf94912fe0dad6e9",
+        "4f39126d9c14f9f0",
+        "39070b5a60fc9f15",
+        "9e176638fe3d61f8",
+        "8a5c59812df6d52e",
+        "086cc13be0896e17",
+        "859b755762b32684",
+        "664ec272e9b19366",
+        "498941c0ef8416ee",
+        "45c63701d704d96d",
+        "cc1b3728614b1665",
+        "f845a6081405f68c",
+        "16687cdfdcc2c661",
+        "c388e41fe24442c0",
+        "f9151a200fb15957",
+        "ea573c6dd8d27d70",
+        "a50d1ded69251c6a",
+        "db1a13d4e5b7d51b",
+        "a392871c12c267ca",
+        "f79fc735a19af7d1",
+        "91ae06fcfbb4c08c",
+        "38cbcf2aa98551ff",
+        "35a7e277d18360d8",
+        "0aae0dc11294fba7",
+        "d282f2f2f7f305f4",
+        "d308352e1bbe19c3",
+        "6e724706d69b79fe",
+        "00e8408520fce93e",
+        "a4392d9adbdd8611",
+        "8b503471959a12ae",
+        "ce60e20b91111826",
+        "e27dc11bcc49fe9a",
+        "0d3a722595974878",
+        "d688418015766e8c",
+        "3c0b6738b71cdf07",
+        "2cf2ba9499fb3c6a",
+        "a8ce719b1c163a66",
+        "e61f5152b7dd3f89",
+        "f2b407f554b85561",
+        "73ccd2c371d8d53d",
+        "25a02e0eec57bac0",
+        "82f3a90b1a942ddd",
+        "310e6be69bdf5559",
+        "a5e37a42e2c4606f",
+        "9a4ad24b1f6eb05b",
+        "5e2c83c30494bea9",
+        "18ade283a6b30e81",
+        "426231d1209451a0",
+        "aa8966511b033e46",
+        "53a28dfb102e7ffb",
+        "40a6e1fb7e96db79",
+        "1dd7aa280dcc85df",
+        "024819f0ca7a664b",
+        "5c887f144d63b92f",
+        "11e45c80953fc62f",
+        "006a5556097a2dc6",
+        "0b0d87923e2c6b36",
+        "373f8b501fd366cd",
+        "bea9c323bad26e65",
+        "388bbe82594c7c58",
+        "0c41fc1e40a373a3",
+        "a4e1efce9ffe54b5",
+        "ed3558ffa627505c",
+        "2e604083a85ae59d",
+        "6582ab09316e30d0",
+        "344addc5a59873f1",
+        "667828e72735369e",
+        "8bfce5a52f3f3927",
+        "744e23729dfcf061"
+      ],
+      "sale_price": 3.99,
+      "score": 59.3958,
+      "score_components": {
+        "data_confidence": 0.88,
+        "discount_component": 0.3339,
+        "final_score": 59.3958,
+        "ingredient_usefulness": 0.95,
+        "recipe_availability": 1.0,
+        "savings_component": 0.4283
+      },
+      "source": "mortonwilliams-storefront",
+      "unit": "3 ct"
+    },
+    {
+      "absolute_savings": 1.3,
+      "category": "meat",
+      "discount_percent": 0.3523,
+      "ingredient_id": "chicken thighs",
+      "ingredient_name": "chicken thighs",
+      "original_price": 3.69,
+      "price_display": "$2.39",
+      "product_name": "Fresh Grade A Chicken Thighs, Skinless",
+      "recipe_count": 12,
+      "recipe_ids": [
+        "40289325db25f841",
+        "c681dba4049e1d16",
+        "8667ebc0d20e3aac",
+        "b50a46c363b63a1e",
+        "7b2fda280563bf69",
+        "37bafdc1605c8749",
+        "93f5797b2d2ea0ff",
+        "6fb843b127a9a7f9",
+        "b017fddc5cd585f0",
+        "0a3c8021c0eaa872",
+        "26cc5d5f40cb8b4b",
+        "e7cb0a011a73dd5c"
+      ],
+      "sale_price": 2.39,
+      "score": 59.312,
+      "score_components": {
+        "data_confidence": 0.82,
+        "discount_component": 0.3523,
+        "final_score": 59.312,
+        "ingredient_usefulness": 1.0,
+        "recipe_availability": 1.0,
+        "savings_component": 0.3247
+      },
+      "source": "mortonwilliams-storefront",
+      "unit": "per lb"
+    }
+  ],
+  "exclusions": [
+    {
+      "ingredient_id": "ginger",
+      "product_name": "Seagram\u2019s Ginger Ale",
+      "raw_original_price": "",
+      "raw_price": "2 for $3",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "salad dressing",
+      "product_name": "Salad Dressing",
+      "raw_original_price": "",
+      "raw_price": "2 for $7",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "ginger",
+      "product_name": "Dr. Pepper or Seagram\u2019s Ginger Ale",
+      "raw_original_price": "",
+      "raw_price": "2 for $3",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Organic Chickpea Puffs",
+      "raw_original_price": "",
+      "raw_price": "2 for $7",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Potato Chips",
+      "raw_original_price": "",
+      "raw_price": "2 for $7",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Alkaline Water",
+      "raw_original_price": "",
+      "raw_price": "2 for $5",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "ginger",
+      "product_name": "Club Soda or Ginger Ale",
+      "raw_original_price": "",
+      "raw_price": "2 for $6",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "apples",
+      "product_name": "Apple Juice",
+      "raw_original_price": "",
+      "raw_price": "2 for $6",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Smart Water",
+      "raw_original_price": "",
+      "raw_price": "2 for $4",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Vitamin Water",
+      "raw_original_price": "",
+      "raw_price": "3 for $5",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Barbecue Sauce",
+      "raw_original_price": "",
+      "raw_price": "2 for $6",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Dry Roasted Peanuts",
+      "raw_original_price": "",
+      "raw_price": "2 for $6",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Seltzer Water",
+      "raw_original_price": "",
+      "raw_price": "3 for $3",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Zero Sugar Soda",
+      "raw_original_price": "",
+      "raw_price": "2 for $4",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Crab Cakes",
+      "raw_original_price": "",
+      "raw_price": "2 for $6",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Cat Food",
+      "raw_original_price": "",
+      "raw_price": "2 for $3",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Instant Oatmeal",
+      "raw_original_price": "",
+      "raw_price": "2 for $7",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Applesauce",
+      "raw_original_price": "",
+      "raw_price": "2 for $5",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Steam-In-Bag Vegetables",
+      "raw_original_price": "",
+      "raw_price": "2 for $6",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Chopped or Crushed Herbs",
+      "raw_original_price": "",
+      "raw_price": "2 for $7",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Kefir",
+      "raw_original_price": "",
+      "raw_price": "3 for $5",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "American Singles",
+      "raw_original_price": "",
+      "raw_price": "2 for $7",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Iced Tea",
+      "raw_original_price": "",
+      "raw_price": "2 for $6",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Sour Cream",
+      "raw_original_price": "",
+      "raw_price": "2 for $4",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Gandules",
+      "raw_original_price": "",
+      "raw_price": "5 for $6",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Citrus Drink",
+      "raw_original_price": "",
+      "raw_price": "2 for $4",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Fruit Punch or Lemonade",
+      "raw_original_price": "",
+      "raw_price": "3 for $5",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Steam In Bag Vegetables",
+      "raw_original_price": "",
+      "raw_price": "2 for $3",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Fruit Bowls",
+      "raw_original_price": "",
+      "raw_price": "2 for $7",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Coconut Water",
+      "raw_original_price": "",
+      "raw_price": "3 for $5",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Iced Tea or Lemonade",
+      "raw_original_price": "",
+      "raw_price": "2 for $5",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "salad dressing",
+      "product_name": "Salad Dressing",
+      "raw_original_price": "",
+      "raw_price": "2 for $6",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Iced Tea",
+      "raw_original_price": "",
+      "raw_price": "2 for $5",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Mixers",
+      "raw_original_price": "",
+      "raw_price": "2 for $4",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Water",
+      "raw_original_price": "",
+      "raw_price": "2 for $6",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Pickles",
+      "raw_original_price": "",
+      "raw_price": "2 for $6",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Zero Calories Sparkling Water",
+      "raw_original_price": "",
+      "raw_price": "4 for $5",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Sparkling Energy Drink",
+      "raw_original_price": "",
+      "raw_price": "2 for $6",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Sports Drink",
+      "raw_original_price": "",
+      "raw_price": "3 for $5",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Iced Tea",
+      "raw_original_price": "",
+      "raw_price": "3 for $5",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Antioxidant Infusions",
+      "raw_original_price": "",
+      "raw_price": "2 for $4",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Sunkist or A&W",
+      "raw_original_price": "",
+      "raw_price": "2 for $3",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "apples",
+      "product_name": "Apple Juice",
+      "raw_original_price": "",
+      "raw_price": "2 for $7",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Spring Water",
+      "raw_original_price": "",
+      "raw_price": "2 for $7",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Nectar",
+      "raw_original_price": "",
+      "raw_price": "2 for $6",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Loaf Cakes",
+      "raw_original_price": "",
+      "raw_price": "2 for $7",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Veggie Crisps",
+      "raw_original_price": "",
+      "raw_price": "2 for $6",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Pizza Rolls",
+      "raw_original_price": "",
+      "raw_price": "2 for $7",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Lemonade",
+      "raw_original_price": "",
+      "raw_price": "2 for $6",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Sour Cream",
+      "raw_original_price": "",
+      "raw_price": "2 for $4",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "apples",
+      "product_name": "Apple & Eve apple juice, clear or natural, 64oz bottle",
+      "raw_original_price": "",
+      "raw_price": "2 for $7",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Kraft barbecue sauce, 17.5-18oz bottle, all varieties",
+      "raw_original_price": "",
+      "raw_price": "2 for $6",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Vlasic pickles,16-24oz jar, select varieties",
+      "raw_original_price": "",
+      "raw_price": "2 for $6",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Saratoga spring water, 28oz bottle, still or sparkling",
+      "raw_original_price": "",
+      "raw_price": "2 for $7",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Bloom sparkling energy drink, 12oz can, all varieties",
+      "raw_original_price": "",
+      "raw_price": "2 for $6",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Sparkling Ice zero calories sparkling water, 17oz bottle, all varieties (warm only)",
+      "raw_original_price": "",
+      "raw_price": "4 for $5",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Gold Peak iced tea, 18.5oz bottles, all varieties",
+      "raw_original_price": "",
+      "raw_price": "3 for $5",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Powerade sports drink, 28oz bottle, all varieties",
+      "raw_original_price": "",
+      "raw_price": "3 for $5",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Evian water, 1.5 liter bottle",
+      "raw_original_price": "",
+      "raw_price": "2 for $6",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "bai antioxidant infusions (warm only), 18oz bottle, all varieties",
+      "raw_original_price": "",
+      "raw_price": "2 for $4",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Canada Dry, 7-Up, Sunkist or A&W, 1.25 liter bottle",
+      "raw_original_price": "",
+      "raw_price": "2 for $3",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Canada Dry mixers, 1 liter bottle, all varieties",
+      "raw_original_price": "",
+      "raw_price": "2 for $4",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Snapple iced tea, 64oz bottle",
+      "raw_original_price": "",
+      "raw_price": "2 for $5",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "bowl & basket instant oatmeal, 7.9-15.1oz package, all varieties",
+      "raw_original_price": "",
+      "raw_price": "2 for $7",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Harvest Snaps veggie crisps, 2.5-3.3oz bag, select varieties",
+      "raw_original_price": "",
+      "raw_price": "2 for $6",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Fancy Feast Medley's cat food, 3oz package, select varieties",
+      "raw_original_price": "",
+      "raw_price": "2 for $3",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Entenmann's loaf cakes, 11.5-14oz package",
+      "raw_original_price": "",
+      "raw_price": "2 for $7",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Fage sour cream, 16oz container",
+      "raw_original_price": "",
+      "raw_price": "2 for $4",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Newman's Own lemonade, 59oz carton, all varieties",
+      "raw_original_price": "",
+      "raw_price": "2 for $6",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Totino's pizza rolls, 7.5oz package, all varieties",
+      "raw_original_price": "",
+      "raw_price": "2 for $7",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "select varieties",
+      "raw_original_price": "",
+      "raw_price": "2 for $4",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Wholesome Pantry organic steam-in-bag veggetables, 12oz bag, all varieties",
+      "raw_original_price": "",
+      "raw_price": "2 for $6",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "olive oil",
+      "product_name": "Filippo Berio Olive Oil, Extra Virgin",
+      "raw_original_price": "$16.99",
+      "raw_price": "$7.99",
+      "reasons": [
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Michelob ULTRA Zero Non-Alcoholic American Lager Beer, 12 Pack, 12 Fl Oz Cans",
+      "raw_original_price": "$19.99",
+      "raw_price": "$18.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "FAGE All Natural Sour Cream",
+      "raw_original_price": "$3.99",
+      "raw_price": "$2.00",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Purex Liquid Laundry Detergent, Fresh Lavender Blossom, 50 Fluid Ounces, 38 Loads",
+      "raw_original_price": "$10.49",
+      "raw_price": "$5.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Euroclassic Authentic Brioche Hot Dog Buns",
+      "raw_original_price": "$8.99",
+      "raw_price": "$6.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Arnold Whole Grains, Healthy, Bread, Multigrain Bread, 24 oz",
+      "raw_original_price": "$5.29",
+      "raw_price": "$4.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Red Seedless Grapes Bag",
+      "raw_original_price": "$4.99",
+      "raw_price": "$3.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Montauk Brewing Company Wave Chaser",
+      "raw_original_price": "$13.99",
+      "raw_price": "$11.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Montauk Brewing Company Cold Day IPA",
+      "raw_original_price": "$13.99",
+      "raw_price": "$11.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Montauk Brewing Company Pumpkin Ale",
+      "raw_original_price": "$13.99",
+      "raw_price": "$11.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Montauk Brewing Co. Juicy IPA",
+      "raw_original_price": "$13.99",
+      "raw_price": "$11.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Montauk Easy Riser Belgian White Ale",
+      "raw_original_price": "$13.99",
+      "raw_price": "$11.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Montauk Brewing Wave Chaser India Pale Ale",
+      "raw_original_price": "$13.99",
+      "raw_price": "$11.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Montauk Beer, Craft, Session IPA",
+      "raw_original_price": "$13.99",
+      "raw_price": "$11.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "gelatin",
+      "product_name": "Jell-O Peach Gelatin Dessert Mix",
+      "raw_original_price": "$2.49",
+      "raw_price": "$1.99",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "gelatin",
+      "product_name": "Jell-O Raspberry Gelatin Dessert Mix",
+      "raw_original_price": "$2.49",
+      "raw_price": "$1.99",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Jell-O Chocolate Instant Pudding & Pie Filling Mix",
+      "raw_original_price": "$2.49",
+      "raw_price": "$1.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "gelatin",
+      "product_name": "Jell-O Lemon Gelatin Dessert Mix",
+      "raw_original_price": "$2.49",
+      "raw_price": "$1.99",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "gelatin",
+      "product_name": "Jell-O Black Cherry Gelatin Dessert Mix",
+      "raw_original_price": "$2.49",
+      "raw_price": "$1.99",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "gelatin",
+      "product_name": "Jell-O Cherry Gelatin Dessert Mix",
+      "raw_original_price": "$2.49",
+      "raw_price": "$1.99",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Jell-O Chocolate Pudding & Pie Filling Mix",
+      "raw_original_price": "$2.49",
+      "raw_price": "$1.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "baking soda",
+      "product_name": "Arm & Hammer Baking Soda",
+      "raw_original_price": "$1.59",
+      "raw_price": "$1.19",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Kraft Original Slow-Simmered Barbecue Sauce",
+      "raw_original_price": "$3.99",
+      "raw_price": "$3.00",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Kraft Hickory Smoke Slow-Simmered Barbecue Sauce",
+      "raw_original_price": "$3.99",
+      "raw_price": "$3.00",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "beef steak",
+      "product_name": "Certified Angus Prime Beef Certified Angus Beef Round For Pepper Steak, Boneless, Average Weight 1 lb Pack",
+      "raw_original_price": "$7.99",
+      "raw_price": "$6.39",
+      "reasons": [
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Entenmann's Lemon, Loaf Cake, Loaf Cake, 11.5 oz",
+      "raw_original_price": "$6.59",
+      "raw_price": "$3.50",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Arnold Whole Grains, 100% Whole Wheat, Bread, Wheat Bread, 24 oz",
+      "raw_original_price": "$5.29",
+      "raw_price": "$4.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Arnold Whole Grains, Oatnut, Bread, Multigrain Bread, 24 oz",
+      "raw_original_price": "$5.29",
+      "raw_price": "$4.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Arnold Whole Grains 12 Grain Bread",
+      "raw_original_price": "$5.29",
+      "raw_price": "$4.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Maple Donuts Donuts, Glazed",
+      "raw_original_price": "$7.99",
+      "raw_price": "$5.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Bowl & Basket Hamburger Bun",
+      "raw_original_price": "$8.99",
+      "raw_price": "$6.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Bowl & Basket Brioche Hot Dog",
+      "raw_original_price": "$8.99",
+      "raw_price": "$6.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Bowl & Basket Brioche Seeded Hamburger Buns",
+      "raw_original_price": "$8.99",
+      "raw_price": "$6.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "butter",
+      "product_name": "Entenmann's Butter Loaf Cake",
+      "raw_original_price": "$6.59",
+      "raw_price": "$3.50",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Entenmann's Marble Loaf Cake",
+      "raw_original_price": "$6.59",
+      "raw_price": "$3.50",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "tuna",
+      "product_name": "Bumble Bee Chunk Light Tuna in Water",
+      "raw_original_price": "$2.49",
+      "raw_price": "$1.25",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "sugar",
+      "product_name": "Dole No Sugar Added in Water Pineapple Slices",
+      "raw_original_price": "$3.99",
+      "raw_price": "$2.99",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Motts Applesauce Ms Original Applesauce",
+      "raw_original_price": "$6.79",
+      "raw_price": "$4.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "pineapple",
+      "product_name": "Dole in Water Sweetened with Stevia Extract Pineapple Chunks",
+      "raw_original_price": "$3.99",
+      "raw_price": "$2.99",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Morton Williams Prepared Food",
+      "raw_original_price": "$12.99",
+      "raw_price": "$7.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Harvest Snaps Green Pea Snacks, Baked, Lightly Salted",
+      "raw_original_price": "$3.29",
+      "raw_price": "$3.00",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Harvest Snaps Green Pea Snacks, Baked, Caesar",
+      "raw_original_price": "$3.29",
+      "raw_price": "$3.00",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "basil",
+      "product_name": "Harvest Snaps Red Lentil Snack, Baked, Tomato Basil",
+      "raw_original_price": "$3.29",
+      "raw_price": "$3.00",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Lay's Potato Chips, Classic",
+      "raw_original_price": "$4.29",
+      "raw_price": "$3.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "cheese",
+      "product_name": "ParmCrisps Oven-Baked Jalapeno Cheese Snack",
+      "raw_original_price": "$4.19",
+      "raw_price": "$3.99",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "onions",
+      "product_name": "Lay's Potato Chips, Sour Cream & Onion Flavored",
+      "raw_original_price": "$4.29",
+      "raw_price": "$3.99",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "2000 Flushes Toilet Bowl Cleaner, Automatic, Blue Plus Bleach",
+      "raw_original_price": "$5.79",
+      "raw_price": "$4.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Scrubbing Bubbles\u00ae Bathroom Grime Fighter Disinfectant Trigger Bottle, Citrus",
+      "raw_original_price": "$5.99",
+      "raw_price": "$5.49",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Brillo Soap Pads, Steel Wool, Lemon",
+      "raw_original_price": "$3.99",
+      "raw_price": "$2.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Brillo Soap Pads, Steel Wool",
+      "raw_original_price": "$3.99",
+      "raw_price": "$2.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "vanilla extract",
+      "product_name": "Coffee mate French Vanilla Flavored Coffee Creamer",
+      "raw_original_price": "$7.99",
+      "raw_price": "$5.49",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Coffee mate Hazelnut Liquid Coffee Creamer",
+      "raw_original_price": "$7.99",
+      "raw_price": "$5.49",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Coffee mate Hazelnut Flavored Coffee Creamer",
+      "raw_original_price": "$7.99",
+      "raw_price": "$5.49",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Coffee mate Coconut Cr\u00e8me Flavored Coffee Creamer",
+      "raw_original_price": "$7.99",
+      "raw_price": "$5.49",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Coffee mate Italian Sweet Cr\u00e8me Flavored Coffee Creamer",
+      "raw_original_price": "$7.99",
+      "raw_price": "$5.49",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Coffee mate Original Flavored Coffee Creamer",
+      "raw_original_price": "$7.99",
+      "raw_price": "$5.49",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Coffee mate Italian Sweet Cr\u00e8me Coffee Creamer",
+      "raw_original_price": "$7.99",
+      "raw_price": "$5.49",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "vanilla extract",
+      "product_name": "International Delight Cold Foam Coffee Creamer, French Vanilla Cold Foam Flavored Creamer, 14 OZ Can",
+      "raw_original_price": "$7.99",
+      "raw_price": "$5.99",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Starbucks Unsweetened Blonde Roast Black Iced Coffee",
+      "raw_original_price": "$10.99",
+      "raw_price": "$6.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Starbucks Unsweetened Medium Roast Black Iced Coffee",
+      "raw_original_price": "$10.99",
+      "raw_price": "$6.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Maxwell House Original Roast Ground Coffee",
+      "raw_original_price": "$12.49",
+      "raw_price": "$8.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Starbucks Espresso Beverage, Caramel Macchiato, Chilled",
+      "raw_original_price": "$10.99",
+      "raw_price": "$6.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "beans",
+      "product_name": "Peet's Coffee Major Dickason's Blend, Dark Roast Whole Bean Coffee, Bag",
+      "raw_original_price": "$17.99",
+      "raw_price": "$11.99",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Peet's Coffee Big Bang, Medium Roast Ground Coffee, Bag",
+      "raw_original_price": "$17.99",
+      "raw_price": "$11.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Peet's Coffee Major Dickason's Blend, Dark Roast Ground Coffee, Bag",
+      "raw_original_price": "$17.99",
+      "raw_price": "$11.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Maxwell House Master Blend Light Roast Ground Coffee",
+      "raw_original_price": "$12.49",
+      "raw_price": "$8.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Chips Ahoy! Original Chocolate Chip Cookies",
+      "raw_original_price": "$6.79",
+      "raw_price": "$4.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Sheila G's Brownie Brittle, Chocolate Chip",
+      "raw_original_price": "$5.29",
+      "raw_price": "$3.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "olive oil",
+      "product_name": "Graza Drizzle, Extra Virgin Olive Oil for Finishing",
+      "raw_original_price": "$23.99",
+      "raw_price": "$17.99",
+      "reasons": [
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "apples",
+      "product_name": "Celsius Sparkling Green Apple Cherry, Energy Drink",
+      "raw_original_price": "$2.99",
+      "raw_price": "$2.50",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Celsius Sparkling Grape Rush, Energy Drink",
+      "raw_original_price": "$2.99",
+      "raw_price": "$2.50",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Celsius Sparkling Orange, Energy Drink",
+      "raw_original_price": "$2.99",
+      "raw_price": "$2.50",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Celsius Peach Mango Green Tea, Energy Drink",
+      "raw_original_price": "$2.99",
+      "raw_price": "$2.50",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "C4 Cherry Popsicle, Performance Energy Drink Can",
+      "raw_original_price": "$3.49",
+      "raw_price": "$3.00",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Celsius Sparkling Cosmic Vibe, Energy Drink",
+      "raw_original_price": "$2.99",
+      "raw_price": "$2.50",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "C4 Performance Energy Frozen Bombsicle",
+      "raw_original_price": "$3.49",
+      "raw_price": "$3.00",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "C4 Grape Popsicle, Performance Energy Drink Can",
+      "raw_original_price": "$3.49",
+      "raw_price": "$3.00",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "CELSIUS Sparkling Peach Vibe, Energy Drink",
+      "raw_original_price": "$2.99",
+      "raw_price": "$2.50",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Bloom Nutrition Zero Sugar, Peach Mango, Sparkling Energy Drink, Can",
+      "raw_original_price": "$3.49",
+      "raw_price": "$3.00",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Bloom Nutrition Carbonated Raspberry Lemon Sparkling Energy Drink",
+      "raw_original_price": "$3.49",
+      "raw_price": "$3.00",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Fresh Wild Caught Fresh Icelandic Cod Fillet",
+      "raw_original_price": "$14.99",
+      "raw_price": "$11.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Fresh Seedless Watermelon Halves",
+      "raw_original_price": "$14.90",
+      "raw_price": "$9.90",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Red Grapes",
+      "raw_original_price": "$13.48",
+      "raw_price": "$8.98",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Black & Red Plums",
+      "raw_original_price": "$1.56",
+      "raw_price": "$1.25",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "nectarines",
+      "product_name": "Nectarine",
+      "raw_original_price": "$1.68",
+      "raw_price": "$1.50",
+      "reasons": [
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Peach",
+      "raw_original_price": "$1.68",
+      "raw_price": "$1.50",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Dragonfruit (Pitaya)",
+      "raw_original_price": "$4.99",
+      "raw_price": "$3.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Grapes Box",
+      "raw_original_price": "$10.10",
+      "raw_price": "$8.98",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Grapes",
+      "raw_original_price": "$11.23",
+      "raw_price": "$8.98",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Kellogg's Eggo Chocolatey Chip Waffles, Breakfast Food",
+      "raw_original_price": "$5.49",
+      "raw_price": "$3.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Kellogg's Eggo Homestyle Frozen Waffles",
+      "raw_original_price": "$5.49",
+      "raw_price": "$3.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Kellogg's Eggo Blueberry Waffles, Breakfast Food",
+      "raw_original_price": "$5.49",
+      "raw_price": "$3.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Fresh Express Italian Blend",
+      "raw_original_price": "$4.99",
+      "raw_price": "$3.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Fresh Express Salad, Sweet Hearts",
+      "raw_original_price": "$4.99",
+      "raw_price": "$3.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Fresh Express Salad, Spring Mix",
+      "raw_original_price": "$4.99",
+      "raw_price": "$3.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "H\u00e4agen-Dazs Chocolate Ice Cream",
+      "raw_original_price": "$6.99",
+      "raw_price": "$4.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "H\u00e4agen-Dazs Ice Cream Dulce De Leche Caramel",
+      "raw_original_price": "$6.99",
+      "raw_price": "$4.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "H\u00e4agen-Dazs Matcha Green Tea Ice Cream",
+      "raw_original_price": "$6.99",
+      "raw_price": "$4.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "strawberries",
+      "product_name": "H\u00e4agen-Dazs Strawberry Ice Cream",
+      "raw_original_price": "$6.99",
+      "raw_price": "$4.99",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "vanilla extract",
+      "product_name": "H\u00e4agen-Dazs Vanilla Ice Cream",
+      "raw_original_price": "$6.99",
+      "raw_price": "$4.99",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "potatoes",
+      "product_name": "Ore-Ida Extra Crispy Crinkles French Fries Fried Food Snacks Frozen Potatoes",
+      "raw_original_price": "$7.99",
+      "raw_price": "$4.99",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "potatoes",
+      "product_name": "Ore-Ida Crispy Straight-Cut Fries",
+      "raw_original_price": "$7.99",
+      "raw_price": "$4.99",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Smucker's Uncrustables Chocolate Flavored Hazelnut Spread Sandwich",
+      "raw_original_price": "$5.99",
+      "raw_price": "$5.49",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "potatoes",
+      "product_name": "Ore-Ida Classic Steak Fries",
+      "raw_original_price": "$7.99",
+      "raw_price": "$4.99",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Birds Eye Steamfresh Mixed Vegetables, Frozen Vegetables",
+      "raw_original_price": "$2.99",
+      "raw_price": "$2.00",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Wholesome Pantry Organic Frozen Vegetables",
+      "raw_original_price": "$3.39",
+      "raw_price": "$3.00",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Wholesome Pantry Organic Frozen Egetables",
+      "raw_original_price": "$3.39",
+      "raw_price": "$3.00",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "OGX Thick & Full + Biotin & Collagen Volumizing Shampoo, 13 fl. oz",
+      "raw_original_price": "$13.99",
+      "raw_price": "$8.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Truvia Calorie Free Sweetener",
+      "raw_original_price": "$4.99",
+      "raw_price": "$3.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Bowl & Basket SYRUP",
+      "raw_original_price": "$9.99",
+      "raw_price": "$8.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Morton Williams Sausage",
+      "raw_original_price": "$8.99",
+      "raw_price": "$7.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Key Food Schaller & Weber's Uncured Wieners",
+      "raw_original_price": "$9.99",
+      "raw_price": "$8.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Just the Fun Part Hazelnut Waffle Cones",
+      "raw_original_price": "$6.99",
+      "raw_price": "$4.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "H\u00e4agen-Dazs Chocolate Dark Chocolate Ice Cream Bars",
+      "raw_original_price": "$7.99",
+      "raw_price": "$5.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "St. Dalfour Apricot Fruit Spread",
+      "raw_original_price": "$6.99",
+      "raw_price": "$4.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "St. Dalfour Fruit Spread, Black Raspberry",
+      "raw_original_price": "$5.49",
+      "raw_price": "$4.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "St. Dalfour Orange Marmalade Fruit Spread",
+      "raw_original_price": "$5.49",
+      "raw_price": "$4.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "St. Dalfour Four Fruits Fruit Spread",
+      "raw_original_price": "$5.49",
+      "raw_price": "$4.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Heinz Tomato Ketchup",
+      "raw_original_price": "$4.99",
+      "raw_price": "$3.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Welch's Passion Fruit",
+      "raw_original_price": "$5.99",
+      "raw_price": "$3.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "sugar",
+      "product_name": "Apple & Eve No Sugar Added Natural Style Apple Juice",
+      "raw_original_price": "$5.59",
+      "raw_price": "$3.50",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Montauk Brewing Company Pilsner in Can",
+      "raw_original_price": "$13.99",
+      "raw_price": "$11.99",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Culture Pop Soda Wild Berries & Lime",
+      "raw_original_price": "$2.99",
+      "raw_price": "$2.00",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "strawberries",
+      "product_name": "Culture Pop Soda Strawberry & Rhubarb",
+      "raw_original_price": "$2.99",
+      "raw_price": "$2.00",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Poppi Prebiotic Soda, Cherry Limeade",
+      "raw_original_price": "$2.99",
+      "raw_price": "$2.50",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "ginger",
+      "product_name": "Poppi Prebiotic Soda, Ginger Lime",
+      "raw_original_price": "$2.99",
+      "raw_price": "$2.50",
+      "reasons": [
+        "not a useful recipe ingredient"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Poppi Prebiotic Soda, Wild Berry",
+      "raw_original_price": "$2.99",
+      "raw_price": "$2.50",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    },
+    {
+      "ingredient_id": "",
+      "product_name": "Poppi Prebiotic Soda, Cherry Cola",
+      "raw_original_price": "$2.99",
+      "raw_price": "$2.50",
+      "reasons": [
+        "normalized ingredient type unavailable",
+        "not a useful recipe ingredient",
+        "fewer than three matching recipes"
+      ]
+    }
+  ],
+  "metadata": {
+    "candidate_count": 10,
+    "exclusion_sample_count": 200,
+    "generated_at": "2026-07-21T19:24:32Z",
+    "source": "SNAPP sale ingredient candidate artifact",
+    "source_database": "database.scrape-20260721-143928.json",
+    "source_last_updated": "2026-07-21T18:41:06+00:00",
+    "weights": {
+      "absolute_savings": 14,
+      "data_confidence": 8,
+      "discount_percent": 46,
+      "ingredient_usefulness": 20,
+      "recipe_availability": 12
+    }
+  }
+}

@@ -63,6 +63,7 @@ const signUpUsernameInput = document.getElementById("sign-up-username");
 const signUpPasswordInput = document.getElementById("sign-up-password");
 const saleIngredientsGrid = document.getElementById("sale-ingredients-grid");
 const saleIngredientsStatus = document.getElementById("sale-ingredients-status");
+const homeUsername = document.getElementById("home-username");
 
 const scheduledMeals = [];
 let currentUser = null;
@@ -207,8 +208,8 @@ function getApiEndpoints(path) {
   return [];
 }
 
-const SIGNED_OUT_PANEL_IDS = new Set(["home", "account", "dishes"]);
-const SIGNED_IN_DEFAULT_PANEL_ID = "dishes";
+const SIGNED_OUT_PANEL_IDS = new Set(["home", "account"]);
+const SIGNED_IN_DEFAULT_PANEL_ID = "home";
 const SIGNED_OUT_DEFAULT_PANEL_ID = "home";
 const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -299,6 +300,25 @@ function renderNavigationForAuthState() {
       (authView === "signed-out" && isSignedIn);
   });
   accountStatus.hidden = !isSignedIn;
+}
+
+function renderHomeForAuthState() {
+  const isSignedIn = Boolean(currentUser);
+  document.querySelectorAll(".signed-in-home").forEach((element) => {
+    element.hidden = !isSignedIn;
+  });
+  document.querySelectorAll(".signed-out-home").forEach((element) => {
+    element.hidden = isSignedIn;
+  });
+  if (homeUsername) {
+    homeUsername.textContent = getDisplayUsername(currentUser);
+  }
+  if (isSignedIn) {
+    loadSaleIngredients();
+  } else if (saleIngredientsGrid && saleIngredientsStatus) {
+    saleIngredientsGrid.replaceChildren();
+    saleIngredientsStatus.textContent = "";
+  }
 }
 
 function setAuthStatus(message, type = "neutral") {
@@ -873,6 +893,7 @@ async function renderAuthState(user) {
 
   accountUsername.textContent = getDisplayUsername(user);
   syncSettingsFromUserInfo(user, currentUserInfo);
+  renderHomeForAuthState();
   await loadSavedStores();
   await loadPantryItems();
   await loadScheduledMeals();
@@ -2574,5 +2595,4 @@ updatePantryQuantityVisibility();
 renderSchedule();
 showAuthMode("sign-in");
 initializeAuth();
-loadSaleIngredients();
 handleInitialUrlState();

@@ -20,7 +20,7 @@
         <span class="brand-name">SNAPP</span>
       </div>
       <nav class="nav-buttons">
-        <button data-target="home" data-auth-view="signed-out" class="nav-button active">Home</button>
+        <button data-target="home" class="nav-button active">Home</button>
         <button data-target="account" data-auth-view="signed-out" class="nav-button">Account</button>
         <button data-target="dishes" data-auth-view="signed-in" class="nav-button" hidden>Dishes</button>
         <button data-target="my" data-auth-view="signed-in" class="nav-button" hidden>My stores</button>
@@ -103,7 +103,7 @@
       </section>
 
       <section id="home" class="panel visible">
-        <div class="home-hero">
+        <div class="home-hero signed-out-home">
           <div>
             <p class="eyebrow">Nourishment Made Practical</p>
             <h1>Welcome to SNAPP</h1>
@@ -125,7 +125,20 @@
           </div>
         </div>
 
-        <section class="home-section sale-ingredients-section">
+        <div class="signed-in-home" hidden>
+          <div class="home-dashboard-header">
+            <div>
+              <p class="eyebrow">Today's Store Plan</p>
+              <h1>Hello <span id="home-username">there</span></h1>
+              <p>
+                Start with sale ingredients that already have recipe matches and
+                Morton Williams price estimates.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <section class="home-section sale-ingredients-section signed-in-home" hidden>
           <div class="section-heading-row">
             <div>
               <h2>Best sale ingredients today</h2>
@@ -136,7 +149,33 @@
           <div id="sale-ingredients-grid" class="sale-ingredients-grid"></div>
         </section>
 
-        <section class="home-section">
+        <section class="home-section home-store-preview signed-in-home" hidden>
+          <div class="section-heading-row">
+            <div>
+              <h2>My stores</h2>
+              <p>Saved local store support is coming soon. These placeholders show where selected stores will appear.</p>
+            </div>
+          </div>
+          <div class="store-preview-grid">
+            <article>
+              <h3>Morton Williams 23rd Street</h3>
+              <p>311 East 23rd Street, New York, NY 10010</p>
+              <span>Placeholder active source</span>
+            </article>
+            <article>
+              <h3>Neighborhood Market</h3>
+              <p>Local grocery placeholder</p>
+              <span>Coming soon</span>
+            </article>
+            <article>
+              <h3>Community Food Co-op</h3>
+              <p>Local grocery placeholder</p>
+              <span>Coming soon</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="home-section signed-out-home">
           <h2>Core Food Groups</h2>
           <p>
             A balanced plate generally includes complex carbohydrates, lean
@@ -177,7 +216,7 @@
           </div>
         </section>
 
-        <section class="home-section">
+        <section class="home-section signed-out-home">
           <h2>Simple Plate Method</h2>
           <div class="plate-layout">
             <div class="plate-text">
@@ -199,7 +238,7 @@
           </div>
         </section>
 
-        <section class="home-section">
+        <section class="home-section signed-out-home">
           <h2>Weekly Nutrition Focus</h2>
           <p>
             Instead of overhauling everything at once, anchor one weekly focus:
@@ -232,7 +271,7 @@
           </div>
         </section>
 
-        <section class="home-section">
+        <section class="home-section signed-out-home">
           <h2>Use SNAPP Throughout Your Day</h2>
           <p>
             Morning: verify your meals and prep ingredients. Midday: ask the

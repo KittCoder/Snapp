@@ -20,6 +20,7 @@ DEFAULT_FEATURES = MODEL_DIR / "morton_williams_product_features.json"
 DEFAULT_UNCERTAIN = MODEL_DIR / "morton_williams_uncertain_products.csv"
 DEFAULT_INVALID = MODEL_DIR / "morton_williams_invalid_or_noise.csv"
 DEFAULT_INDEX_DIR = MODEL_DIR / "morton_williams_vector_index"
+DEFAULT_SALE_CANDIDATES = MODEL_DIR / "sale_ingredient_candidates.json"
 ROLLBACK_DIR = MODEL_DIR / "artifact_rollbacks"
 
 
@@ -48,6 +49,7 @@ def backup_active_artifacts() -> Path:
     copy_if_exists(DEFAULT_UNCERTAIN, backup / DEFAULT_UNCERTAIN.name)
     copy_if_exists(DEFAULT_INVALID, backup / DEFAULT_INVALID.name)
     copy_if_exists(DEFAULT_INDEX_DIR, backup / DEFAULT_INDEX_DIR.name)
+    copy_if_exists(DEFAULT_SALE_CANDIDATES, backup / DEFAULT_SALE_CANDIDATES.name)
     copy_if_exists(DEFAULT_MANIFEST_PATH, backup / DEFAULT_MANIFEST_PATH.name)
     return backup
 
@@ -100,6 +102,7 @@ def main() -> None:
     staged_uncertain = staging_root / DEFAULT_UNCERTAIN.name
     staged_invalid = staging_root / DEFAULT_INVALID.name
     staged_index = staging_root / DEFAULT_INDEX_DIR.name
+    staged_sale_candidates = staging_root / DEFAULT_SALE_CANDIDATES.name
     staged_manifest = staging_root / DEFAULT_MANIFEST_PATH.name
     try:
         source_summary = validate_source_schema(args.source)
@@ -131,6 +134,15 @@ def main() -> None:
         if args.force_rebuild and staged_index.exists():
             shutil.rmtree(staged_index)
         run_step(index_cmd, dry_run=args.dry_run)
+        sale_candidates_cmd = [
+            sys.executable,
+            str(MODEL_DIR / "build_sale_ingredient_candidates.py"),
+            "--source",
+            str(args.source),
+            "--output",
+            str(staged_sale_candidates),
+        ]
+        run_step(sale_candidates_cmd, dry_run=args.dry_run)
         if not args.dry_run:
             write_manifest(
                 path=staged_manifest,
@@ -153,6 +165,7 @@ def main() -> None:
             promote_file(staged_features, DEFAULT_FEATURES)
             promote_file(staged_uncertain, DEFAULT_UNCERTAIN)
             promote_file(staged_invalid, DEFAULT_INVALID)
+            promote_file(staged_sale_candidates, DEFAULT_SALE_CANDIDATES)
             promote_dir(staged_index, DEFAULT_INDEX_DIR)
             promote_file(staged_manifest, DEFAULT_MANIFEST_PATH)
         elapsed_ms = round((time.perf_counter() - started) * 1000, 2)
