@@ -71,9 +71,17 @@ let myStoreMarkers = [];
 let pantryItems = [];
 let savedMyStores = [];
 let activeAuthUserId = null;
+let dishProgressTimer = null;
 const selectedMyStoreIds = new Set();
 const selectedShoppingIngredientIds = new Set();
 const pantryHandledShoppingIngredientIds = new Set();
+
+const DISH_PROGRESS_MESSAGES = [
+  "Finding meals...",
+  "Checking recipes...",
+  "Matching ingredients...",
+  "Pricing groceries...",
+];
 
 const TRADITIONAL_SPICES = [
   "salt",
@@ -296,11 +304,41 @@ function setAuthStatus(message, type = "neutral") {
   authStatus.dataset.type = type;
 }
 
+function clearDishProgress() {
+  if (dishProgressTimer) {
+    window.clearInterval(dishProgressTimer);
+    dishProgressTimer = null;
+  }
+  delete dishStatus.dataset.loading;
+}
+
+function setDishStatus(message) {
+  clearDishProgress();
+  dishStatus.textContent = message;
+}
+
+function startDishProgress() {
+  clearDishProgress();
+  let messageIndex = 0;
+  const spinner = document.createElement("span");
+  spinner.className = "dish-status-spinner";
+  spinner.setAttribute("aria-hidden", "true");
+  const text = document.createElement("span");
+  text.className = "dish-status-text";
+  text.textContent = DISH_PROGRESS_MESSAGES[messageIndex];
+  dishStatus.dataset.loading = "true";
+  dishStatus.replaceChildren(spinner, text);
+  dishProgressTimer = window.setInterval(() => {
+    messageIndex = (messageIndex + 1) % DISH_PROGRESS_MESSAGES.length;
+    text.textContent = DISH_PROGRESS_MESSAGES[messageIndex];
+  }, 1200);
+}
+
 function clearDishSession() {
   dishResults.replaceChildren();
   dishEmptyState.hidden = false;
   dishInput.value = "";
-  dishStatus.textContent = "";
+  setDishStatus("");
   dishSource.hidden = true;
 }
 
@@ -2336,17 +2374,17 @@ dishForm.addEventListener("submit", async (event) => {
   submitButton.disabled = true;
   appendDishMessage("user", mealPrompt);
   dishInput.value = "";
-  dishStatus.textContent = "Searching your saved profile, pantry, recipes, and grocery prices...";
+  startDishProgress();
   dishSource.hidden = true;
 
   try {
     const data = await fetchDishes(mealPrompt);
     renderDishes(data);
-    dishStatus.textContent = `Found ${Math.min(data.dishes.length, 3)} recipe ${data.dishes.length === 1 ? "match" : "matches"} with grocery price estimates.`;
+    setDishStatus(`Found ${Math.min(data.dishes.length, 3)} recipe ${data.dishes.length === 1 ? "match" : "matches"} with grocery price estimates.`);
     dishSource.hidden = false;
   } catch (error) {
     appendDishMessage("bot", `Dish search error: ${error.message}`);
-    dishStatus.textContent = `Dish search error: ${error.message}`;
+    setDishStatus(`Dish search error: ${error.message}`);
   } finally {
     submitButton.disabled = false;
     dishInput.focus();

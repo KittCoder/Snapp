@@ -522,6 +522,15 @@ NON_FOOD_CATEGORY_PATTERNS = (
 BRAND_PATTERN = re.compile(r"\b([A-Z][A-Za-z0-9'&.-]+(?:\s+[A-Z][A-Za-z0-9'&.-]+){0,2})\s+brand\b")
 
 
+@lru_cache(maxsize=32768)
+def cached_regex(pattern: str, flags: int = 0) -> re.Pattern[str]:
+    return re.compile(pattern, flags)
+
+
+def regex_search(pattern: str, text: str, flags: int = 0) -> re.Match[str] | None:
+    return cached_regex(pattern, flags).search(text)
+
+
 @dataclass
 class ParsedIngredient:
     raw_text: str
@@ -654,7 +663,7 @@ def extract_preparation(text: str) -> tuple[str, list[str]]:
     working = text
     for term in PREPARATION_TERMS:
         pattern = rf"(?:,\s*|\b){re.escape(term)}\b"
-        if re.search(pattern, working, flags=re.I):
+        if regex_search(pattern, working, flags=re.I):
             found.append(term)
             working = re.sub(pattern, " ", working, flags=re.I)
     working = re.sub(r"\s+", " ", working).strip(" ,")
@@ -824,7 +833,7 @@ def product_evidence_score(name: str, price: Any, unit: Any, source: str) -> tup
         score += 15
     if source == "mortonwilliams-storefront":
         score += 20
-    if any(re.search(pattern, normalized) for pattern in PRODUCT_EVIDENCE_PATTERNS):
+    if any(regex_search(pattern, normalized) for pattern in PRODUCT_EVIDENCE_PATTERNS):
         score += 20
     if len(normalized.split()) >= 2:
         score += 10
@@ -872,14 +881,14 @@ def classify_product_record(
         }
 
     for pattern in NOISE_NAME_PATTERNS:
-        if re.search(pattern, normalized_name):
+        if regex_search(pattern, normalized_name):
             exclusion_reasons.append("scraper/navigation/description noise")
             break
     for pattern in SENTENCE_FRAGMENT_PATTERNS:
-        if re.search(pattern, normalized_name):
+        if regex_search(pattern, normalized_name):
             exclusion_reasons.append("sentence fragment")
             break
-    if re.search(r"\b(shopping cart|add to cart|learn more|browse aisle|view details)\b", normalized_name):
+    if regex_search(r"\b(shopping cart|add to cart|learn more|browse aisle|view details)\b", normalized_name):
         exclusion_reasons.append("instructional or navigation text")
 
     score, evidence_reasons = product_evidence_score(name, price, unit, source)
@@ -906,11 +915,11 @@ def classify_product_record(
     probable_reasons = []
     if source == "mortonwilliams-pdf":
         probable_reasons.append("pdf flyer row")
-    if re.search(r"\bor\b", normalized_name):
+    if regex_search(r"\bor\b", normalized_name):
         probable_reasons.append("multi-product flyer row")
     if len(normalized_name.split()) <= 2 and not any(brand in normalized_name for brand in BRAND_HINTS):
         probable_reasons.append("generic short product name")
-    if any(re.search(pattern, normalized_name) for pattern in NON_FOOD_CATEGORY_PATTERNS):
+    if any(regex_search(pattern, normalized_name) for pattern in NON_FOOD_CATEGORY_PATTERNS):
         probable_reasons.append("non-food grocery aisle product")
 
     if probable_reasons:
@@ -1026,7 +1035,7 @@ def infer_category(name: str) -> tuple[str | None, str | None]:
         (r"\b(cleaner|detergent|paper towel|tissue|bandage|soap|shampoo|conditioner)\b", "household", None),
     )
     for pattern, category, subcategory in rules:
-        if re.search(pattern, text):
+        if regex_search(pattern, text):
             return category, subcategory
     return None, None
 
@@ -1034,16 +1043,16 @@ def infer_category(name: str) -> tuple[str | None, str | None]:
 def canonical_for_product(normalized_name: str) -> str | None:
     normalized = apply_alias(normalized_name)
     for pattern, canonical in CANONICAL_PATTERNS:
-        if re.search(pattern, normalized):
+        if regex_search(pattern, normalized):
             if canonical == "peppers" and "dr pepper" in normalized:
                 continue
-            if canonical == "sugar" and re.search(r"\b(soda|drink|sports drink)\b", normalized):
+            if canonical == "sugar" and regex_search(r"\b(soda|drink|sports drink)\b", normalized):
                 continue
             if canonical == "milk" and "muscle milk" in normalized:
                 continue
-            if canonical in {"beef", "chicken", "chicken breast", "chicken thighs"} and re.search(r"\b(broth|stock|bouillon)\b", normalized):
+            if canonical in {"beef", "chicken", "chicken breast", "chicken thighs"} and regex_search(r"\b(broth|stock|bouillon)\b", normalized):
                 continue
-            if canonical == "pasta" and re.search(r"\bpasta sauce\b", normalized):
+            if canonical == "pasta" and regex_search(r"\bpasta sauce\b", normalized):
                 continue
             if canonical == "butter" and re.search(r"\bpeanut butter\b", normalized):
                 return "peanut butter"

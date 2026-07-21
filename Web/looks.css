@@ -555,6 +555,30 @@ main {
   color: var(--color-muted);
 }
 
+.dish-status[data-loading="true"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-primary-strong);
+  font-weight: 700;
+}
+
+.dish-status-spinner {
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 2px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
+  border-top-color: var(--color-primary);
+  border-radius: 999px;
+  animation: dish-status-spin 0.75s linear infinite;
+  flex: 0 0 auto;
+}
+
+@keyframes dish-status-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .dish-results {
   list-style: none;
   padding: 0;

@@ -1714,7 +1714,7 @@ class ProductMatchService:
                 continue
             forced = self._forced_result(text, query_profile, parsed, started_by_text[text])
             if forced:
-                self.cache.set(key, forced)
+                self.cache.set(key, copy.deepcopy(forced))
                 results_by_key[key] = forced
                 continue
             if key not in unique_queries:
@@ -1737,13 +1737,19 @@ class ProductMatchService:
                 )
             for (text, query_profile, parsed, key), retrieval in zip(misses, retrievals):
                 result = self._match_from_retrieval(text, query_profile, parsed, retrieval, started_by_text[text], limit, 50)
-                self.cache.set(key, result)
+                self.cache.set(key, copy.deepcopy(result))
                 results_by_key[key] = result
 
         ordered = []
+        emitted_keys = set()
         for text in texts:
             _profile, _parsed, key = profiles[text]
-            ordered.append(copy.deepcopy(results_by_key[key]))
+            result = results_by_key[key]
+            if key in emitted_keys:
+                ordered.append(copy.deepcopy(result))
+            else:
+                ordered.append(result)
+                emitted_keys.add(key)
         return ordered
 
 
