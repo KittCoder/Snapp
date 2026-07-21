@@ -3459,7 +3459,32 @@ def basket_item_to_morton_williams_product(item, feature):
     product["estimated_price_total"] = round(float(checkout_cost), 2) if checkout_cost is not None else product.get("price")
     product["quantity_optimization_warnings"] = item.warnings
     product["pricing_source"] = "morton_williams_quantity_engine"
+    product["purchase_quantity_display"] = purchase_quantity_display(product)
     return product
+
+
+def purchase_quantity_display(product):
+    packages = product.get("packages_purchased")
+    package_size = re.sub(r"\s+", " ", str(product.get("package_size") or "")).strip()
+    if packages is None:
+        return package_size or None
+    try:
+        packages = float(packages)
+    except (TypeError, ValueError):
+        return package_size or None
+    if packages <= 0:
+        return package_size or None
+    amount = f"{packages:g}"
+    normalized_size = package_size.casefold()
+    if normalized_size in {"lb", "lbs", "pound", "pounds", "per lb", "per pound", "1 lb", "1 pound"}:
+        return f"{amount} lb"
+    if normalized_size in {"oz", "ounce", "ounces", "per oz", "per ounce", "1 oz", "1 ounce"}:
+        return f"{amount} oz"
+    if normalized_size in {"each", "ea", "ct", "count", "1 count"}:
+        return f"{amount} item" if packages == 1 else f"{amount} items"
+    if package_size:
+        return f"{amount} x {package_size}"
+    return f"{amount} package" if packages == 1 else f"{amount} packages"
 
 
 def estimated_grams_from_required_quantity(required_quantity, ingredient_name=None):
@@ -3604,6 +3629,7 @@ def spoonacular_recipe_to_demo_dish(
                 "package_size": product.get("package_size"),
                 "package_grams": product.get("package_grams"),
                 "packages_purchased": product.get("packages_purchased"),
+                "purchase_quantity_display": product.get("purchase_quantity_display"),
                 "required_quantity": product.get("required_quantity"),
                 "leftover_quantity": product.get("leftover_quantity"),
                 "grams_total": grams_total,

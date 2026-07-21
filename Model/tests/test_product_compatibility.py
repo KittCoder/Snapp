@@ -582,6 +582,7 @@ class OverrideCacheBatchEndpointTests(unittest.TestCase):
         self.assertEqual(matches[0][1]["store_id"], "morton-williams")
         self.assertEqual(matches[0][1]["pricing_source"], "morton_williams_quantity_engine")
         self.assertEqual(matches[0][1]["estimated_price_total"], 9.99)
+        self.assertEqual(matches[0][1]["purchase_quantity_display"], "1 lb")
 
     def test_pantry_adjustment_filters_covered_items_and_spices(self):
         import model

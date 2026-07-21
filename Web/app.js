@@ -842,6 +842,8 @@ function getIngredientQuantity(ingredient) {
   if (typeof ingredient === "string" || !ingredient) return "1 item";
 
   return (
+    ingredient.purchase_quantity_display ||
+    formatPurchaseQuantity(ingredient) ||
     ingredient.package_size ||
     ingredient.quantity ||
     ingredient.amount ||
@@ -849,6 +851,31 @@ function getIngredientQuantity(ingredient) {
     ingredient.display ||
     "1 item"
   );
+}
+
+function formatCount(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number) || number <= 0) return "";
+  return Number.isInteger(number) ? String(number) : String(Number(number.toFixed(2)));
+}
+
+function formatPurchaseQuantity(ingredient) {
+  if (!ingredient || typeof ingredient !== "object") return "";
+  const count = formatCount(ingredient.packages_purchased);
+  const packageSize = String(ingredient.package_size || "").trim();
+  if (!count) return packageSize;
+  const normalizedPackage = packageSize.toLowerCase();
+  if (["lb", "lbs", "pound", "pounds", "per lb", "per pound", "1 lb", "1 pound"].includes(normalizedPackage)) {
+    return `${count} lb`;
+  }
+  if (["oz", "ounce", "ounces", "per oz", "per ounce", "1 oz", "1 ounce"].includes(normalizedPackage)) {
+    return `${count} oz`;
+  }
+  if (["each", "ea", "ct", "count", "1 count"].includes(normalizedPackage)) {
+    return Number(count) === 1 ? "1 item" : `${count} items`;
+  }
+  if (packageSize) return `${count} x ${packageSize}`;
+  return Number(count) === 1 ? "1 package" : `${count} packages`;
 }
 
 function getShoppingIngredients() {
@@ -935,7 +962,7 @@ function renderShoppingList() {
       updateShoppingAddButton(items);
     });
 
-    details.textContent = `${item.name} - ${item.quantity} (${item.dishName})`;
+    details.textContent = `${item.name} - get ${item.quantity} (${item.dishName})`;
     if (item.unavailable) {
       details.textContent += " - unavailable";
     }
@@ -1075,25 +1102,67 @@ function createScheduleSlot(day, slot) {
 }
 
 function createScheduleMealCard(meal) {
-  const button = document.createElement("button");
+  const card = document.createElement("div");
+  const openButton = document.createElement("button");
+  const removeButton = document.createElement("button");
   const price = document.createElement("span");
-  button.type = "button";
-  button.className = "schedule-meal";
-  button.draggable = true;
-  button.dataset.scheduleId = meal.schedule_id;
-  button.textContent = meal.name;
+
+  card.className = "schedule-meal";
+  card.draggable = true;
+  card.dataset.scheduleId = meal.schedule_id;
+
+  openButton.type = "button";
+  openButton.className = "schedule-meal-open";
+  openButton.textContent = meal.name;
   price.textContent = currencyFormatter.format(meal.estimated_price_total || 0);
-  button.appendChild(price);
-  button.addEventListener("click", () => openDishModal(meal));
-  button.addEventListener("dragstart", (event) => {
+  openButton.appendChild(price);
+  openButton.addEventListener("click", () => openDishModal(meal));
+
+  removeButton.type = "button";
+  removeButton.className = "schedule-meal-remove";
+  removeButton.textContent = "Remove";
+  removeButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    removeScheduledMeal(meal.schedule_id);
+  });
+
+  card.append(openButton, removeButton);
+  card.addEventListener("dragstart", (event) => {
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData("text/plain", meal.schedule_id);
-    button.classList.add("dragging");
+    card.classList.add("dragging");
   });
-  button.addEventListener("dragend", () => {
-    button.classList.remove("dragging");
+  card.addEventListener("dragend", () => {
+    card.classList.remove("dragging");
   });
-  return button;
+  return card;
+}
+
+async function removeScheduledMeal(scheduleId) {
+  const normalizedId = String(scheduleId || "");
+  const index = scheduledMeals.findIndex((meal) => String(meal.schedule_id) === normalizedId);
+  if (index === -1) return;
+
+  scheduledMeals.splice(index, 1);
+  selectedShoppingIngredientIds.forEach((id) => {
+    if (id.startsWith(`${normalizedId}:`)) selectedShoppingIngredientIds.delete(id);
+  });
+  pantryHandledShoppingIngredientIds.forEach((id) => {
+    if (id.startsWith(`${normalizedId}:`)) pantryHandledShoppingIngredientIds.delete(id);
+  });
+  saveScheduledMealsToStorage();
+  renderSchedule();
+
+  if (supabaseClient && currentUser && normalizedId) {
+    const { error } = await supabaseClient
+      .from("user_scheduled_meals")
+      .delete()
+      .eq("user_id", currentUser.id)
+      .eq("id", normalizedId);
+    if (error) {
+      console.warn("Scheduled meal removal sync failed:", error.message);
+    }
+  }
 }
 
 function handleScheduleDragOver(event) {
@@ -1373,7 +1442,9 @@ function openDishModal(dish) {
 	      : "";
 	    const sourceText = ingredient.recipe_measure || ingredient.required_quantity_display;
 	    const requirementText = sourceText ? `${sourceText} -> ` : "";
-	    return `${requirementText}${ingredient.product_name || ingredient.name}${ingredient.package_size ? ` (${ingredient.package_size})` : ""}${storeText}${priceText}`;
+	    const purchaseText = ingredient.purchase_quantity_display || formatPurchaseQuantity(ingredient);
+	    const packageText = purchaseText ? `, get ${purchaseText}` : ingredient.package_size ? ` (${ingredient.package_size})` : "";
+	    return `${requirementText}${ingredient.product_name || ingredient.name}${packageText}${storeText}${priceText}`;
 	  });
 
   const instructionsHeading = document.createElement("h4");
