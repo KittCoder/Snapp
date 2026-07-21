@@ -21,6 +21,8 @@ const myStoreSource = document.getElementById("my-store-source");
 const pantryForm = document.getElementById("pantry-form");
 const pantryNameInput = document.getElementById("pantry-name");
 const pantryQuantityInput = document.getElementById("pantry-quantity");
+const pantryQuantityLabel = document.getElementById("pantry-quantity-label");
+const pantrySpiceSuggestions = document.getElementById("pantry-spice-suggestions");
 const pantryStatus = document.getElementById("pantry-status");
 const pantryList = document.getElementById("pantry-list");
 const dishForm = document.getElementById("dish-form");
@@ -72,6 +74,85 @@ let activeAuthUserId = null;
 const selectedMyStoreIds = new Set();
 const selectedShoppingIngredientIds = new Set();
 const pantryHandledShoppingIngredientIds = new Set();
+
+const TRADITIONAL_SPICES = [
+  "salt",
+  "black pepper",
+  "garlic powder",
+  "onion powder",
+  "paprika",
+  "smoked paprika",
+  "cayenne pepper",
+  "crushed red pepper flakes",
+  "chili powder",
+  "ground cumin",
+  "ground coriander",
+  "ground cinnamon",
+  "ground ginger",
+  "ground nutmeg",
+  "ground cloves",
+  "allspice",
+  "turmeric",
+  "dried oregano",
+  "dried basil",
+  "dried thyme",
+  "dried rosemary",
+  "dried sage",
+  "dried parsley",
+  "dill weed",
+  "bay leaves",
+  "Italian seasoning",
+  "herbes de Provence",
+  "poultry seasoning",
+  "celery seed",
+  "mustard powder",
+];
+
+const SPICE_ALIASES = new Map([
+  ["pepper", "black pepper"],
+  ["cayenne", "cayenne pepper"],
+  ["red pepper flakes", "crushed red pepper flakes"],
+  ["crushed red pepper", "crushed red pepper flakes"],
+  ["cumin", "ground cumin"],
+  ["coriander", "ground coriander"],
+  ["cinnamon", "ground cinnamon"],
+  ["ginger", "ground ginger"],
+  ["nutmeg", "ground nutmeg"],
+  ["cloves", "ground cloves"],
+  ["oregano", "dried oregano"],
+  ["basil", "dried basil"],
+  ["thyme", "dried thyme"],
+  ["rosemary", "dried rosemary"],
+  ["sage", "dried sage"],
+  ["parsley", "dried parsley"],
+  ["dill", "dill weed"],
+  ["bay leaf", "bay leaves"],
+  ["italian seasoning", "Italian seasoning"],
+  ["herbs de provence", "herbes de Provence"],
+  ["herbes de provence", "herbes de Provence"],
+  ["mustard", "mustard powder"],
+  ["dry mustard", "mustard powder"],
+]);
+
+function normalizeSpiceText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function canonicalSpiceName(value) {
+  const normalized = normalizeSpiceText(value);
+  if (!normalized) return "";
+  const direct = TRADITIONAL_SPICES.find((spice) => normalizeSpiceText(spice) === normalized);
+  if (direct) return direct;
+  return SPICE_ALIASES.get(normalized) || "";
+}
+
+function isTraditionalSpice(value) {
+  return Boolean(canonicalSpiceName(value));
+}
 const SCHEDULE_DAYS = [
   "Monday",
   "Tuesday",
@@ -407,6 +488,30 @@ function setPantryStatus(message, type = "neutral") {
   pantryStatus.dataset.type = type;
 }
 
+function populatePantrySpiceSuggestions() {
+  if (!pantrySpiceSuggestions) return;
+  pantrySpiceSuggestions.replaceChildren(
+    ...TRADITIONAL_SPICES.map((spice) => {
+      const option = document.createElement("option");
+      option.value = spice;
+      return option;
+    })
+  );
+}
+
+function updatePantryQuantityVisibility() {
+  const spiceName = canonicalSpiceName(pantryNameInput.value);
+  const isSpice = Boolean(spiceName);
+  pantryForm.classList.toggle("spice-selected", isSpice);
+  if (pantryQuantityLabel) pantryQuantityLabel.hidden = isSpice;
+  pantryQuantityInput.required = !isSpice;
+  pantryQuantityInput.disabled = isSpice;
+  if (isSpice) {
+    pantryQuantityInput.value = "";
+    pantryNameInput.value = spiceName;
+  }
+}
+
 function getPantryErrorMessage(error) {
   const message = error?.message || "";
   if (
@@ -592,7 +697,9 @@ function renderPantryItems() {
     const itemText = document.createElement("span");
     const removeButton = document.createElement("button");
 
-    itemText.textContent = `${item.name} - ${item.quantity}`;
+    itemText.textContent = isTraditionalSpice(item.name)
+      ? `${canonicalSpiceName(item.name)} - pantry spice`
+      : `${item.name} - ${item.quantity}`;
     removeButton.type = "button";
     removeButton.textContent = "Remove";
     removeButton.addEventListener("click", () => deletePantryItem(item.id));
@@ -1243,7 +1350,17 @@ async function updateScheduledMealPlacement(scheduleId, day, slot) {
   }
 }
 
-const PANTRY_SPICE_PATTERN = /\b(salt|pepper|black pepper|white pepper|red pepper flakes|cayenne|paprika|cumin|cinnamon|nutmeg|allspice|chili powder|curry powder|garlic powder|onion powder|basil|oregano|thyme|rosemary|parsley|bay leaves?|sage|dill|cilantro|mint)\b/i;
+function textIncludesTraditionalSpice(value) {
+  const normalized = normalizeSpiceText(value);
+  if (!normalized) return false;
+  return TRADITIONAL_SPICES.some((spice) => {
+    const spiceText = normalizeSpiceText(spice);
+    return normalized === spiceText || normalized.includes(spiceText);
+  }) || [...SPICE_ALIASES.keys()].some((alias) => {
+    const aliasText = normalizeSpiceText(alias);
+    return normalized === aliasText || normalized.includes(aliasText);
+  });
+}
 
 function normalizePantryText(value) {
   return String(value || "")
@@ -1341,10 +1458,10 @@ async function consumePantryForScheduledDish(dish) {
       ingredient?.measure,
       ingredient?.name,
     ].filter(Boolean).join(" ");
-    if (PANTRY_SPICE_PATTERN.test(ingredientText)) return;
+    if (textIncludesTraditionalSpice(ingredientText)) return;
 
     const pantryItem = pantryItems.find(
-      (item) => !consumedIds.has(item.id) && !PANTRY_SPICE_PATTERN.test(item.name) && pantryItemMatchesIngredient(item, ingredient)
+      (item) => !consumedIds.has(item.id) && !textIncludesTraditionalSpice(item.name) && pantryItemMatchesIngredient(item, ingredient)
     );
     if (!pantryItem) return;
 
@@ -2161,10 +2278,11 @@ myStoreForm.addEventListener("submit", async (event) => {
 
 pantryForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const name = pantryNameInput.value.trim();
-  const quantity = pantryQuantityInput.value.trim();
+  const spiceName = canonicalSpiceName(pantryNameInput.value);
+  const name = spiceName || pantryNameInput.value.trim();
+  const quantity = spiceName ? "pantry staple" : pantryQuantityInput.value.trim();
 
-  if (!name || !quantity) {
+  if (!name || (!spiceName && !quantity)) {
     setPantryStatus("Enter both a food name and quantity.", "error");
     return;
   }
@@ -2176,11 +2294,15 @@ pantryForm.addEventListener("submit", async (event) => {
     const wasAdded = await addPantryItem(name, quantity);
     if (wasAdded) {
       pantryForm.reset();
+      updatePantryQuantityVisibility();
     }
   } finally {
     submitButton.disabled = false;
   }
 });
+
+pantryNameInput.addEventListener("input", updatePantryQuantityVisibility);
+pantryNameInput.addEventListener("change", updatePantryQuantityVisibility);
 
 shoppingAddPantryButton.addEventListener("click", async () => {
   const items = getShoppingIngredients();
@@ -2267,6 +2389,8 @@ dietSelect.addEventListener("change", () => {
   queueSettingsSave();
 });
 
+populatePantrySpiceSuggestions();
+updatePantryQuantityVisibility();
 renderSchedule();
 showAuthMode("sign-in");
 initializeAuth();

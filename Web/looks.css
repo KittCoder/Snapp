@@ -1120,6 +1120,10 @@ main {
   align-items: end;
 }
 
+.pantry-form.spice-selected {
+  grid-template-columns: minmax(180px, 1fr) auto;
+}
+
 .pantry-form label {
   display: grid;
   gap: 0.42rem;

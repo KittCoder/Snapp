@@ -3237,31 +3237,61 @@ def should_buy_recipe_ingredient(ingredient):
 
 SPICE_PANTRY_TERMS = {
     "salt",
-    "pepper",
     "black pepper",
-    "basil",
-    "oregano",
-    "thyme",
-    "rosemary",
-    "parsley",
-    "bay leaf",
-    "bay leaves",
     "paprika",
-    "cumin",
-    "cinnamon",
-    "nutmeg",
-    "allspice",
+    "smoked paprika",
+    "cayenne pepper",
+    "crushed red pepper flakes",
     "chili powder",
-    "curry powder",
-    "cayenne",
-    "red pepper flakes",
-    "white pepper",
-    "sage",
-    "dill",
-    "cilantro",
-    "mint",
+    "ground cumin",
+    "ground coriander",
+    "ground cinnamon",
+    "ground ginger",
+    "ground nutmeg",
+    "ground cloves",
+    "allspice",
+    "turmeric",
+    "dried oregano",
+    "dried basil",
+    "dried thyme",
+    "dried rosemary",
+    "dried sage",
+    "dried parsley",
+    "dill weed",
+    "bay leaves",
+    "Italian seasoning",
+    "herbes de Provence",
+    "poultry seasoning",
+    "celery seed",
+    "mustard powder",
     "garlic powder",
     "onion powder",
+}
+
+SPICE_PANTRY_ALIASES = {
+    "pepper": "black pepper",
+    "cayenne": "cayenne pepper",
+    "red pepper flakes": "crushed red pepper flakes",
+    "crushed red pepper": "crushed red pepper flakes",
+    "cumin": "ground cumin",
+    "coriander": "ground coriander",
+    "cinnamon": "ground cinnamon",
+    "ginger": "ground ginger",
+    "nutmeg": "ground nutmeg",
+    "cloves": "ground cloves",
+    "oregano": "dried oregano",
+    "basil": "dried basil",
+    "thyme": "dried thyme",
+    "rosemary": "dried rosemary",
+    "sage": "dried sage",
+    "parsley": "dried parsley",
+    "dill": "dill weed",
+    "bay leaf": "bay leaves",
+    "italian seasoning": "Italian seasoning",
+    "herbs de provence": "herbes de Provence",
+    "herbes de provence": "herbes de Provence",
+    "mustard": "mustard powder",
+    "dry mustard": "mustard powder",
 }
 
 
@@ -3285,7 +3315,14 @@ def ingredient_identity_key(text):
 
 def spice_requirements_for_text(text):
     normalized = normalize_cuisine_text(text)
-    return {term for term in SPICE_PANTRY_TERMS if re.search(rf"\b{re.escape(term)}s?\b", normalized)}
+    terms = set()
+    for term in SPICE_PANTRY_TERMS:
+        if re.search(rf"\b{re.escape(normalize_cuisine_text(term))}s?\b", normalized):
+            terms.add(term)
+    for alias, canonical in SPICE_PANTRY_ALIASES.items():
+        if re.search(rf"\b{re.escape(alias)}s?\b", normalized):
+            terms.add(canonical)
+    return terms
 
 
 def pantry_spice_keys(pantry_items):

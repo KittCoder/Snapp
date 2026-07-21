@@ -364,13 +364,15 @@
             <input
               type="text"
               id="pantry-name"
+              list="pantry-spice-suggestions"
               autocomplete="off"
               maxlength="80"
               placeholder="e.g. rice"
               required
             />
+            <datalist id="pantry-spice-suggestions"></datalist>
           </label>
-          <label>
+          <label id="pantry-quantity-label">
             Quantity
             <input
               type="text"

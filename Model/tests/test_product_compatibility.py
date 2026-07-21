@@ -605,6 +605,29 @@ class OverrideCacheBatchEndpointTests(unittest.TestCase):
         )
         self.assertEqual(adjusted, ["2 carrots"])
 
+    def test_traditional_pantry_spices_are_non_depleting(self):
+        import model
+
+        recipe = {
+            "extendedIngredients": [
+                {"name": "smoked paprika", "original": "1 teaspoon smoked paprika"},
+                {"name": "pepper", "original": "1/2 teaspoon pepper"},
+                {"name": "poultry seasoning", "original": "1 teaspoon poultry seasoning"},
+                {"name": "celery seed", "original": "1/4 teaspoon celery seed"},
+                {"name": "chicken thighs", "original": "2 pound chicken thighs"},
+            ]
+        }
+        adjusted, _originals = model.pantry_adjusted_recipe_ingredients(
+            recipe,
+            [
+                {"name": "smoked paprika", "quantity": "pantry staple"},
+                {"name": "black pepper", "quantity": "pantry staple"},
+                {"name": "poultry seasoning", "quantity": "pantry staple"},
+                {"name": "celery seed", "quantity": "pantry staple"},
+            ],
+        )
+        self.assertEqual(adjusted, ["2 pound chicken thighs"])
+
     def test_per_person_recipe_quantities_are_scaled_for_matching(self):
         import model
 
