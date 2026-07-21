@@ -279,7 +279,10 @@ def detect_fat_percent(text: str) -> str | None:
 
 def detect_broth_species(text: str) -> str | None:
     for species in ("chicken", "beef", "vegetable", "seafood", "turkey"):
-        if text_has(text, rf"\b{species}\s+(?:broth|stock)\b"):
+        if text_has(
+            text,
+            rf"\b{species}\s+(?:broth|stock|bouillon)\b|\b(?:broth|stock|bouillon)\s+{species}\b|\bbouillon\b.*\b{species}\b|\b{species}\s+flavo(?:r|u)r\s+bouillon\b",
+        ):
             return species
     return None
 
@@ -376,7 +379,7 @@ BEEF_CUT_PATTERNS = [
     ("eye of round", r"\beye (?:of )?round\b"),
     ("sirloin tip roast", r"\bsirloin tip roast\b"),
     ("tri-tip", r"\btri[-\s]?tip\b"),
-    ("tenderloin", r"\btenderloin\b|\bfilet mignon\b|\bfilet\b"),
+    ("tenderloin", r"\btenderloin\b|\bfilet mignon\b|\bfilet\b|\bfillet\s+beef\b|\bbeef\s+fillet\b"),
     ("ribeye steak", r"\bribeye\b|\brib eye\b|\bstanding rib roast\b|\brib roast\b|\bprime rib\b|\brib steak\b"),
     ("strip steak", r"\bnew york strip\b|\bny strip\b|\bstrip steak\b|\bshell steak\b|\bclub steak\b"),
     ("top sirloin", r"\btop sirloin\b|\bsirloin steak\b|\bpalomilla\b"),
@@ -540,6 +543,10 @@ def classify_identity(
 
     if text_has(detection_text, r"\bkefir\b"):
         profile.family = "kefir"; profile.category = profile.category or "dairy"
+    elif text_has(detection_text, r"\begg beaters?\b|\bliquid egg substitute\b|\begg substitute\b"):
+        profile.family = "egg substitute"; profile.category = profile.category or "dairy"
+    elif text_has(detection_text, r"\beggs?\b|\begg yolks?\b|\begg whites?\b") or canonical == "eggs":
+        profile.family = "eggs"; profile.category = profile.category or "dairy"
     elif text_has(detection_text, r"\boat milk\b|\boatmilk\b"):
         profile.family = "milk"; profile.dairy_type = "plant"; profile.milk_kind = "oat milk"
     elif text_has(detection_text, r"\balmond milk\b|\balmondmilk\b"):
@@ -597,6 +604,8 @@ def classify_identity(
         profile.family = "sauce"; profile.category = profile.category or "pantry"
     if text_has(detection_text, r"\btoothpaste\b|\btoothbrush\b|\bmouthwash\b|\bdental\b|\bfloss\b"):
         profile.family = "oral care"; profile.category = "household"
+    if text_has(detection_text, r"\bfacial tissues?\b|\btissues?\b|\bpaper towels?\b|\bnapkins?\b"):
+        profile.family = "household"; profile.category = "household"
     if text_has(detection_text, r"\bgum\b|\bchewing gum\b|\bbreath mints?\b|\btic tac\b|\bice breakers\b"):
         profile.family = "candy"; profile.category = "snacks"
     if text_has(detection_text, r"\bdog food\b|\bcat food\b|\bdog treats?\b|\bcat treats?\b|\bmilk-bone\b|\bpurina\b|\bfriskies\b|\bfancy feast\b|\bmeow mix\b|\bpedigree\b|\bcesar\b"):
@@ -657,7 +666,7 @@ def classify_identity(
     elif text_has(detection_text, r"\bstock\b"):
         profile.family = "broth"; profile.broth_type = "stock"
     elif text_has(detection_text, r"\bbouillon\b"):
-        profile.family = "bouillon"; profile.broth_type = "bouillon"
+        profile.family = "bouillon"; profile.broth_type = "bouillon"; profile.broth_species = broth_species
     elif text_has(detection_text, r"\bconsomm[eé]\b|\bconsomme\b"):
         profile.family = "broth"; profile.broth_type = "consomme"; profile.broth_species = broth_species
     elif text_has(detection_text, r"\bsoup\b") and not text_has(detection_text, r"\bsoup meat\b"):
@@ -788,6 +797,10 @@ def classify_identity(
     elif canonical == "yeast":
         profile.family = "yeast"
 
+    if text_has(detection_text, r"\bpuff pastry\b|\bpastry dough\b|\bfrozen sheets pastry dough\b|\bpastry sheets?\b"):
+        profile.family = "puff pastry"; profile.category = profile.category or "pantry"
+        if text_has(detection_text, r"\bfrozen\b"):
+            profile.freshness = profile.freshness or "frozen"
     if text_has(normalized, r"\bpancake mix\b") and not text_has(normalized, r"\bpotato pancake\b|\blatkes?\b"):
         profile.family = "pancake mix"
     elif text_has(normalized, r"\bpotato pancake\b|\blatkes?\b"):
@@ -851,7 +864,7 @@ def classify_identity(
         profile.family = "peas"; profile.category = profile.category or "produce"
     elif text_has(detection_text, r"\bmustard\b") and profile.category not in {"snacks", "prepared"}:
         profile.family = "mustard"; profile.category = profile.category or "pantry"
-    elif text_has(detection_text, r"\bhoney\b") and profile.category not in {"meat", "snacks", "prepared"} and profile.family not in {"ham"}:
+    elif text_has(detection_text, r"\bhoney\b") and profile.category not in {"meat", "snacks", "prepared", "bakery"} and profile.family not in {"ham"}:
         profile.family = "honey"; profile.category = profile.category or "pantry"
     elif text_has(detection_text, r"\bginger\b") and profile.category != "prepared":
         profile.family = "ginger"; profile.category = profile.category or "pantry"
@@ -948,7 +961,7 @@ def classify_identity(
     if text_has(
         detection_text,
         r"\bpot pie\b|\bfrozen meal\b|\bfrozen dinners?\b|\bentr[eé]es?\b|\balfredo\b|\bmacaroni (?:and|&) (?:cheese|beef)\b|\bbeef\s+(?:and|&)\s+broccoli\b|\bbeef barley vegetable\b|\bbeef chili\b|\bchili\b.*\bbeef\b|\bbeef flavor\b|\bflavor noodles?\b|\bramen\b|\bpho bowl\b|\bgerber\b|\bcovered raisins\b|\bmashed potatoes\b|\bcakes?\b|\bcheesecake\b|\bcupcakes?\b|\bdips?\b|\bpizza\b|\bravioli\b|\btortelloni\b|\bpierogi\b|\btortillas?\b|\bwraps?\b|\bbaby food\b|\bpouch\b|\bbeef stew with\b|\bdinty moore\b|\bchicken parmesan\b|\btaquitos?\b|\bburritos?\b|\bempanadas?\b|\bbiryani\b|\bchallah\b|\brolls?\b|\bonion rings?\b|\bfunyuns?\b|\bfrench onion\b.*\bdip\b|\bdip\b.*\bfrench onion\b|\bonion dip\b|\bonion gravy\b|\bonion bagels?\b|\bpopcorn\b|\bcrackers?\b|\bchips?\b|\bmrs ts\b",
-    ) and profile.family not in {"hummus", "pita bread"}:
+    ) and profile.family not in {"hummus", "pita bread", "bouillon", "broth"}:
         profile.family = "prepared meal"
         profile.category = "prepared"
 
@@ -1148,6 +1161,8 @@ def compatibility_signals(query: IngredientProfile, product: IngredientProfile) 
         signals.append(CompatibilitySignal("broth_identity", severity, f"{product.family} is not broth"))
     if query.family == "broth" and product.family == "broth" and query.broth_species and product.broth_species and query.broth_species != product.broth_species:
         signals.append(CompatibilitySignal("broth_species", HARD_REJECT, f"{product.broth_species} stock does not satisfy {query.broth_species}"))
+    if query.family == "bouillon" and product.family == "bouillon" and query.broth_species and product.broth_species and query.broth_species != product.broth_species:
+        signals.append(CompatibilitySignal("bouillon_species", HARD_REJECT, f"{product.broth_species} bouillon does not satisfy {query.broth_species}"))
     if query.family == "soup" and query.soup_type and product.soup_type != query.soup_type:
         signals.append(CompatibilitySignal("soup_type", HARD_REJECT, f"{product.soup_type or 'generic soup'} is not {query.soup_type} soup"))
     if query.family == "juice":
@@ -1168,6 +1183,18 @@ def compatibility_signals(query: IngredientProfile, product: IngredientProfile) 
         signals.append(CompatibilitySignal("yeast_type", HARD_REJECT, "nutritional yeast is not baking yeast"))
     if query.family == "pancake mix" and product.family == "potato pancake mix":
         signals.append(CompatibilitySignal("pancake_mix_type", HARD_REJECT, "potato pancake mix is not pancake mix"))
+    if query.family == "eggs" and product.family == "egg substitute":
+        signals.append(CompatibilitySignal("egg_identity", HARD_REJECT, "egg substitute is not shell eggs"))
+    if query.family == "eggs" and text_has(product.normalized_signature, r"\bno yolks\b|\bmacaroni\b|\bpasta\b|\bwraps?\b|\bsandwich\b|\bburrito\b"):
+        signals.append(CompatibilitySignal("egg_identity", HARD_REJECT, "egg-containing prepared product is not shell eggs"))
+    if query.family == "puff pastry" and text_has(product.normalized_signature, r"\bcrisps?\b|\bfranks?\b|\bparty size\b|\bsnacks?\b|\bcannoli\b|\bdanish\b|\bcinnamon rolls?\b"):
+        signals.append(CompatibilitySignal("puff_pastry_identity", HARD_REJECT, "pastry-containing prepared product is not puff pastry sheets"))
+    if query.family == "puff pastry" and product.category in {"snacks", "household", "prepared", "meat"}:
+        signals.append(CompatibilitySignal("puff_pastry_identity", HARD_REJECT, f"{product.category} product is not puff pastry sheets"))
+    if query.family == "puff pastry" and product.family != "puff pastry":
+        signals.append(CompatibilitySignal("puff_pastry_identity", HARD_REJECT, f"{product.family or 'unknown'} is not puff pastry sheets"))
+    if query.family == "mustard" and text_has(product.normalized_signature, r"\bmustard\s+(?:seed|powder)\b|\b(?:seed|powder)\s+mustard\b"):
+        signals.append(CompatibilitySignal("mustard_form", HARD_REJECT, "mustard seed or powder is not prepared mustard"))
 
     if query.family == "tomato product" and product.family == "tomato product" and query.tomato_type and product.tomato_type and query.tomato_type != product.tomato_type:
         signals.append(CompatibilitySignal("tomato_type", HARD_REJECT, f"{product.tomato_type} is not {query.tomato_type}"))
@@ -1198,6 +1225,10 @@ def compatibility_signals(query: IngredientProfile, product: IngredientProfile) 
         signals.append(CompatibilitySignal("extract_identity", HARD_REJECT, "vanilla-flavored product is not vanilla extract"))
     if query.family == "buttermilk" and text_has(product.normalized_signature, r"\bbiscuits?\b|\bwaffles?\b|\bpancake\b|\bmix\b|\bdressing\b|\bdip\b"):
         signals.append(CompatibilitySignal("buttermilk_identity", HARD_REJECT, "buttermilk-flavored prepared product is not buttermilk"))
+    if query.family == "honey" and product.category in {"bakery", "snacks", "prepared", "meat"}:
+        signals.append(CompatibilitySignal("honey_identity", HARD_REJECT, "honey-flavored or honey-containing product is not plain honey"))
+    if query.family == "honey" and product.family != "honey":
+        signals.append(CompatibilitySignal("honey_identity", HARD_REJECT, "honey-flavored or honey-containing product is not plain honey"))
 
     if query.sweetened_status == "unsweetened" and product.sweetened_status == "sweetened":
         signals.append(CompatibilitySignal("sweetened_status", HARD_REJECT, "sweetened product conflicts with unsweetened request"))

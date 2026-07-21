@@ -132,6 +132,8 @@ ALIAS_TO_CANONICAL = {
     "spring onions": "green onions",
     "almondmilk": "almond milk",
     "oatmilk": "oat milk",
+    "bouillan": "bouillon",
+    "boullan": "bouillon",
 }
 
 MISSPELLINGS = {
@@ -139,6 +141,8 @@ MISSPELLINGS = {
     "parmesan": "parmesan",
     "confectioner's": "confectioners",
     "confectioners'": "confectioners",
+    "bouillan": "bouillon",
+    "boullan": "bouillon",
 }
 
 MEANINGFUL_MODIFIERS = {
@@ -213,6 +217,8 @@ IDENTITY_PHRASES = {
     "masa flour",
     "pita bread",
     "chili sauce",
+    "puff pastry",
+    "bouillon",
 }
 
 COUNT_UNIT_INGREDIENTS = {
@@ -744,6 +750,8 @@ def parse_ingredient(raw_text: str) -> ParsedIngredient:
             canonical_source = COUNT_INGREDIENT_UNITS[canonical_words[0]]
     canonical = apply_alias(canonical_source)
     canonical = re.sub(r"\s+", " ", canonical).strip(" ,-")
+    if re.search(r"\begg\s+(?:yolks?|whites?)\b|\b(?:yolks?|whites?)\b", normalized_raw):
+        canonical = "eggs"
     if quantity is not None and unit is None and re.search(r"\bpita breads?\b|\bpitas?\b", normalize_text(raw)):
         unit = "count"
         canonical = "pita bread"

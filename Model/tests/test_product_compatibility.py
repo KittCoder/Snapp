@@ -424,6 +424,82 @@ class CompatibilityRuleTests(unittest.TestCase):
         self.assertEqual(stew.selected_match.product_id, "stew")
         self.assertTrue({"entree", "bacon", "soup"} <= {item.product_id for item in stew.rejected_candidates})
 
+    def test_fillet_beef_prefers_tenderloin_table_substitutes_not_chuck(self):
+        svc = service(
+            [
+                feature("chuck", "Fresh Beef 1st Cut Chuck Steak", "beef", "meat"),
+                feature("hanger", "Beef Hanger Steak", "beef", "meat"),
+                feature("tenderloin", "Certified Angus Beef Loin Tenderloin Steak, Boneless", "beef", "meat"),
+                feature("strip", "Certified Angus Beef New York Strip Steak, Bone In", "beef", "meat"),
+            ]
+        )
+        result = svc.match_recipe_ingredient("1lb of Fillet Beef")
+        self.assertIn(result.selected_match.product_id, {"tenderloin", "strip"})
+        self.assertIn("chuck", {item.product_id for item in result.rejected_candidates})
+
+    def test_egg_yolks_match_whole_egg_inventory_not_no_yolks_products(self):
+        svc = service(
+            [
+                feature("no_yolks", "No Yolks Extra Broad Enriched Macaroni Product", None, "pantry"),
+                feature("substitute", "Egg Beaters Original Liquid Egg Substitute", "eggs", "dairy"),
+                feature("eggs", "Bowl & Basket Eggs", "eggs", "dairy"),
+            ]
+        )
+        result = svc.match_recipe_ingredient("2 Egg Yolks Beaten")
+        self.assertEqual(result.selected_match.product_id, "eggs")
+        self.assertIn("no_yolks", {item.product_id for item in result.rejected_candidates})
+
+    def test_puff_pastry_matches_raw_pastry_sheets_not_pastry_snacks(self):
+        svc = service(
+            [
+                feature("crisps", "Special K Pastry Crisps", None, "snacks"),
+                feature("franks", "Nathan's Famous Beef Franks in Puff Pastry, Party Size", "beef", "meat"),
+                feature("sheets", "Bowl & Basket Puff Pastry Sheets", None, None),
+                feature("dough", "Pepperidge Farm Frozen Sheets Pastry Dough", None, None),
+            ]
+        )
+        result = svc.match_recipe_ingredient("7oz of Puff Pastry")
+        self.assertIn(result.selected_match.product_id, {"sheets", "dough"})
+        self.assertTrue({"crisps", "franks"} <= {item.product_id for item in result.rejected_candidates})
+
+    def test_bouillon_keeps_species_and_is_not_prepared_beef_flavor(self):
+        svc = service(
+            [
+                feature("vegetable", "Knorr Bouillon Cubes Vegetable", None, "pantry"),
+                feature("chicken", "Maggi Chicken Flavor Bouillon Tablets", None, "pantry"),
+                feature("beef", "HERB-OX Beef Bouillon Cube, 3.25 OZ", None, "pantry"),
+            ]
+        )
+        result = svc.match_recipe_ingredient("1 low-sodium beef bouillon cube")
+        self.assertEqual(result.selected_match.product_id, "beef")
+        self.assertTrue({"vegetable", "chicken"} <= {item.product_id for item in result.rejected_candidates})
+        typo = svc.match_recipe_ingredient("1 beef bouillan cube")
+        self.assertEqual(typo.selected_match.product_id, "beef")
+
+    def test_plain_honey_rejects_honey_flavored_bakery_or_snacks(self):
+        svc = service(
+            [
+                feature("cornbread", "Honey Flavored Corn Bread", None, "bakery"),
+                feature("crackers", "HONEY MAID Honey Graham Crackers", None, "snacks"),
+                feature("honey", "Bowl & Basket Honey", "honey", "pantry"),
+            ]
+        )
+        result = svc.match_recipe_ingredient("1 tablespoon honey")
+        self.assertEqual(result.selected_match.product_id, "honey")
+        self.assertTrue({"cornbread", "crackers"} <= {item.product_id for item in result.rejected_candidates})
+
+    def test_prepared_mustard_rejects_mustard_seed_or_powder(self):
+        svc = service(
+            [
+                feature("seed", "McCormick Yellow Mustard Seed", None, "pantry"),
+                feature("powder", "Colman's Mustard Powder", None, "pantry"),
+                feature("mustard", "French's Classic Yellow Mustard", None, "pantry"),
+            ]
+        )
+        result = svc.match_recipe_ingredient("2 tablespoons yellow mustard")
+        self.assertEqual(result.selected_match.product_id, "mustard")
+        self.assertTrue({"seed", "powder"} <= {item.product_id for item in result.rejected_candidates})
+
     def test_juice_only_matches_when_recipe_asks_for_juice(self):
         carrots = service(
             [
