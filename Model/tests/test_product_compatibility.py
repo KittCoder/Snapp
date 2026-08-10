@@ -149,7 +149,7 @@ class CompatibilityRuleTests(unittest.TestCase):
             ("tomato paste", "paste", ["sauce"], [feature("sauce", "Tomato Sauce", "tomato sauce", "pantry"), feature("paste", "Cento Tomato Paste", "tomato paste", "pantry")]),
             ("heavy cream", "heavy", ["half"], [feature("half", "Half And Half", None, "dairy"), feature("heavy", "Bowl & Basket Heavy Cream", "heavy cream", "dairy")]),
             ("pancake mix", "pancake", ["potato"], [feature("potato", "Streit's Potato Pancake Mix", None, "produce"), feature("pancake", "Pancake Mix", None, None)]),
-            ("all-purpose flour", "ap", ["bread", "cake"], [feature("bread", "Bread Flour", "bread flour", "pantry"), feature("cake", "Cake Flour", "cake flour", "pantry"), feature("ap", "Gold Medal All Purpose Flour", "all-purpose flour", "pantry")]),
+            ("all-purpose flour", "ap", ["cake"], [feature("bread", "Bread Flour", "bread flour", "pantry"), feature("cake", "Cake Flour", "cake flour", "pantry"), feature("ap", "Gold Medal All Purpose Flour", "all-purpose flour", "pantry")]),
             ("active dry yeast", "active", ["nutritional"], [feature("nutritional", "Nutritional Yeast", "yeast", "pantry"), feature("active", "Active Dry Yeast", "yeast", "pantry")]),
             ("olive oil", "oil", ["dressing"], [feature("dressing", "Olive Oil Dressing", None, "pantry"), feature("oil", "Extra Virgin Olive Oil", "olive oil", "pantry")]),
             ("soy sauce", "soy", ["soybean"], [feature("soybean", "Soy Beans", None, "pantry"), feature("soy", "Kikkoman Soy Sauce", "soy sauce", "pantry")]),
@@ -616,6 +616,13 @@ class CompatibilityRuleTests(unittest.TestCase):
         self.assertEqual(result.selected_match.product_id, "heavy")
         self.assertIn("half", {item.product_id for item in result.rejected_candidates})
 
+    def test_heavy_cream_allows_half_and_half_for_sauce(self):
+        result = service([feature("half", "Bowl & Basket Half And Half", None, "dairy")]).match_recipe_ingredient(
+            "heavy cream for sauce"
+        )
+        self.assertEqual(result.selected_match.product_id, "half")
+        self.assertIn("culinary_substitute", result.selected_match.reason_codes)
+
     def test_sweetened_condensed_milk_never_matches_evaporated_milk(self):
         svc = service(
             [
@@ -655,12 +662,42 @@ class CompatibilityRuleTests(unittest.TestCase):
         self.assertEqual(starch.selected_match.product_id, "cornstarch")
         self.assertIn("cornmeal", {item.product_id for item in starch.rejected_candidates})
 
+    def test_flour_and_starch_substitutions_are_functional(self):
+        bread = service([feature("ap", "Gold Medal All Purpose Flour", "all-purpose flour", "pantry")]).match_recipe_ingredient(
+            "bread flour"
+        )
+        self.assertEqual(bread.selected_match.product_id, "ap")
+
+        cake = service([feature("bread", "King Arthur Bread Flour", "bread flour", "pantry")]).match_recipe_ingredient(
+            "cake flour"
+        )
+        self.assertIsNone(cake.selected_match)
+        self.assertIn("bread", {item.product_id for item in cake.rejected_candidates})
+
+        starch = service([feature("potato", "Bob's Red Mill Potato Starch", None, "pantry")]).match_recipe_ingredient(
+            "cornstarch"
+        )
+        self.assertEqual(starch.selected_match.product_id, "potato")
+
     def test_rice_and_pasta_functional_substitution(self):
         rice = service([feature("jasmine", "Mahatma Jasmine Rice", "rice", "pantry")]).match_recipe_ingredient("long grain white rice")
         self.assertEqual(rice.selected_match.product_id, "jasmine")
 
         pasta = service([feature("rigatoni", "De Cecco Rigatoni Pasta", "pasta", "pantry")]).match_recipe_ingredient("penne")
         self.assertEqual(pasta.selected_match.product_id, "rigatoni")
+
+    def test_rice_and_pasta_poor_shape_substitutions(self):
+        arborio = service([feature("long", "Mahatma Long Grain White Rice", "rice", "pantry")]).match_recipe_ingredient(
+            "Arborio rice"
+        )
+        self.assertIsNone(arborio.selected_match)
+        self.assertIn("long", {item.product_id for item in arborio.compatible_alternatives})
+
+        spaghetti = service([feature("lasagna", "Barilla Lasagna Sheets", "pasta", "pantry")]).match_recipe_ingredient(
+            "spaghetti"
+        )
+        self.assertIsNone(spaghetti.selected_match)
+        self.assertIn("lasagna", {item.product_id for item in spaghetti.rejected_candidates})
 
     def test_green_onions_stay_distinct_from_yellow_onions(self):
         svc = service(
@@ -672,6 +709,57 @@ class CompatibilityRuleTests(unittest.TestCase):
         result = svc.match_recipe_ingredient("green onions")
         self.assertEqual(result.selected_match.product_id, "scallions")
         self.assertIn("yellow", {item.product_id for item in result.rejected_candidates + result.substitution_candidates})
+
+    def test_vegetable_functional_substitutions_and_pepper_identity(self):
+        broccoli = service([feature("broccolini", "Fresh Broccolini", None, "produce")]).match_recipe_ingredient("broccoli")
+        self.assertEqual(broccoli.selected_match.product_id, "broccolini")
+
+        pepper = service(
+            [
+                feature("black", "ShopRite Black Pepper", "peppers", "pantry"),
+                feature("red", "Red Bell Pepper", "peppers", "produce"),
+            ]
+        ).match_recipe_ingredient("bell pepper")
+        self.assertEqual(pepper.selected_match.product_id, "red")
+        self.assertIn("black", {item.product_id for item in pepper.rejected_candidates})
+
+    def test_tomato_legume_and_form_rules(self):
+        tomato = service([feature("whole", "San Marzano Whole Peeled Tomatoes", "tomatoes", "pantry")]).match_recipe_ingredient(
+            "diced canned tomatoes for cooked sauce"
+        )
+        self.assertEqual(tomato.selected_match.product_id, "whole")
+
+        raw_tomato = service([feature("canned", "Bowl & Basket Diced Tomatoes", "tomatoes", "pantry")]).match_recipe_ingredient(
+            "fresh tomato salad"
+        )
+        self.assertIsNone(raw_tomato.selected_match)
+        self.assertIn("canned", {item.product_id for item in raw_tomato.rejected_candidates})
+
+        paste = service([feature("ketchup", "Heinz Ketchup", None, "pantry")]).match_recipe_ingredient("tomato paste")
+        self.assertIsNone(paste.selected_match)
+        self.assertIn("ketchup", {item.product_id for item in paste.rejected_candidates})
+
+        beans = service([feature("great", "Great Northern Beans", "beans", "pantry")]).match_recipe_ingredient("cannellini beans")
+        self.assertEqual(beans.selected_match.product_id, "great")
+
+        chickpeas = service([feature("garbanzo", "Goya Garbanzo Beans", "beans", "pantry")]).match_recipe_ingredient("chickpeas")
+        self.assertEqual(chickpeas.selected_match.product_id, "garbanzo")
+
+        lentils = service([feature("red", "Red Lentils", None, "pantry")]).match_recipe_ingredient("green lentils")
+        self.assertIsNone(lentils.selected_match)
+        self.assertIn("red", {item.product_id for item in lentils.rejected_candidates})
+
+    def test_frozen_spinach_form_depends_on_context(self):
+        cooked = service([feature("frozen", "Frozen Chopped Spinach", "spinach", "produce", freshness="frozen")]).match_recipe_ingredient(
+            "cooked fresh spinach"
+        )
+        self.assertEqual(cooked.selected_match.product_id, "frozen")
+
+        salad = service([feature("frozen", "Frozen Chopped Spinach", "spinach", "produce", freshness="frozen")]).match_recipe_ingredient(
+            "fresh spinach salad"
+        )
+        self.assertIsNone(salad.selected_match)
+        self.assertIn("frozen", {item.product_id for item in salad.rejected_candidates})
 
 
 class OverrideCacheBatchEndpointTests(unittest.TestCase):
