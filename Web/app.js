@@ -8,6 +8,7 @@ const scheduleFavoriteRecipesPanel = document.getElementById("schedule-favorite-
 const favoriteRecipesStatus = document.getElementById("favorite-recipes-status");
 const favoriteRecipesList = document.getElementById("favorite-recipes-list");
 const themeSelect = document.getElementById("theme-select");
+const languageSelect = document.getElementById("language-select");
 const notificationsToggle = document.getElementById("notifications-toggle");
 const dietSelect = document.getElementById("diet-select");
 const storeSearchForm = document.getElementById("store-search-form");
@@ -83,6 +84,147 @@ let dishProgressTimer = null;
 const selectedMyStoreIds = new Set();
 const selectedShoppingIngredientIds = new Set();
 const pantryHandledShoppingIngredientIds = new Set();
+const LANGUAGE_STORAGE_KEY = "snapp-language";
+const originalTextNodes = new WeakMap();
+
+const SPANISH_TEXT = {
+  "Home": "Inicio",
+  "Account": "Cuenta",
+  "Dishes": "Platillos",
+  "My stores": "Mis tiendas",
+  "My pantry": "Mi despensa",
+  "Schedule": "Horario",
+  "Shopping list": "Lista de compras",
+  "Budget": "Presupuesto",
+  "Information": "Informacion",
+  "Settings": "Configuracion",
+  "Signed out": "Sesion cerrada",
+  "Sign out": "Cerrar sesion",
+  "SNAPP Account": "Cuenta de SNAPP",
+  "Save your planning session with Supabase.": "Guarda tu sesion de planificacion con Supabase.",
+  "Create an account or sign in to use SNAPP. This prototype uses a username and password while Supabase keeps you signed in on this browser.": "Crea una cuenta o inicia sesion para usar SNAPP. Este prototipo usa un nombre de usuario y una contrasena mientras Supabase mantiene tu sesion abierta en este navegador.",
+  "Account actions": "Acciones de cuenta",
+  "Sign in": "Iniciar sesion",
+  "Create account": "Crear cuenta",
+  "Username": "Nombre de usuario",
+  "Password": "Contrasena",
+  "Nourishment Made Practical": "Nutricion practica",
+  "Welcome to SNAPP": "Bienvenido a SNAPP",
+  "Build balanced meals with clarity. SNAPP helps you plan your week, understand nutrition foundations, and turn food choices into habits that are realistic for your schedule.": "Crea comidas balanceadas con claridad. SNAPP te ayuda a planificar la semana, entender bases de nutricion y convertir tus decisiones de comida en habitos realistas para tu horario.",
+  "Today's Store Plan": "Plan de tiendas de hoy",
+  "Hello": "Hola",
+  "Start with sale ingredients that already have recipe matches and Morton Williams price estimates.": "Empieza con ingredientes en oferta que ya tienen recetas compatibles y estimados de precio de Morton Williams.",
+  "Best sale ingredients today": "Mejores ingredientes en oferta hoy",
+  "Ranked from current Morton Williams sale data and matched to recipes SNAPP can price.": "Clasificados con datos actuales de ofertas de Morton Williams y recetas que SNAPP puede estimar.",
+  "Saved local store support is coming soon. These placeholders show where selected stores will appear.": "La compatibilidad con tiendas locales guardadas llegara pronto. Estos espacios muestran donde apareceran tus tiendas seleccionadas.",
+  "Placeholder active source": "Fuente activa temporal",
+  "Local grocery placeholder": "Tienda local temporal",
+  "Coming soon": "Proximamente",
+  "Core Food Groups": "Grupos principales de alimentos",
+  "Simple Plate Method": "Metodo simple del plato",
+  "Weekly Nutrition Focus": "Enfoque semanal de nutricion",
+  "Use SNAPP Throughout Your Day": "Usa SNAPP durante el dia",
+  "Ask for a meal idea. SNAPP uses your saved profile, pantry, budget, diet, and store settings automatically.": "Pide una idea de comida. SNAPP usa automaticamente tu perfil, despensa, presupuesto, dieta y tiendas guardadas.",
+  "Ask for a meal idea to get started.": "Pide una idea de comida para empezar.",
+  "What meal do you want?": "Que comida quieres?",
+  "Send": "Enviar",
+  "Weekly Meal Schedule": "Horario semanal de comidas",
+  "Meals you select from Dishes appear here. Click a meal to view its recipe and ingredients.": "Las comidas que selecciones en Platillos aparecen aqui. Haz clic en una comida para ver su receta e ingredientes.",
+  "Recipes": "Recetas",
+  "Drag recipes into a breakfast, lunch, or dinner slot.": "Arrastra recetas a desayuno, almuerzo o cena.",
+  "Ingredients from dishes you added to your schedule appear here.": "Los ingredientes de los platillos agregados a tu horario aparecen aqui.",
+  "Add all to pantry": "Agregar todo a la despensa",
+  "Enter a 5-digit US ZIP code to find nearby grocery stores, then select the stores you want to use.": "Ingresa un codigo postal de EE. UU. de 5 digitos para encontrar tiendas cercanas y seleccionar las que quieres usar.",
+  "ZIP code": "Codigo postal",
+  "Find nearby stores": "Buscar tiendas cercanas",
+  "Nearby grocery store map": "Mapa de tiendas cercanas",
+  "Selected stores": "Tiendas seleccionadas",
+  "Store data and map tiles ©": "Datos de tiendas y mosaicos de mapa ©",
+  "OpenStreetMap contributors": "Colaboradores de OpenStreetMap",
+  "Add foods you already have so SNAPP can consider them when suggesting dishes.": "Agrega alimentos que ya tienes para que SNAPP los considere al sugerir platillos.",
+  "Food": "Alimento",
+  "Quantity": "Cantidad",
+  "Add item": "Agregar articulo",
+  "Set your meal budget in Settings, and SNAPP will subtract the estimated price of each scheduled meal.": "Define tu presupuesto de comidas en Configuracion y SNAPP restara el precio estimado de cada comida programada.",
+  "Remaining budget": "Presupuesto restante",
+  "Meal budget:": "Presupuesto de comidas:",
+  "Scheduled meals:": "Comidas programadas:",
+  "Scheduled cost:": "Costo programado:",
+  "Grocery Store Information": "Informacion de tiendas",
+  "Enter a 5-digit US ZIP code to find grocery stores in that area.": "Ingresa un codigo postal de EE. UU. de 5 digitos para encontrar tiendas en esa area.",
+  "Find stores": "Buscar tiendas",
+  "Store data ©": "Datos de tiendas ©",
+  "Account and Nutritional Information": "Cuenta e informacion nutricional",
+  "How many people are you cooking for?": "Para cuantas personas cocinas?",
+  "Dietary Restrictions": "Restricciones alimentarias",
+  "Restrictions for dish recommendations": "Restricciones para recomendaciones de platillos",
+  "Preferences": "Preferencias",
+  "Theme": "Tema",
+  "Light": "Claro",
+  "Dark": "Oscuro",
+  "Language": "Idioma",
+  "English": "Ingles",
+  "Español": "Espanol",
+  "Dietary Preference": "Preferencia alimentaria",
+  "Balanced": "Balanceada",
+  "Vegetarian": "Vegetariana",
+  "Vegan": "Vegana",
+  "Keto": "Keto",
+  "Enable daily reminders": "Activar recordatorios diarios",
+  "Close recipe": "Cerrar receta",
+  "Remove": "Quitar",
+  "No stores selected.": "No hay tiendas seleccionadas.",
+  "SNAP accepted": "Acepta SNAP",
+  "SNAP acceptance not verified": "Aceptacion de SNAP no verificada",
+  "View on map": "Ver en el mapa",
+  "Visit website": "Visitar sitio web",
+  "No stores found for this search.": "No se encontraron tiendas para esta busqueda.",
+  "Map library could not load. Store list is still available.": "No se pudo cargar el mapa. La lista de tiendas sigue disponible.",
+  "Enter a valid 5-digit US ZIP code.": "Ingresa un codigo postal valido de EE. UU. de 5 digitos.",
+  "Searching for grocery stores...": "Buscando tiendas...",
+  "Searching nearby stores...": "Buscando tiendas cercanas...",
+  "Store search error:": "Error al buscar tiendas:",
+};
+
+function getLanguage() {
+  return languageSelect?.value || localStorage.getItem(LANGUAGE_STORAGE_KEY) || "en";
+}
+
+function translateText(text) {
+  if (getLanguage() !== "es") return text;
+  return SPANISH_TEXT[text] || text;
+}
+
+function translateNodeValue(value) {
+  const match = String(value).match(/^(\s*)(.*?)(\s*)$/s);
+  if (!match || !match[2]) return value;
+  return `${match[1]}${translateText(match[2])}${match[3]}`;
+}
+
+function applyLanguage() {
+  const language = getLanguage();
+  document.documentElement.lang = language === "es" ? "es" : "en";
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    if (!originalTextNodes.has(node)) {
+      originalTextNodes.set(node, node.nodeValue);
+    }
+    node.nodeValue = translateNodeValue(originalTextNodes.get(node));
+  }
+  document.querySelectorAll("[placeholder]").forEach((element) => {
+    if (!element.dataset.i18nPlaceholder) {
+      element.dataset.i18nPlaceholder = element.getAttribute("placeholder") || "";
+    }
+    element.setAttribute("placeholder", translateText(element.dataset.i18nPlaceholder));
+  });
+  document.querySelectorAll("[aria-label]").forEach((element) => {
+    if (!element.dataset.i18nAriaLabel) {
+      element.dataset.i18nAriaLabel = element.getAttribute("aria-label") || "";
+    }
+    element.setAttribute("aria-label", translateText(element.dataset.i18nAriaLabel));
+  });
+}
 
 const DISH_PROGRESS_MESSAGES = [
   "Finding meals...",
@@ -1951,7 +2093,7 @@ async function fetchStores(zipCode, options = {}) {
   for (const endpoint of getApiEndpoints("/grocery-stores")) {
     try {
       const params = new URLSearchParams({ zip: zipCode });
-      params.set("snap_only", "1");
+      params.set("snap_only", options.snapOnly === true ? "1" : "0");
       if (options.radiusMiles) {
         params.set("radius_miles", options.radiusMiles);
       }
@@ -2060,7 +2202,7 @@ function renderSelectedMyStores() {
 
   if (!savedMyStores.length) {
     const emptyItem = document.createElement("li");
-    emptyItem.textContent = "No stores selected.";
+    emptyItem.textContent = translateText("No stores selected.");
     selectedStoreList.appendChild(emptyItem);
     return;
   }
@@ -2072,7 +2214,7 @@ function renderSelectedMyStores() {
 
     itemText.textContent = store.name;
     removeButton.type = "button";
-    removeButton.textContent = "Remove";
+    removeButton.textContent = translateText("Remove");
     removeButton.addEventListener("click", () => deleteMyStore(store.store_key));
 
     item.append(itemText, removeButton);
@@ -2090,7 +2232,13 @@ function renderMyStores(data) {
 
   const map = ensureMyStoreMap(data.center);
   if (!window.L || !map) {
-    myStoreStatus.textContent = "Map library could not load. Store list is still available.";
+    myStoreStatus.textContent = translateText("Map library could not load. Store list is still available.");
+  }
+
+  if (!stores.length) {
+    const emptyItem = document.createElement("li");
+    emptyItem.textContent = translateText("No stores found for this search.");
+    myStoreResults.appendChild(emptyItem);
   }
 
   stores.forEach((store) => {
@@ -2370,6 +2518,13 @@ async function handleInitialUrlState() {
 
 function renderStores(stores) {
   storeResults.replaceChildren();
+  if (!stores.length) {
+    const emptyItem = document.createElement("li");
+    emptyItem.textContent = translateText("No stores found for this search.");
+    storeResults.appendChild(emptyItem);
+    return;
+  }
+
   stores.forEach((store) => {
     const item = document.createElement("li");
     const name = document.createElement("h3");
@@ -2379,7 +2534,11 @@ function renderStores(stores) {
     item.append(name, address);
     if (store.accepts_snap) {
       const snapNote = document.createElement("p");
-      snapNote.textContent = `SNAP accepted${store.snap_source ? ` (${store.snap_source})` : ""}`;
+      snapNote.textContent = `${translateText("SNAP accepted")}${store.snap_source ? ` (${store.snap_source})` : ""}`;
+      item.appendChild(snapNote);
+    } else {
+      const snapNote = document.createElement("p");
+      snapNote.textContent = translateText("SNAP acceptance not verified");
       item.appendChild(snapNote);
     }
 
@@ -2390,7 +2549,7 @@ function renderStores(stores) {
       mapLink.href = `https://www.openstreetmap.org/?mlat=${encodeURIComponent(store.latitude)}&mlon=${encodeURIComponent(store.longitude)}#map=17/${encodeURIComponent(store.latitude)}/${encodeURIComponent(store.longitude)}`;
       mapLink.target = "_blank";
       mapLink.rel = "noopener noreferrer";
-      mapLink.textContent = "View on map";
+      mapLink.textContent = translateText("View on map");
       links.appendChild(mapLink);
     }
 
@@ -2399,7 +2558,7 @@ function renderStores(stores) {
       websiteLink.href = store.website;
       websiteLink.target = "_blank";
       websiteLink.rel = "noopener noreferrer";
-      websiteLink.textContent = "Visit website";
+      websiteLink.textContent = translateText("Visit website");
       links.appendChild(websiteLink);
     }
 
@@ -2643,7 +2802,7 @@ storeSearchForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const zipCode = zipCodeInput.value.trim();
   if (!/^\d{5}$/.test(zipCode)) {
-    storeSearchStatus.textContent = "Enter a valid 5-digit US ZIP code.";
+    storeSearchStatus.textContent = translateText("Enter a valid 5-digit US ZIP code.");
     storeResults.replaceChildren();
     storeSource.hidden = true;
     return;
@@ -2651,19 +2810,25 @@ storeSearchForm.addEventListener("submit", async (event) => {
 
   const submitButton = storeSearchForm.querySelector("button");
   submitButton.disabled = true;
-  storeSearchStatus.textContent = "Searching for grocery stores...";
+  storeSearchStatus.textContent = translateText("Searching for grocery stores...");
   storeResults.replaceChildren();
   storeSource.hidden = true;
 
   try {
-    const data = await fetchStores(zipCode);
-    renderStores(data.stores);
-    storeSearchStatus.textContent = data.stores.length
-      ? `${data.stores.length} grocery store${data.stores.length === 1 ? "" : "s"} found near ${data.location}.`
-      : `No grocery stores were found in ${data.location}.`;
+    const data = await fetchStores(zipCode, { snapOnly: false });
+    const stores = data.stores || [];
+    renderStores(stores);
+    storeSearchStatus.textContent =
+      getLanguage() === "es"
+        ? stores.length
+          ? `Se encontraron ${stores.length} tienda${stores.length === 1 ? "" : "s"} cerca de ${data.location}.`
+          : `No se encontraron tiendas en ${data.location}.`
+        : stores.length
+          ? `${stores.length} grocery store${stores.length === 1 ? "" : "s"} found near ${data.location}.`
+          : `No grocery stores were found in ${data.location}.`;
     storeSource.hidden = false;
   } catch (error) {
-    storeSearchStatus.textContent = `Store search error: ${error.message}`;
+    storeSearchStatus.textContent = `${translateText("Store search error:")} ${error.message}`;
   } finally {
     submitButton.disabled = false;
   }
@@ -2673,41 +2838,53 @@ myStoreForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const zipCode = myZipCodeInput.value.trim();
   if (!/^\d{5}$/.test(zipCode)) {
-    myStoreStatus.textContent = "Enter a valid 5-digit US ZIP code.";
+    myStoreStatus.textContent = translateText("Enter a valid 5-digit US ZIP code.");
     myStoreResults.replaceChildren();
-    selectedStoreList.replaceChildren();
     myStoreSource.hidden = true;
     clearMyStoreMap();
+    renderSelectedMyStores();
     return;
   }
 
   const submitButton = myStoreForm.querySelector("button");
   submitButton.disabled = true;
-  myStoreStatus.textContent = "Searching within 1 mile...";
+  myStoreStatus.textContent = translateText("Searching nearby stores...");
   myStoreResults.replaceChildren();
-  selectedStoreList.replaceChildren();
   myStoreSource.hidden = true;
   clearMyStoreMap();
+  renderSelectedMyStores();
 
   try {
-    const data = await fetchStores(zipCode, { radiusMiles: "1" });
+    const data = await fetchStores(zipCode, { snapOnly: false });
     renderMyStores(data);
-    let statusMessage = data.stores.length
-      ? `${data.stores.length} grocery store${data.stores.length === 1 ? "" : "s"} found within 1 mile of ${data.location}.`
-      : `No grocery stores were found within 1 mile of ${data.location}.`;
+    const stores = data.stores || [];
+    let statusMessage =
+      getLanguage() === "es"
+        ? stores.length
+          ? `Se encontraron ${stores.length} tienda${stores.length === 1 ? "" : "s"} cerca de ${data.location}.`
+          : `No se encontraron tiendas cerca de ${data.location}.`
+        : stores.length
+          ? `${stores.length} grocery store${stores.length === 1 ? "" : "s"} found near ${data.location}.`
+          : `No grocery stores were found near ${data.location}.`;
     try {
       const traderJoesData = await fetchTraderJoesStore(zipCode);
       const store = traderJoesData.store;
       const didSaveStoreNumber = await saveTraderJoesStoreNumber(traderJoesData);
       if (store && didSaveStoreNumber) {
-        statusMessage += ` Trader Joe's store number ${store.store_number} saved for ${store.name}.`;
+        statusMessage +=
+          getLanguage() === "es"
+            ? ` Numero de tienda Trader Joe's ${store.store_number} guardado para ${store.name}.`
+            : ` Trader Joe's store number ${store.store_number} saved for ${store.name}.`;
       }
     } catch (error) {
-      statusMessage += ` Trader Joe's store number could not be resolved: ${error.message}`;
+      statusMessage +=
+        getLanguage() === "es"
+          ? ` No se pudo resolver el numero de tienda Trader Joe's: ${error.message}`
+          : ` Trader Joe's store number could not be resolved: ${error.message}`;
     }
     myStoreStatus.textContent = statusMessage;
   } catch (error) {
-    myStoreStatus.textContent = `Store search error: ${error.message}`;
+    myStoreStatus.textContent = `${translateText("Store search error:")} ${error.message}`;
   } finally {
     submitButton.disabled = false;
   }
@@ -2815,6 +2992,14 @@ themeSelect.addEventListener("change", () => {
   document.body.classList.toggle("dark-theme", themeSelect.value === "dark");
 });
 
+if (languageSelect) {
+  languageSelect.value = localStorage.getItem(LANGUAGE_STORAGE_KEY) || "en";
+  languageSelect.addEventListener("change", () => {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, languageSelect.value);
+    applyLanguage();
+  });
+}
+
 notificationsToggle.addEventListener("change", () => {
   const status = notificationsToggle.checked ? "enabled" : "disabled";
   setSettingsStatus(`Daily reminders ${status}.`);
@@ -2828,6 +3013,7 @@ dietSelect.addEventListener("change", () => {
 
 populatePantrySpiceSuggestions();
 updatePantryQuantityVisibility();
+applyLanguage();
 renderSchedule();
 showAuthMode("sign-in");
 initializeAuth();

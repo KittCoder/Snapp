@@ -110,6 +110,17 @@ class SaleIngredientTests(unittest.TestCase):
         self.assertTrue(model.recipe_uses_sale_ingredient(spoonacular_recipe, "chicken breast"))
         self.assertFalse(model.recipe_uses_sale_ingredient(spoonacular_recipe, "beef"))
 
+    def test_recipe_offal_filter_excludes_organs_but_not_kidney_beans(self):
+        self.assertTrue(
+            model.recipe_contains_offal(recipe("brain-1", "Beef Brains and Scrambled Eggs", ["beef brains"]))
+        )
+        self.assertTrue(
+            model.recipe_contains_offal(recipe("feet-1", "Pan-Broiled Boneless Pork Feet", ["pork feet"]))
+        )
+        self.assertFalse(
+            model.recipe_contains_offal(recipe("beans-1", "Kidney Bean Chili", ["kidney beans", "tomatoes"]))
+        )
+
     def test_frontend_transfers_sale_ingredient_id(self):
         app_js = Path(__file__).resolve().parents[2] / "Web" / "app.js"
         source = app_js.read_text(encoding="utf-8")

@@ -270,6 +270,17 @@ RECIPE_SEARCH_STOPWORDS = {
     "the",
     "with",
 }
+OFFAL_RECIPE_PATTERN = re.compile(
+    r"\b("
+    r"brains?|kidneys?|livers?|feet|foot|tongues?|tripe|hearts?|gizzards?|"
+    r"sweetbreads?|oxtails?|ox\s+joints?|neck\s+bones?|marrow\s+bones?|giblets?"
+    r")\b",
+    re.I,
+)
+OFFAL_FALSE_POSITIVE_PATTERN = re.compile(
+    r"\b(kidney beans?|heart(?:y|s?\s+of\s+(?:palm|romaine|lettuce|artichoke)))\b",
+    re.I,
+)
 RECIPE_GENERIC_PROMPT_WORDS = RECIPE_SEARCH_STOPWORDS | {
     "breakfast",
     "brunch",
@@ -475,7 +486,14 @@ CORS_ORIGINS = {
     for origin in os.getenv("CORS_ORIGINS", DEFAULT_CORS_ORIGINS).split(",")
     if origin.strip()
 }
-MATCHER_WARMUP_EXEMPT_ENDPOINTS = {"health", "static", "sale_ingredients", "sale_ingredients_options"}
+MATCHER_WARMUP_EXEMPT_ENDPOINTS = {
+    "health",
+    "static",
+    "sale_ingredients",
+    "sale_ingredients_options",
+    "dishes",
+    "dishes_options",
+}
 
 
 @app.before_request
@@ -1257,6 +1275,8 @@ def sale_recipe_index():
         return sale_recipe_index_cache
     index = {}
     for database_recipe in load_all_recipes_db():
+        if recipe_contains_offal(database_recipe):
+            continue
         recipe = all_recipe_to_spoonacular_recipe(database_recipe)
         recipe_id = spoonacular_recipe_id(recipe)
         if not recipe_id:
@@ -2545,6 +2565,35 @@ def all_recipe_ingredient_name(ingredient):
     return name
 
 
+def recipe_offal_filter_text(recipe):
+    database_recipe = recipe.get("_snapp_database_recipe") or recipe
+    ingredient_texts = []
+    for ingredient in database_recipe.get("ingredients") or []:
+        if isinstance(ingredient, dict):
+            ingredient_texts.extend(
+                str(ingredient.get(key) or "")
+                for key in ("raw", "name", "note")
+            )
+        else:
+            ingredient_texts.append(str(ingredient or ""))
+    return " ".join(
+        [
+            str(recipe.get("title") or recipe.get("name") or database_recipe.get("name") or ""),
+            str(database_recipe.get("description") or ""),
+            " ".join(str(category or "") for category in database_recipe.get("category") or []),
+            " ".join(ingredient_texts),
+        ]
+    )
+
+
+def recipe_contains_offal(recipe):
+    text = recipe_offal_filter_text(recipe)
+    if not OFFAL_RECIPE_PATTERN.search(text):
+        return False
+    cleaned = OFFAL_FALSE_POSITIVE_PATTERN.sub(" ", text)
+    return bool(OFFAL_RECIPE_PATTERN.search(cleaned))
+
+
 def all_recipe_to_spoonacular_recipe(recipe):
     source_url = recipe.get("source_url") or recipe.get("original_usda_url")
     recipe_id = str(recipe.get("id") or source_url or recipe.get("name") or "").strip()
@@ -2903,6 +2952,8 @@ def all_recipe_candidates_for_prompt(meal_prompt, dietary_restrictions="", recip
         if not database_recipe:
             database_recipe = load_all_recipes_by_id().get(indexed_recipe["id"])
         if not database_recipe:
+            continue
+        if recipe_contains_offal(database_recipe):
             continue
         recipe = all_recipe_to_spoonacular_recipe(database_recipe)
         if not spoonacular_ingredients(recipe):
@@ -3953,6 +4004,30 @@ def estimated_grams_from_required_quantity(required_quantity, ingredient_name=No
     return None
 
 
+def should_use_semantic_recipe_matching():
+    state = matcher_warmup.get_warmup_status()
+    return bool(state.model_loaded and state.index_loaded and state.status == "ready")
+
+
+def prewarm_morton_williams_recipe_matches(recipes, pantry_items=None):
+    ingredient_texts = []
+    for recipe in recipes:
+        adjusted, _original_by_text = pantry_adjusted_recipe_ingredients(
+            recipe,
+            pantry_items,
+            servings=source_recipe_servings(recipe),
+        )
+        ingredient_texts.extend(adjusted)
+    if not ingredient_texts:
+        return
+    service = basket_builder_match_service()
+    service.match_recipe_ingredients(
+        ingredient_texts,
+        limit=15,
+        use_semantic=should_use_semantic_recipe_matching(),
+    )
+
+
 def match_recipe_ingredients_to_morton_williams(recipe, pantry_items=None, servings=None):
     from basket_quantity import build_recipe_basket
 
@@ -3966,7 +4041,7 @@ def match_recipe_ingredients_to_morton_williams(recipe, pantry_items=None, servi
     basket = build_recipe_basket(
         basket_recipe,
         optimization_mode="balanced",
-        use_semantic=True,
+        use_semantic=should_use_semantic_recipe_matching(),
     )
     service = basket_builder_match_service()
     matches = []
@@ -4638,6 +4713,11 @@ def build_real_recipe_results(
         else:
             ranked_candidates = ranked_candidates[: max(result_limit * 2, 6)]
 
+    prewarm_morton_williams_recipe_matches(
+        [recipe for recipe, _relevance_score, _exact_match in ranked_candidates],
+        pantry_items=pantry_items,
+    )
+
     exact_results = []
     closest_results = []
     for recipe, relevance_score, exact_match in ranked_candidates:
@@ -4748,6 +4828,10 @@ def build_sale_ingredient_recipe_results(
             -item[1],
             (item[0].get("title") or item[0].get("name") or "").casefold(),
         )
+    )
+    prewarm_morton_williams_recipe_matches(
+        [recipe for recipe, _relevance_score, _exact_match in candidates[: max(24, result_limit * 6)]],
+        pantry_items=pantry_items,
     )
     results = []
     relaxed = False
