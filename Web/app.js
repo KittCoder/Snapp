@@ -3,6 +3,10 @@ const navButtons = document.querySelectorAll(".nav-button");
 const scheduleCalendar = document.getElementById("schedule-calendar");
 const scheduleRecipeTray = document.getElementById("schedule-recipe-tray");
 const scheduleRecipeList = document.getElementById("schedule-recipe-list");
+const scheduleFavoriteRecipesButton = document.getElementById("schedule-favorite-recipes-button");
+const scheduleFavoriteRecipesPanel = document.getElementById("schedule-favorite-recipes-panel");
+const favoriteRecipesStatus = document.getElementById("favorite-recipes-status");
+const favoriteRecipesList = document.getElementById("favorite-recipes-list");
 const themeSelect = document.getElementById("theme-select");
 const notificationsToggle = document.getElementById("notifications-toggle");
 const dietSelect = document.getElementById("diet-select");
@@ -66,6 +70,7 @@ const saleIngredientsStatus = document.getElementById("sale-ingredients-status")
 const homeUsername = document.getElementById("home-username");
 
 const scheduledMeals = [];
+let favoriteRecipes = [];
 let currentUser = null;
 let currentUserInfo = null;
 let settingsSaveTimer = null;
@@ -368,6 +373,7 @@ function clearUserScopedTransientState() {
   selectedShoppingIngredientIds.clear();
   pantryHandledShoppingIngredientIds.clear();
   scheduledMeals.splice(0, scheduledMeals.length);
+  favoriteRecipes = [];
   clearDishSession();
 }
 
@@ -896,6 +902,7 @@ async function renderAuthState(user) {
   renderHomeForAuthState();
   await loadSavedStores();
   await loadPantryItems();
+  await loadFavoriteRecipes();
   await loadScheduledMeals();
 
   if (user) {
@@ -973,6 +980,219 @@ function saveScheduledMealsToStorage() {
     storageKey,
     JSON.stringify(scheduledMeals)
   );
+}
+
+function getFavoriteRecipeKey(dish) {
+  return String(
+    dish?.recipe_id ||
+      dish?.recipe?.id ||
+      dish?.recipe?.source ||
+      dish?.recipe?.youtube ||
+      dish?.name ||
+      ""
+  ).trim();
+}
+
+function normalizeFavoriteRecipe(record) {
+  const recipeData = record.recipe_data || record.dish || record;
+  return {
+    id: record.id || null,
+    recipe_key: record.recipe_key || getFavoriteRecipeKey(recipeData),
+    recipe_name: record.recipe_name || recipeData.name || "Favorite recipe",
+    recipe_data: recipeData,
+    created_at: record.created_at || null,
+  };
+}
+
+function isFavoriteRecipe(dish) {
+  const recipeKey = getFavoriteRecipeKey(dish);
+  return Boolean(recipeKey && favoriteRecipes.some((favorite) => favorite.recipe_key === recipeKey));
+}
+
+function favoriteRecipeRecordForSave(dish) {
+  const recipeKey = getFavoriteRecipeKey(dish);
+  return {
+    user_id: currentUser.id,
+    recipe_key: recipeKey,
+    recipe_name: dish.name || "Favorite recipe",
+    recipe_data: dish,
+  };
+}
+
+function getFavoriteRecipeErrorMessage(error) {
+  const message = error?.message || "";
+  if (message.includes("user_favorite_recipes") && message.includes("schema cache")) {
+    return "Favorite recipe setup is missing. Run the user_favorite_recipes SQL setup in Supabase, then refresh.";
+  }
+  if (message.includes("permission denied")) {
+    return "Favorite recipe permissions are missing. Run the user_favorite_recipes policy SQL in Supabase, then refresh.";
+  }
+  return message || "Favorite recipe request failed.";
+}
+
+async function loadFavoriteRecipes() {
+  if (!supabaseClient || !currentUser) {
+    favoriteRecipes = [];
+    renderFavoriteRecipesPanel();
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("user_favorite_recipes")
+    .select("id,recipe_key,recipe_name,recipe_data,created_at")
+    .eq("user_id", currentUser.id)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    favoriteRecipes = [];
+    renderFavoriteRecipesPanel();
+    if (favoriteRecipesStatus) {
+      favoriteRecipesStatus.textContent = getFavoriteRecipeErrorMessage(error);
+      favoriteRecipesStatus.dataset.type = "error";
+    }
+    return;
+  }
+
+  favoriteRecipes = (data || []).map(normalizeFavoriteRecipe);
+  renderFavoriteRecipesPanel();
+}
+
+async function addFavoriteRecipe(dish) {
+  const recipeKey = getFavoriteRecipeKey(dish);
+  if (!supabaseClient || !currentUser || !recipeKey) return false;
+
+  const { data, error } = await supabaseClient
+    .from("user_favorite_recipes")
+    .upsert(favoriteRecipeRecordForSave(dish), { onConflict: "user_id,recipe_key" })
+    .select("id,recipe_key,recipe_name,recipe_data,created_at")
+    .single();
+
+  if (error) {
+    if (favoriteRecipesStatus) {
+      favoriteRecipesStatus.textContent = getFavoriteRecipeErrorMessage(error);
+      favoriteRecipesStatus.dataset.type = "error";
+    }
+    return false;
+  }
+
+  const favorite = normalizeFavoriteRecipe(data);
+  favoriteRecipes = [
+    favorite,
+    ...favoriteRecipes.filter((item) => item.recipe_key !== favorite.recipe_key),
+  ];
+  renderFavoriteRecipesPanel();
+  return true;
+}
+
+async function removeFavoriteRecipe(dish) {
+  const recipeKey = getFavoriteRecipeKey(dish);
+  if (!supabaseClient || !currentUser || !recipeKey) return false;
+
+  const { error } = await supabaseClient
+    .from("user_favorite_recipes")
+    .delete()
+    .eq("user_id", currentUser.id)
+    .eq("recipe_key", recipeKey);
+
+  if (error) {
+    if (favoriteRecipesStatus) {
+      favoriteRecipesStatus.textContent = getFavoriteRecipeErrorMessage(error);
+      favoriteRecipesStatus.dataset.type = "error";
+    }
+    return false;
+  }
+
+  favoriteRecipes = favoriteRecipes.filter((item) => item.recipe_key !== recipeKey);
+  renderFavoriteRecipesPanel();
+  return true;
+}
+
+async function toggleFavoriteRecipe(dish, button) {
+  if (!currentUser || !supabaseClient) return;
+  const wasFavorite = isFavoriteRecipe(dish);
+  button.disabled = true;
+  const didSave = wasFavorite
+    ? await removeFavoriteRecipe(dish)
+    : await addFavoriteRecipe(dish);
+  button.disabled = false;
+  if (!didSave) return;
+  renderFavoriteButton(button, dish);
+  renderSchedule();
+}
+
+function renderFavoriteButton(button, dish) {
+  const isFavorite = isFavoriteRecipe(dish);
+  button.type = "button";
+  button.className = "favorite-recipe-button";
+  button.textContent = isFavorite ? "♥" : "♡";
+  button.title = isFavorite ? "Remove from favorite recipes" : "Add to favorite recipes";
+  button.setAttribute("aria-label", button.title);
+  button.classList.toggle("active", isFavorite);
+  button.disabled = !currentUser || !supabaseClient;
+}
+
+function createFavoriteRecipeButton(dish) {
+  const button = document.createElement("button");
+  renderFavoriteButton(button, dish);
+  button.addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleFavoriteRecipe(dish, button);
+  });
+  return button;
+}
+
+function renderFavoriteRecipesPanel() {
+  if (!favoriteRecipesList || !favoriteRecipesStatus) return;
+
+  favoriteRecipesList.replaceChildren();
+  delete favoriteRecipesStatus.dataset.type;
+
+  if (!currentUser) {
+    favoriteRecipesStatus.textContent = "";
+    return;
+  }
+
+  if (!favoriteRecipes.length) {
+    favoriteRecipesStatus.textContent = "No favorite recipes yet.";
+    return;
+  }
+
+  favoriteRecipesStatus.textContent = `${favoriteRecipes.length} favorite recipe${favoriteRecipes.length === 1 ? "" : "s"}`;
+  favoriteRecipes.forEach((favorite) => {
+    const dish = favorite.recipe_data;
+    const item = document.createElement("article");
+    const title = document.createElement("h4");
+    const meta = document.createElement("p");
+    const actions = document.createElement("div");
+    const queueButton = document.createElement("button");
+    const removeButton = document.createElement("button");
+    const isQueued = scheduledMeals.some(
+      (meal) => (meal.recipe_id || meal.name) === (dish.recipe_id || dish.name)
+    );
+
+    item.className = "favorite-recipe-item";
+    title.textContent = favorite.recipe_name || dish.name || "Favorite recipe";
+    meta.textContent = [
+      formatServings(dish),
+      dish.estimated_price_total
+        ? `${currencyFormatter.format(dish.estimated_price_total)} estimated groceries`
+        : "",
+    ].filter(Boolean).join(" | ");
+    actions.className = "favorite-recipe-actions";
+
+    queueButton.type = "button";
+    queueButton.textContent = isQueued ? "In queue" : "Add to queue";
+    queueButton.disabled = isQueued;
+    queueButton.addEventListener("click", () => addMealToSchedule(dish));
+
+    removeButton.type = "button";
+    removeButton.textContent = "Remove";
+    removeButton.addEventListener("click", () => removeFavoriteRecipe(dish));
+
+    actions.append(queueButton, removeButton);
+    item.append(title, meta, actions);
+    favoriteRecipesList.appendChild(item);
+  });
 }
 
 function normalizeScheduledMeal(record) {
@@ -1199,6 +1419,7 @@ function renderSchedule() {
   scheduleRecipeList.replaceChildren();
 
   renderScheduleRecipeTray();
+  renderFavoriteRecipesPanel();
 
   SCHEDULE_DAYS.forEach((day) => {
     const dayColumn = document.createElement("section");
@@ -1272,6 +1493,8 @@ function createScheduleSlot(day, slot) {
 function createScheduleMealCard(meal) {
   const card = document.createElement("div");
   const openButton = document.createElement("button");
+  const actions = document.createElement("div");
+  const favoriteButton = createFavoriteRecipeButton(meal);
   const removeButton = document.createElement("button");
   const price = document.createElement("span");
 
@@ -1294,7 +1517,9 @@ function createScheduleMealCard(meal) {
     removeScheduledMeal(meal.schedule_id);
   });
 
-  card.append(openButton, removeButton);
+  actions.className = "schedule-meal-actions";
+  actions.append(favoriteButton, removeButton);
+  card.append(openButton, actions);
   card.addEventListener("dragstart", (event) => {
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData("text/plain", meal.schedule_id);
@@ -1363,6 +1588,13 @@ function handleScheduleTrayDrop(event) {
 scheduleRecipeTray.addEventListener("dragover", handleScheduleDragOver);
 scheduleRecipeTray.addEventListener("dragleave", handleScheduleDragLeave);
 scheduleRecipeTray.addEventListener("drop", handleScheduleTrayDrop);
+
+scheduleFavoriteRecipesButton?.addEventListener("click", () => {
+  const isHidden = scheduleFavoriteRecipesPanel.hidden;
+  scheduleFavoriteRecipesPanel.hidden = !isHidden;
+  scheduleFavoriteRecipesButton.classList.toggle("active", isHidden);
+  if (isHidden) renderFavoriteRecipesPanel();
+});
 
 async function updateScheduledMealPlacement(scheduleId, day, slot) {
   const meal = scheduledMeals.find((item) => String(item.schedule_id) === scheduleId);
@@ -2228,7 +2460,9 @@ function appendDishMessage(type, text) {
 function createDishCard(dish) {
     const nutritionTotal = dish.nutrition_total || {};
     const card = document.createElement("article");
+    const header = document.createElement("div");
     const title = document.createElement("h3");
+    const favoriteButton = createFavoriteRecipeButton(dish);
     const price = document.createElement("p");
     const metadata = document.createElement("p");
     const totalNutrition = document.createElement("div");
@@ -2244,7 +2478,9 @@ function createDishCard(dish) {
         openDishModal(dish);
       }
     });
+    header.className = "dish-card-header";
     title.textContent = dish.name;
+    header.append(title, favoriteButton);
     price.className = "dish-price";
     price.textContent = dish.estimated_price_total
       ? `${currencyFormatter.format(dish.estimated_price_total)} estimated grocery total | ${currencyFormatter.format(dish.estimated_price_per_serving)} per serving`
@@ -2270,7 +2506,7 @@ function createDishCard(dish) {
       addMealToSchedule(dish);
     });
 
-    card.appendChild(title);
+    card.appendChild(header);
 
     card.append(
       price,

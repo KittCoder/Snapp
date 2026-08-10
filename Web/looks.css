@@ -777,6 +777,13 @@ main {
   font-size: 1.05rem;
 }
 
+.dish-card-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.65rem;
+  align-items: start;
+}
+
 .dish-card p {
   margin: 0.65rem 0 0;
   color: var(--color-muted);
@@ -935,10 +942,105 @@ main {
   font-size: 1rem;
 }
 
+.schedule-tray-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.schedule-tray-header button {
+  border: 1px solid color-mix(in srgb, var(--color-primary) 34%, var(--color-border));
+  border-radius: 999px;
+  padding: 0.42rem 0.65rem;
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-panel-strong));
+  color: var(--color-primary-strong);
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.schedule-tray-header button.active {
+  background: color-mix(in srgb, var(--color-primary) 16%, var(--color-panel-strong));
+}
+
 .schedule-recipe-tray > p {
   margin: 0.35rem 0 0.85rem;
   color: var(--color-muted);
   font-size: 0.84rem;
+}
+
+.favorite-recipes-panel {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0 0 0.85rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, var(--color-panel-strong) 90%, transparent);
+}
+
+.favorite-recipes-status {
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.favorite-recipes-status[data-type="error"] {
+  color: #b91c1c;
+}
+
+.favorite-recipes-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.favorite-recipe-item {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, var(--color-primary) 5%, var(--color-panel-strong));
+}
+
+.favorite-recipe-item h4,
+.favorite-recipe-item p {
+  margin: 0;
+}
+
+.favorite-recipe-item h4 {
+  font-size: 0.88rem;
+}
+
+.favorite-recipe-item p {
+  color: var(--color-muted);
+  font-size: 0.76rem;
+}
+
+.favorite-recipe-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.favorite-recipe-actions button {
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 0.4rem 0.62rem;
+  background: var(--color-panel-strong);
+  color: var(--color-primary-strong);
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.favorite-recipe-actions button:disabled {
+  cursor: default;
+  opacity: 0.65;
 }
 
 .schedule-recipe-list {
@@ -962,6 +1064,38 @@ main {
 
 .schedule-meal button {
   font: inherit;
+}
+
+.schedule-meal-actions {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.favorite-recipe-button {
+  width: 2rem;
+  height: 2rem;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, #e11d48 35%, var(--color-border));
+  border-radius: 999px;
+  padding: 0;
+  background: color-mix(in srgb, #e11d48 7%, var(--color-panel-strong));
+  color: #be123c;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.favorite-recipe-button.active {
+  background: color-mix(in srgb, #e11d48 14%, var(--color-panel-strong));
+  color: #9f1239;
+}
+
+.favorite-recipe-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
 }
 
 .schedule-meal-open {

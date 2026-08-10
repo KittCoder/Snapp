@@ -327,8 +327,15 @@
         <div class="schedule-layout">
           <div id="schedule-calendar" class="schedule-calendar"></div>
           <aside id="schedule-recipe-tray" class="schedule-recipe-tray" aria-label="Recipes to schedule">
-            <h3>Recipes</h3>
+            <div class="schedule-tray-header">
+              <h3>Recipes</h3>
+              <button id="schedule-favorite-recipes-button" type="button">fvorite recipes</button>
+            </div>
             <p>Drag recipes into a breakfast, lunch, or dinner slot.</p>
+            <div id="schedule-favorite-recipes-panel" class="favorite-recipes-panel" hidden>
+              <div id="favorite-recipes-status" class="favorite-recipes-status" role="status" aria-live="polite"></div>
+              <div id="favorite-recipes-list" class="favorite-recipes-list"></div>
+            </div>
             <div id="schedule-recipe-list" class="schedule-recipe-list"></div>
           </aside>
         </div>
