@@ -1488,7 +1488,7 @@ class ProductMatchService:
         self,
         ingredient_text: str,
         limit: int = 5,
-        candidate_limit: int = 50,
+        candidate_limit: int = 80,
         use_semantic: bool = True,
     ) -> MatchResult:
         started = time.perf_counter()
@@ -1725,7 +1725,7 @@ class ProductMatchService:
             try:
                 retrievals = self.retriever.retrieve_product_candidates_batch(
                     [query for _text, query_profile, _parsed, _key in misses for query in [query_profile.normalized_signature]],
-                    limit=50,
+                    limit=80,
                     use_semantic=use_semantic,
                 )
             except TypeError as exc:
@@ -1733,10 +1733,10 @@ class ProductMatchService:
                     raise
                 retrievals = self.retriever.retrieve_product_candidates_batch(
                     [query for _text, query_profile, _parsed, _key in misses for query in [query_profile.normalized_signature]],
-                    limit=50,
+                    limit=80,
                 )
             for (text, query_profile, parsed, key), retrieval in zip(misses, retrievals):
-                result = self._match_from_retrieval(text, query_profile, parsed, retrieval, started_by_text[text], limit, 50)
+                result = self._match_from_retrieval(text, query_profile, parsed, retrieval, started_by_text[text], limit, 80)
                 self.cache.set(key, copy.deepcopy(result))
                 results_by_key[key] = result
 
