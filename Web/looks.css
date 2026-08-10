@@ -871,14 +871,14 @@ main {
 
 .schedule-calendar {
   display: grid;
-  grid-template-columns: repeat(7, minmax(150px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(7, minmax(220px, 1fr));
+  gap: 0.9rem;
   overflow-x: auto;
-  padding-bottom: 0.25rem;
+  padding: 0 0.15rem 0.35rem;
 }
 
 .schedule-day {
-  min-height: 420px;
+  min-height: 100%;
   border: 1px solid var(--color-border);
   border-radius: 0.85rem;
   padding: 0.85rem;
@@ -896,7 +896,7 @@ main {
 }
 
 .schedule-slot {
-  min-height: 112px;
+  min-height: 136px;
   display: grid;
   align-content: start;
   gap: 0.5rem;
@@ -1050,16 +1050,17 @@ main {
 
 .schedule-meal {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.55rem;
-  align-items: center;
+  grid-template-columns: 1fr;
+  gap: 0.7rem;
+  align-items: start;
   width: 100%;
   border: 1px solid color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
   border-radius: 0.65rem;
-  padding: 0.65rem;
+  padding: 0.78rem;
   background: color-mix(in srgb, var(--color-primary) 9%, var(--color-panel-strong));
   color: var(--color-text);
   cursor: grab;
+  overflow: hidden;
 }
 
 .schedule-meal button {
@@ -1068,8 +1069,10 @@ main {
 
 .schedule-meal-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.35rem;
   align-items: center;
+  justify-content: flex-start;
 }
 
 .favorite-recipe-button {
@@ -1089,8 +1092,9 @@ main {
 }
 
 .favorite-recipe-button.active {
-  background: color-mix(in srgb, #e11d48 14%, var(--color-panel-strong));
-  color: #9f1239;
+  border-color: #be123c;
+  background: #e11d48;
+  color: #ffffff;
 }
 
 .favorite-recipe-button:disabled {
@@ -1102,6 +1106,7 @@ main {
   display: grid;
   gap: 0.35rem;
   min-width: 0;
+  overflow-wrap: anywhere;
   border: none;
   padding: 0;
   background: transparent;
@@ -1114,7 +1119,7 @@ main {
 .schedule-meal-remove {
   border: 1px solid color-mix(in srgb, #ef4444 35%, var(--color-border));
   border-radius: 999px;
-  padding: 0.42rem 0.65rem;
+  padding: 0.48rem 0.74rem;
   background: color-mix(in srgb, #ef4444 8%, var(--color-panel-strong));
   color: #b91c1c;
   font-size: 0.78rem;
@@ -1152,6 +1157,28 @@ main {
   list-style: none;
   padding: 0;
   margin: 1rem 0 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.shopping-category-section {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.shopping-category-section h3 {
+  margin: 0;
+  padding: 0.3rem 0 0.2rem;
+  color: var(--color-primary-strong);
+  font-size: 0.86rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.shopping-category-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
   display: grid;
   gap: 0.65rem;
 }

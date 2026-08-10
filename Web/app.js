@@ -86,6 +86,30 @@ const selectedShoppingIngredientIds = new Set();
 const pantryHandledShoppingIngredientIds = new Set();
 const LANGUAGE_STORAGE_KEY = "snapp-language";
 const originalTextNodes = new WeakMap();
+const SHOPPING_CATEGORY_ORDER = [
+  "Produce",
+  "Bakery & Bread",
+  "Deli & Prepared Foods",
+  "Meat",
+  "Poultry",
+  "Seafood",
+  "Dairy & Eggs",
+  "Refrigerated",
+  "Frozen",
+  "Canned & Jarred Goods",
+  "Pasta, Rice & Grains",
+  "Beans & Legumes",
+  "Baking",
+  "Spices & Seasonings",
+  "Oils, Vinegars & Condiments",
+  "Sauces & Dressings",
+  "Breakfast & Cereal",
+  "Snacks",
+  "Beverages",
+  "International Foods",
+  "Household",
+  "Other",
+];
 
 const SPANISH_TEXT = {
   "Home": "Inicio",
@@ -1151,6 +1175,16 @@ function isFavoriteRecipe(dish) {
   return Boolean(recipeKey && favoriteRecipes.some((favorite) => favorite.recipe_key === recipeKey));
 }
 
+function setFavoriteRecipesStatus(message, type = "neutral") {
+  if (!favoriteRecipesStatus) return;
+  favoriteRecipesStatus.textContent = message;
+  if (type === "neutral") {
+    delete favoriteRecipesStatus.dataset.type;
+  } else {
+    favoriteRecipesStatus.dataset.type = type;
+  }
+}
+
 function favoriteRecipeRecordForSave(dish) {
   const recipeKey = getFavoriteRecipeKey(dish);
   return {
@@ -1210,10 +1244,7 @@ async function addFavoriteRecipe(dish) {
     .single();
 
   if (error) {
-    if (favoriteRecipesStatus) {
-      favoriteRecipesStatus.textContent = getFavoriteRecipeErrorMessage(error);
-      favoriteRecipesStatus.dataset.type = "error";
-    }
+    setFavoriteRecipesStatus(getFavoriteRecipeErrorMessage(error), "error");
     return false;
   }
 
@@ -1223,6 +1254,7 @@ async function addFavoriteRecipe(dish) {
     ...favoriteRecipes.filter((item) => item.recipe_key !== favorite.recipe_key),
   ];
   renderFavoriteRecipesPanel();
+  updateFavoriteRecipeButtons(favorite.recipe_key);
   return true;
 }
 
@@ -1237,28 +1269,60 @@ async function removeFavoriteRecipe(dish) {
     .eq("recipe_key", recipeKey);
 
   if (error) {
-    if (favoriteRecipesStatus) {
-      favoriteRecipesStatus.textContent = getFavoriteRecipeErrorMessage(error);
-      favoriteRecipesStatus.dataset.type = "error";
-    }
+    setFavoriteRecipesStatus(getFavoriteRecipeErrorMessage(error), "error");
     return false;
   }
 
   favoriteRecipes = favoriteRecipes.filter((item) => item.recipe_key !== recipeKey);
   renderFavoriteRecipesPanel();
+  updateFavoriteRecipeButtons(recipeKey);
   return true;
 }
 
 async function toggleFavoriteRecipe(dish, button) {
-  if (!currentUser || !supabaseClient) return;
+  const recipeKey = getFavoriteRecipeKey(dish);
+  if (!recipeKey) return;
+  if (!currentUser || !supabaseClient) {
+    setFavoriteRecipesStatus("Sign in and configure Supabase to save favorite recipes.", "error");
+    return;
+  }
   const wasFavorite = isFavoriteRecipe(dish);
   button.disabled = true;
+  if (!wasFavorite) {
+    favoriteRecipes = [
+      normalizeFavoriteRecipe({
+        recipe_key: recipeKey,
+        recipe_name: dish.name || "Favorite recipe",
+        recipe_data: dish,
+      }),
+      ...favoriteRecipes.filter((favorite) => favorite.recipe_key !== recipeKey),
+    ];
+  } else {
+    favoriteRecipes = favoriteRecipes.filter((favorite) => favorite.recipe_key !== recipeKey);
+  }
+  renderFavoriteRecipesPanel();
+  updateFavoriteRecipeButtons(recipeKey);
   const didSave = wasFavorite
     ? await removeFavoriteRecipe(dish)
     : await addFavoriteRecipe(dish);
   button.disabled = false;
-  if (!didSave) return;
-  renderFavoriteButton(button, dish);
+  if (!didSave) {
+    if (wasFavorite) {
+      favoriteRecipes = [
+        normalizeFavoriteRecipe({
+          recipe_key: recipeKey,
+          recipe_name: dish.name || "Favorite recipe",
+          recipe_data: dish,
+        }),
+        ...favoriteRecipes.filter((favorite) => favorite.recipe_key !== recipeKey),
+      ];
+    } else {
+      favoriteRecipes = favoriteRecipes.filter((favorite) => favorite.recipe_key !== recipeKey);
+    }
+    renderFavoriteRecipesPanel();
+    updateFavoriteRecipeButtons(recipeKey);
+    return;
+  }
   renderSchedule();
 }
 
@@ -1269,8 +1333,22 @@ function renderFavoriteButton(button, dish) {
   button.textContent = isFavorite ? "♥" : "♡";
   button.title = isFavorite ? "Remove from favorite recipes" : "Add to favorite recipes";
   button.setAttribute("aria-label", button.title);
+  button.dataset.recipeKey = getFavoriteRecipeKey(dish);
   button.classList.toggle("active", isFavorite);
   button.disabled = !currentUser || !supabaseClient;
+}
+
+function updateFavoriteRecipeButtons(recipeKey) {
+  if (!recipeKey) return;
+  document.querySelectorAll(".favorite-recipe-button").forEach((button) => {
+    if (button.dataset.recipeKey !== recipeKey) return;
+    const isFavorite = favoriteRecipes.some((favorite) => favorite.recipe_key === recipeKey);
+    button.textContent = isFavorite ? "♥" : "♡";
+    button.title = isFavorite ? "Remove from favorite recipes" : "Add to favorite recipes";
+    button.setAttribute("aria-label", button.title);
+    button.classList.toggle("active", isFavorite);
+    button.disabled = !currentUser || !supabaseClient;
+  });
 }
 
 function createFavoriteRecipeButton(dish) {
@@ -1287,19 +1365,18 @@ function renderFavoriteRecipesPanel() {
   if (!favoriteRecipesList || !favoriteRecipesStatus) return;
 
   favoriteRecipesList.replaceChildren();
-  delete favoriteRecipesStatus.dataset.type;
 
   if (!currentUser) {
-    favoriteRecipesStatus.textContent = "";
+    setFavoriteRecipesStatus("");
     return;
   }
 
   if (!favoriteRecipes.length) {
-    favoriteRecipesStatus.textContent = "No favorite recipes yet.";
+    setFavoriteRecipesStatus("No favorite recipes yet.");
     return;
   }
 
-  favoriteRecipesStatus.textContent = `${favoriteRecipes.length} favorite recipe${favoriteRecipes.length === 1 ? "" : "s"}`;
+  setFavoriteRecipesStatus(`${favoriteRecipes.length} favorite recipe${favoriteRecipes.length === 1 ? "" : "s"}`);
   favoriteRecipes.forEach((favorite) => {
     const dish = favorite.recipe_data;
     const item = document.createElement("article");
@@ -1408,6 +1485,78 @@ function formatPurchaseQuantity(ingredient) {
   return Number(count) === 1 ? "1 package" : `${count} packages`;
 }
 
+function shoppingCategoryFromText(value) {
+  const text = String(value || "").toLowerCase();
+  if (!text) return "";
+
+  const categoryMatchers = [
+    ["Produce", /\b(apple|apples|avocado|banana|berries|berry|broccoli|cabbage|carrot|celery|cilantro|corn|cucumber|fruit|garlic|greens?|herbs?|kale|lettuce|lime|lemon|mushrooms?|onions?|orange|parsley|pepper|peppers|potato|potatoes|produce|salad|spinach|tomato|tomatoes|vegetable|zucchini)\b/],
+    ["Bakery & Bread", /\b(bagels?|bakery|bread|brioche|buns?|croissants?|muffins?|pita|rolls?|sourdough|tortillas?)\b/],
+    ["Deli & Prepared Foods", /\b(deli|prepared|rotisserie|salad bar|sandwich|sliced turkey|sliced ham)\b/],
+    ["Meat", /\b(beef|bacon|brisket|chuck|ground beef|ham|lamb|meat|pork|sausage|steak|veal)\b/],
+    ["Poultry", /\b(chicken|duck|poultry|turkey)\b/],
+    ["Seafood", /\b(clams?|cod|crab|fish|salmon|scallops?|seafood|shrimp|tuna)\b/],
+    ["Dairy & Eggs", /\b(butter|cheese|cream|dairy|eggs?|feta|half and half|milk|mozzarella|parmesan|sour cream|yogurt)\b/],
+    ["Refrigerated", /\b(refrigerated|fresh pasta|hummus|tofu|tempeh)\b/],
+    ["Frozen", /\b(frozen|ice cream|sorbet)\b/],
+    ["Canned & Jarred Goods", /\b(canned|jarred|broth|stock|tomato paste|tomato sauce|diced tomatoes|crushed tomatoes|olives?|pickles?)\b/],
+    ["Pasta, Rice & Grains", /\b(pasta|spaghetti|noodles?|rice|grains?|quinoa|couscous|barley|oats?)\b/],
+    ["Beans & Legumes", /\b(beans?|black beans|chickpeas?|garbanzo|kidney beans|lentils?|legumes?|peas?)\b/],
+    ["Baking", /\b(baking|baking powder|baking soda|brown sugar|cake|cocoa|cornstarch|flour|sugar|vanilla|yeast)\b/],
+    ["Spices & Seasonings", /\b(spices?|seasonings?|salt|pepper|paprika|cumin|cinnamon|oregano|basil|thyme|rosemary|sage|turmeric|chili powder|cayenne)\b/],
+    ["Oils, Vinegars & Condiments", /\b(oil|olive oil|vinegar|mustard|ketchup|mayonnaise|mayo|relish|condiment)\b/],
+    ["Sauces & Dressings", /\b(sauce|salsa|dressing|marinade|pesto|teriyaki|soy sauce|hot sauce|bbq)\b/],
+    ["Breakfast & Cereal", /\b(cereal|granola|pancake|waffle|breakfast)\b/],
+    ["Snacks", /\b(chips?|crackers?|cookies?|popcorn|pretzels?|snacks?)\b/],
+    ["Beverages", /\b(beverage|coffee|drink|juice|seltzer|soda|tea|water)\b/],
+    ["International Foods", /\b(curry|miso|tahini|tortilla|sriracha|ramen|naan|coconut milk)\b/],
+    ["Household", /\b(foil|paper towels?|soap|detergent|trash bags?|household)\b/],
+  ];
+
+  return categoryMatchers.find(([_category, pattern]) => pattern.test(text))?.[0] || "";
+}
+
+function getShoppingCategory(ingredient) {
+  const categoryText = typeof ingredient === "object" && ingredient
+    ? [
+        ingredient.category,
+        ingredient.product_category,
+        ingredient.store_category,
+        ingredient.department,
+        ingredient.aisle,
+      ].filter(Boolean).join(" ")
+    : "";
+  const directCategory = SHOPPING_CATEGORY_ORDER.find(
+    (category) => category.toLowerCase() === String(categoryText).trim().toLowerCase()
+  );
+  if (directCategory) return directCategory;
+
+  const text = typeof ingredient === "object" && ingredient
+    ? [
+        categoryText,
+        ingredient.product_name,
+        ingredient.recipe_ingredient,
+        ingredient.name,
+        ingredient.ingredient,
+        ingredient.display,
+        ingredient.measure,
+      ].filter(Boolean).join(" ")
+    : ingredient;
+
+  return shoppingCategoryFromText(text) || "Other";
+}
+
+function getSortedShoppingCategories(items) {
+  const categories = new Map(SHOPPING_CATEGORY_ORDER.map((category) => [category, []]));
+  items.forEach((item) => {
+    const category = SHOPPING_CATEGORY_ORDER.includes(item.category) ? item.category : "Other";
+    categories.get(category).push(item);
+  });
+  return SHOPPING_CATEGORY_ORDER
+    .map((category) => [category, categories.get(category)])
+    .filter(([_category, categoryItems]) => categoryItems.length);
+}
+
 function getShoppingIngredients() {
   return scheduledMeals.flatMap((meal) => {
     const ingredients =
@@ -1426,6 +1575,7 @@ function getShoppingIngredients() {
       dishName: meal.name || "Scheduled dish",
       name: getIngredientName(ingredient),
       quantity: getIngredientQuantity(ingredient),
+      category: getShoppingCategory(ingredient),
       unavailable:
         Boolean(
           ingredient &&
@@ -1470,52 +1620,65 @@ function renderShoppingList() {
     return;
   }
 
-  items.forEach((item) => {
-    const listItem = document.createElement("li");
-    const checkbox = document.createElement("input");
-    const details = document.createElement("span");
-    const addButton = document.createElement("button");
+  getSortedShoppingCategories(items).forEach(([category, categoryItems]) => {
+    const section = document.createElement("li");
+    const heading = document.createElement("h3");
+    const categoryList = document.createElement("ul");
 
-    listItem.className = "shopping-list-item";
-    listItem.classList.toggle("selected", selectedShoppingIngredientIds.has(item.id));
+    section.className = "shopping-category-section";
+    heading.textContent = category;
+    categoryList.className = "shopping-category-list";
 
-    checkbox.type = "checkbox";
-    checkbox.checked = selectedShoppingIngredientIds.has(item.id);
-    checkbox.setAttribute("aria-label", `Select ${item.name}`);
-    checkbox.addEventListener("change", () => {
-      if (checkbox.checked) {
-        selectedShoppingIngredientIds.add(item.id);
-      } else {
-        selectedShoppingIngredientIds.delete(item.id);
+    categoryItems.forEach((item) => {
+      const listItem = document.createElement("li");
+      const checkbox = document.createElement("input");
+      const details = document.createElement("span");
+      const addButton = document.createElement("button");
+
+      listItem.className = "shopping-list-item";
+      listItem.classList.toggle("selected", selectedShoppingIngredientIds.has(item.id));
+
+      checkbox.type = "checkbox";
+      checkbox.checked = selectedShoppingIngredientIds.has(item.id);
+      checkbox.setAttribute("aria-label", `Select ${item.name}`);
+      checkbox.addEventListener("change", () => {
+        if (checkbox.checked) {
+          selectedShoppingIngredientIds.add(item.id);
+        } else {
+          selectedShoppingIngredientIds.delete(item.id);
+        }
+        listItem.classList.toggle("selected", checkbox.checked);
+        updateShoppingAddButton(items);
+      });
+
+      details.textContent = `${item.name} - get ${item.quantity} (${item.dishName})`;
+      if (item.unavailable) {
+        details.textContent += " - unavailable";
       }
-      listItem.classList.toggle("selected", checkbox.checked);
-      updateShoppingAddButton(items);
+
+      addButton.type = "button";
+      addButton.textContent = "Add to pantry";
+      addButton.addEventListener("click", async () => {
+        addButton.disabled = true;
+        shoppingStatus.textContent = `Adding ${item.name} to pantry...`;
+        const wasAdded = await addPantryItem(item.name, item.quantity);
+        if (wasAdded) {
+          pantryHandledShoppingIngredientIds.add(item.id);
+          selectedShoppingIngredientIds.delete(item.id);
+          shoppingStatus.textContent = `${item.name} added to pantry.`;
+          renderShoppingList();
+          return;
+        }
+        shoppingStatus.textContent = "Could not add ingredient to pantry.";
+        addButton.disabled = false;
+      });
+
+      listItem.append(checkbox, details, addButton);
+      categoryList.appendChild(listItem);
     });
 
-    details.textContent = `${item.name} - get ${item.quantity} (${item.dishName})`;
-    if (item.unavailable) {
-      details.textContent += " - unavailable";
-    }
-
-    addButton.type = "button";
-    addButton.textContent = "Add to pantry";
-    addButton.addEventListener("click", async () => {
-      addButton.disabled = true;
-      shoppingStatus.textContent = `Adding ${item.name} to pantry...`;
-      const wasAdded = await addPantryItem(item.name, item.quantity);
-      if (wasAdded) {
-        pantryHandledShoppingIngredientIds.add(item.id);
-        selectedShoppingIngredientIds.delete(item.id);
-        shoppingStatus.textContent = `${item.name} added to pantry.`;
-        renderShoppingList();
-        return;
-      }
-      shoppingStatus.textContent = "Could not add ingredient to pantry.";
-      addButton.disabled = false;
-    });
-
-    listItem.append(checkbox, details, addButton);
-    shoppingList.appendChild(listItem);
+    section.append(heading, categoryList);
+    shoppingList.appendChild(section);
   });
 
   updateShoppingAddButton(items);
