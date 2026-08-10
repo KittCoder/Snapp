@@ -39,6 +39,14 @@ LOW = "low"
 NO_SAFE_MATCH = "no_safe_match"
 SUBSTITUTION_ONLY = "substitution_only"
 
+SUBSTITUTION_SCORES = {
+    "exact_equivalent": 1.00,
+    "strong_substitute": 0.90,
+    "good_substitute": 0.80,
+    "acceptable_substitute": 0.68,
+    "last_resort": 0.52,
+}
+
 
 @dataclass(frozen=True)
 class MatchScoringConfig:
@@ -89,6 +97,7 @@ class IngredientProfile:
     bone_status: str | None = None
     skin_status: str | None = None
     flavor: str | None = None
+    culinary_type: str | None = None
     dietary_requirements: set[str] = field(default_factory=set)
     brand: str | None = None
     raw_text: str = ""
@@ -393,6 +402,384 @@ BEEF_CUT_PATTERNS = [
 ]
 
 
+def add_pair(table: dict[tuple[str, str], float], left: str, right: str, tier: str, *, bidirectional: bool = True) -> None:
+    table[(left, right)] = SUBSTITUTION_SCORES[tier]
+    if bidirectional:
+        table[(right, left)] = SUBSTITUTION_SCORES[tier]
+
+
+CULINARY_SUBSTITUTION_PAIRS: dict[tuple[str, str], float] = {}
+for left, right, tier in [
+    ("neufchatel", "cream_cheese", "exact_equivalent"),
+    ("mascarpone", "cream_cheese", "good_substitute"),
+    ("mascarpone", "neufchatel", "good_substitute"),
+    ("ricotta", "cream_cheese", "acceptable_substitute"),
+    ("ricotta", "neufchatel", "acceptable_substitute"),
+    ("ricotta", "mascarpone", "acceptable_substitute"),
+    ("ricotta", "cottage_cheese", "strong_substitute"),
+    ("ricotta", "farmer_cheese", "strong_substitute"),
+    ("cottage_cheese", "farmer_cheese", "good_substitute"),
+    ("monterey_jack", "colby", "strong_substitute"),
+    ("monterey_jack", "mild_cheddar", "strong_substitute"),
+    ("monterey_jack", "colby_jack", "strong_substitute"),
+    ("monterey_jack", "low_moisture_mozzarella", "good_substitute"),
+    ("colby", "mild_cheddar", "strong_substitute"),
+    ("colby", "colby_jack", "strong_substitute"),
+    ("mild_cheddar", "medium_cheddar", "strong_substitute"),
+    ("medium_cheddar", "sharp_cheddar", "strong_substitute"),
+    ("sharp_cheddar", "colby", "good_substitute"),
+    ("low_moisture_mozzarella", "provolone", "strong_substitute"),
+    ("fresh_mozzarella", "burrata", "good_substitute"),
+    ("parmesan", "grana_padano", "exact_equivalent"),
+    ("parmesan", "pecorino_romano", "strong_substitute"),
+    ("parmesan", "aged_asiago", "good_substitute"),
+    ("pecorino_romano", "aged_asiago", "good_substitute"),
+    ("swiss", "emmental", "exact_equivalent"),
+    ("swiss", "gruyere", "strong_substitute"),
+    ("swiss", "jarlsberg", "strong_substitute"),
+    ("gruyere", "emmental", "strong_substitute"),
+    ("gruyere", "jarlsberg", "good_substitute"),
+    ("feta", "goat_cheese", "good_substitute"),
+    ("feta", "queso_fresco", "acceptable_substitute"),
+    ("feta", "cotija", "acceptable_substitute"),
+    ("cotija", "queso_fresco", "good_substitute"),
+    ("blue_cheese", "gorgonzola", "strong_substitute"),
+    ("blue_cheese", "roquefort", "strong_substitute"),
+    ("blue_cheese", "stilton", "strong_substitute"),
+    ("whole_milk", "2_percent_milk", "strong_substitute"),
+    ("whole_milk", "1_percent_milk", "good_substitute"),
+    ("whole_milk", "skim_milk", "acceptable_substitute"),
+    ("2_percent_milk", "1_percent_milk", "strong_substitute"),
+    ("2_percent_milk", "skim_milk", "good_substitute"),
+    ("heavy_cream", "whipping_cream", "exact_equivalent"),
+    ("half_and_half", "light_cream", "strong_substitute"),
+    ("plain_greek_yogurt", "plain_yogurt", "strong_substitute"),
+    ("plain_greek_yogurt", "sour_cream", "strong_substitute"),
+    ("plain_greek_yogurt", "creme_fraiche", "good_substitute"),
+    ("plain_yogurt", "sour_cream", "good_substitute"),
+    ("plain_yogurt", "plain_kefir", "good_substitute"),
+    ("sour_cream", "creme_fraiche", "strong_substitute"),
+    ("butter", "margarine", "good_substitute"),
+    ("butter", "plant_butter", "good_substitute"),
+    ("neutral_oil", "canola_oil", "exact_equivalent"),
+    ("neutral_oil", "sunflower_oil", "strong_substitute"),
+    ("neutral_oil", "grapeseed_oil", "strong_substitute"),
+    ("neutral_oil", "avocado_oil", "strong_substitute"),
+    ("olive_oil", "avocado_oil", "strong_substitute"),
+    ("olive_oil", "neutral_oil", "good_substitute"),
+    ("bread_flour", "high_gluten_flour", "strong_substitute"),
+    ("bread_flour", "all_purpose_flour", "strong_substitute"),
+    ("cake_flour", "pastry_flour", "strong_substitute"),
+    ("whole_wheat_flour", "white_whole_wheat_flour", "strong_substitute"),
+    ("cornstarch", "potato_starch", "strong_substitute"),
+    ("cornstarch", "arrowroot", "strong_substitute"),
+    ("cornstarch", "tapioca_starch", "good_substitute"),
+    ("potato_starch", "arrowroot", "strong_substitute"),
+    ("potato_starch", "tapioca_starch", "strong_substitute"),
+    ("long_grain_white_rice", "jasmine_rice", "strong_substitute"),
+    ("long_grain_white_rice", "basmati_rice", "strong_substitute"),
+    ("jasmine_rice", "basmati_rice", "good_substitute"),
+    ("arborio_rice", "carnaroli_rice", "strong_substitute"),
+    ("spaghetti", "linguine", "strong_substitute"),
+    ("spaghetti", "fettuccine", "good_substitute"),
+    ("spaghetti", "bucatini", "good_substitute"),
+    ("penne", "rigatoni", "strong_substitute"),
+    ("penne", "ziti", "strong_substitute"),
+    ("penne", "mostaccioli", "strong_substitute"),
+    ("elbow_macaroni", "small_shells", "strong_substitute"),
+    ("elbow_macaroni", "ditalini", "good_substitute"),
+    ("breadcrumbs", "panko", "strong_substitute"),
+    ("breadcrumbs", "crushed_crackers", "good_substitute"),
+    ("yellow_onion", "white_onion", "strong_substitute"),
+    ("yellow_onion", "red_onion", "good_substitute"),
+    ("yellow_onion", "shallot", "good_substitute"),
+    ("white_onion", "red_onion", "good_substitute"),
+    ("red_onion", "shallot", "good_substitute"),
+    ("green_onion", "chives", "good_substitute"),
+    ("green_onion", "shallot", "acceptable_substitute"),
+    ("garlic_powder", "granulated_garlic", "strong_substitute"),
+    ("tomato_sauce", "tomato_puree", "good_substitute"),
+    ("tomato_sauce", "crushed_tomatoes", "good_substitute"),
+    ("black_beans", "pinto_beans", "good_substitute"),
+    ("black_beans", "kidney_beans", "good_substitute"),
+    ("kidney_beans", "pinto_beans", "good_substitute"),
+    ("cannellini_beans", "great_northern_beans", "strong_substitute"),
+    ("cannellini_beans", "navy_beans", "strong_substitute"),
+    ("brown_lentils", "green_lentils", "strong_substitute"),
+    ("chicken_broth", "chicken_stock", "exact_equivalent"),
+    ("beef_broth", "beef_stock", "exact_equivalent"),
+    ("vegetable_broth", "vegetable_stock", "exact_equivalent"),
+    ("white_wine_vinegar", "champagne_vinegar", "strong_substitute"),
+    ("white_wine_vinegar", "rice_vinegar", "good_substitute"),
+    ("white_wine_vinegar", "apple_cider_vinegar", "good_substitute"),
+    ("apple_cider_vinegar", "rice_vinegar", "good_substitute"),
+    ("lemon_juice", "lime_juice", "good_substitute"),
+    ("granulated_sugar", "superfine_sugar", "exact_equivalent"),
+    ("light_brown_sugar", "dark_brown_sugar", "strong_substitute"),
+    ("honey", "maple_syrup", "good_substitute"),
+    ("honey", "agave", "good_substitute"),
+    ("fresh_oregano", "dried_oregano", "strong_substitute"),
+    ("fresh_thyme", "dried_thyme", "strong_substitute"),
+    ("fresh_rosemary", "dried_rosemary", "strong_substitute"),
+]:
+    add_pair(CULINARY_SUBSTITUTION_PAIRS, left, right, tier)
+add_pair(CULINARY_SUBSTITUTION_PAIRS, "low_moisture_mozzarella", "fresh_mozzarella", "good_substitute", bidirectional=False)
+add_pair(CULINARY_SUBSTITUTION_PAIRS, "fresh_garlic", "jarred_minced_garlic", "strong_substitute", bidirectional=False)
+add_pair(CULINARY_SUBSTITUTION_PAIRS, "fresh_garlic", "garlic_paste", "strong_substitute", bidirectional=False)
+add_pair(CULINARY_SUBSTITUTION_PAIRS, "fresh_garlic", "garlic_powder", "acceptable_substitute", bidirectional=False)
+add_pair(CULINARY_SUBSTITUTION_PAIRS, "garlic_powder", "fresh_garlic", "good_substitute", bidirectional=False)
+add_pair(CULINARY_SUBSTITUTION_PAIRS, "tomato_paste", "tomato_sauce", "acceptable_substitute", bidirectional=False)
+add_pair(CULINARY_SUBSTITUTION_PAIRS, "cornstarch", "all_purpose_flour", "acceptable_substitute", bidirectional=False)
+add_pair(CULINARY_SUBSTITUTION_PAIRS, "fresh_parsley", "dried_parsley", "good_substitute", bidirectional=False)
+add_pair(CULINARY_SUBSTITUTION_PAIRS, "fresh_basil", "dried_basil", "good_substitute", bidirectional=False)
+
+
+CULINARY_FAMILY_CEILINGS = {
+    "cheese:fresh_spreadable": SUBSTITUTION_SCORES["acceptable_substitute"],
+    "cheese:mild_melting": SUBSTITUTION_SCORES["acceptable_substitute"],
+    "cheese:hard_grating": SUBSTITUTION_SCORES["acceptable_substitute"],
+    "rice:short_medium": SUBSTITUTION_SCORES["good_substitute"],
+    "pasta:long": SUBSTITUTION_SCORES["good_substitute"],
+    "pasta:short_tubular": SUBSTITUTION_SCORES["good_substitute"],
+    "pasta:small": SUBSTITUTION_SCORES["good_substitute"],
+    "beans:white": SUBSTITUTION_SCORES["strong_substitute"],
+}
+
+
+def detect_culinary_type(text: str, profile: IngredientProfile) -> None:
+    if profile.family == "prepared meal" or profile.category in {"prepared", "bakery", "snacks", "beverage", "household", "baby", "pet"}:
+        return
+    if text_has(text, r"\bneufch[aâ]tel\b|\bneufchatel\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "neufchatel"
+    elif text_has(text, r"\bcream cheese\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "cream_cheese"
+    elif text_has(text, r"\bmascarpone\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "mascarpone"
+    elif text_has(text, r"\bricotta\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "ricotta"
+    elif text_has(text, r"\bcottage cheese\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "cottage_cheese"
+    elif text_has(text, r"\bfarmer'?s? cheese\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "farmer_cheese"
+    elif text_has(text, r"\bmonterey jack\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "monterey_jack"
+    elif text_has(text, r"\bcolby jack\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "colby_jack"
+    elif text_has(text, r"\bcolby\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "colby"
+    elif text_has(text, r"\bsharp cheddar\b|\bextra sharp cheddar\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "sharp_cheddar"
+    elif text_has(text, r"\bmedium cheddar\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "medium_cheddar"
+    elif text_has(text, r"\bmild cheddar\b|\bcheddar\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "mild_cheddar"
+    elif text_has(text, r"\bfresh mozzarella\b|\bmozzarella fresca\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "fresh_mozzarella"
+    elif text_has(text, r"\blow[-\s]?moisture mozzarella\b|\bshredded mozzarella\b|\bmozzarella\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "low_moisture_mozzarella"
+    elif text_has(text, r"\bprovolone\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "provolone"
+    elif text_has(text, r"\bburrata\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "burrata"
+    elif text_has(text, r"\bparmigiano(?: reggiano)?\b|\bparmesan\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "parmesan"
+    elif text_has(text, r"\bgrana padano\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "grana_padano"
+    elif text_has(text, r"\bpecorino(?: romano)?\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "pecorino_romano"
+    elif text_has(text, r"\baged asiago\b|\basiago\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "aged_asiago"
+    elif text_has(text, r"\bswiss\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "swiss"
+    elif text_has(text, r"\bemmental\b|\bemmentaler\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "emmental"
+    elif text_has(text, r"\bgruy[eè]re\b|\bgruyere\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "gruyere"
+    elif text_has(text, r"\bjarlsberg\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "jarlsberg"
+    elif text_has(text, r"\bfeta\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "feta"
+    elif text_has(text, r"\bgoat cheese\b|\bchevre\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "goat_cheese"
+    elif text_has(text, r"\bqueso fresco\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "queso_fresco"
+    elif text_has(text, r"\bcotija\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"; profile.culinary_type = "cotija"
+    elif text_has(text, r"\bblue cheese\b|\bgorgonzola\b|\broquefort\b|\bstilton\b"):
+        profile.family = "cheese"; profile.category = profile.category or "dairy"
+        profile.culinary_type = "gorgonzola" if "gorgonzola" in text else "roquefort" if "roquefort" in text else "stilton" if "stilton" in text else "blue_cheese"
+
+    if profile.family == "milk":
+        if profile.milk_kind == "evaporated milk":
+            profile.culinary_type = "evaporated_milk"
+        elif profile.milk_kind == "condensed milk":
+            profile.culinary_type = "sweetened_condensed_milk"
+        elif profile.fat_percent == "2 percent":
+            profile.culinary_type = "2_percent_milk"
+        elif profile.fat_percent == "1 percent":
+            profile.culinary_type = "1_percent_milk"
+        elif profile.fat_level == "fat-free":
+            profile.culinary_type = "skim_milk"
+        elif profile.fat_level == "whole":
+            profile.culinary_type = "whole_milk"
+    if profile.family == "heavy cream":
+        profile.culinary_type = "whipping_cream" if text_has(text, r"\bwhipping cream\b") else "heavy_cream"
+    elif text_has(text, r"\blight cream\b"):
+        profile.family = "half-and-half"; profile.category = profile.category or "dairy"; profile.culinary_type = "light_cream"
+    elif profile.family == "half-and-half":
+        profile.culinary_type = "half_and_half"
+    elif text_has(text, r"\bcr[eè]me fra[iî]che\b|\bcreme fraiche\b"):
+        profile.family = "sour cream"; profile.category = profile.category or "dairy"; profile.culinary_type = "creme_fraiche"
+    elif profile.family == "sour cream":
+        profile.culinary_type = "sour_cream"
+    elif profile.family == "butter":
+        profile.culinary_type = "butter"
+    elif profile.family == "margarine":
+        profile.culinary_type = "plant_butter" if text_has(text, r"\bplant\b|\bvegan\b") else "margarine"
+    elif profile.family == "olive oil":
+        profile.culinary_type = "olive_oil"
+    elif profile.family == "cooking oil":
+        if text_has(text, r"\bcanola\b"):
+            profile.culinary_type = "canola_oil"
+        elif text_has(text, r"\bsunflower\b"):
+            profile.culinary_type = "sunflower_oil"
+        elif text_has(text, r"\bgrapeseed\b"):
+            profile.culinary_type = "grapeseed_oil"
+        elif text_has(text, r"\bavocado\b"):
+            profile.culinary_type = "avocado_oil"
+        else:
+            profile.culinary_type = "neutral_oil"
+    elif profile.family == "yogurt":
+        if profile.flavor in {None, "plain"}:
+            profile.culinary_type = "plain_greek_yogurt" if text_has(text, r"\bgreek\b") else "plain_yogurt"
+    elif profile.family == "kefir":
+        profile.culinary_type = "plain_kefir" if text_has(text, r"\bplain\b") or not profile.flavor else None
+    elif profile.family == "flour":
+        profile.culinary_type = (profile.flour_type or "").replace("-", "_").replace(" ", "_") or None
+        if text_has(text, r"\bpastry flour\b"):
+            profile.culinary_type = "pastry_flour"
+        elif text_has(text, r"\bself[-\s]?rising flour\b"):
+            profile.culinary_type = "self_rising_flour"
+        elif text_has(text, r"\bhigh[-\s]?gluten flour\b"):
+            profile.culinary_type = "high_gluten_flour"
+    elif profile.family == "corn starch":
+        profile.culinary_type = "cornstarch"
+    elif text_has(text, r"\bpotato starch\b|\barrowroot\b|\btapioca starch\b"):
+        profile.family = "starch"; profile.category = profile.category or "pantry"
+        profile.culinary_type = "potato_starch" if "potato" in text else "arrowroot" if "arrowroot" in text else "tapioca_starch"
+    elif profile.family == "rice":
+        for rice_type, pattern in {
+            "jasmine_rice": r"\bjasmine\b",
+            "basmati_rice": r"\bbasmati\b",
+            "arborio_rice": r"\barborio\b|\brisotto rice\b",
+            "carnaroli_rice": r"\bcarnaroli\b",
+            "brown_rice": r"\bbrown rice\b",
+            "short_medium_rice": r"\bshort[-\s]?grain\b|\bmedium[-\s]?grain\b|\bsushi rice\b",
+            "long_grain_white_rice": r"\blong[-\s]?grain\b|\bwhite rice\b|\brice\b",
+        }.items():
+            if text_has(text, pattern):
+                profile.culinary_type = rice_type
+                break
+    elif profile.family == "pasta":
+        for pasta_type, pattern in {
+            "spaghetti": r"\bspaghetti\b",
+            "linguine": r"\blinguine\b",
+            "fettuccine": r"\bfettuccine\b",
+            "bucatini": r"\bbucatini\b",
+            "penne": r"\bpenne\b",
+            "rigatoni": r"\brigatoni\b",
+            "ziti": r"\bziti\b",
+            "mostaccioli": r"\bmostaccioli\b",
+            "elbow_macaroni": r"\belbows?\b|\bmacaroni\b",
+            "small_shells": r"\bsmall shells?\b",
+            "ditalini": r"\bditalini\b",
+            "lasagna_sheets": r"\blasagna\b",
+            "stuffed_pasta": r"\bravioli\b|\btortellini\b|\btortelloni\b",
+            "gnocchi": r"\bgnocchi\b",
+            "fresh_pasta": r"\bfresh pasta\b",
+        }.items():
+            if text_has(text, pattern):
+                profile.culinary_type = pasta_type
+                break
+    elif profile.family == "breadcrumbs":
+        profile.culinary_type = "panko" if text_has(text, r"\bpanko\b") else "crushed_crackers" if text_has(text, r"\bcrushed crackers?\b") else "breadcrumbs"
+    elif profile.family == "onion":
+        if text_has(text, r"\bwhite onion\b"):
+            profile.culinary_type = "white_onion"
+        elif text_has(text, r"\bred onion\b"):
+            profile.culinary_type = "red_onion"
+        elif text_has(text, r"\bshallots?\b"):
+            profile.culinary_type = "shallot"
+        else:
+            profile.culinary_type = "yellow_onion"
+    elif profile.family == "green onion":
+        profile.culinary_type = "green_onion"
+    elif text_has(text, r"\bchives?\b"):
+        profile.family = "green onion"; profile.category = profile.category or "produce"; profile.culinary_type = "chives"
+    elif profile.family == "seasoning" and text_has(text, r"\bgarlic salt\b"):
+        profile.culinary_type = "garlic_salt"
+    elif profile.family == "seasoning" and text_has(text, r"\bgarlic powder\b|\bgranulated garlic\b"):
+        profile.culinary_type = "granulated_garlic" if "granulated" in text else "garlic_powder"
+    elif text_has(text, r"\bgarlic paste\b|\bjarred minced garlic\b|\bminced garlic\b|\bgarlic\b"):
+        profile.family = "garlic"; profile.category = profile.category or "produce"
+        profile.culinary_type = "garlic_paste" if "paste" in text else "jarred_minced_garlic" if "jarred" in text or "minced" in text else "fresh_garlic"
+    elif profile.family == "tomato product":
+        profile.culinary_type = (profile.tomato_type or "").replace(" ", "_") or None
+        if text_has(text, r"\btomato puree\b"):
+            profile.culinary_type = "tomato_puree"
+    elif profile.family == "beans":
+        for bean_type, pattern in {
+            "black_beans": r"\bblack beans?\b",
+            "pinto_beans": r"\bpinto beans?\b",
+            "kidney_beans": r"\bkidney beans?\b",
+            "cannellini_beans": r"\bcannellini\b",
+            "great_northern_beans": r"\bgreat northern\b",
+            "navy_beans": r"\bnavy beans?\b",
+            "chickpeas": r"\bchickpeas?\b|\bgarbanzo\b",
+            "white_beans": r"\bwhite beans?\b",
+        }.items():
+            if text_has(text, pattern):
+                profile.culinary_type = bean_type
+                break
+    elif text_has(text, r"\blentils?\b"):
+        profile.family = "lentils"; profile.category = profile.category or "pantry"
+        profile.culinary_type = "red_lentils" if text_has(text, r"\bred|yellow\b") else "green_lentils" if "green" in text else "brown_lentils" if "brown" in text else None
+    elif profile.family == "broth":
+        if profile.broth_species and profile.broth_type:
+            profile.culinary_type = f"{profile.broth_species}_{profile.broth_type}"
+    elif profile.family == "vinegar":
+        for acid_type, pattern in {
+            "white_wine_vinegar": r"\bwhite wine vinegar\b",
+            "champagne_vinegar": r"\bchampagne vinegar\b",
+            "rice_vinegar": r"\brice vinegar\b",
+            "apple_cider_vinegar": r"\bapple cider vinegar\b",
+            "distilled_white_vinegar": r"\bdistilled white vinegar\b|\bwhite vinegar\b",
+        }.items():
+            if text_has(text, pattern):
+                profile.culinary_type = acid_type
+                break
+    elif profile.family in {"lemon juice", "lime juice"}:
+        profile.culinary_type = profile.family.replace(" ", "_")
+    elif profile.family in {"sugar", "brown sugar", "powdered sugar"}:
+        if text_has(text, r"\bpowdered sugar\b|\bconfectioners'? sugar\b"):
+            profile.family = "powdered sugar"; profile.culinary_type = "powdered_sugar"
+        elif text_has(text, r"\bdark brown sugar\b"):
+            profile.family = "brown sugar"; profile.culinary_type = "dark_brown_sugar"
+        elif text_has(text, r"\blight brown sugar\b|\bbrown sugar\b"):
+            profile.family = "brown sugar"; profile.culinary_type = "light_brown_sugar"
+        elif text_has(text, r"\bcaster sugar\b|\bsuperfine sugar\b"):
+            profile.family = "sugar"; profile.culinary_type = "superfine_sugar"
+        else:
+            profile.family = "sugar"; profile.culinary_type = "granulated_sugar"
+    elif profile.family == "honey":
+        profile.culinary_type = "honey"
+    elif text_has(text, r"\bmaple syrup\b|\bagave\b"):
+        profile.family = "sweetener"; profile.category = profile.category or "pantry"; profile.culinary_type = "maple_syrup" if "maple" in text else "agave"
+    elif profile.family in {"parsley", "basil", "oregano", "thyme", "rosemary"}:
+        prefix = "dried" if profile.freshness == "dried" else "fresh"
+        profile.culinary_type = f"{prefix}_{profile.family}"
+
+
 def detect_beef_cut(text: str) -> str | None:
     for cut, pattern in BEEF_CUT_PATTERNS:
         if text_has(text, pattern):
@@ -479,6 +866,8 @@ def profile_from_query(ingredient_text: str, overrides: OverrideStore | None = N
         profile.normalized_signature = profile.tomato_type
     elif profile.broth_species and profile.broth_type:
         profile.normalized_signature = f"{profile.broth_species} {profile.broth_type}"
+    elif profile.culinary_type:
+        profile.normalized_signature = profile.culinary_type.replace("_", " ")
     else:
         profile.normalized_signature = normalize_text(normalized)
     return profile, parsed.to_dict()
@@ -852,6 +1241,8 @@ def classify_identity(
         profile.family = "hot sauce"; profile.category = profile.category or "pantry"
     elif text_has(detection_text, r"\bvinegar\b"):
         profile.family = "vinegar"; profile.category = profile.category or "pantry"
+    elif text_has(detection_text, r"\brice\b") and profile.category not in {"prepared", "snacks"}:
+        profile.family = "rice"; profile.category = profile.category or "pantry"
     elif text_has(detection_text, r"\bquinoa\b"):
         profile.family = "quinoa"; profile.category = profile.category or "pantry"
     elif text_has(detection_text, r"\brolled oats\b|\boats\b|\boatmeal\b") and profile.category not in {"snacks", "prepared"}:
@@ -1040,11 +1431,71 @@ def classify_identity(
             profile.category = "dairy"
         elif profile.family in {"broth", "soup", "bouillon", "tomato product", "flour", "sugar", "baking powder", "baking soda", "yeast", "soy sauce", "olive oil"}:
             profile.category = "pantry"
+    detect_culinary_type(detection_text, profile)
     return profile
+
+
+def culinary_group(profile: IngredientProfile) -> str | None:
+    if not profile.culinary_type:
+        return None
+    if profile.culinary_type in {"cream_cheese", "neufchatel", "mascarpone", "ricotta", "cottage_cheese", "farmer_cheese"}:
+        return "cheese:fresh_spreadable"
+    if profile.culinary_type in {"monterey_jack", "colby", "colby_jack", "mild_cheddar", "medium_cheddar", "sharp_cheddar", "low_moisture_mozzarella", "provolone"}:
+        return "cheese:mild_melting"
+    if profile.culinary_type in {"parmesan", "grana_padano", "pecorino_romano", "aged_asiago", "cotija"}:
+        return "cheese:hard_grating"
+    if profile.culinary_type in {"swiss", "emmental", "gruyere", "jarlsberg"}:
+        return "cheese:swiss_style"
+    if profile.culinary_type in {"feta", "goat_cheese", "queso_fresco"}:
+        return "cheese:brined_crumbly"
+    if profile.culinary_type in {"blue_cheese", "gorgonzola", "roquefort", "stilton"}:
+        return "cheese:blue"
+    if profile.culinary_type in {"short_medium_rice"}:
+        return "rice:short_medium"
+    if profile.culinary_type in {"spaghetti", "linguine", "fettuccine", "bucatini"}:
+        return "pasta:long"
+    if profile.culinary_type in {"penne", "rigatoni", "ziti", "mostaccioli"}:
+        return "pasta:short_tubular"
+    if profile.culinary_type in {"elbow_macaroni", "small_shells", "ditalini"}:
+        return "pasta:small"
+    if profile.culinary_type in {"cannellini_beans", "great_northern_beans", "navy_beans", "white_beans"}:
+        return "beans:white"
+    return None
+
+
+def culinary_substitution_score(query: IngredientProfile, product: IngredientProfile) -> float | None:
+    if not query.culinary_type or not product.culinary_type or query.culinary_type == product.culinary_type:
+        return None
+    explicit = CULINARY_SUBSTITUTION_PAIRS.get((query.culinary_type, product.culinary_type))
+    if explicit is not None:
+        return explicit
+    query_group = culinary_group(query)
+    product_group = culinary_group(product)
+    if query_group and query_group == product_group:
+        return CULINARY_FAMILY_CEILINGS.get(query_group, SUBSTITUTION_SCORES["acceptable_substitute"])
+    return None
+
+
+def culinary_substitution_signal(query: IngredientProfile, product: IngredientProfile) -> CompatibilitySignal | None:
+    score = culinary_substitution_score(query, product)
+    if score is None:
+        return None
+    if score >= SUBSTITUTION_SCORES["strong_substitute"]:
+        classification = SOFT_PREFERENCE
+    elif score >= SUBSTITUTION_SCORES["acceptable_substitute"]:
+        classification = STRONG_PENALTY
+    else:
+        classification = STRONG_PENALTY
+    return CompatibilitySignal(
+        "culinary_substitution",
+        classification,
+        f"{product.culinary_type} can substitute for {query.culinary_type}",
+    )
 
 
 def compatibility_signals(query: IngredientProfile, product: IngredientProfile) -> list[CompatibilitySignal]:
     signals: list[CompatibilitySignal] = []
+    substitution_signal = culinary_substitution_signal(query, product)
 
     if query.family and product.family:
         if query.family == product.family:
@@ -1063,10 +1514,39 @@ def compatibility_signals(query: IngredientProfile, product: IngredientProfile) 
             signals.append(CompatibilitySignal("base_family", COMPATIBLE, "heavy cream satisfies generic cream"))
         elif {query.family, product.family} <= {"broth", "stock"}:
             signals.append(CompatibilitySignal("base_family", SOFT_PREFERENCE, "broth and stock are close substitutions"))
+        elif substitution_signal:
+            signals.append(CompatibilitySignal("base_family", SOFT_PREFERENCE, f"{product.family} is a functional substitute for {query.family}"))
         else:
             signals.append(CompatibilitySignal("base_family", HARD_REJECT, f"{product.family} is not {query.family}"))
     else:
         signals.append(CompatibilitySignal("base_family", UNKNOWN, "family is incomplete"))
+    if substitution_signal:
+        signals.append(substitution_signal)
+
+    if query.family == "cheese" and product.family == "cheese" and query.culinary_type and product.culinary_type and query.culinary_type != product.culinary_type:
+        if not substitution_signal:
+            signals.append(CompatibilitySignal("cheese_function", HARD_REJECT, f"{product.culinary_type} is not a functional substitute for {query.culinary_type}"))
+        if {query.culinary_type, product.culinary_type} == {"fresh_mozzarella", "low_moisture_mozzarella"}:
+            signals.append(CompatibilitySignal("mozzarella_moisture", STRONG_PENALTY, "fresh and low-moisture mozzarella differ in texture and use"))
+        if query.culinary_type == "blue_cheese" and product.culinary_type not in {"gorgonzola", "roquefort", "stilton"}:
+            signals.append(CompatibilitySignal("blue_cheese_identity", HARD_REJECT, "ordinary mild cheese is not blue cheese"))
+
+    if query.culinary_type == "sweetened_condensed_milk" and product.culinary_type != "sweetened_condensed_milk":
+        signals.append(CompatibilitySignal("condensed_milk_identity", HARD_REJECT, "sweetened condensed milk requires a sweetened condensed equivalent"))
+    if query.culinary_type == "self_rising_flour" and product.culinary_type != "self_rising_flour":
+        signals.append(CompatibilitySignal("self_rising_flour", HARD_REJECT, "self-rising flour includes leavening and salt"))
+    if query.culinary_type == "powdered_sugar" and product.culinary_type != "powdered_sugar":
+        signals.append(CompatibilitySignal("powdered_sugar_identity", HARD_REJECT, "powdered sugar is not ordinary granulated sugar"))
+    if query.family == "breadcrumbs" and product.family == "flour":
+        signals.append(CompatibilitySignal("breadcrumb_flour_identity", HARD_REJECT, "breadcrumbs are not flour"))
+    if query.family == "flour" and product.family == "breadcrumbs":
+        signals.append(CompatibilitySignal("breadcrumb_flour_identity", HARD_REJECT, "breadcrumbs are not flour"))
+    if query.family == "corn starch" and product.family in {"cornmeal", "corn flour"}:
+        signals.append(CompatibilitySignal("corn_product_identity", HARD_REJECT, f"{product.family} is not cornstarch"))
+    if query.family in {"cornmeal", "corn flour"} and product.family == "corn starch":
+        signals.append(CompatibilitySignal("corn_product_identity", HARD_REJECT, "cornstarch is not cornmeal or corn flour"))
+    if query.culinary_type == "fresh_garlic" and product.culinary_type in {"garlic_powder", "granulated_garlic", "garlic_salt"}:
+        signals.append(CompatibilitySignal("garlic_conversion", HARD_REJECT, "dried garlic requires quantity or salt conversion"))
 
     if query.family == "milk" and product.family == "milk":
         if query.dairy_type == "dairy" and product.dairy_type == "plant":
@@ -1341,9 +1821,10 @@ def score_candidate(
     config: MatchScoringConfig,
     override_approved: bool = False,
 ) -> RankedCandidate:
+    substitution_score = culinary_substitution_score(query_profile, product_profile)
     canonical_match = bool(query_profile.canonical and query_profile.canonical == product_profile.canonical)
     family_match = bool(query_profile.family and query_profile.family == product_profile.family) or any(
-        signal.rule == "base_family" and signal.classification == COMPATIBLE
+        signal.rule == "base_family" and signal.classification in {COMPATIBLE, SOFT_PREFERENCE}
         for signal in signals
     )
     category_match = query_profile.category and product_profile.category and query_profile.category == product_profile.category
@@ -1365,6 +1846,7 @@ def score_candidate(
         "category_compatibility": config.category_weight if category_match else 0.0,
         "attribute_compatibility": attribute_compatible * config.attribute_weight,
         "specific_attribute_match": explicit_attribute_bonus(query_profile, product_profile),
+        "culinary_substitution_quality": 0.08 * (substitution_score or 0.0),
         "unrequested_attribute_penalty": -unrequested_attribute_penalty(query_profile, product_profile),
         "query_token_presence": 0.06 if query_tokens_present(query_profile, product_profile) else 0.0,
         "brand": config.brand_weight if brand_match else 0.0,
@@ -1375,12 +1857,17 @@ def score_candidate(
         "soft_conflict_penalty": -config.soft_penalty * sum(1 for signal in signals if signal.classification == SOFT_PREFERENCE),
     }
     final_score = max(0.0, min(1.0, sum(breakdown.values())))
+    if substitution_score is not None:
+        cap = 0.93 if substitution_score >= 1.0 else 0.86 if substitution_score >= 0.9 else 0.78 if substitution_score >= 0.8 else 0.66
+        final_score = min(final_score, cap)
     conflicts = [asdict(signal) for signal in signals if signal.classification in {STRONG_PENALTY, HARD_REJECT, UNKNOWN}]
     reason_codes = list(candidate.retrieval_reason_codes)
     if canonical_match:
         reason_codes.append("canonical_match")
     if family_match:
         reason_codes.append("family_match")
+    if substitution_score is not None:
+        reason_codes.append("culinary_substitute")
     if override_approved:
         reason_codes.append("approved_override")
     if has_hard_reject(signals):
@@ -1421,6 +1908,85 @@ def confidence_for(top: RankedCandidate | None, second: RankedCandidate | None, 
     if top.final_score >= config.low_threshold:
         return LOW
     return NO_SAFE_MATCH
+
+
+def culinary_substitution_queries(profile: IngredientProfile, limit: int = 6) -> list[tuple[str, float]]:
+    if not profile.culinary_type:
+        return []
+    pairs: list[tuple[str, float]] = []
+    seen = {profile.culinary_type}
+    for (source, target), score in CULINARY_SUBSTITUTION_PAIRS.items():
+        if source == profile.culinary_type and target not in seen:
+            seen.add(target)
+            pairs.append((target.replace("_", " "), score))
+    group = culinary_group(profile)
+    if group:
+        for (source, target), score in CULINARY_SUBSTITUTION_PAIRS.items():
+            if source in seen:
+                continue
+            probe = IngredientProfile(
+                normalized_signature=source.replace("_", " "),
+                canonical=None,
+                family=profile.family,
+                category=profile.category,
+                culinary_type=source,
+            )
+            if culinary_group(probe) == group and source not in seen:
+                seen.add(source)
+                ceiling = CULINARY_FAMILY_CEILINGS.get(group, SUBSTITUTION_SCORES["acceptable_substitute"])
+                pairs.append((source.replace("_", " "), min(score, ceiling)))
+    pairs.sort(key=lambda item: (-item[1], item[0]))
+    return pairs[:limit]
+
+
+def merge_retrieval_results(primary: CandidateRetrievalResult, expansions: list[tuple[CandidateRetrievalResult, float]]) -> CandidateRetrievalResult:
+    by_id: dict[str, Candidate] = {}
+    for candidate in primary.candidates:
+        by_id[candidate.product_id] = copy.deepcopy(candidate)
+    for retrieval, substitution_score in expansions:
+        for candidate in retrieval.candidates:
+            expanded = copy.deepcopy(candidate)
+            expanded.lexical_similarity = min(expanded.lexical_similarity, substitution_score)
+            if expanded.semantic_similarity is not None:
+                expanded.semantic_similarity = min(expanded.semantic_similarity, substitution_score)
+            expanded.exact_match = False
+            expanded.alias_match = False
+            expanded.retrieval_reason_codes = sorted(set(expanded.retrieval_reason_codes) | {"deterministic_substitution_query"})
+            existing = by_id.get(expanded.product_id)
+            if existing is None:
+                by_id[expanded.product_id] = expanded
+                continue
+            existing.lexical_similarity = max(existing.lexical_similarity, expanded.lexical_similarity)
+            if expanded.semantic_similarity is not None:
+                existing.semantic_similarity = max(existing.semantic_similarity or -1, expanded.semantic_similarity)
+            existing.retrieval_reason_codes = sorted(set(existing.retrieval_reason_codes) | set(expanded.retrieval_reason_codes))
+            if existing.category_match_signal == "unknown":
+                existing.category_match_signal = expanded.category_match_signal
+    primary_ids = {candidate.product_id for candidate in primary.candidates}
+    merged = sorted(
+        by_id.values(),
+        key=lambda item: (
+            item.product_id not in primary_ids,
+            -(item.lexical_similarity * 0.62 + (item.semantic_similarity or 0) * 0.38),
+            item.source_rank or 999999,
+            item.normalized_name,
+        ),
+    )
+    return CandidateRetrievalResult(
+        ingredient_text=primary.ingredient_text,
+        parsed_query=primary.parsed_query,
+        normalized_semantic_query=primary.normalized_semantic_query,
+        candidates=merged,
+        retrieval_latency_ms=round(primary.retrieval_latency_ms + sum(item.retrieval_latency_ms for item, _score in expansions), 2),
+        lexical_latency_ms=round(primary.lexical_latency_ms + sum(item.lexical_latency_ms for item, _score in expansions), 2),
+        semantic_latency_ms=primary.semantic_latency_ms,
+        query_embedding_latency_ms=primary.query_embedding_latency_ms,
+        embedding_index_available=primary.embedding_index_available,
+        embedding_model_version=primary.embedding_model_version,
+        index_version=primary.index_version,
+        degraded_mode=primary.degraded_mode,
+        errors=primary.errors + [error for item, _score in expansions for error in item.errors if "Semantic retrieval skipped" not in error],
+    )
 
 
 class ProductMatchService:
@@ -1484,6 +2050,36 @@ class ProductMatchService:
             ]
         )
 
+    def _retrieve_with_substitution_expansion(
+        self,
+        query_profile: IngredientProfile,
+        candidate_limit: int,
+        use_semantic: bool,
+    ) -> CandidateRetrievalResult:
+        try:
+            retrieval = self.retriever.retrieve_product_candidates(
+                query_profile.normalized_signature,
+                limit=candidate_limit,
+                use_semantic=use_semantic,
+            )
+        except TypeError as exc:
+            if "use_semantic" not in str(exc):
+                raise
+            retrieval = self.retriever.retrieve_product_candidates(query_profile.normalized_signature, limit=candidate_limit)
+
+        expansions = []
+        for alternate_query, substitution_score in culinary_substitution_queries(query_profile):
+            try:
+                expanded = self.retriever.retrieve_product_candidates(
+                    alternate_query,
+                    limit=max(12, candidate_limit // 4),
+                    use_semantic=False,
+                )
+            except TypeError:
+                expanded = self.retriever.retrieve_product_candidates(alternate_query, limit=max(12, candidate_limit // 4))
+            expansions.append((expanded, substitution_score))
+        return merge_retrieval_results(retrieval, expansions) if expansions else retrieval
+
     def match_recipe_ingredient(
         self,
         ingredient_text: str,
@@ -1506,16 +2102,7 @@ class ProductMatchService:
             self.cache.set(key, forced)
             return forced
 
-        try:
-            retrieval = self.retriever.retrieve_product_candidates(
-                query_profile.normalized_signature,
-                limit=candidate_limit,
-                use_semantic=use_semantic,
-            )
-        except TypeError as exc:
-            if "use_semantic" not in str(exc):
-                raise
-            retrieval = self.retriever.retrieve_product_candidates(query_profile.normalized_signature, limit=candidate_limit)
+        retrieval = self._retrieve_with_substitution_expansion(query_profile, candidate_limit, use_semantic)
         result = self._match_from_retrieval(ingredient_text, query_profile, parsed, retrieval, started, limit, candidate_limit)
         self.cache.set(key, result)
         return result
@@ -1722,19 +2309,10 @@ class ProductMatchService:
                 misses.append((text, query_profile, parsed, key))
 
         if misses:
-            try:
-                retrievals = self.retriever.retrieve_product_candidates_batch(
-                    [query for _text, query_profile, _parsed, _key in misses for query in [query_profile.normalized_signature]],
-                    limit=80,
-                    use_semantic=use_semantic,
-                )
-            except TypeError as exc:
-                if "use_semantic" not in str(exc):
-                    raise
-                retrievals = self.retriever.retrieve_product_candidates_batch(
-                    [query for _text, query_profile, _parsed, _key in misses for query in [query_profile.normalized_signature]],
-                    limit=80,
-                )
+            retrievals = [
+                self._retrieve_with_substitution_expansion(query_profile, 80, use_semantic)
+                for _text, query_profile, _parsed, _key in misses
+            ]
             for (text, query_profile, parsed, key), retrieval in zip(misses, retrievals):
                 result = self._match_from_retrieval(text, query_profile, parsed, retrieval, started_by_text[text], limit, 80)
                 self.cache.set(key, copy.deepcopy(result))

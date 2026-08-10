@@ -571,6 +571,108 @@ class CompatibilityRuleTests(unittest.TestCase):
         )
         self.assertEqual(svc.match_recipe_ingredient("vegan butter").selected_match.product_id, "plant")
 
+    def test_culinary_substitution_expands_neufchatel_to_cream_cheese(self):
+        svc = service([feature("cream", "Philadelphia Original Cream Cheese", "cream cheese", "dairy")])
+        result = svc.match_recipe_ingredient("neufchatel")
+        self.assertEqual(result.selected_match.product_id, "cream")
+        self.assertIn("culinary_substitute", result.selected_match.reason_codes)
+
+    def test_exact_ingredient_outranks_substitution(self):
+        svc = service(
+            [
+                feature("mascarpone", "BelGioioso Mascarpone", None, "dairy"),
+                feature("cream", "Philadelphia Original Cream Cheese", "cream cheese", "dairy"),
+            ]
+        )
+        result = svc.match_recipe_ingredient("cream cheese")
+        self.assertEqual(result.selected_match.product_id, "cream")
+        self.assertIn("mascarpone", {item.product_id for item in result.compatible_alternatives + result.substitution_candidates})
+
+    def test_cream_cheese_does_not_become_cheddar(self):
+        svc = service([feature("cheddar", "Bowl & Basket Mild Cheddar Cheese", "cheddar cheese", "dairy")])
+        result = svc.match_recipe_ingredient("cream cheese")
+        self.assertIsNone(result.selected_match)
+        self.assertIn("cheddar", {item.product_id for item in result.rejected_candidates})
+
+    def test_parmesan_accepts_grana_padano_but_not_mozzarella(self):
+        svc = service(
+            [
+                feature("mozz", "Low Moisture Mozzarella Cheese", "mozzarella cheese", "dairy"),
+                feature("grana", "BelGioioso Grana Padano Cheese", None, "dairy"),
+            ]
+        )
+        result = svc.match_recipe_ingredient("parmesan")
+        self.assertEqual(result.selected_match.product_id, "grana")
+        self.assertIn("mozz", {item.product_id for item in result.rejected_candidates})
+
+    def test_heavy_cream_rejects_half_and_half_when_whipping(self):
+        svc = service(
+            [
+                feature("half", "Bowl & Basket Half And Half", None, "dairy"),
+                feature("heavy", "Bowl & Basket Heavy Whipping Cream", "heavy cream", "dairy"),
+            ]
+        )
+        result = svc.match_recipe_ingredient("heavy cream for whipping")
+        self.assertEqual(result.selected_match.product_id, "heavy")
+        self.assertIn("half", {item.product_id for item in result.rejected_candidates})
+
+    def test_sweetened_condensed_milk_never_matches_evaporated_milk(self):
+        svc = service(
+            [
+                feature("evap", "Carnation Evaporated Milk", "milk", "dairy"),
+                feature("condensed", "Eagle Brand Sweetened Condensed Milk", "milk", "dairy"),
+            ]
+        )
+        result = svc.match_recipe_ingredient("sweetened condensed milk")
+        self.assertEqual(result.selected_match.product_id, "condensed")
+        self.assertIn("evap", {item.product_id for item in result.rejected_candidates})
+
+    def test_plain_greek_yogurt_can_substitute_for_sour_cream_but_not_flavored(self):
+        svc = service(
+            [
+                feature("mango", "Chobani Mango Greek Yogurt", "yogurt", "dairy"),
+                feature("greek", "Fage Plain Greek Yogurt", "yogurt", "dairy"),
+            ]
+        )
+        result = svc.match_recipe_ingredient("sour cream")
+        self.assertEqual(result.selected_match.product_id, "greek")
+        self.assertIn("mango", {item.product_id for item in result.rejected_candidates})
+
+    def test_starch_and_grain_incompatibilities_are_preserved(self):
+        svc = service(
+            [
+                feature("flour", "Gold Medal All Purpose Flour", "all-purpose flour", "pantry"),
+                feature("panko", "Kikkoman Panko Bread Crumbs", None, "pantry"),
+                feature("cornmeal", "Indian Head Yellow Corn Meal", None, "pantry"),
+                feature("cornstarch", "Argo Corn Starch", "corn starch", "pantry"),
+            ]
+        )
+        breadcrumbs = svc.match_recipe_ingredient("breadcrumbs")
+        self.assertEqual(breadcrumbs.selected_match.product_id, "panko")
+        self.assertIn("flour", {item.product_id for item in breadcrumbs.rejected_candidates})
+
+        starch = svc.match_recipe_ingredient("cornstarch")
+        self.assertEqual(starch.selected_match.product_id, "cornstarch")
+        self.assertIn("cornmeal", {item.product_id for item in starch.rejected_candidates})
+
+    def test_rice_and_pasta_functional_substitution(self):
+        rice = service([feature("jasmine", "Mahatma Jasmine Rice", "rice", "pantry")]).match_recipe_ingredient("long grain white rice")
+        self.assertEqual(rice.selected_match.product_id, "jasmine")
+
+        pasta = service([feature("rigatoni", "De Cecco Rigatoni Pasta", "pasta", "pantry")]).match_recipe_ingredient("penne")
+        self.assertEqual(pasta.selected_match.product_id, "rigatoni")
+
+    def test_green_onions_stay_distinct_from_yellow_onions(self):
+        svc = service(
+            [
+                feature("yellow", "Yellow Onions", "onions", "produce"),
+                feature("scallions", "Green Onions Scallions", None, "produce"),
+            ]
+        )
+        result = svc.match_recipe_ingredient("green onions")
+        self.assertEqual(result.selected_match.product_id, "scallions")
+        self.assertIn("yellow", {item.product_id for item in result.rejected_candidates + result.substitution_candidates})
+
 
 class OverrideCacheBatchEndpointTests(unittest.TestCase):
     def test_override_precedence_forbidden_beats_forced(self):
