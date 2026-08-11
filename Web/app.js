@@ -69,12 +69,33 @@ const signUpPasswordInput = document.getElementById("sign-up-password");
 const saleIngredientsGrid = document.getElementById("sale-ingredients-grid");
 const saleIngredientsStatus = document.getElementById("sale-ingredients-status");
 const homeUsername = document.getElementById("home-username");
+const onboardingForm = document.getElementById("onboarding-form");
+const onboardingProgressLabel = document.getElementById("onboarding-progress-label");
+const onboardingProgressBar = document.getElementById("onboarding-progress-bar");
+const onboardingStatus = document.getElementById("onboarding-status");
+const onboardingBackButton = document.getElementById("onboarding-back");
+const onboardingContinueButton = document.getElementById("onboarding-continue");
+const onboardingZipCodeInput = document.getElementById("onboarding-zip-code");
+const onboardingHouseholdMinusButton = document.getElementById("onboarding-household-minus");
+const onboardingHouseholdPlusButton = document.getElementById("onboarding-household-plus");
+const onboardingHouseholdInput = document.getElementById("onboarding-household-size");
+const onboardingHouseholdOutput = document.getElementById("onboarding-household-output");
+const onboardingPreferenceChips = document.getElementById("onboarding-preference-chips");
+const onboardingCustomPreferenceInput = document.getElementById("onboarding-custom-preference");
+const onboardingAddPreferenceButton = document.getElementById("onboarding-add-preference");
+const onboardingSelectedPreferences = document.getElementById("onboarding-selected-preferences");
+const settingsPreferenceChips = document.getElementById("settings-preference-chips");
+const settingsCustomPreferenceInput = document.getElementById("settings-custom-preference");
+const settingsAddPreferenceButton = document.getElementById("settings-add-preference");
+const settingsSelectedPreferences = document.getElementById("settings-selected-preferences");
 
 const scheduledMeals = [];
 let favoriteRecipes = [];
 let currentUser = null;
 let currentUserInfo = null;
 let settingsSaveTimer = null;
+let onboardingStepIndex = 0;
+let selectedDietaryPreferences = [];
 let myStoreMap = null;
 let myStoreMarkers = [];
 let pantryItems = [];
@@ -380,8 +401,28 @@ function getApiEndpoints(path) {
 }
 
 const SIGNED_OUT_PANEL_IDS = new Set(["home", "account"]);
+const ONBOARDING_PANEL_ID = "onboarding";
 const SIGNED_IN_DEFAULT_PANEL_ID = "home";
 const SIGNED_OUT_DEFAULT_PANEL_ID = "home";
+const ONBOARDING_TOTAL_STEPS = 4;
+const HOUSEHOLD_MIN = 1;
+const HOUSEHOLD_MAX = 20;
+const POPULAR_DIETARY_PREFERENCES = [
+  "Vegetarian",
+  "Vegan",
+  "Pescatarian",
+  "Gluten-free",
+  "Dairy-free",
+  "Nut-free",
+  "Peanut-free",
+  "Egg-free",
+  "Soy-free",
+  "Halal",
+  "Kosher",
+  "Low sodium",
+  "Low sugar",
+  "High protein",
+];
 const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
@@ -450,6 +491,10 @@ function showPanel(id) {
     targetId = SIGNED_OUT_DEFAULT_PANEL_ID;
   }
 
+  if (isOnboardingRequired() && targetId !== ONBOARDING_PANEL_ID) {
+    targetId = ONBOARDING_PANEL_ID;
+  }
+
   panels.forEach((panel) =>
     panel.classList.toggle("visible", panel.id === targetId)
   );
@@ -460,6 +505,14 @@ function showPanel(id) {
   if (targetId === "my" && myStoreMap) {
     window.setTimeout(() => myStoreMap.invalidateSize(), 0);
   }
+
+  if (targetId === ONBOARDING_PANEL_ID) {
+    renderOnboardingStep();
+  }
+}
+
+function isOnboardingRequired() {
+  return Boolean(currentUser && currentUserInfo && !currentUserInfo.onboarding_completed);
 }
 
 function renderNavigationForAuthState() {
@@ -579,10 +632,12 @@ function getDefaultUserInfo(user) {
     id: user.id,
     username: getDisplayUsername(user),
     zip_code: "",
-    household_size: 2,
+    household_size: 1,
     budget: null,
     dietary_preference: "balanced",
+    dietary_preferences: [],
     dietary_restrictions: "",
+    onboarding_completed: false,
     notifications_enabled: true,
     store_number: null,
     store_name: "",
@@ -592,10 +647,124 @@ function getDefaultUserInfo(user) {
   };
 }
 
+function normalizeDietaryPreference(value) {
+  return String(value || "").trim().replace(/\s+/g, " ");
+}
+
+function getDietaryPreferencesFromInfo(info) {
+  if (Array.isArray(info?.dietary_preferences)) {
+    return info.dietary_preferences.map(normalizeDietaryPreference).filter(Boolean);
+  }
+
+  if (typeof info?.dietary_restrictions === "string" && info.dietary_restrictions.trim()) {
+    return info.dietary_restrictions
+      .split(",")
+      .map(normalizeDietaryPreference)
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function setDietaryPreferences(preferences, { syncTextarea = true } = {}) {
+  const seen = new Set();
+  selectedDietaryPreferences = preferences
+    .map(normalizeDietaryPreference)
+    .filter(Boolean)
+    .filter((preference) => {
+      const key = preference.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+  if (syncTextarea) {
+    dietaryRestrictionsInput.value = selectedDietaryPreferences.join(", ");
+  }
+
+  renderDietaryPreferenceEditors();
+}
+
+function addDietaryPreference(preference, options = {}) {
+  const normalizedPreference = normalizeDietaryPreference(preference);
+  if (!normalizedPreference) return false;
+
+  const exists = selectedDietaryPreferences.some(
+    (item) => item.toLowerCase() === normalizedPreference.toLowerCase()
+  );
+  if (exists) return false;
+
+  setDietaryPreferences([...selectedDietaryPreferences, normalizedPreference], options);
+  return true;
+}
+
+function removeDietaryPreference(preference, options = {}) {
+  const key = normalizeDietaryPreference(preference).toLowerCase();
+  setDietaryPreferences(
+    selectedDietaryPreferences.filter((item) => item.toLowerCase() !== key),
+    options
+  );
+}
+
+function renderPreferenceChips(container) {
+  if (!container) return;
+  container.replaceChildren(
+    ...POPULAR_DIETARY_PREFERENCES.map((preference) => {
+      const button = document.createElement("button");
+      const isSelected = selectedDietaryPreferences.some(
+        (item) => item.toLowerCase() === preference.toLowerCase()
+      );
+      button.type = "button";
+      button.className = "preference-chip";
+      button.textContent = preference;
+      button.setAttribute("aria-pressed", String(isSelected));
+      button.dataset.selected = String(isSelected);
+      button.addEventListener("click", () => {
+        if (isSelected) {
+          removeDietaryPreference(preference);
+        } else {
+          addDietaryPreference(preference);
+        }
+        queueSettingsSave();
+      });
+      return button;
+    })
+  );
+}
+
+function renderSelectedPreferenceTags(container) {
+  if (!container) return;
+  container.replaceChildren(
+    ...selectedDietaryPreferences.map((preference) => {
+      const tag = document.createElement("span");
+      tag.className = "selected-tag";
+      const label = document.createElement("span");
+      label.textContent = preference;
+      const removeButton = document.createElement("button");
+      removeButton.type = "button";
+      removeButton.textContent = "×";
+      removeButton.setAttribute("aria-label", `Remove ${preference}`);
+      removeButton.addEventListener("click", () => {
+        removeDietaryPreference(preference);
+        queueSettingsSave();
+      });
+      tag.append(label, removeButton);
+      return tag;
+    })
+  );
+}
+
+function renderDietaryPreferenceEditors() {
+  renderPreferenceChips(onboardingPreferenceChips);
+  renderSelectedPreferenceTags(onboardingSelectedPreferences);
+  renderPreferenceChips(settingsPreferenceChips);
+  renderSelectedPreferenceTags(settingsSelectedPreferences);
+}
+
 function syncSettingsFromUserInfo(user, userInfo) {
   const info = userInfo || (user ? getDefaultUserInfo(user) : null);
   profileNameInput.value = getDisplayUsername(user);
-  householdSizeInput.value = info?.household_size || "2";
+  householdSizeInput.value = info?.household_size || "1";
   profileZipCodeInput.value = info?.zip_code || "";
   if (!myZipCodeInput.value) {
     myZipCodeInput.value = info?.zip_code || "";
@@ -608,7 +777,12 @@ function syncSettingsFromUserInfo(user, userInfo) {
   if (info?.dietary_preference) {
     dietSelect.value = info.dietary_preference;
   }
-  dietaryRestrictionsInput.value = info?.dietary_restrictions || "";
+  setDietaryPreferences(getDietaryPreferencesFromInfo(info), {
+    syncTextarea: !info?.dietary_restrictions,
+  });
+  if (info?.dietary_restrictions) {
+    dietaryRestrictionsInput.value = info.dietary_restrictions;
+  }
   if (info?.notifications_enabled != null) {
     notificationsToggle.checked = Boolean(info.notifications_enabled);
   }
@@ -661,8 +835,8 @@ function getSettingsError() {
   const householdSize = Number.parseInt(householdSizeInput.value, 10);
   const zipCode = profileZipCodeInput.value.trim();
 
-  if (!Number.isFinite(householdSize) || householdSize < 1) {
-    return "Household size must be at least 1.";
+  if (!Number.isFinite(householdSize) || householdSize < 1 || householdSize > 20) {
+    return "Household size must be between 1 and 20.";
   }
 
   if (zipCode && !/^\d{5}$/.test(zipCode)) {
@@ -694,7 +868,9 @@ async function saveSettingsToUser() {
       zip_code: zipCode,
       budget: budgetInput.value ? Number(budgetInput.value) : null,
       dietary_preference: dietSelect.value,
+      dietary_preferences: selectedDietaryPreferences,
       dietary_restrictions: dietaryRestrictionsInput.value.trim(),
+      onboarding_completed: Boolean(currentUserInfo?.onboarding_completed),
       notifications_enabled: notificationsToggle.checked,
     })
     .select()
@@ -713,6 +889,126 @@ function queueSettingsSave() {
   if (!currentUser) return;
   window.clearTimeout(settingsSaveTimer);
   settingsSaveTimer = window.setTimeout(saveSettingsToUser, 450);
+}
+
+function setOnboardingStatus(message, type = "neutral") {
+  if (!onboardingStatus) return;
+  onboardingStatus.textContent = message;
+  onboardingStatus.dataset.type = type;
+}
+
+function getClampedHouseholdSize(value) {
+  const householdSize = Number.parseInt(value, 10);
+  if (!Number.isFinite(householdSize)) return HOUSEHOLD_MIN;
+  return Math.min(HOUSEHOLD_MAX, Math.max(HOUSEHOLD_MIN, householdSize));
+}
+
+function setOnboardingHouseholdSize(value) {
+  const householdSize = getClampedHouseholdSize(value);
+  onboardingHouseholdInput.value = String(householdSize);
+  onboardingHouseholdOutput.textContent = String(householdSize);
+  onboardingHouseholdMinusButton.disabled = householdSize <= HOUSEHOLD_MIN;
+  onboardingHouseholdPlusButton.disabled = householdSize >= HOUSEHOLD_MAX;
+}
+
+function syncOnboardingFromUserInfo(userInfo) {
+  const info = userInfo || {};
+  onboardingZipCodeInput.value = info.zip_code || profileZipCodeInput.value || "";
+  setOnboardingHouseholdSize(info.household_size || householdSizeInput.value || HOUSEHOLD_MIN);
+  setDietaryPreferences(getDietaryPreferencesFromInfo(info), {
+    syncTextarea: !info.dietary_restrictions,
+  });
+  onboardingStepIndex = 0;
+  setOnboardingStatus("");
+  renderOnboardingStep();
+}
+
+function renderOnboardingStep() {
+  if (!onboardingForm) return;
+
+  const steps = Array.from(onboardingForm.querySelectorAll(".onboarding-step"));
+  steps.forEach((step, index) => {
+    const isActive = index === onboardingStepIndex;
+    step.hidden = !isActive;
+    step.classList.toggle("active", isActive);
+  });
+
+  const progressValue = ((onboardingStepIndex + 1) / ONBOARDING_TOTAL_STEPS) * 100;
+  onboardingProgressLabel.textContent = `${onboardingStepIndex + 1} of ${ONBOARDING_TOTAL_STEPS}`;
+  onboardingProgressBar.style.width = `${progressValue}%`;
+  onboardingBackButton.hidden = onboardingStepIndex === 0;
+  onboardingContinueButton.textContent =
+    onboardingStepIndex === ONBOARDING_TOTAL_STEPS - 1 ? "Start finding meals" : "Continue";
+  setOnboardingHouseholdSize(onboardingHouseholdInput.value);
+
+  const focusTarget = steps[onboardingStepIndex]?.querySelector(
+    "input:not([hidden]), button:not([hidden])"
+  );
+  window.setTimeout(() => focusTarget?.focus(), 0);
+}
+
+function getOnboardingStepError() {
+  if (onboardingStepIndex === 0 && !/^\d{5}$/.test(onboardingZipCodeInput.value.trim())) {
+    return "Enter a valid 5-digit US ZIP code.";
+  }
+
+  if (onboardingStepIndex === 1) {
+    const householdSize = getClampedHouseholdSize(onboardingHouseholdInput.value);
+    if (householdSize < HOUSEHOLD_MIN || householdSize > HOUSEHOLD_MAX) {
+      return "Household size must be between 1 and 20.";
+    }
+  }
+
+  return "";
+}
+
+async function saveOnboardingToUser() {
+  if (!supabaseClient || !currentUser) return false;
+
+  const zipCode = onboardingZipCodeInput.value.trim();
+  const householdSize = getClampedHouseholdSize(onboardingHouseholdInput.value);
+
+  if (!/^\d{5}$/.test(zipCode)) {
+    setOnboardingStatus("Enter a valid 5-digit US ZIP code.", "error");
+    onboardingStepIndex = 0;
+    renderOnboardingStep();
+    return false;
+  }
+
+  setOnboardingStatus("Saving your setup...");
+  onboardingContinueButton.disabled = true;
+  onboardingBackButton.disabled = true;
+
+  const dietaryRestrictions = selectedDietaryPreferences.join(", ");
+  const { data, error } = await supabaseClient
+    .from("user_info")
+    .upsert({
+      id: currentUser.id,
+      username: getDisplayUsername(currentUser),
+      zip_code: zipCode,
+      household_size: householdSize,
+      dietary_preferences: selectedDietaryPreferences,
+      dietary_restrictions: dietaryRestrictions,
+      onboarding_completed: true,
+      budget: budgetInput.value ? Number(budgetInput.value) : currentUserInfo?.budget ?? null,
+      dietary_preference: currentUserInfo?.dietary_preference || dietSelect.value || "balanced",
+      notifications_enabled: notificationsToggle.checked,
+    })
+    .select()
+    .single();
+
+  onboardingContinueButton.disabled = false;
+  onboardingBackButton.disabled = false;
+
+  if (error) {
+    setOnboardingStatus(error.message, "error");
+    return false;
+  }
+
+  currentUserInfo = data;
+  syncSettingsFromUserInfo(currentUser, currentUserInfo);
+  setOnboardingStatus("Setup saved.", "success");
+  return true;
 }
 
 function setPantryStatus(message, type = "neutral") {
@@ -1065,6 +1361,9 @@ async function renderAuthState(user) {
 
   accountUsername.textContent = getDisplayUsername(user);
   syncSettingsFromUserInfo(user, currentUserInfo);
+  if (user && currentUserInfo && !currentUserInfo.onboarding_completed) {
+    syncOnboardingFromUserInfo(currentUserInfo);
+  }
   renderHomeForAuthState();
   await loadSavedStores();
   await loadPantryItems();
@@ -1076,7 +1375,9 @@ async function renderAuthState(user) {
     signInForm.hidden = true;
     signUpForm.hidden = true;
     setAuthStatus(`Signed in as ${getDisplayUsername(user)}.`, "success");
-    if (SIGNED_OUT_PANEL_IDS.has(document.querySelector(".panel.visible")?.id)) {
+    if (isOnboardingRequired()) {
+      showPanel(ONBOARDING_PANEL_ID);
+    } else if (SIGNED_OUT_PANEL_IDS.has(document.querySelector(".panel.visible")?.id)) {
       showPanel(SIGNED_IN_DEFAULT_PANEL_ID);
     }
     return;
@@ -2879,6 +3180,78 @@ navButtons.forEach((button) =>
 showSignInButton.addEventListener("click", () => showAuthMode("sign-in"));
 showSignUpButton.addEventListener("click", () => showAuthMode("sign-up"));
 
+onboardingZipCodeInput.addEventListener("input", () => {
+  onboardingZipCodeInput.value = onboardingZipCodeInput.value.replace(/\D/g, "").slice(0, 5);
+  setOnboardingStatus("");
+});
+
+onboardingHouseholdMinusButton.addEventListener("click", () => {
+  setOnboardingHouseholdSize(Number(onboardingHouseholdInput.value) - 1);
+  setOnboardingStatus("");
+});
+
+onboardingHouseholdPlusButton.addEventListener("click", () => {
+  setOnboardingHouseholdSize(Number(onboardingHouseholdInput.value) + 1);
+  setOnboardingStatus("");
+});
+
+function handleCustomPreferenceAdd(input) {
+  const didAdd = addDietaryPreference(input.value);
+  input.value = "";
+  if (didAdd) {
+    queueSettingsSave();
+  }
+}
+
+onboardingAddPreferenceButton.addEventListener("click", () => {
+  handleCustomPreferenceAdd(onboardingCustomPreferenceInput);
+  onboardingCustomPreferenceInput.focus();
+});
+
+onboardingCustomPreferenceInput.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") return;
+  event.preventDefault();
+  handleCustomPreferenceAdd(onboardingCustomPreferenceInput);
+});
+
+settingsAddPreferenceButton.addEventListener("click", () => {
+  handleCustomPreferenceAdd(settingsCustomPreferenceInput);
+  settingsCustomPreferenceInput.focus();
+});
+
+settingsCustomPreferenceInput.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") return;
+  event.preventDefault();
+  handleCustomPreferenceAdd(settingsCustomPreferenceInput);
+});
+
+onboardingBackButton.addEventListener("click", () => {
+  onboardingStepIndex = Math.max(0, onboardingStepIndex - 1);
+  setOnboardingStatus("");
+  renderOnboardingStep();
+});
+
+onboardingForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const stepError = getOnboardingStepError();
+  if (stepError) {
+    setOnboardingStatus(stepError, "error");
+    return;
+  }
+
+  if (onboardingStepIndex < ONBOARDING_TOTAL_STEPS - 1) {
+    onboardingStepIndex += 1;
+    setOnboardingStatus("");
+    renderOnboardingStep();
+    return;
+  }
+
+  const wasSaved = await saveOnboardingToUser();
+  if (wasSaved) {
+    showPanel(SIGNED_IN_DEFAULT_PANEL_ID);
+  }
+});
+
 signInForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   if (!supabaseClient) return;
@@ -3145,6 +3518,13 @@ householdSizeInput.addEventListener("input", () => {
 profileZipCodeInput.addEventListener("input", queueSettingsSave);
 
 dietaryRestrictionsInput.addEventListener("input", queueSettingsSave);
+dietaryRestrictionsInput.addEventListener("change", () => {
+  setDietaryPreferences(
+    dietaryRestrictionsInput.value.split(",").map(normalizeDietaryPreference),
+    { syncTextarea: false }
+  );
+  queueSettingsSave();
+});
 
 budgetInput.addEventListener("input", () => {
   renderBudget();

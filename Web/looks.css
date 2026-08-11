@@ -667,6 +667,253 @@ main {
   font-weight: 700;
 }
 
+.onboarding-panel {
+  overflow: hidden;
+}
+
+.onboarding-shell {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.onboarding-progress-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 1rem;
+  color: var(--color-muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.onboarding-progress-track {
+  height: 0.55rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-border) 70%, transparent);
+}
+
+.onboarding-progress-track span {
+  display: block;
+  height: 100%;
+  width: 25%;
+  border-radius: inherit;
+  background: linear-gradient(140deg, var(--color-primary) 15%, var(--color-accent-soft) 100%);
+  transition: width 220ms ease;
+}
+
+.onboarding-card {
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--color-border) 88%, transparent);
+  border-radius: 1rem;
+  padding: clamp(1.2rem, 4vw, 2rem);
+  background:
+    linear-gradient(150deg, color-mix(in srgb, var(--color-panel-strong) 96%, transparent), color-mix(in srgb, var(--color-panel-strong) 84%, transparent)),
+    radial-gradient(circle at 90% 10%, rgba(251, 191, 36, 0.16), transparent 30%);
+  box-shadow: var(--shadow-strong);
+}
+
+.onboarding-step {
+  min-height: 360px;
+  animation: rise-in 260ms ease-out;
+}
+
+.onboarding-step > p:not(.eyebrow) {
+  margin: 0 0 1.3rem;
+  max-width: 58ch;
+  color: var(--color-muted);
+}
+
+.onboarding-icon {
+  width: 3.25rem;
+  height: 3.25rem;
+  display: grid;
+  place-items: center;
+  margin-bottom: 1rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 24%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  font-size: 1.55rem;
+}
+
+.onboarding-field {
+  display: grid;
+  gap: 0.45rem;
+  max-width: 280px;
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.number-selector {
+  display: inline-grid;
+  grid-template-columns: 4rem 7rem 4rem;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.4rem;
+}
+
+.number-selector button {
+  width: 4rem;
+  height: 4rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 32%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--color-panel-strong) 92%, transparent);
+  color: var(--color-primary-strong);
+  font: inherit;
+  font-size: 1.6rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.number-selector output {
+  min-width: 7rem;
+  text-align: center;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: clamp(3rem, 8vw, 4.8rem);
+  line-height: 1;
+  color: var(--color-text);
+}
+
+.preference-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 1rem 0;
+}
+
+.preference-chip,
+.selected-tag,
+.tag-entry-row button,
+.onboarding-actions button[type="submit"] {
+  border-radius: 999px;
+  font: inherit;
+}
+
+.preference-chip {
+  border: 1px solid var(--color-border);
+  padding: 0.58rem 0.82rem;
+  background: color-mix(in srgb, var(--color-panel-strong) 90%, transparent);
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.preference-chip[data-selected="true"] {
+  border-color: color-mix(in srgb, var(--color-primary) 48%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  color: var(--color-primary-strong);
+}
+
+.preference-chip:hover {
+  transform: translateY(-1px);
+}
+
+.tag-entry {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 1.1rem;
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.tag-entry-row {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.tag-entry-row input,
+.onboarding-field input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-panel-strong) 92%, transparent);
+  color: var(--color-text);
+  border-radius: 0.85rem;
+  padding: 0.72rem 0.95rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.tag-entry-row button,
+.onboarding-actions button[type="submit"] {
+  border: none;
+  padding: 0.72rem 1.15rem;
+  background: linear-gradient(140deg, var(--color-primary) 15%, #22c55e 100%);
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 11px 24px rgba(17, 94, 89, 0.22);
+}
+
+.selected-tags {
+  min-height: 2.3rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+.selected-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.55rem 0.45rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
+  background: color-mix(in srgb, var(--color-accent-soft) 16%, transparent);
+  color: var(--color-text);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.selected-tag button {
+  width: 1.45rem;
+  height: 1.45rem;
+  border: none;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--color-panel-strong) 80%, transparent);
+  color: var(--color-muted);
+  cursor: pointer;
+}
+
+.onboarding-status {
+  min-height: 1.5rem;
+  margin-top: 1rem;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.onboarding-status[data-type="success"] {
+  color: var(--color-primary-strong);
+  font-weight: 700;
+}
+
+.onboarding-status[data-type="error"] {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+.onboarding-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1.2rem;
+}
+
+.preference-chip:focus-visible,
+.selected-tag button:focus-visible,
+.number-selector button:focus-visible,
+.tag-entry-row button:focus-visible,
+.onboarding-actions button:focus-visible,
+.tag-entry-row input:focus,
+.onboarding-field input:focus {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
+  outline-offset: 2px;
+}
+
 .add-to-schedule-button {
   width: 100%;
   margin-top: 1rem;
@@ -1756,8 +2003,27 @@ tbody tr:last-child td {
   .add-to-schedule-button,
   .shopping-header button,
   .shopping-list-item button,
-  .store-search-form button {
+  .store-search-form button,
+  .tag-entry-row button,
+  .onboarding-actions button {
     width: 100%;
+  }
+
+  .onboarding-progress-row,
+  .tag-entry-row,
+  .onboarding-actions {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .number-selector {
+    grid-template-columns: 3.4rem minmax(5rem, 1fr) 3.4rem;
+    width: 100%;
+  }
+
+  .number-selector button {
+    width: 3.4rem;
+    height: 3.4rem;
   }
 
   .home-hero,

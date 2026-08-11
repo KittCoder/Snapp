@@ -102,6 +102,87 @@
         </div>
       </section>
 
+      <section id="onboarding" class="panel onboarding-panel" aria-labelledby="onboarding-title">
+        <div class="onboarding-shell">
+          <div class="onboarding-progress-row">
+            <span id="onboarding-progress-label">1 of 4</span>
+            <div class="onboarding-progress-track" aria-hidden="true">
+              <span id="onboarding-progress-bar"></span>
+            </div>
+          </div>
+
+          <form id="onboarding-form" class="onboarding-card" novalidate>
+            <div class="onboarding-step active" data-step="0">
+              <div class="onboarding-icon" aria-hidden="true">🥬</div>
+              <p class="eyebrow">Fresh start</p>
+              <h1 id="onboarding-title">Where are you shopping?</h1>
+              <p>We'll use this to find stores and deals near you.</p>
+              <label class="onboarding-field" for="onboarding-zip-code">
+                ZIP code
+                <input
+                  type="text"
+                  id="onboarding-zip-code"
+                  inputmode="numeric"
+                  autocomplete="postal-code"
+                  pattern="[0-9]{5}"
+                  maxlength="5"
+                  placeholder="e.g. 10001"
+                  required
+                />
+              </label>
+            </div>
+
+            <div class="onboarding-step" data-step="1" hidden>
+              <div class="onboarding-icon" aria-hidden="true">🍽️</div>
+              <p class="eyebrow">Servings</p>
+              <h1>How many people are you cooking for?</h1>
+              <p>SNAPP can use this when scaling recipe quantities.</p>
+              <div class="number-selector" role="group" aria-label="Household size">
+                <button id="onboarding-household-minus" type="button" aria-label="Decrease household size">−</button>
+                <output id="onboarding-household-output" for="onboarding-household-size">1</output>
+                <button id="onboarding-household-plus" type="button" aria-label="Increase household size">+</button>
+              </div>
+              <input type="number" id="onboarding-household-size" min="1" max="20" value="1" hidden />
+            </div>
+
+            <div class="onboarding-step" data-step="2" hidden>
+              <div class="onboarding-icon" aria-hidden="true">🥑</div>
+              <p class="eyebrow">Food fit</p>
+              <h1>Any dietary preferences?</h1>
+              <p>We'll use these to recommend recipes that fit you.</p>
+              <div id="onboarding-preference-chips" class="preference-chip-grid" aria-label="Popular dietary preferences"></div>
+              <div class="tag-entry">
+                <label for="onboarding-custom-preference">Add your own</label>
+                <div class="tag-entry-row">
+                  <input
+                    type="text"
+                    id="onboarding-custom-preference"
+                    autocomplete="off"
+                    maxlength="80"
+                    placeholder="e.g. No mushrooms"
+                  />
+                  <button id="onboarding-add-preference" type="button">Add</button>
+                </div>
+              </div>
+              <div id="onboarding-selected-preferences" class="selected-tags" aria-label="Selected dietary preferences"></div>
+            </div>
+
+            <div class="onboarding-step" data-step="3" hidden>
+              <div class="onboarding-icon" aria-hidden="true">✨</div>
+              <p class="eyebrow">Ready</p>
+              <h1>You're all set!</h1>
+              <p>Your SNAPP setup is ready to personalize meals, stores, and shopping plans.</p>
+            </div>
+
+            <div id="onboarding-status" class="onboarding-status" role="status" aria-live="polite"></div>
+            <div class="onboarding-actions">
+              <button id="onboarding-back" type="button" class="secondary-button">Back</button>
+              <button id="onboarding-continue" type="submit">Continue</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
       <section id="home" class="panel visible">
         <div class="home-hero signed-out-home">
           <div>
@@ -475,7 +556,7 @@
             </label>
             <label>
               How many people are you cooking for?
-              <input type="number" id="household-size" min="1" step="1" inputmode="numeric" value="2" placeholder="e.g. 4" />
+              <input type="number" id="household-size" min="1" max="20" step="1" inputmode="numeric" value="1" placeholder="e.g. 4" />
             </label>
             <label>
               ZIP code
@@ -506,8 +587,25 @@
         <section class="settings-section">
           <h3>Dietary Restrictions</h3>
           <div class="settings-form">
+            <div class="settings-wide">
+              <div id="settings-preference-chips" class="preference-chip-grid" aria-label="Popular dietary preferences"></div>
+              <div class="tag-entry">
+                <label for="settings-custom-preference">Add your own</label>
+                <div class="tag-entry-row">
+                  <input
+                    type="text"
+                    id="settings-custom-preference"
+                    autocomplete="off"
+                    maxlength="80"
+                    placeholder="e.g. Prefer spicy food"
+                  />
+                  <button id="settings-add-preference" type="button">Add</button>
+                </div>
+              </div>
+              <div id="settings-selected-preferences" class="selected-tags" aria-label="Selected dietary preferences"></div>
+            </div>
             <label class="settings-wide">
-              Restrictions for dish recommendations
+              Additional notes for dish recommendations
               <textarea
                 id="dietary-restrictions"
                 rows="4"
