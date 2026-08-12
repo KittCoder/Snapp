@@ -1,5 +1,6 @@
 const panels = document.querySelectorAll(".panel");
 const navButtons = document.querySelectorAll(".nav-button");
+const appSwitchButtons = document.querySelectorAll("[data-app-mode]");
 const scheduleCalendar = document.getElementById("schedule-calendar");
 const scheduleRecipeTray = document.getElementById("schedule-recipe-tray");
 const scheduleRecipeList = document.getElementById("schedule-recipe-list");
@@ -91,6 +92,9 @@ const settingsPreferenceChips = document.getElementById("settings-preference-chi
 const settingsCustomPreferenceInput = document.getElementById("settings-custom-preference");
 const settingsAddPreferenceButton = document.getElementById("settings-add-preference");
 const settingsSelectedPreferences = document.getElementById("settings-selected-preferences");
+const snapHouseholdSizeInput = document.getElementById("snap-household-size");
+const snapIncomeInput = document.getElementById("snap-income");
+const snapEstimateOutput = document.getElementById("snap-estimate-output");
 
 const scheduledMeals = [];
 let favoriteRecipes = [];
@@ -106,6 +110,7 @@ let savedMyStores = [];
 let activeAuthUserId = null;
 let dishProgressTimer = null;
 let authRenderSequence = 0;
+let activeAppMode = "snapp";
 const selectedMyStoreIds = new Set();
 const selectedShoppingIngredientIds = new Set();
 const pantryHandledShoppingIngredientIds = new Set();
@@ -409,6 +414,32 @@ const ONBOARDING_PANEL_ID = "onboarding";
 const SIGNED_IN_DEFAULT_PANEL_ID = "home";
 const SIGNED_OUT_DEFAULT_PANEL_ID = "home";
 const ONBOARDING_TOTAL_STEPS = 4;
+const SNAP101_PANEL_IDS = new Set(["snap101-snap", "snap101-nutrition"]);
+const SNAP101_DEFAULT_PANEL_ID = "snap101-snap";
+const SNAPP_PANEL_IDS = new Set([
+  "account",
+  "onboarding",
+  "home",
+  "dishes",
+  "schedule",
+  "shopping",
+  "my",
+  "pantry",
+  "budget",
+  "information",
+  "settings",
+]);
+const SNAP_MAX_ALLOTMENTS = {
+  1: 298,
+  2: 546,
+  3: 785,
+  4: 994,
+  5: 1183,
+  6: 1421,
+  7: 1571,
+  8: 1789,
+};
+const SNAP_ADDITIONAL_MEMBER_ALLOTMENT = 218;
 const HOUSEHOLD_MIN = 1;
 const HOUSEHOLD_MAX = 20;
 const POPULAR_DIETARY_PREFERENCES = [
@@ -486,12 +517,21 @@ const RESTRICTION_WARNING_RULES = [
 function showPanel(id) {
   const isSignedIn = Boolean(currentUser);
   let targetId = id;
+  const targetAppMode = SNAP101_PANEL_IDS.has(targetId) ? "snap101" : "snapp";
 
-  if (!isSignedIn && !SIGNED_OUT_PANEL_IDS.has(targetId)) {
+  activeAppMode = targetAppMode;
+  renderAppMode();
+
+  if (activeAppMode === "snapp" && !isSignedIn && !SIGNED_OUT_PANEL_IDS.has(targetId)) {
     targetId = SIGNED_OUT_DEFAULT_PANEL_ID;
   }
 
-  if (isOnboardingRequired() && targetId !== ONBOARDING_PANEL_ID && targetId !== "account") {
+  if (
+    activeAppMode === "snapp" &&
+    isOnboardingRequired() &&
+    targetId !== ONBOARDING_PANEL_ID &&
+    targetId !== "account"
+  ) {
     targetId = ONBOARDING_PANEL_ID;
   }
 
@@ -509,6 +549,10 @@ function showPanel(id) {
   if (targetId === ONBOARDING_PANEL_ID) {
     renderOnboardingStep();
   }
+
+  if (targetId === SNAP101_DEFAULT_PANEL_ID) {
+    syncSnapCalculatorHouseholdSize();
+  }
 }
 
 function isOnboardingRequired() {
@@ -519,11 +563,21 @@ function renderNavigationForAuthState() {
   const isSignedIn = Boolean(currentUser);
   navButtons.forEach((button) => {
     const authView = button.dataset.authView;
+    const appView = button.dataset.appView || "snapp";
     button.hidden =
+      appView !== activeAppMode ||
       (authView === "signed-in" && !isSignedIn) ||
       (authView === "signed-out" && isSignedIn);
   });
   accountStatus.hidden = !isSignedIn;
+}
+
+function renderAppMode() {
+  appSwitchButtons.forEach((button) => {
+    button.classList.toggle("active", button.dataset.appMode === activeAppMode);
+  });
+  document.body.dataset.appMode = activeAppMode;
+  renderNavigationForAuthState();
 }
 
 function renderAccountForAuthState() {
@@ -923,6 +977,40 @@ function getClampedHouseholdSize(value) {
   const householdSize = Number.parseInt(value, 10);
   if (!Number.isFinite(householdSize)) return HOUSEHOLD_MIN;
   return Math.min(HOUSEHOLD_MAX, Math.max(HOUSEHOLD_MIN, householdSize));
+}
+
+function getSnapMaximumAllotment(householdSize) {
+  const size = Math.max(1, Math.floor(Number(householdSize) || 1));
+  if (size <= 8) {
+    return SNAP_MAX_ALLOTMENTS[size];
+  }
+  return SNAP_MAX_ALLOTMENTS[8] + (size - 8) * SNAP_ADDITIONAL_MEMBER_ALLOTMENT;
+}
+
+function syncSnapCalculatorHouseholdSize() {
+  if (!snapHouseholdSizeInput) return;
+
+  const householdSize = getClampedHouseholdSize(
+    currentUserInfo?.household_size || householdSizeInput?.value || onboardingHouseholdInput?.value || 1
+  );
+  snapHouseholdSizeInput.value = String(householdSize);
+  updateSnapEstimate();
+}
+
+function updateSnapEstimate() {
+  if (!snapHouseholdSizeInput || !snapIncomeInput || !snapEstimateOutput) return;
+
+  const householdSize = getClampedHouseholdSize(snapHouseholdSizeInput.value);
+  const monthlyIncome = Math.max(0, Number(snapIncomeInput.value || 0));
+  const maximumAllotment = getSnapMaximumAllotment(householdSize);
+  const expectedContribution = monthlyIncome * 0.3;
+  const estimate = Math.max(0, Math.round(maximumAllotment - expectedContribution));
+  snapHouseholdSizeInput.value = String(householdSize);
+  snapEstimateOutput.textContent = `${currencyFormatter.format(estimate)} estimated monthly benefit`;
+  snapEstimateOutput.setAttribute(
+    "aria-label",
+    `${currencyFormatter.format(maximumAllotment)} maximum allotment minus ${currencyFormatter.format(expectedContribution)} estimated contribution`
+  );
 }
 
 function setOnboardingHouseholdSize(value) {
@@ -1385,6 +1473,7 @@ async function renderAuthState(user) {
   renderNavigationForAuthState();
   renderAccountForAuthState();
   syncSettingsFromUserInfo(user, null);
+  syncSnapCalculatorHouseholdSize();
   renderHomeForAuthState();
 
   if (user) {
@@ -1394,6 +1483,7 @@ async function renderAuthState(user) {
 
   renderAccountForAuthState();
   syncSettingsFromUserInfo(user, currentUserInfo);
+  syncSnapCalculatorHouseholdSize();
   if (user && currentUserInfo && !currentUserInfo.onboarding_completed) {
     syncOnboardingFromUserInfo(currentUserInfo);
   }
@@ -1409,9 +1499,9 @@ async function renderAuthState(user) {
   if (user) {
     renderAccountForAuthState();
     setAuthStatus(`Signed in as ${getDisplayUsername(user)}.`, "success");
-    if (isOnboardingRequired()) {
+    if (activeAppMode === "snapp" && isOnboardingRequired()) {
       showPanel(ONBOARDING_PANEL_ID);
-    } else if (document.querySelector(".panel.visible")?.id === ONBOARDING_PANEL_ID) {
+    } else if (activeAppMode === "snapp" && document.querySelector(".panel.visible")?.id === ONBOARDING_PANEL_ID) {
       showPanel(SIGNED_IN_DEFAULT_PANEL_ID);
     }
     return;
@@ -1421,7 +1511,9 @@ async function renderAuthState(user) {
     showAuthMode("sign-in");
     setAuthStatus("Signed out.", "success");
   }
-  showPanel(SIGNED_OUT_DEFAULT_PANEL_ID);
+  if (activeAppMode === "snapp") {
+    showPanel(SIGNED_OUT_DEFAULT_PANEL_ID);
+  }
 }
 
 async function handleSignOut() {
@@ -3017,7 +3109,11 @@ async function generateRecipesForSaleIngredient(item) {
 async function handleInitialUrlState() {
   const params = new URLSearchParams(window.location.search);
   const panel = params.get("panel");
+  const appMode = params.get("app");
   const saleIngredient = params.get("sale_ingredient");
+  if (!panel && appMode === "snap101") {
+    showPanel(SNAP101_DEFAULT_PANEL_ID);
+  }
   if (panel) {
     showPanel(panel);
   }
@@ -3227,8 +3323,21 @@ navButtons.forEach((button) =>
   button.addEventListener("click", () => showPanel(button.dataset.target))
 );
 
+appSwitchButtons.forEach((button) =>
+  button.addEventListener("click", () => {
+    if (button.dataset.appMode === "snap101") {
+      showPanel(SNAP101_DEFAULT_PANEL_ID);
+      return;
+    }
+    showPanel(SIGNED_IN_DEFAULT_PANEL_ID);
+  })
+);
+
 showSignInButton.addEventListener("click", () => showAuthMode("sign-in"));
 showSignUpButton.addEventListener("click", () => showAuthMode("sign-up"));
+
+snapHouseholdSizeInput?.addEventListener("input", updateSnapEstimate);
+snapIncomeInput?.addEventListener("input", updateSnapEstimate);
 
 onboardingZipCodeInput.addEventListener("input", () => {
   onboardingZipCodeInput.value = onboardingZipCodeInput.value.replace(/\D/g, "").slice(0, 5);
@@ -3554,6 +3663,7 @@ dishModal.addEventListener("click", (event) => {
 
 householdSizeInput.addEventListener("input", () => {
   renderBudget();
+  syncSnapCalculatorHouseholdSize();
   queueSettingsSave();
 });
 

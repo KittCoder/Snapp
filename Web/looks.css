@@ -117,6 +117,33 @@ body.dark-theme {
   font-size: 1.05rem;
 }
 
+.app-switch {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 86%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--color-panel-strong) 84%, transparent);
+}
+
+.app-switch button {
+  border: 0;
+  border-radius: 0.75rem;
+  padding: 0.55rem 0.85rem;
+  background: transparent;
+  color: var(--color-muted);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.app-switch button.active {
+  background: #0f766e;
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(17, 94, 89, 0.22);
+}
+
 .nav-buttons {
   display: flex;
   flex-wrap: wrap;
@@ -497,6 +524,241 @@ main {
 
 .plate-layout img {
   aspect-ratio: 16 / 10;
+}
+
+.snap101-panel {
+  background: color-mix(in srgb, var(--color-panel-strong) 92%, #eaf4f0 8%);
+}
+
+.snap101-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr);
+  gap: 1.35rem;
+  align-items: center;
+  margin-bottom: 1.6rem;
+}
+
+.snap101-hero p:not(.eyebrow) {
+  color: var(--color-muted);
+  font-size: 1.03rem;
+}
+
+.snap101-hero img,
+.nutrition-story img {
+  width: 100%;
+  height: 310px;
+  object-fit: cover;
+  border-radius: 1rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.snap101-grid,
+.nutrition-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1.2rem 0;
+}
+
+.snap101-grid article,
+.nutrition-cards article,
+.nutrition-story article,
+.snap-calculator,
+.allotment-section,
+.macro-bars {
+  border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--color-panel-strong) 92%, transparent);
+  padding: 1.1rem;
+}
+
+.snap101-grid h2,
+.nutrition-story h2,
+.snap-calculator h2,
+.allotment-section h2,
+.macro-bars h2 {
+  font-family: "Sora", "Avenir Next", "Segoe UI", sans-serif;
+  font-size: 1.15rem;
+  margin-bottom: 0.55rem;
+}
+
+.snap101-grid p,
+.snap-calculator p,
+.allotment-section p,
+.nutrition-story p,
+.nutrition-cards p {
+  color: var(--color-muted);
+}
+
+.snap-calculator {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(280px, 1.1fr);
+  gap: 1.2rem;
+  align-items: start;
+  margin: 1.35rem 0;
+}
+
+.snap-calculator-form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.snap-calculator-form label {
+  display: grid;
+  gap: 0.4rem;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.snap-calculator-form input {
+  border: 1px solid var(--color-border);
+  border-radius: 0.85rem;
+  padding: 0.72rem 0.95rem;
+  background: var(--color-panel-strong);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.snap-estimate-output {
+  border-radius: 1rem;
+  padding: 1rem;
+  background: #082f49;
+  color: #ffffff;
+  font-size: 1.2rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.snap101-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.allotment-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin: 0.9rem 0;
+}
+
+.allotment-list span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  border-radius: 0.85rem;
+  padding: 0.75rem 0.85rem;
+  background: #eef6ff;
+  color: #0f2f4f;
+  font-weight: 800;
+}
+
+.allotment-list strong {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #f59e0b;
+  color: #111827;
+}
+
+.nutrition-story {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(280px, 1.1fr);
+  gap: 1rem;
+  margin: 1.2rem 0;
+}
+
+.plate-infographic {
+  position: relative;
+  width: min(270px, 100%);
+  aspect-ratio: 1;
+  margin: 1rem auto 0;
+  border: 12px solid #ffffff;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px var(--color-border), 0 16px 30px rgba(15, 47, 79, 0.13);
+  background:
+    linear-gradient(90deg, #22c55e 0 50%, transparent 50%),
+    linear-gradient(180deg, transparent 0 50%, #f59e0b 50% 100%),
+    #38bdf8;
+}
+
+.plate-infographic span {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 900;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.28);
+}
+
+.plate-half {
+  inset: 0 50% 0 0;
+}
+
+.plate-quarter.protein {
+  inset: 0 0 50% 50%;
+}
+
+.plate-quarter.carbs {
+  inset: 50% 0 0 50%;
+}
+
+.nutrition-cards article span {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.7rem;
+  background: #f59e0b;
+  color: #111827;
+  font-weight: 900;
+}
+
+.nutrition-cards h3 {
+  margin: 0.75rem 0 0.4rem;
+}
+
+.macro-bars {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.macro-bars > div {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.macro-bars span {
+  color: var(--color-muted);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.macro-bars strong {
+  position: relative;
+  min-height: 2.25rem;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 0.75rem;
+  padding: 0.52rem 0.75rem;
+  background: #e5edf7;
+  color: #0f2f4f;
+}
+
+.macro-bars strong::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--bar-width);
+  background: linear-gradient(90deg, #5eead4, #fbbf24);
 }
 
 .gallery-grid {
@@ -1988,6 +2250,15 @@ tbody tr:last-child td {
     justify-content: space-between;
   }
 
+  .app-switch,
+  .nav-buttons {
+    width: 100%;
+  }
+
+  .app-switch button {
+    flex: 1;
+  }
+
   main {
     width: min(1080px, 100% - 1.2rem);
     margin-top: 1.2rem;
@@ -2042,6 +2313,7 @@ tbody tr:last-child td {
   .shopping-header button,
   .shopping-list-item button,
   .store-search-form button,
+  .snap-calculator-form input,
   .tag-entry-row button,
   .onboarding-actions button {
     width: 100%;
@@ -2066,8 +2338,25 @@ tbody tr:last-child td {
 
   .home-hero,
   .auth-layout,
-  .plate-layout {
+  .plate-layout,
+  .snap101-hero,
+  .snap-calculator,
+  .nutrition-story {
     grid-template-columns: 1fr;
+  }
+
+  .snap101-grid,
+  .nutrition-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .allotment-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .snap101-hero img,
+  .nutrition-story img {
+    height: 230px;
   }
 
   .section-heading-row {

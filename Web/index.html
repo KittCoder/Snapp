@@ -19,17 +19,23 @@
         <span class="brand-logo">S</span>
         <span class="brand-name">SNAPP</span>
       </div>
+      <div class="app-switch" aria-label="Application section">
+        <button id="app-switch-snapp" type="button" class="active" data-app-mode="snapp">SNAPP</button>
+        <button id="app-switch-snap101" type="button" data-app-mode="snap101">SNAP 101</button>
+      </div>
       <nav class="nav-buttons">
-        <button data-target="home" class="nav-button active">Home</button>
-        <button data-target="account" class="nav-button">Account</button>
-        <button data-target="dishes" data-auth-view="signed-in" class="nav-button" hidden>Dishes</button>
-        <button data-target="my" data-auth-view="signed-in" class="nav-button" hidden>My stores</button>
-        <button data-target="pantry" data-auth-view="signed-in" class="nav-button" hidden>My pantry</button>
-        <button data-target="schedule" data-auth-view="signed-in" class="nav-button" hidden>Schedule</button>
-        <button data-target="shopping" data-auth-view="signed-in" class="nav-button" hidden>Shopping list</button>
-        <button data-target="budget" data-auth-view="signed-in" class="nav-button" hidden>Budget</button>
-        <button data-target="information" data-auth-view="signed-in" class="nav-button" hidden>Information</button>
-        <button data-target="settings" data-auth-view="signed-in" class="nav-button" hidden>Settings</button>
+        <button data-target="home" data-app-view="snapp" class="nav-button active">Home</button>
+        <button data-target="account" data-app-view="snapp" class="nav-button">Account</button>
+        <button data-target="dishes" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Dishes</button>
+        <button data-target="my" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>My stores</button>
+        <button data-target="pantry" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>My pantry</button>
+        <button data-target="schedule" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Schedule</button>
+        <button data-target="shopping" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Shopping list</button>
+        <button data-target="budget" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Budget</button>
+        <button data-target="information" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Information</button>
+        <button data-target="settings" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Settings</button>
+        <button data-target="snap101-snap" data-app-view="snap101" class="nav-button" hidden>SNAP</button>
+        <button data-target="snap101-nutrition" data-app-view="snap101" class="nav-button" hidden>Nutrition</button>
       </nav>
       <div class="account-status" hidden>
         <span id="account-username">Signed out</span>
@@ -188,6 +194,178 @@
             </div>
           </form>
         </div>
+      </section>
+
+      <section id="snap101-snap" class="panel snap101-panel">
+        <div class="snap101-hero">
+          <div>
+            <p class="eyebrow">SNAP 101</p>
+            <h1>SNAP basics, without the paperwork fog</h1>
+            <p>
+              SNAP is the Supplemental Nutrition Assistance Program. It helps
+              eligible households buy groceries with monthly benefits loaded on
+              an EBT card. States run applications locally, while USDA sets many
+              of the national rules.
+            </p>
+          </div>
+          <img
+            src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1100&q=80"
+            alt="Fresh produce at a grocery market."
+          />
+        </div>
+
+        <div class="snap101-grid">
+          <article>
+            <h2>What SNAP can buy</h2>
+            <p>
+              SNAP can generally be used for foods like fruits, vegetables,
+              bread, cereal, dairy, meat, poultry, fish, snacks, non-alcoholic
+              drinks, and seeds or plants that grow food.
+            </p>
+          </article>
+          <article>
+            <h2>What it usually cannot buy</h2>
+            <p>
+              SNAP usually cannot buy alcohol, tobacco, vitamins, medicine,
+              household supplies, pet food, or hot prepared foods meant to be
+              eaten right away.
+            </p>
+          </article>
+          <article>
+            <h2>How benefits are estimated</h2>
+            <p>
+              A simple estimate starts with the maximum allotment for household
+              size, then subtracts about 30% of countable monthly income. Real
+              eligibility uses deductions and state-specific details.
+            </p>
+          </article>
+        </div>
+
+        <section class="snap-calculator">
+          <div>
+            <p class="eyebrow">Placeholder calculator</p>
+            <h2>Estimate a monthly SNAP amount</h2>
+            <p>
+              This quick placeholder uses your saved family size when available:
+              maximum allotment minus 30% of monthly income.
+            </p>
+          </div>
+          <form id="snap-calculator-form" class="snap-calculator-form">
+            <label>
+              Household size
+              <input id="snap-household-size" type="number" min="1" max="20" step="1" inputmode="numeric" value="1" />
+            </label>
+            <label>
+              Monthly income
+              <input id="snap-income" type="number" min="0" step="1" inputmode="decimal" placeholder="e.g. 1200" />
+            </label>
+            <output id="snap-estimate-output" class="snap-estimate-output">$298 estimated monthly benefit</output>
+          </form>
+          <p class="snap101-note">
+            This is not an eligibility decision. Official applications consider
+            deductions, expenses, resources, immigration status, student rules,
+            work rules, and state policy.
+          </p>
+        </section>
+
+        <section class="allotment-section">
+          <h2>FY2026 maximum monthly allotments</h2>
+          <div class="allotment-list" aria-label="Maximum monthly SNAP allotments by household size">
+            <span><strong>1</strong>$298</span>
+            <span><strong>2</strong>$546</span>
+            <span><strong>3</strong>$785</span>
+            <span><strong>4</strong>$994</span>
+            <span><strong>5</strong>$1,183</span>
+            <span><strong>6</strong>$1,421</span>
+            <span><strong>7</strong>$1,571</span>
+            <span><strong>8</strong>$1,789</span>
+          </div>
+          <p>Each additional person: +$218 per month.</p>
+        </section>
+      </section>
+
+      <section id="snap101-nutrition" class="panel snap101-panel">
+        <div class="snap101-hero nutrition-hero">
+          <div>
+            <p class="eyebrow">Nutrition</p>
+            <h1>Eat steady, not perfect</h1>
+            <p>
+              Good nutrition is mostly about repeatable basics: enough protein,
+              fiber-rich carbs, colorful produce, healthy fats, water, and meals
+              that actually fit your day.
+            </p>
+          </div>
+          <img
+            src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1100&q=80"
+            alt="Balanced bowls with vegetables, grains, and protein."
+          />
+        </div>
+
+        <section class="nutrition-story">
+          <article>
+            <h2>Build the plate</h2>
+            <p>
+              Start with the plate method: half produce, one quarter protein,
+              and one quarter grains or starchy foods. Add a little fat for
+              flavor and fullness.
+            </p>
+            <div class="plate-infographic" aria-label="Plate method infographic">
+              <span class="plate-half">Produce</span>
+              <span class="plate-quarter protein">Protein</span>
+              <span class="plate-quarter carbs">Grains</span>
+            </div>
+          </article>
+          <article>
+            <h2>Think in simple swaps</h2>
+            <p>
+              Add beans to rice, choose whole-grain bread when it works, keep
+              frozen vegetables around, and pair snacks with protein when you
+              want them to last longer.
+            </p>
+            <img
+              src="https://images.unsplash.com/photo-1518843875459-f738682238a6?auto=format&fit=crop&w=900&q=80"
+              alt="Colorful vegetables prepared for cooking."
+            />
+          </article>
+        </section>
+
+        <div class="nutrition-cards">
+          <article>
+            <span>1</span>
+            <h3>Protein helps meals stick</h3>
+            <p>Eggs, beans, yogurt, tofu, fish, chicken, and lentils all count.</p>
+          </article>
+          <article>
+            <span>2</span>
+            <h3>Fiber is the quiet helper</h3>
+            <p>Oats, beans, fruit, vegetables, and whole grains support fullness.</p>
+          </article>
+          <article>
+            <span>3</span>
+            <h3>Frozen and canned are useful</h3>
+            <p>They are budget-friendly, last longer, and can reduce food waste.</p>
+          </article>
+        </div>
+
+        <section class="macro-bars" aria-label="Balanced meal building blocks">
+          <h2>Meal building blocks</h2>
+          <div>
+            <span>Color</span>
+            <strong style="--bar-width: 85%">Vegetables and fruit</strong>
+          </div>
+          <div>
+            <span>Staying power</span>
+            <strong style="--bar-width: 70%">Protein and fiber</strong>
+          </div>
+          <div>
+            <span>Energy</span>
+            <strong style="--bar-width: 62%">Grains and starchy foods</strong>
+          </div>
+          <div>
+            <span>Flavor</span>
+            <strong style="--bar-width: 48%">Healthy fats and seasonings</strong>
+          </div>
+        </section>
       </section>
 
       <section id="home" class="panel visible">
