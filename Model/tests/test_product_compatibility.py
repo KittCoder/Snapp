@@ -82,6 +82,47 @@ class FakeRetriever:
         )
 
 
+class FakeBatchRetriever(FakeRetriever):
+    def __init__(self, features):
+        super().__init__(features)
+        self.batch_calls = 0
+
+    def retrieve_product_candidates_batch(self, ingredient_texts, limit=50, **_kwargs):
+        self.batch_calls += 1
+        return [
+            CandidateRetrievalResult(
+                ingredient_text=ingredient_text,
+                parsed_query={},
+                normalized_semantic_query=ingredient_text,
+                candidates=[
+                    Candidate(
+                        product_id=item["product_id"],
+                        original_product_name=item["original_product_name"],
+                        normalized_name=item["normalized_name"],
+                        record_status=item["record_status"],
+                        canonical_ingredient=item.get("canonical_name"),
+                        lexical_similarity=item.get("lexical", 0.7),
+                        semantic_similarity=item.get("semantic", 0.7),
+                        exact_match=item.get("exact", False),
+                        category_match_signal="match",
+                        retrieval_reason_codes=["test_batch"],
+                    )
+                    for item in self.features[:limit]
+                ],
+                retrieval_latency_ms=1.0,
+                lexical_latency_ms=0.1,
+                semantic_latency_ms=0.1,
+                query_embedding_latency_ms=0.1,
+                embedding_index_available=True,
+                embedding_model_version="fake",
+                index_version="fake-index-v1",
+                degraded_mode=False,
+                errors=[],
+            )
+            for ingredient_text in ingredient_texts
+        ]
+
+
 def service(features, override_data=None):
     if override_data is None:
         overrides = OverrideStore(Path("/tmp/definitely-missing-overrides.json"))
@@ -175,7 +216,7 @@ class CompatibilityRuleTests(unittest.TestCase):
 
     def test_nuts_olives_and_spices_remain_buyable(self):
         cases = [
-            ("walnuts", "walnuts", ["cookies"], [feature("cookies", "Walnut Chocolate Chip Cookies", None, "snacks"), feature("walnuts", "Fisher Chopped Walnuts", "walnuts", "pantry")]),
+            ("walnuts", "walnuts", ["cookies", "dressing"], [feature("cookies", "Walnut Chocolate Chip Cookies", None, "snacks"), feature("dressing", "Walnut Dressing", None, "pantry"), feature("walnuts", "Fisher Chopped Walnuts", "walnuts", "pantry")]),
             ("pecans", "pecans", ["tarte"], [feature("tarte", "Chambord Pecan Tarte", None, "prepared"), feature("pecans", "Diamond Chopped Pecans", "pecans", "pantry")]),
             ("almonds", "almonds", ["milk"], [feature("milk", "Almond Milk", "almond milk", "dairy"), feature("almonds", "Bowl & Basket Almonds", "almonds", "pantry")]),
             ("pitted Kalamata olives", "olives", ["oil"], [feature("oil", "Extra Virgin Olive Oil", "olive oil", "pantry"), feature("olives", "Bowl & Basket Kalamata Olives", "olives", "pantry")]),
@@ -193,6 +234,21 @@ class CompatibilityRuleTests(unittest.TestCase):
                 self.assertEqual(result.selected_match.product_id, expected)
                 unsafe_ids = {item.product_id for item in result.rejected_candidates + result.substitution_candidates}
                 self.assertTrue(set(rejected) <= unsafe_ids)
+
+    def test_bulk_matching_uses_batched_retrieval_for_unique_misses(self):
+        retriever = FakeBatchRetriever(
+            [
+                feature("walnuts", "Fisher Chopped Walnuts", "walnuts", "pantry"),
+                feature("milk", "Whole Milk", "milk", "dairy"),
+            ]
+        )
+        svc = ProductMatchService(retriever=retriever, overrides=OverrideStore(Path("/tmp/definitely-missing-overrides.json")))
+
+        results = svc.match_recipe_ingredients(["walnuts", "milk"], limit=5)
+
+        self.assertEqual(retriever.batch_calls, 1)
+        self.assertEqual(retriever.calls, 0)
+        self.assertEqual(len(results), 2)
 
     def test_beef_does_not_accept_pork_sausage(self):
         result = service(

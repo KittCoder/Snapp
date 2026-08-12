@@ -22,7 +22,7 @@ from product_retrieval import (
 )
 
 
-MATCHER_VERSION = "ingredient-product-matcher-v1.10"
+MATCHER_VERSION = "ingredient-product-matcher-v1.11"
 DEFAULT_OVERRIDES_PATH = Path(__file__).resolve().parent / "product_match_overrides.json"
 DEFAULT_EVALUATION_FIXTURE = Path(__file__).resolve().parent / "evaluation" / "product_match_cases.jsonl"
 
@@ -1321,7 +1321,7 @@ def classify_identity(
         profile.family = "walnuts"; profile.category = profile.category or "pantry"
     elif text_has(detection_text, r"\bpecans?\b|\bpecan meats?\b"):
         profile.family = "pecans"; profile.category = profile.category or "pantry"
-    elif text_has(detection_text, r"\balmonds?\b") and profile.family != "milk":
+    elif text_has(detection_text, r"\balmonds?\b") and profile.family not in {"milk", "nut butter"}:
         profile.family = "almonds"; profile.category = profile.category or "pantry"
     elif text_has(detection_text, r"\bolives?\b|\bkalamata\b") and profile.family not in {"tuna", "meat cut", "ground meat", "beef", "chicken", "pork", "ham", "sausage"}:
         profile.family = "olives"; profile.category = profile.category or "pantry"
@@ -1878,6 +1878,14 @@ def compatibility_signals(query: IngredientProfile, product: IngredientProfile) 
         signals.append(CompatibilitySignal("honey_identity", HARD_REJECT, "honey-flavored or honey-containing product is not plain honey"))
     if query.family == "honey" and product.family != "honey":
         signals.append(CompatibilitySignal("honey_identity", HARD_REJECT, "honey-flavored or honey-containing product is not plain honey"))
+    if query.family in {"walnuts", "pecans", "almonds"}:
+        plain_nut_reject_patterns = (
+            r"\bdressing\b|\bsauce\b|\bmarinade\b|\bvinaigrette\b|\bspread\b|\bbutter\b|\boil\b",
+            r"\bcookies?\b|\bcakes?\b|\btart(?:e)?s?\b|\bbars?\b|\bcereal\b|\bgranola\b|\btrail mix\b",
+            r"\bmilk\b|\bbeverage\b|\bice cream\b|\byogurt\b|\bhummus\b|\bsalad\b|\bprepared\b",
+        )
+        if product.family != query.family or product.category in {"bakery", "prepared"} or text_has(product.normalized_signature, *plain_nut_reject_patterns):
+            signals.append(CompatibilitySignal("plain_nut_identity", HARD_REJECT, f"{product.family or 'unknown'} is not plain {query.family}"))
 
     if query.sweetened_status == "unsweetened" and product.sweetened_status == "sweetened":
         signals.append(CompatibilitySignal("sweetened_status", HARD_REJECT, "sweetened product conflicts with unsweetened request"))
@@ -2478,12 +2486,27 @@ class ProductMatchService:
                 misses.append((text, query_profile, parsed, key))
 
         if misses:
-            retrievals = [
-                self._retrieve_with_substitution_expansion(query_profile, 80, use_semantic)
-                for _text, query_profile, _parsed, _key in misses
-            ]
+            miss_texts = [query_profile.normalized_signature for _text, query_profile, _parsed, _key in misses]
+            try:
+                retrievals = self.retriever.retrieve_product_candidates_batch(
+                    miss_texts,
+                    limit=80,
+                    use_semantic=use_semantic,
+                )
+            except (AttributeError, TypeError):
+                retrievals = [
+                    self._retrieve_with_substitution_expansion(query_profile, 80, use_semantic)
+                    for _text, query_profile, _parsed, _key in misses
+                ]
             for (text, query_profile, parsed, key), retrieval in zip(misses, retrievals):
                 result = self._match_from_retrieval(text, query_profile, parsed, retrieval, started_by_text[text], limit, 80)
+                if (
+                    result.selected_match is None
+                    and culinary_substitution_queries(query_profile)
+                    and not any("deterministic_substitution_query" in candidate.retrieval_reason_codes for candidate in retrieval.candidates)
+                ):
+                    expanded_retrieval = self._retrieve_with_substitution_expansion(query_profile, 80, use_semantic)
+                    result = self._match_from_retrieval(text, query_profile, parsed, expanded_retrieval, started_by_text[text], limit, 80)
                 self.cache.set(key, copy.deepcopy(result))
                 results_by_key[key] = result
 

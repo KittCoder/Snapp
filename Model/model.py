@@ -87,6 +87,8 @@ SALE_INGREDIENT_CANDIDATES_FILENAME = os.getenv(
 SALE_CANDIDATE_POOL_SIZE = 10
 SALE_HOME_SAMPLE_SIZE = 3
 MIN_SALE_RECIPE_COUNT = 3
+REAL_RECIPE_MATCH_MULTIPLIER = int(os.getenv("SNAPP_REAL_RECIPE_MATCH_MULTIPLIER", "1"))
+SALE_RECIPE_MATCH_MULTIPLIER = int(os.getenv("SNAPP_SALE_RECIPE_MATCH_MULTIPLIER", "3"))
 MAX_TRUSTED_DISCOUNT_PERCENT = 0.85
 SALE_DESIRABILITY_WEIGHTS = {
     "discount_percent": 46,
@@ -4700,18 +4702,19 @@ def build_real_recipe_results(
             (item[0].get("title") or item[0].get("name") or "").casefold(),
         )
     )
+    match_window = max(result_limit + 2, result_limit * max(1, REAL_RECIPE_MATCH_MULTIPLIER))
     if len(ranked_candidates) > result_limit:
         exact_ranked = [item for item in ranked_candidates if item[2]]
         if len(exact_ranked) >= result_limit:
-            selected = exact_ranked[: max(result_limit * 2, 6)]
+            selected = exact_ranked[:match_window]
             selected_ids = {spoonacular_recipe_id(item[0]) for item in selected}
             fallback = [
                 item for item in ranked_candidates
                 if spoonacular_recipe_id(item[0]) not in selected_ids
-            ][: max(result_limit, 3)]
+            ][:result_limit]
             ranked_candidates = selected + fallback
         else:
-            ranked_candidates = ranked_candidates[: max(result_limit * 2, 6)]
+            ranked_candidates = ranked_candidates[:match_window]
 
     prewarm_morton_williams_recipe_matches(
         [recipe for recipe, _relevance_score, _exact_match in ranked_candidates],
@@ -4830,13 +4833,13 @@ def build_sale_ingredient_recipe_results(
         )
     )
     prewarm_morton_williams_recipe_matches(
-        [recipe for recipe, _relevance_score, _exact_match in candidates[: max(24, result_limit * 6)]],
+        [recipe for recipe, _relevance_score, _exact_match in candidates[: max(result_limit + 3, result_limit * SALE_RECIPE_MATCH_MULTIPLIER)]],
         pantry_items=pantry_items,
     )
     results = []
     relaxed = False
     seen = set()
-    for recipe, relevance_score, exact_match in candidates[: max(24, result_limit * 6)]:
+    for recipe, relevance_score, exact_match in candidates[: max(result_limit + 3, result_limit * SALE_RECIPE_MATCH_MULTIPLIER)]:
         matches = match_recipe_ingredients_to_morton_williams(
             recipe,
             pantry_items=pantry_items,
