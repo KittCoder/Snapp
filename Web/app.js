@@ -56,6 +56,9 @@ const settingsStatus = document.getElementById("settings-status");
 const accountStatus = document.querySelector(".account-status");
 const accountUsername = document.getElementById("account-username");
 const signOutButton = document.getElementById("sign-out-button");
+const accountPanelSignOutButton = document.getElementById("account-panel-sign-out-button");
+const signedInAccountPanel = document.getElementById("signed-in-account");
+const signedInAccountName = document.getElementById("signed-in-account-name");
 const authStatus = document.getElementById("auth-status");
 const signInForm = document.getElementById("sign-in-form");
 const signUpForm = document.getElementById("sign-up-form");
@@ -102,6 +105,7 @@ let pantryItems = [];
 let savedMyStores = [];
 let activeAuthUserId = null;
 let dishProgressTimer = null;
+let authRenderSequence = 0;
 const selectedMyStoreIds = new Set();
 const selectedShoppingIngredientIds = new Set();
 const pantryHandledShoppingIngredientIds = new Set();
@@ -483,15 +487,11 @@ function showPanel(id) {
   const isSignedIn = Boolean(currentUser);
   let targetId = id;
 
-  if (isSignedIn && SIGNED_OUT_PANEL_IDS.has(targetId)) {
-    targetId = SIGNED_IN_DEFAULT_PANEL_ID;
-  }
-
   if (!isSignedIn && !SIGNED_OUT_PANEL_IDS.has(targetId)) {
     targetId = SIGNED_OUT_DEFAULT_PANEL_ID;
   }
 
-  if (isOnboardingRequired() && targetId !== ONBOARDING_PANEL_ID) {
+  if (isOnboardingRequired() && targetId !== ONBOARDING_PANEL_ID && targetId !== "account") {
     targetId = ONBOARDING_PANEL_ID;
   }
 
@@ -524,6 +524,28 @@ function renderNavigationForAuthState() {
       (authView === "signed-out" && isSignedIn);
   });
   accountStatus.hidden = !isSignedIn;
+}
+
+function renderAccountForAuthState() {
+  const isSignedIn = Boolean(currentUser);
+  const displayUsername = getDisplayUsername(currentUser);
+
+  if (isSignedIn) {
+    authTabs.hidden = true;
+    signInForm.hidden = true;
+    signUpForm.hidden = true;
+  }
+  if (signedInAccountPanel) {
+    signedInAccountPanel.hidden = !isSignedIn;
+  }
+  if (signedInAccountName) {
+    signedInAccountName.textContent = displayUsername;
+  }
+  accountUsername.textContent = displayUsername;
+  signOutButton.hidden = !isSignedIn;
+  if (accountPanelSignOutButton) {
+    accountPanelSignOutButton.hidden = !isSignedIn;
+  }
 }
 
 function renderHomeForAuthState() {
@@ -1332,16 +1354,25 @@ async function deletePantryItem(itemId) {
 }
 
 function showAuthMode(mode) {
+  if (currentUser) {
+    renderAccountForAuthState();
+    return;
+  }
+
   const isSignUp = mode === "sign-up";
   authTabs.hidden = false;
   signInForm.hidden = isSignUp;
   signUpForm.hidden = !isSignUp;
+  if (signedInAccountPanel) {
+    signedInAccountPanel.hidden = true;
+  }
   showSignInButton.classList.toggle("active", !isSignUp);
   showSignUpButton.classList.toggle("active", isSignUp);
   setAuthStatus("");
 }
 
 async function renderAuthState(user) {
+  const renderId = ++authRenderSequence;
   const wasSignedIn = Boolean(currentUser);
   const nextUserId = user?.id || null;
   if (activeAuthUserId !== nextUserId) {
@@ -1352,32 +1383,35 @@ async function renderAuthState(user) {
   currentUserInfo = null;
   document.body.classList.toggle("signed-in", Boolean(user));
   renderNavigationForAuthState();
-  accountUsername.textContent = getDisplayUsername(user);
-  signOutButton.hidden = !user;
+  renderAccountForAuthState();
+  syncSettingsFromUserInfo(user, null);
+  renderHomeForAuthState();
 
   if (user) {
     currentUserInfo = await ensureUserInfo(user);
+    if (renderId !== authRenderSequence) return;
   }
 
-  accountUsername.textContent = getDisplayUsername(user);
+  renderAccountForAuthState();
   syncSettingsFromUserInfo(user, currentUserInfo);
   if (user && currentUserInfo && !currentUserInfo.onboarding_completed) {
     syncOnboardingFromUserInfo(currentUserInfo);
   }
   renderHomeForAuthState();
-  await loadSavedStores();
-  await loadPantryItems();
-  await loadFavoriteRecipes();
-  await loadScheduledMeals();
+  await Promise.allSettled([
+    loadSavedStores(),
+    loadPantryItems(),
+    loadFavoriteRecipes(),
+    loadScheduledMeals(),
+  ]);
+  if (renderId !== authRenderSequence) return;
 
   if (user) {
-    authTabs.hidden = true;
-    signInForm.hidden = true;
-    signUpForm.hidden = true;
+    renderAccountForAuthState();
     setAuthStatus(`Signed in as ${getDisplayUsername(user)}.`, "success");
     if (isOnboardingRequired()) {
       showPanel(ONBOARDING_PANEL_ID);
-    } else if (SIGNED_OUT_PANEL_IDS.has(document.querySelector(".panel.visible")?.id)) {
+    } else if (document.querySelector(".panel.visible")?.id === ONBOARDING_PANEL_ID) {
       showPanel(SIGNED_IN_DEFAULT_PANEL_ID);
     }
     return;
@@ -1388,6 +1422,22 @@ async function renderAuthState(user) {
     setAuthStatus("Signed out.", "success");
   }
   showPanel(SIGNED_OUT_DEFAULT_PANEL_ID);
+}
+
+async function handleSignOut() {
+  if (!supabaseClient) return;
+
+  const signOutButtons = [signOutButton, accountPanelSignOutButton].filter(Boolean);
+  signOutButtons.forEach((button) => {
+    button.disabled = true;
+  });
+  const { error } = await supabaseClient.auth.signOut();
+  if (error) {
+    setAuthStatus(error.message, "error");
+  }
+  signOutButtons.forEach((button) => {
+    button.disabled = false;
+  });
 }
 
 function getScheduledMealTotal() {
@@ -3323,16 +3373,8 @@ signUpForm.addEventListener("submit", async (event) => {
   submitButton.disabled = false;
 });
 
-signOutButton.addEventListener("click", async () => {
-  if (!supabaseClient) return;
-
-  signOutButton.disabled = true;
-  const { error } = await supabaseClient.auth.signOut();
-  if (error) {
-    setAuthStatus(error.message, "error");
-  }
-  signOutButton.disabled = false;
-});
+signOutButton.addEventListener("click", handleSignOut);
+accountPanelSignOutButton?.addEventListener("click", handleSignOut);
 
 storeSearchForm.addEventListener("submit", async (event) => {
   event.preventDefault();
