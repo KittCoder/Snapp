@@ -259,7 +259,7 @@
               Monthly income
               <input id="snap-income" type="number" min="0" step="1" inputmode="decimal" placeholder="e.g. 1200" />
             </label>
-            <output id="snap-estimate-output" class="snap-estimate-output">$298 estimated monthly benefit</output>
+            <output id="snap-estimate-output" class="snap-estimate-output">$298 estimated monthly food budget</output>
           </form>
           <p class="snap101-note">
             This is not an eligibility decision. Official applications consider
@@ -690,13 +690,17 @@
 
       <section id="budget" class="panel">
         <h2>Budget</h2>
-        <p>Set your meal budget in Settings, and SNAPP will subtract the estimated price of each scheduled meal.</p>
+        <p>Your monthly food budget is used here. SNAPP subtracts the estimated price of each scheduled meal.</p>
+        <p id="budget-empty-message" class="budget-empty-message" hidden>
+          No monthly budget has been added yet. Use SNAP 101 to estimate one.
+          <button id="budget-open-snap101" type="button">Open SNAP 101</button>
+        </p>
         <div class="budget-display" aria-live="polite">
-          <span class="budget-label">Remaining budget</span>
+          <span class="budget-label">Remaining monthly budget</span>
           <strong id="remaining-budget">$0.00</strong>
         </div>
         <div class="budget-summary">
-          <span>Meal budget: <strong id="current-budget">$0.00</strong></span>
+          <span>Monthly food budget: <strong id="current-budget">$0.00</strong></span>
           <span>Scheduled meals: <strong id="budget-meal-count">0</strong></span>
           <span>Scheduled cost: <strong id="scheduled-meal-cost">$0.00</strong></span>
         </div>

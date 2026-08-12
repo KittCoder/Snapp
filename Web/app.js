@@ -51,6 +51,8 @@ const dietaryRestrictionsInput = document.getElementById("dietary-restrictions")
 const budgetInput = document.getElementById("budget-input");
 const currentBudget = document.getElementById("current-budget");
 const remainingBudget = document.getElementById("remaining-budget");
+const budgetEmptyMessage = document.getElementById("budget-empty-message");
+const budgetOpenSnap101Button = document.getElementById("budget-open-snap101");
 const budgetMealCount = document.getElementById("budget-meal-count");
 const scheduledMealCost = document.getElementById("scheduled-meal-cost");
 const settingsStatus = document.getElementById("settings-status");
@@ -1006,11 +1008,16 @@ function updateSnapEstimate() {
   const expectedContribution = monthlyIncome * 0.3;
   const estimate = Math.max(0, Math.round(maximumAllotment - expectedContribution));
   snapHouseholdSizeInput.value = String(householdSize);
-  snapEstimateOutput.textContent = `${currencyFormatter.format(estimate)} estimated monthly benefit`;
+  snapEstimateOutput.textContent = `${currencyFormatter.format(estimate)} estimated monthly food budget`;
   snapEstimateOutput.setAttribute(
     "aria-label",
     `${currencyFormatter.format(maximumAllotment)} maximum allotment minus ${currencyFormatter.format(expectedContribution)} estimated contribution`
   );
+  if (snapIncomeInput.value !== "") {
+    budgetInput.value = String(estimate);
+    renderBudget();
+    queueSettingsSave();
+  }
 }
 
 function setOnboardingHouseholdSize(value) {
@@ -1545,10 +1552,14 @@ function getHouseholdSize() {
 }
 
 function renderBudget() {
-  const budget = Number(budgetInput.value || 0);
+  const hasBudget = budgetInput.value !== "";
+  const budget = hasBudget ? Number(budgetInput.value || 0) : 0;
   const scheduledTotal = getScheduledMealTotal();
   const remaining = budget - scheduledTotal;
 
+  if (budgetEmptyMessage) {
+    budgetEmptyMessage.hidden = hasBudget;
+  }
   currentBudget.textContent = currencyFormatter.format(budget);
   remainingBudget.textContent = currencyFormatter.format(remaining);
   remainingBudget.classList.toggle("over-budget", remaining < 0);
@@ -3682,6 +3693,8 @@ budgetInput.addEventListener("input", () => {
   renderBudget();
   queueSettingsSave();
 });
+
+budgetOpenSnap101Button?.addEventListener("click", () => showPanel(SNAP101_DEFAULT_PANEL_ID));
 
 themeSelect.addEventListener("change", () => {
   document.body.classList.toggle("dark-theme", themeSelect.value === "dark");

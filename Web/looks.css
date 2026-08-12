@@ -2090,6 +2090,31 @@ main {
   text-transform: uppercase;
 }
 
+.budget-empty-message {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 28%, var(--color-border));
+  border-radius: 1rem;
+  padding: 0.85rem 1rem;
+  background: color-mix(in srgb, var(--color-primary) 9%, var(--color-panel-strong));
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.budget-empty-message button {
+  border: 0;
+  border-radius: 0.8rem;
+  padding: 0.58rem 0.85rem;
+  background: var(--color-primary);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
 #remaining-budget {
   color: var(--color-primary-strong);
   font-family: "Fraunces", Georgia, serif;
