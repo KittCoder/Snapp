@@ -344,6 +344,91 @@ class CompatibilityRuleTests(unittest.TestCase):
         self.assertEqual(result.selected_match.product_id, "margarine")
         self.assertIn("oil", {item.product_id for item in result.rejected_candidates})
 
+    def test_product_descriptor_words_do_not_override_core_identity(self):
+        cases = [
+            (
+                "2 tablespoon margarine",
+                "margarine",
+                ["pickles"],
+                [
+                    feature("pickles", "B&G Pickles, Bread & Butter", "butter", "dairy"),
+                    feature("margarine", "Land O Lakes Margarine Sticks", "margarine", "dairy"),
+                ],
+            ),
+            (
+                "0.5 teaspoon salt",
+                "salt",
+                ["beans"],
+                [
+                    feature("beans", "Del Monte No Salt Added Cut Green Beans", "salt", "pantry"),
+                    feature("salt", "Bowl & Basket Salt", "salt", "pantry"),
+                ],
+            ),
+            (
+                "2 cup milk",
+                "milk",
+                ["matzos"],
+                [
+                    feature("matzos", "Streit's Milk Chocolate Matzos", "milk", "dairy"),
+                    feature("milk", "a2 Milk Whole Milk", "milk", "dairy"),
+                ],
+            ),
+        ]
+        for query, expected, rejected, features in cases:
+            with self.subTest(query=query):
+                result = service(features).match_recipe_ingredient(query)
+                self.assertEqual(result.selected_match.product_id, expected)
+                rejected_ids = {item.product_id for item in result.rejected_candidates}
+                self.assertTrue(set(rejected) <= rejected_ids)
+
+    def test_fresh_prepped_produce_rejects_seasoned_or_pickled_forms(self):
+        cases = [
+            (
+                "1 cup diced celery diced",
+                "celery",
+                ["sticks", "salt"],
+                [
+                    feature("sticks", "Sunnyside Fresh Celery Sticks", "celery", "produce", freshness="fresh"),
+                    feature("salt", "McCormick Celery Salt", "celery", "produce"),
+                    feature("celery", "Celery Heart Bag", "celery", "produce", freshness="fresh"),
+                ],
+            ),
+            (
+                "0.5 cup diced green pepper diced",
+                "green",
+                ["pickled"],
+                [
+                    feature("pickled", "B&G Sweet Peppers", "peppers", "produce"),
+                    feature("green", "Green Bell Pepper", "peppers", "produce", freshness="fresh"),
+                ],
+            ),
+            (
+                "0.25 cup minced onion minced",
+                "onion",
+                ["granulated"],
+                [
+                    feature("granulated", "Watertown Choice Granulated Onion", "onions", "produce"),
+                    feature("onion", "White Onion", "onions", "produce", freshness="fresh"),
+                ],
+            ),
+        ]
+        for query, expected, rejected, features in cases:
+            with self.subTest(query=query):
+                result = service(features).match_recipe_ingredient(query)
+                self.assertEqual(result.selected_match.product_id, expected)
+                unsafe_ids = {item.product_id for item in result.rejected_candidates + result.substitution_candidates}
+                self.assertTrue(set(rejected) <= unsafe_ids)
+
+    def test_sour_cream_phrase_requires_sour_cream_not_salad_dressing(self):
+        result = service(
+            [
+                feature("dressing", "Wish-Bone Creamy French Salad Dressing", "salad dressing", "pantry"),
+                feature("sour", "Daisy Sour Cream, Pure & Natural", "sour cream", "dairy"),
+            ]
+        ).match_recipe_ingredient("sour cream dressing")
+        self.assertEqual(result.selected_match.product_id, "sour")
+        self.assertIn("dressing", {item.product_id for item in result.rejected_candidates})
+
     def test_canned_tuna_can_match_tuna_inventory_with_canned_metadata(self):
         svc = service(
             [
@@ -961,6 +1046,18 @@ class OverrideCacheBatchEndpointTests(unittest.TestCase):
         }
         adjusted, _originals = model.pantry_adjusted_recipe_ingredients(recipe, [], servings=4)
         self.assertEqual(adjusted, ["8 chicken thighs", "2 peppers"])
+
+    def test_prep_only_recipe_fragments_are_not_purchased(self):
+        import model
+
+        recipe = {
+            "extendedIngredients": [
+                {"name": "thinly sliced", "original": "2 cup thinly sliced"},
+                {"name": "celery", "original": "1 cup diced celery"},
+            ]
+        }
+        adjusted, _originals = model.pantry_adjusted_recipe_ingredients(recipe, [], servings=4)
+        self.assertEqual(adjusted, ["1 cup diced celery"])
 
     def test_recipe_servings_parses_database_yield(self):
         import model

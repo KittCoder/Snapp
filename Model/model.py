@@ -3680,10 +3680,17 @@ def morton_williams_store_lookup():
 
 
 def should_buy_recipe_ingredient(ingredient):
-    text = normalize_cuisine_text(" ".join(str(ingredient.get(key) or "") for key in ("name", "measure", "display")))
+    ingredient_texts = [
+        normalize_cuisine_text(str(ingredient.get(key) or ""))
+        for key in ("name", "measure", "display", "original")
+    ]
+    text = normalize_cuisine_text(" ".join(value for value in ingredient_texts if value))
     if not text:
         return False
+    quantity_prefix = r"(?:\d+(?:\.\d+)?|\d+\s+\d+/\d+|\d+/\d+)?\s*(?:cups?|tablespoons?|tbsp|teaspoons?|tsp|pounds?|lbs?|ounces?|oz|grams?|g|kilograms?|kg|cloves?|cans?)?\s*"
+    prep_only = rf"^{quantity_prefix}(?:very\s+)?(?:thinly\s+|finely\s+|roughly\s+|coarsely\s+)?(?:sliced|diced|minced|chopped|shredded|julienned|grated|crushed)$"
     no_buy_patterns = (
+        prep_only,
         r"\bwater\b",
         r"\bboiling water\b",
         r"\bwarm water\b",
@@ -3691,6 +3698,8 @@ def should_buy_recipe_ingredient(ingredient):
         r"\bas desired\b",
         r"\bto taste\b",
     )
+    if any(value and re.search(prep_only, value) for value in ingredient_texts):
+        return False
     return not any(re.search(pattern, text) for pattern in no_buy_patterns)
 
 
