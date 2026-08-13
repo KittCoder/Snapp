@@ -117,6 +117,7 @@ const selectedMyStoreIds = new Set();
 const selectedShoppingIngredientIds = new Set();
 const pantryHandledShoppingIngredientIds = new Set();
 const LANGUAGE_STORAGE_KEY = "snapp-language";
+const ONBOARDING_COMPLETED_STORAGE_PREFIX = "snapp:onboarding-completed:";
 const originalTextNodes = new WeakMap();
 const SHOPPING_CATEGORY_ORDER = [
   "Produce",
@@ -558,7 +559,45 @@ function showPanel(id) {
 }
 
 function isOnboardingRequired() {
-  return Boolean(currentUser && currentUserInfo && !currentUserInfo.onboarding_completed);
+  return Boolean(currentUser && currentUserInfo && !hasCompletedOnboarding(currentUserInfo, currentUser));
+}
+
+function onboardingCompletedStorageKey(user = currentUser) {
+  return user?.id ? `${ONBOARDING_COMPLETED_STORAGE_PREFIX}${user.id}` : "";
+}
+
+function hasCompletedOnboarding(userInfo = currentUserInfo, user = currentUser) {
+  if (!user) return false;
+  if (userInfo?.onboarding_completed) return true;
+  const storageKey = onboardingCompletedStorageKey(user);
+  return Boolean(storageKey && window.localStorage.getItem(storageKey) === "true");
+}
+
+function rememberOnboardingCompleted(user = currentUser) {
+  const storageKey = onboardingCompletedStorageKey(user);
+  if (storageKey) {
+    window.localStorage.setItem(storageKey, "true");
+  }
+}
+
+async function repairOnboardingCompletionIfNeeded(user, userInfo) {
+  if (!supabaseClient || !user || !userInfo || userInfo.onboarding_completed || !hasCompletedOnboarding(userInfo, user)) {
+    return userInfo;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("user_info")
+    .update({ onboarding_completed: true })
+    .eq("id", user.id)
+    .select()
+    .single();
+
+  if (error) {
+    setSettingsStatus(error.message, "error");
+    return { ...userInfo, onboarding_completed: true };
+  }
+
+  return data || { ...userInfo, onboarding_completed: true };
 }
 
 function renderNavigationForAuthState() {
@@ -948,7 +987,7 @@ async function saveSettingsToUser() {
       dietary_preference: dietSelect.value,
       dietary_preferences: selectedDietaryPreferences,
       dietary_restrictions: dietaryRestrictionsInput.value.trim(),
-      onboarding_completed: Boolean(currentUserInfo?.onboarding_completed),
+      onboarding_completed: hasCompletedOnboarding(currentUserInfo, currentUser),
       notifications_enabled: notificationsToggle.checked,
     })
     .select()
@@ -960,6 +999,9 @@ async function saveSettingsToUser() {
   }
 
   currentUserInfo = data;
+  if (currentUserInfo?.onboarding_completed) {
+    rememberOnboardingCompleted(currentUser);
+  }
   setSettingsStatus("Settings saved.", "success");
 }
 
@@ -1123,6 +1165,7 @@ async function saveOnboardingToUser() {
   }
 
   currentUserInfo = data;
+  rememberOnboardingCompleted(currentUser);
   syncSettingsFromUserInfo(currentUser, currentUserInfo);
   setOnboardingStatus("Setup saved.", "success");
   return true;
@@ -1485,13 +1528,14 @@ async function renderAuthState(user) {
 
   if (user) {
     currentUserInfo = await ensureUserInfo(user);
+    currentUserInfo = await repairOnboardingCompletionIfNeeded(user, currentUserInfo);
     if (renderId !== authRenderSequence) return;
   }
 
   renderAccountForAuthState();
   syncSettingsFromUserInfo(user, currentUserInfo);
   syncSnapCalculatorHouseholdSize();
-  if (user && currentUserInfo && !currentUserInfo.onboarding_completed) {
+  if (user && currentUserInfo && !hasCompletedOnboarding(currentUserInfo, user)) {
     syncOnboardingFromUserInfo(currentUserInfo);
   }
   renderHomeForAuthState();
