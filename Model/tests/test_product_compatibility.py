@@ -188,6 +188,7 @@ class CompatibilityRuleTests(unittest.TestCase):
             ("ground beef", "ground", ["steak"], [feature("steak", "Ribeye Steak", "beef", "meat"), feature("ground", "Ground Beef Chuck", "ground beef", "meat")]),
             ("baking powder", "powder", ["soda"], [feature("soda", "Baking Soda", "baking soda", "pantry"), feature("powder", "Baking Powder", "baking powder", "pantry")]),
             ("tomato paste", "paste", ["sauce"], [feature("sauce", "Tomato Sauce", "tomato sauce", "pantry"), feature("paste", "Cento Tomato Paste", "tomato paste", "pantry")]),
+            ("1 jar spaghetti sauce", "sauce", ["linguine"], [feature("linguine", "Colavita Linguine Pasta", "pasta", "pantry"), feature("sauce", "Rao's Homemade Marinara Sauce", "pasta sauce", "pantry")]),
             ("heavy cream", "heavy", ["half"], [feature("half", "Half And Half", None, "dairy"), feature("heavy", "Bowl & Basket Heavy Cream", "heavy cream", "dairy")]),
             ("pancake mix", "pancake", ["potato"], [feature("potato", "Streit's Potato Pancake Mix", None, "produce"), feature("pancake", "Pancake Mix", None, None)]),
             ("all-purpose flour", "ap", ["cake"], [feature("bread", "Bread Flour", "bread flour", "pantry"), feature("cake", "Cake Flour", "cake flour", "pantry"), feature("ap", "Gold Medal All Purpose Flour", "all-purpose flour", "pantry")]),

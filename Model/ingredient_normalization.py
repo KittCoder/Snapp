@@ -434,12 +434,12 @@ CANONICAL_PATTERNS = (
     (r"\bonions?\b", "onions"),
     (r"\bpotatoes\b", "potatoes"),
     (r"\brice\b", "rice"),
+    (r"\bpasta sauce\b|\bspaghetti sauce\b|\bmarinara\b|\btomato basil sauce\b", "pasta sauce"),
     (r"\bpasta\b|\bspaghetti\b|\bpenne\b|\blinguine\b|\bravioli\b", "pasta"),
     (r"\bbeans?\b", "beans"),
     (r"\bbroth\b", "broth"),
     (r"\bstock\b", "stock"),
     (r"\bsoup\b", "soup"),
-    (r"\bpasta sauce\b|\bmarinara\b|\btomato basil sauce\b", "pasta sauce"),
     (r"\bsoy sauce\b", "soy sauce"),
     (r"\bsalsa\b", "salsa"),
     (r"\bsalad dressing\b|\bdressing\b", "salad dressing"),
@@ -1052,7 +1052,7 @@ def canonical_for_product(normalized_name: str) -> str | None:
                 continue
             if canonical in {"beef", "chicken", "chicken breast", "chicken thighs"} and regex_search(r"\b(broth|stock|bouillon)\b", normalized):
                 continue
-            if canonical == "pasta" and regex_search(r"\bpasta sauce\b", normalized):
+            if canonical == "pasta" and regex_search(r"\b(?:pasta|spaghetti) sauce\b|\bmarinara\b", normalized):
                 continue
             if canonical == "butter" and re.search(r"\bpeanut butter\b", normalized):
                 return "peanut butter"

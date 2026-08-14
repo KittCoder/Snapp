@@ -1160,7 +1160,7 @@ def classify_identity(
         "diced tomatoes": r"\bdiced tomatoes\b|\btomatoes diced\b",
         "stewed tomatoes": r"\bstewed tomatoes\b|\btomatoes stewed\b",
         "tomatoes": r"\bcanned tomatoes\b|\bwhole peeled tomatoes\b|\bcan\b.*\btomatoes\b|\btomatoes\b.*\bcan\b",
-        "pasta sauce": r"\bpasta sauce\b|\bmarinara\b",
+        "pasta sauce": r"\bpasta sauce\b|\bspaghetti sauce\b|\bmarinara\b",
     }
     for tomato_type, pattern in tomato_patterns.items():
         if (text_has(detection_text, pattern) or canonical == tomato_type) and (
@@ -1721,6 +1721,10 @@ def compatibility_signals(query: IngredientProfile, product: IngredientProfile) 
         signals.append(CompatibilitySignal("lentil_texture", HARD_REJECT, "red lentils do not hold shape like brown or green lentils"))
     if query.family == "tomato product" and text_has(product.normalized_signature, r"\bketchup\b"):
         signals.append(CompatibilitySignal("tomato_ketchup_identity", HARD_REJECT, "ketchup is not a general tomato product substitute"))
+    if query.family == "tomato product" and query.tomato_type in {"pasta sauce", "tomato sauce"} and product.family == "pasta":
+        signals.append(CompatibilitySignal("sauce_pasta_identity", HARD_REJECT, "dry pasta is not pasta sauce"))
+    if query.family == "pasta" and product.family == "tomato product":
+        signals.append(CompatibilitySignal("pasta_sauce_identity", HARD_REJECT, "pasta sauce is not dry pasta"))
     if query.culinary_type == "fresh_tomatoes" and product.family == "tomato product" and recipe_context_has(query, r"\bsalad\b|\braw\b|\bfresh\b"):
         signals.append(CompatibilitySignal("tomato_raw_context", HARD_REJECT, "canned tomatoes are not appropriate for raw tomato use"))
     if query.culinary_type in {"green_onion", "chives"} and product.culinary_type == "yellow_onion" and not recipe_context_has(query, r"\bcook(?:ed|ing)?\b|\bsaut[eé]\b|\bsoup\b|\bstew\b"):

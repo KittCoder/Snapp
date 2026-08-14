@@ -1781,63 +1781,97 @@ main {
 }
 
 .dish-modal {
-  width: min(760px, calc(100vw - 2rem));
-  max-height: min(780px, calc(100vh - 2rem));
+  width: min(860px, calc(100vw - 1.5rem));
+  max-height: min(820px, calc(100vh - 1.5rem));
   border: 1px solid var(--color-border);
-  border-radius: 0.85rem;
+  border-radius: 1rem;
   padding: 0;
-  background: var(--color-panel);
+  overflow: hidden;
+  background: var(--color-panel-strong);
   color: var(--color-text);
-  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.28);
+  box-shadow: 0 28px 90px rgba(15, 23, 42, 0.38);
+}
+
+.dish-modal[open] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
 .dish-modal::backdrop {
-  background: rgba(15, 23, 42, 0.42);
+  background: rgba(15, 23, 42, 0.68);
+  backdrop-filter: blur(3px);
 }
 
 .dish-modal-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1rem;
+  padding: 1rem 1.2rem;
   border-bottom: 1px solid var(--color-border);
+  background: var(--color-panel-strong);
 }
 
 .dish-modal-header h3 {
   margin: 0;
-  font-size: 1.15rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: clamp(1.25rem, 3vw, 1.8rem);
+  line-height: 1.15;
 }
 
 .dish-modal-header button {
-  width: 2.2rem;
-  height: 2.2rem;
+  flex: 0 0 auto;
+  width: 2.6rem;
+  height: 2.6rem;
   border: 1px solid var(--color-border);
   border-radius: 999px;
   background: var(--color-panel-strong);
   color: var(--color-text);
   cursor: pointer;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .dish-modal-content {
-  max-height: calc(min(780px, 100vh - 2rem) - 4.5rem);
+  min-height: 0;
   overflow: auto;
-  padding: 1rem;
+  padding: 1.1rem 1.25rem 1.35rem;
+  background: var(--color-panel-strong);
 }
 
 .dish-modal-summary {
+  margin: 0 0 1rem;
   color: var(--color-muted);
+  font-size: 0.98rem;
+  font-weight: 700;
 }
 
 .dish-modal-content h4 {
-  margin: 1rem 0 0.4rem;
+  margin: 1.15rem 0 0.45rem;
+  font-family: "Sora", "Avenir Next", "Segoe UI", sans-serif;
+  font-size: 1.05rem;
 }
 
 .dish-modal-list {
   margin: 0;
-  padding-left: 1.15rem;
+  padding-left: 1.25rem;
   color: var(--color-muted);
+  font-size: 0.98rem;
+  line-height: 1.45;
+}
+
+.dish-modal-list li {
+  margin: 0.35rem 0;
+  overflow-wrap: anywhere;
+}
+
+.dish-modal-content > p:not(.dish-modal-summary) {
+  color: var(--color-muted);
+  font-size: 0.98rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
 }
 
 .store-search-form {
@@ -2382,6 +2416,17 @@ tbody tr:last-child td {
   .snap101-hero img,
   .nutrition-story img {
     height: 230px;
+  }
+
+  .dish-modal {
+    width: calc(100vw - 0.8rem);
+    max-height: calc(100vh - 0.8rem);
+  }
+
+  .dish-modal-header,
+  .dish-modal-content {
+    padding-left: 0.95rem;
+    padding-right: 0.95rem;
   }
 
   .section-heading-row {

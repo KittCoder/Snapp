@@ -2646,19 +2646,19 @@ function openDishModal(dish) {
   appendModalSection("Recipe ingredients", recipe.ingredients || [], (ingredient) =>
     ingredient.display || ingredient.measure || ingredient.name
   );
-	  appendModalSection("Ingredients to buy", (dish.ingredients_to_buy || dish.ingredients || []).filter(
-	    (ingredient) => !(ingredient.unavailable || ingredient.availability_status === "unavailable")
-	  ), (ingredient) => {
-	    const storeText = ingredient.store_name ? ` at ${ingredient.store_name}` : "";
-	    const priceText = ingredient.estimated_price_total
-	      ? ` - ${currencyFormatter.format(ingredient.estimated_price_total)}`
-	      : "";
-	    const sourceText = ingredient.recipe_measure || ingredient.required_quantity_display;
-	    const requirementText = sourceText ? `${sourceText} -> ` : "";
-	    const purchaseText = ingredient.purchase_quantity_display || formatPurchaseQuantity(ingredient);
-	    const packageText = purchaseText ? `, get ${purchaseText}` : ingredient.package_size ? ` (${ingredient.package_size})` : "";
-	    return `${requirementText}${ingredient.product_name || ingredient.name}${packageText}${storeText}${priceText}`;
-	  });
+  appendModalSection("Ingredients to buy", (dish.ingredients_to_buy || dish.ingredients || []).filter(
+    (ingredient) => !(ingredient.unavailable || ingredient.availability_status === "unavailable")
+  ), (ingredient) => {
+    const storeText = ingredient.store_name ? ` at ${ingredient.store_name}` : "";
+    const priceText = ingredient.estimated_price_total
+      ? ` - ${currencyFormatter.format(ingredient.estimated_price_total)}`
+      : "";
+    const sourceText = cleanIngredientRequirementText(ingredient.recipe_measure || ingredient.required_quantity_display);
+    const requirementText = sourceText ? `${sourceText} -> ` : "";
+    const purchaseText = ingredient.purchase_quantity_display || formatPurchaseQuantity(ingredient);
+    const packageText = purchaseText ? `, get ${purchaseText}` : ingredient.package_size ? ` (${ingredient.package_size})` : "";
+    return `${requirementText}${ingredient.product_name || ingredient.name}${packageText}${storeText}${priceText}`;
+  });
 
   const instructionsHeading = document.createElement("h4");
   const instructions = document.createElement("p");
@@ -2695,6 +2695,13 @@ function openDishModal(dish) {
   } else {
     dishModal.setAttribute("open", "");
   }
+}
+
+function cleanIngredientRequirementText(text) {
+  return String(text || "")
+    .replace(/\s+/g, " ")
+    .replace(/\b(cups?|tablespoons?|teaspoons?|ounces?|pounds?|lbs?|jars?|cans?|packages?|containers?)\s+\1\b/gi, "$1")
+    .trim();
 }
 
 function appendModalSection(title, items, formatter) {
