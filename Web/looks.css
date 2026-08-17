@@ -565,7 +565,7 @@ main {
 .nutrition-story article,
 .snap-calculator,
 .allotment-section,
-.macro-bars {
+.nutrition-games {
   border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
   border-radius: 1rem;
   background: color-mix(in srgb, var(--color-panel-strong) 92%, transparent);
@@ -576,7 +576,7 @@ main {
 .nutrition-story h2,
 .snap-calculator h2,
 .allotment-section h2,
-.macro-bars h2 {
+.nutrition-games h2 {
   font-family: "Sora", "Avenir Next", "Segoe UI", sans-serif;
   font-size: 1.15rem;
   margin-bottom: 0.55rem;
@@ -726,39 +726,193 @@ main {
   margin: 0.75rem 0 0.4rem;
 }
 
-.macro-bars {
-  display: grid;
-  gap: 0.85rem;
+.nutrition-games {
+  margin-top: 1.2rem;
 }
 
-.macro-bars > div {
+.nutrition-game-grid {
   display: grid;
-  gap: 0.3rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
 }
 
-.macro-bars span {
-  color: var(--color-muted);
+.nutrition-game {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+  min-height: 245px;
+  border-radius: 0.8rem;
+  padding: 0.9rem;
+  background: #f8fbff;
+}
+
+.game-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  min-height: 1.8rem;
+}
+
+.game-heading span,
+.game-heading strong {
   font-size: 0.86rem;
-  font-weight: 800;
+  font-weight: 900;
 }
 
-.macro-bars strong {
-  position: relative;
-  min-height: 2.25rem;
-  overflow: hidden;
-  isolation: isolate;
-  border-radius: 0.75rem;
-  padding: 0.52rem 0.75rem;
-  background: #e5edf7;
+.game-heading span {
+  color: var(--color-text);
+}
+
+.game-heading strong {
   color: #0f2f4f;
 }
 
-.macro-bars strong::before {
-  content: "";
+.nutrition-game p {
+  min-height: 2.7rem;
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.82rem;
+}
+
+.nutrition-game label {
+  display: grid;
+  gap: 0.45rem;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.nutrition-game input[type="range"] {
+  width: 100%;
+  accent-color: #16a34a;
+}
+
+.mini-plate {
+  position: relative;
+  width: 94px;
+  aspect-ratio: 1;
+  margin: 0.1rem auto;
+  overflow: hidden;
+  border: 7px solid #ffffff;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: inset 0 0 0 1px #b8c8d8, 0 12px 22px rgba(15, 47, 79, 0.12);
+}
+
+.mini-plate span {
   position: absolute;
   inset: 0 auto 0 0;
-  width: var(--bar-width);
-  background: linear-gradient(90deg, #5eead4, #fbbf24);
+  width: 50%;
+  transition: width 180ms ease;
+}
+
+#plate-produce-fill {
+  background: #22c55e;
+}
+
+#plate-grain-fill {
+  inset: auto 0 0 auto;
+  width: 50%;
+  height: 50%;
+  background: #f59e0b;
+}
+
+.snack-meter {
+  height: 1rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #dbeafe;
+}
+
+.snack-meter span {
+  display: block;
+  width: 50%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #38bdf8, #22c55e, #fbbf24);
+  transition: width 180ms ease;
+}
+
+.snack-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.snack-options button,
+.water-actions button {
+  min-height: 2.1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.65rem;
+  background: #ffffff;
+  color: #334155;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.snack-options button.active {
+  border-color: #0f766e;
+  background: #ccfbf1;
+  color: #115e59;
+}
+
+.water-button {
+  position: relative;
+  width: 82px;
+  height: 82px;
+  margin: 0 auto;
+  overflow: hidden;
+  border: 0;
+  border-radius: 50%;
+  background: #dbeafe;
+  box-shadow: inset 0 0 0 7px #ffffff, 0 12px 22px rgba(14, 116, 144, 0.14);
+  cursor: pointer;
+}
+
+.water-button::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(15, 47, 79, 0.14);
+}
+
+.water-button span {
+  position: absolute;
+  inset: auto 7px 7px;
+  height: 50%;
+  border-radius: 0 0 999px 999px;
+  background: linear-gradient(180deg, #67e8f9, #0ea5e9);
+  transition: height 180ms ease;
+}
+
+.water-actions {
+  text-align: center;
+}
+
+body.dark-theme .nutrition-game {
+  background: #17211f;
+}
+
+body.dark-theme .game-heading strong,
+body.dark-theme .snack-options button,
+body.dark-theme .water-actions button {
+  color: var(--color-text);
+}
+
+body.dark-theme .snack-options button,
+body.dark-theme .water-actions button {
+  border-color: var(--color-border);
+  background: #101817;
+}
+
+body.dark-theme .snack-options button.active {
+  border-color: #5eead4;
+  background: #134e4a;
+  color: #ccfbf1;
 }
 
 .gallery-grid {
@@ -2405,7 +2559,8 @@ tbody tr:last-child td {
   }
 
   .snap101-grid,
-  .nutrition-cards {
+  .nutrition-cards,
+  .nutrition-game-grid {
     grid-template-columns: 1fr;
   }
 

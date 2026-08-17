@@ -347,23 +347,61 @@
           </article>
         </div>
 
-        <section class="macro-bars" aria-label="Balanced meal building blocks">
-          <h2>Meal building blocks</h2>
-          <div>
-            <span>Color</span>
-            <strong style="--bar-width: 85%">Vegetables and fruit</strong>
-          </div>
-          <div>
-            <span>Staying power</span>
-            <strong style="--bar-width: 70%">Protein and fiber</strong>
-          </div>
-          <div>
-            <span>Energy</span>
-            <strong style="--bar-width: 62%">Grains and starchy foods</strong>
-          </div>
-          <div>
-            <span>Flavor</span>
-            <strong style="--bar-width: 48%">Healthy fats and seasonings</strong>
+        <section class="nutrition-games" aria-label="Quick nutrition games">
+          <h2>Quick nutrition games</h2>
+          <div class="nutrition-game-grid">
+            <article class="nutrition-game balance-game">
+              <div class="game-heading">
+                <span>Plate balance</span>
+                <strong id="plate-balance-score">50%</strong>
+              </div>
+              <div class="mini-plate" aria-hidden="true">
+                <span id="plate-produce-fill"></span>
+                <span id="plate-grain-fill"></span>
+              </div>
+              <label for="plate-balance-slider">
+                Move toward half produce
+                <input
+                  type="range"
+                  id="plate-balance-slider"
+                  min="20"
+                  max="70"
+                  value="50"
+                />
+              </label>
+              <p id="plate-balance-message">Half produce leaves room for protein and grains.</p>
+            </article>
+
+            <article class="nutrition-game snack-game">
+              <div class="game-heading">
+                <span>Snack staying power</span>
+                <strong id="snack-score">2/4</strong>
+              </div>
+              <div class="snack-meter" aria-hidden="true">
+                <span id="snack-meter-fill"></span>
+              </div>
+              <div class="snack-options" aria-label="Snack additions">
+                <button type="button" class="active" data-snack-points="1">Apple</button>
+                <button type="button" data-snack-points="1">Crackers</button>
+                <button type="button" class="active" data-snack-points="2">Yogurt</button>
+                <button type="button" data-snack-points="2">Peanut butter</button>
+              </div>
+              <p id="snack-message">Fruit plus protein lasts longer than fruit alone.</p>
+            </article>
+
+            <article class="nutrition-game water-game">
+              <div class="game-heading">
+                <span>Hydration taps</span>
+                <strong id="water-count">3/6</strong>
+              </div>
+              <button id="water-tap-button" class="water-button" type="button" aria-label="Add one water tap">
+                <span id="water-fill"></span>
+              </button>
+              <div class="water-actions">
+                <button id="water-reset-button" type="button">Reset</button>
+              </div>
+              <p id="water-message">Small drinks across the day add up.</p>
+            </article>
           </div>
         </section>
       </section>

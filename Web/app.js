@@ -97,6 +97,20 @@ const settingsSelectedPreferences = document.getElementById("settings-selected-p
 const snapHouseholdSizeInput = document.getElementById("snap-household-size");
 const snapIncomeInput = document.getElementById("snap-income");
 const snapEstimateOutput = document.getElementById("snap-estimate-output");
+const plateBalanceSlider = document.getElementById("plate-balance-slider");
+const plateBalanceScore = document.getElementById("plate-balance-score");
+const plateBalanceMessage = document.getElementById("plate-balance-message");
+const plateProduceFill = document.getElementById("plate-produce-fill");
+const plateGrainFill = document.getElementById("plate-grain-fill");
+const snackOptionButtons = document.querySelectorAll(".snack-options button");
+const snackScore = document.getElementById("snack-score");
+const snackMeterFill = document.getElementById("snack-meter-fill");
+const snackMessage = document.getElementById("snack-message");
+const waterTapButton = document.getElementById("water-tap-button");
+const waterResetButton = document.getElementById("water-reset-button");
+const waterCount = document.getElementById("water-count");
+const waterFill = document.getElementById("water-fill");
+const waterMessage = document.getElementById("water-message");
 
 const scheduledMeals = [];
 let favoriteRecipes = [];
@@ -113,6 +127,7 @@ let activeAuthUserId = null;
 let dishProgressTimer = null;
 let authRenderSequence = 0;
 let activeAppMode = "snapp";
+let hydrationTaps = 3;
 const selectedMyStoreIds = new Set();
 const selectedShoppingIngredientIds = new Set();
 const pantryHandledShoppingIngredientIds = new Set();
@@ -1059,6 +1074,61 @@ function updateSnapEstimate() {
     budgetInput.value = String(estimate);
     renderBudget();
     queueSettingsSave();
+  }
+}
+
+function updatePlateBalanceGame() {
+  if (!plateBalanceSlider || !plateBalanceScore || !plateBalanceMessage || !plateProduceFill || !plateGrainFill) return;
+
+  const producePercent = Number(plateBalanceSlider.value);
+  const grainPercent = Math.max(24, 100 - producePercent - 25);
+  plateBalanceScore.textContent = `${producePercent}%`;
+  plateProduceFill.style.width = `${producePercent}%`;
+  plateGrainFill.style.width = `${grainPercent}%`;
+
+  if (producePercent < 42) {
+    plateBalanceMessage.textContent = "Add color first: produce makes the plate feel bigger.";
+  } else if (producePercent > 58) {
+    plateBalanceMessage.textContent = "Great color. Keep space for protein and grains too.";
+  } else {
+    plateBalanceMessage.textContent = "Balanced: about half produce, plus protein and grains.";
+  }
+}
+
+function updateSnackGame() {
+  if (!snackScore || !snackMeterFill || !snackMessage) return;
+
+  const points = Array.from(snackOptionButtons).reduce((total, button) => {
+    return button.classList.contains("active")
+      ? total + Number(button.dataset.snackPoints || 0)
+      : total;
+  }, 0);
+  const cappedPoints = Math.min(4, points);
+  snackScore.textContent = `${cappedPoints}/4`;
+  snackMeterFill.style.width = `${Math.max(18, cappedPoints * 25)}%`;
+
+  if (points <= 1) {
+    snackMessage.textContent = "Quick energy, but it may not last long.";
+  } else if (points <= 3) {
+    snackMessage.textContent = "Better: pair carbs or fruit with protein or fat.";
+  } else {
+    snackMessage.textContent = "Strong snack: fiber plus protein supports fullness.";
+  }
+}
+
+function updateWaterGame() {
+  if (!waterCount || !waterFill || !waterMessage) return;
+
+  const cappedTaps = Math.min(6, Math.max(0, hydrationTaps));
+  waterCount.textContent = `${cappedTaps}/6`;
+  waterFill.style.height = `${Math.max(8, cappedTaps * 15)}%`;
+
+  if (cappedTaps < 3) {
+    waterMessage.textContent = "Start small: a few sips still count.";
+  } else if (cappedTaps < 6) {
+    waterMessage.textContent = "Steady pace. Add water between meals.";
+  } else {
+    waterMessage.textContent = "Full set: spread drinks across the day.";
   }
 }
 
@@ -3747,6 +3817,25 @@ budgetInput.addEventListener("input", () => {
 
 budgetOpenSnap101Button?.addEventListener("click", () => showPanel(SNAP101_DEFAULT_PANEL_ID));
 
+plateBalanceSlider?.addEventListener("input", updatePlateBalanceGame);
+
+snackOptionButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    button.classList.toggle("active");
+    updateSnackGame();
+  });
+});
+
+waterTapButton?.addEventListener("click", () => {
+  hydrationTaps = hydrationTaps >= 6 ? 0 : hydrationTaps + 1;
+  updateWaterGame();
+});
+
+waterResetButton?.addEventListener("click", () => {
+  hydrationTaps = 0;
+  updateWaterGame();
+});
+
 themeSelect.addEventListener("change", () => {
   document.body.classList.toggle("dark-theme", themeSelect.value === "dark");
 });
@@ -3772,6 +3861,9 @@ dietSelect.addEventListener("change", () => {
 
 populatePantrySpiceSuggestions();
 updatePantryQuantityVisibility();
+updatePlateBalanceGame();
+updateSnackGame();
+updateWaterGame();
 applyLanguage();
 renderSchedule();
 showAuthMode("sign-in");
