@@ -25,15 +25,14 @@
       </div>
       <nav class="nav-buttons">
         <button data-target="home" data-app-view="snapp" class="nav-button active">Home</button>
-        <button data-target="account" data-app-view="snapp" class="nav-button">Account</button>
+        <button data-target="account" data-app-view="snapp" data-auth-view="signed-out" class="nav-button">Account</button>
         <button data-target="dishes" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Dishes</button>
-        <button data-target="my" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>My stores</button>
-        <button data-target="pantry" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>My pantry</button>
+        <button data-target="my" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Stores</button>
+        <button data-target="pantry" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Pantry</button>
         <button data-target="schedule" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Schedule</button>
-        <button data-target="shopping" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Shopping list</button>
+        <button data-target="shopping" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Shopping</button>
         <button data-target="budget" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Budget</button>
-        <button data-target="information" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Information</button>
-        <button data-target="settings" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Settings</button>
+        <button data-target="settings" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Profile</button>
         <button data-target="snap101-snap" data-app-view="snap101" class="nav-button" hidden>SNAP</button>
         <button data-target="snap101-nutrition" data-app-view="snap101" class="nav-button" hidden>Nutrition</button>
       </nav>
@@ -628,6 +627,44 @@
       <section id="schedule" class="panel">
         <h2>Weekly Meal Schedule</h2>
         <p>Meals you select from Dishes appear here. Click a meal to view its recipe and ingredients.</p>
+        <section class="macro-tracker" aria-labelledby="macro-tracker-title">
+          <div class="macro-tracker-heading">
+            <div>
+              <h3 id="macro-tracker-title">Weekly macro tracker</h3>
+              <p>One portion from each scheduled meal counts toward your weekly goals.</p>
+            </div>
+            <strong id="macro-tracker-meal-count">0 meals</strong>
+          </div>
+          <div class="macro-bars" aria-live="polite">
+            <article class="macro-bar-card macro-protein">
+              <div class="macro-bar-label">
+                <span>Protein</span>
+                <strong><span id="macro-protein-total">0g</span> / <span id="macro-protein-goal">350g</span></strong>
+              </div>
+              <div class="macro-bar-track" aria-hidden="true">
+                <span id="macro-protein-fill"></span>
+              </div>
+            </article>
+            <article class="macro-bar-card macro-carbs">
+              <div class="macro-bar-label">
+                <span>Carbs</span>
+                <strong><span id="macro-carbs-total">0g</span> / <span id="macro-carbs-goal">1,925g</span></strong>
+              </div>
+              <div class="macro-bar-track" aria-hidden="true">
+                <span id="macro-carbs-fill"></span>
+              </div>
+            </article>
+            <article class="macro-bar-card macro-fat">
+              <div class="macro-bar-label">
+                <span>Fat</span>
+                <strong><span id="macro-fat-total">0g</span> / <span id="macro-fat-goal">546g</span></strong>
+              </div>
+              <div class="macro-bar-track" aria-hidden="true">
+                <span id="macro-fat-fill"></span>
+              </div>
+            </article>
+          </div>
+        </section>
         <div class="schedule-layout">
           <div id="schedule-calendar" class="schedule-calendar"></div>
           <aside id="schedule-recipe-tray" class="schedule-recipe-tray" aria-label="Recipes to schedule">
@@ -744,36 +781,8 @@
         </div>
       </section>
 
-      <section id="information" class="panel">
-        <h2>Grocery Store Information</h2>
-        <p>Enter a 5-digit US ZIP code to find grocery stores in that area.</p>
-        <form id="store-search-form" class="store-search-form">
-          <label for="zip-code">ZIP code</label>
-          <div class="store-search-controls">
-            <input
-              type="text"
-              id="zip-code"
-              name="zip"
-              inputmode="numeric"
-              autocomplete="postal-code"
-              pattern="[0-9]{5}"
-              maxlength="5"
-              placeholder="e.g. 10001"
-              required
-            />
-            <button type="submit">Find stores</button>
-          </div>
-        </form>
-        <div id="store-search-status" class="store-search-status" role="status" aria-live="polite"></div>
-        <ul id="store-results" class="store-results"></ul>
-        <p id="store-source" class="store-source" hidden>
-          Store data ©
-          <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>.
-        </p>
-      </section>
-
       <section id="settings" class="panel">
-        <h2>Settings</h2>
+        <h2>Profile</h2>
         <section class="settings-section">
           <h3>Account and Nutritional Information</h3>
           <div class="settings-form">

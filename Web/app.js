@@ -55,6 +55,16 @@ const budgetEmptyMessage = document.getElementById("budget-empty-message");
 const budgetOpenSnap101Button = document.getElementById("budget-open-snap101");
 const budgetMealCount = document.getElementById("budget-meal-count");
 const scheduledMealCost = document.getElementById("scheduled-meal-cost");
+const macroTrackerMealCount = document.getElementById("macro-tracker-meal-count");
+const macroProteinTotal = document.getElementById("macro-protein-total");
+const macroProteinGoal = document.getElementById("macro-protein-goal");
+const macroProteinFill = document.getElementById("macro-protein-fill");
+const macroCarbsTotal = document.getElementById("macro-carbs-total");
+const macroCarbsGoal = document.getElementById("macro-carbs-goal");
+const macroCarbsFill = document.getElementById("macro-carbs-fill");
+const macroFatTotal = document.getElementById("macro-fat-total");
+const macroFatGoal = document.getElementById("macro-fat-goal");
+const macroFatFill = document.getElementById("macro-fat-fill");
 const settingsStatus = document.getElementById("settings-status");
 const accountStatus = document.querySelector(".account-status");
 const accountUsername = document.getElementById("account-username");
@@ -163,13 +173,12 @@ const SPANISH_TEXT = {
   "Home": "Inicio",
   "Account": "Cuenta",
   "Dishes": "Platillos",
-  "My stores": "Mis tiendas",
-  "My pantry": "Mi despensa",
+  "Stores": "Tiendas",
+  "Pantry": "Despensa",
   "Schedule": "Horario",
-  "Shopping list": "Lista de compras",
+  "Shopping": "Compras",
   "Budget": "Presupuesto",
-  "Information": "Informacion",
-  "Settings": "Configuracion",
+  "Profile": "Perfil",
   "Signed out": "Sesion cerrada",
   "Sign out": "Cerrar sesion",
   "SNAPP Account": "Cuenta de SNAPP",
@@ -444,9 +453,13 @@ const SNAPP_PANEL_IDS = new Set([
   "my",
   "pantry",
   "budget",
-  "information",
   "settings",
 ]);
+const WEEKLY_MACRO_GOALS = {
+  protein: 350,
+  carbs: 1925,
+  fat: 546,
+};
 const SNAP_MAX_ALLOTMENTS = {
   1: 298,
   2: 546,
@@ -479,6 +492,9 @@ const POPULAR_DIETARY_PREFERENCES = [
 const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
+});
+const gramFormatter = new Intl.NumberFormat("en-US", {
+  maximumFractionDigits: 0,
 });
 
 function formatServings(dish) {
@@ -534,7 +550,7 @@ const RESTRICTION_WARNING_RULES = [
 
 function showPanel(id) {
   const isSignedIn = Boolean(currentUser);
-  let targetId = id;
+  let targetId = id === "information" ? "my" : id;
   const targetAppMode = SNAP101_PANEL_IDS.has(targetId) ? "snap101" : "snapp";
 
   activeAppMode = targetAppMode;
@@ -1681,6 +1697,43 @@ function renderBudget() {
   scheduledMealCost.textContent = currencyFormatter.format(scheduledTotal);
 }
 
+function getPortionMacroValue(meal, macroKey) {
+  const nutrition = meal?.nutrition_total || {};
+  const value = Number(nutrition[macroKey] || 0);
+  return Number.isFinite(value) && value > 0 ? value : 0;
+}
+
+function getScheduledMacroTotals() {
+  return scheduledMeals.reduce(
+    (totals, meal) => {
+      totals.protein += getPortionMacroValue(meal, "protein_g");
+      totals.carbs += getPortionMacroValue(meal, "carbohydrates_g");
+      totals.fat += getPortionMacroValue(meal, "fat_g");
+      return totals;
+    },
+    { protein: 0, carbs: 0, fat: 0 }
+  );
+}
+
+function setMacroBar(totalElement, goalElement, fillElement, total, goal) {
+  if (!totalElement || !goalElement || !fillElement) return;
+  const percent = goal > 0 ? Math.min(100, (total / goal) * 100) : 0;
+  totalElement.textContent = `${gramFormatter.format(total)}g`;
+  goalElement.textContent = `${gramFormatter.format(goal)}g`;
+  fillElement.style.width = `${percent}%`;
+}
+
+function renderMacroTracker() {
+  const totals = getScheduledMacroTotals();
+  if (macroTrackerMealCount) {
+    const mealCount = scheduledMeals.length;
+    macroTrackerMealCount.textContent = `${mealCount} meal${mealCount === 1 ? "" : "s"}`;
+  }
+  setMacroBar(macroProteinTotal, macroProteinGoal, macroProteinFill, totals.protein, WEEKLY_MACRO_GOALS.protein);
+  setMacroBar(macroCarbsTotal, macroCarbsGoal, macroCarbsFill, totals.carbs, WEEKLY_MACRO_GOALS.carbs);
+  setMacroBar(macroFatTotal, macroFatGoal, macroFatFill, totals.fat, WEEKLY_MACRO_GOALS.fat);
+}
+
 function scheduledMealStorageKey() {
   return currentUser ? `snapp:scheduled-meals:${currentUser.id}` : null;
 }
@@ -2291,6 +2344,7 @@ function renderSchedule() {
   scheduleCalendar.replaceChildren();
   scheduleRecipeList.replaceChildren();
 
+  renderMacroTracker();
   renderScheduleRecipeTray();
   renderFavoriteRecipesPanel();
 
@@ -3259,6 +3313,7 @@ async function handleInitialUrlState() {
 }
 
 function renderStores(stores) {
+  if (!storeResults) return;
   storeResults.replaceChildren();
   if (!stores.length) {
     const emptyItem = document.createElement("li");
@@ -3617,7 +3672,7 @@ signUpForm.addEventListener("submit", async (event) => {
 signOutButton.addEventListener("click", handleSignOut);
 accountPanelSignOutButton?.addEventListener("click", handleSignOut);
 
-storeSearchForm.addEventListener("submit", async (event) => {
+storeSearchForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
   const zipCode = zipCodeInput.value.trim();
   if (!/^\d{5}$/.test(zipCode)) {

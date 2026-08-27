@@ -110,7 +110,6 @@ body.dark-theme {
   justify-content: center;
   color: #ffffff;
   font-weight: 700;
-  box-shadow: 0 10px 22px rgba(17, 94, 89, 0.33);
 }
 
 .brand-name {
@@ -1570,6 +1569,102 @@ body.dark-theme .snack-options button.active {
   align-items: start;
 }
 
+.macro-tracker {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 86%, transparent);
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--color-panel-strong) 92%, transparent);
+}
+
+.macro-tracker-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.macro-tracker h3,
+.macro-tracker p {
+  margin: 0;
+}
+
+.macro-tracker h3 {
+  font-size: 1rem;
+}
+
+.macro-tracker p {
+  margin-top: 0.25rem;
+  color: var(--color-muted);
+  font-size: 0.86rem;
+}
+
+.macro-tracker-heading > strong {
+  flex: 0 0 auto;
+  color: var(--color-primary-strong);
+  font-size: 0.85rem;
+}
+
+.macro-bars {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.macro-bar-card {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.macro-bar-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.65rem;
+  align-items: baseline;
+  min-width: 0;
+  font-size: 0.82rem;
+}
+
+.macro-bar-label span {
+  font-weight: 800;
+}
+
+.macro-bar-label strong {
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.macro-bar-track {
+  height: 0.8rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-border) 58%, var(--color-panel-strong));
+}
+
+.macro-bar-track span {
+  display: block;
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  transition: width 220ms ease;
+}
+
+.macro-protein .macro-bar-track span {
+  background: linear-gradient(90deg, #ec4899, #f97316);
+}
+
+.macro-carbs .macro-bar-track span {
+  background: linear-gradient(90deg, #38bdf8, #22c55e);
+}
+
+.macro-fat .macro-bar-track span {
+  background: linear-gradient(90deg, #facc15, #a3e635);
+}
+
 .schedule-calendar {
   display: grid;
   grid-template-columns: repeat(7, minmax(220px, 1fr));
@@ -2486,6 +2581,14 @@ tbody tr:last-child td {
   }
 
   .schedule-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .macro-tracker-heading {
+    display: grid;
+  }
+
+  .macro-bars {
     grid-template-columns: 1fr;
   }
 
