@@ -510,6 +510,33 @@ function formatServings(dish) {
   return `${text} serving${text === "1" ? "" : "s"}`;
 }
 
+function getServingCount(dish) {
+  const recipe = dish?.recipe || {};
+  const candidates = [
+    dish?.servings,
+    recipe.servings,
+    dish?.servings_display,
+    recipe.servings_display,
+  ];
+
+  for (const candidate of candidates) {
+    if (candidate === null || candidate === undefined || candidate === "") continue;
+    const numericValue = Number(candidate);
+    if (Number.isFinite(numericValue) && numericValue > 0) {
+      return numericValue;
+    }
+    const match = String(candidate).match(/\d+(?:\.\d+)?/);
+    if (match) {
+      const parsedValue = Number(match[0]);
+      if (Number.isFinite(parsedValue) && parsedValue > 0) {
+        return parsedValue;
+      }
+    }
+  }
+
+  return 1;
+}
+
 const RESTRICTION_WARNING_RULES = [
   {
     restrictionPattern: /\b(lactose|dairy|milk|cheese|cream|yogurt|butter)\b/i,
@@ -1698,9 +1725,19 @@ function renderBudget() {
 }
 
 function getPortionMacroValue(meal, macroKey) {
-  const nutrition = meal?.nutrition_total || {};
-  const value = Number(nutrition[macroKey] || 0);
-  return Number.isFinite(value) && value > 0 ? value : 0;
+  const perPersonNutrition = meal?.nutrition_per_person || {};
+  const perPersonValue = Number(perPersonNutrition[macroKey]);
+  if (Number.isFinite(perPersonValue) && perPersonValue > 0) {
+    return perPersonValue;
+  }
+
+  const totalNutrition = meal?.nutrition_total || {};
+  const totalValue = Number(totalNutrition[macroKey]);
+  if (!Number.isFinite(totalValue) || totalValue <= 0) {
+    return 0;
+  }
+
+  return totalValue / getServingCount(meal);
 }
 
 function getScheduledMacroTotals() {
