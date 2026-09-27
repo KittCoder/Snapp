@@ -441,7 +441,7 @@ const ONBOARDING_PANEL_ID = "onboarding";
 const SIGNED_IN_DEFAULT_PANEL_ID = "home";
 const SIGNED_OUT_DEFAULT_PANEL_ID = "home";
 const ONBOARDING_TOTAL_STEPS = 4;
-const SNAP101_PANEL_IDS = new Set(["snap101-snap", "snap101-nutrition"]);
+const SNAP101_PANEL_IDS = new Set(["snap101-snap", "snap101-nutrition", "snap101-signup"]);
 const SNAP101_DEFAULT_PANEL_ID = "snap101-snap";
 const SNAPP_PANEL_IDS = new Set([
   "account",

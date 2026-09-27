@@ -529,6 +529,16 @@ main {
   background: color-mix(in srgb, var(--color-panel-strong) 92%, #eaf4f0 8%);
 }
 
+.snap101-signup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.snap101-signup-actions a {
+  text-decoration: none;
+}
+
 .snap101-hero {
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr);
