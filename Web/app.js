@@ -441,7 +441,7 @@ const ONBOARDING_PANEL_ID = "onboarding";
 const SIGNED_IN_DEFAULT_PANEL_ID = "home";
 const SIGNED_OUT_DEFAULT_PANEL_ID = "home";
 const ONBOARDING_TOTAL_STEPS = 4;
-const SNAP101_PANEL_IDS = new Set(["snap101-snap", "snap101-nutrition", "snap101-signup"]);
+const SNAP101_PANEL_IDS = new Set(["snap101-snap", "snap101-nutrition", "snap101-signup", "snap101-signup-options"]);
 const SNAP101_DEFAULT_PANEL_ID = "snap101-snap";
 const SNAPP_PANEL_IDS = new Set([
   "account",
@@ -599,8 +599,9 @@ function showPanel(id) {
   panels.forEach((panel) =>
     panel.classList.toggle("visible", panel.id === targetId)
   );
+  const navTargetId = targetId === "snap101-signup-options" ? "snap101-signup" : targetId;
   navButtons.forEach((button) =>
-    button.classList.toggle("active", button.dataset.target === targetId)
+    button.classList.toggle("active", button.dataset.target === navTargetId)
   );
 
   if (targetId === "my" && myStoreMap) {
@@ -3546,6 +3547,16 @@ async function initializeAuth() {
 navButtons.forEach((button) =>
   button.addEventListener("click", () => showPanel(button.dataset.target))
 );
+
+document.getElementById("snap101-signup-how").addEventListener("click", () => {
+  showPanel("snap101-signup-options");
+  document.getElementById("snap101-signup-options-heading").focus();
+});
+
+document.getElementById("snap101-signup-back").addEventListener("click", () => {
+  showPanel("snap101-signup");
+  document.getElementById("snap101-signup-how").focus();
+});
 
 appSwitchButtons.forEach((button) =>
   button.addEventListener("click", () => {

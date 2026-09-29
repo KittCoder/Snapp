@@ -406,13 +406,24 @@
         </section>
       </section>
 
-      <section id="snap101-signup" class="panel snap101-panel">
+      <section id="snap101-signup" class="panel snap101-panel snap101-signup-panel" aria-labelledby="snap101-signup-heading">
         <p class="eyebrow">SNAP 101</p>
-        <h1>Sign up for SNAP</h1>
+        <h1 id="snap101-signup-heading">Sign up for SNAP</h1>
+        <p class="snap101-signup-intro">Ready to take the next step? Apply directly or explore how to get started.</p>
         <div class="snap101-signup-actions">
-          <a class="secondary-button" href="https://www.ny.gov/services/apply-snap" target="_blank" rel="noopener noreferrer">Sign Up</a>
-          <button type="button" class="secondary-button">How to Sign Up</button>
-          <button type="button" class="secondary-button">Sign Up Centers Near Me</button>
+          <a class="snap101-signup-action snap101-signup-primary" href="https://www.ny.gov/services/apply-snap" target="_blank" rel="noopener noreferrer" aria-label="Sign Up (opens in a new tab)">Sign Up <span aria-hidden="true">↗</span></a>
+          <button id="snap101-signup-how" type="button" class="snap101-signup-action snap101-signup-secondary">How to Sign Up <span aria-hidden="true">→</span></button>
+          <button type="button" class="snap101-signup-action">Sign Up Centers Near Me</button>
+        </div>
+      </section>
+
+      <section id="snap101-signup-options" class="panel snap101-panel snap101-signup-panel" aria-labelledby="snap101-signup-options-heading">
+        <button id="snap101-signup-back" type="button" class="snap101-signup-back"><span aria-hidden="true">←</span> Back to Sign up for SNAP</button>
+        <div><p class="eyebrow">SNAP 101</p></div>
+        <h1 id="snap101-signup-options-heading" tabindex="-1">How would you like to sign up?</h1>
+        <div class="snap101-signup-actions">
+          <button type="button" class="snap101-signup-action snap101-signup-secondary">Do it myself</button>
+          <button type="button" class="snap101-signup-action">Get help</button>
         </div>
       </section>
 
