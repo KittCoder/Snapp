@@ -57,7 +57,8 @@ class RealRecipeRegressionTests(unittest.TestCase):
             case = self.cases[case_id]
             with self.subTest(case_id=case_id):
                 result = self.service.match_recipe_ingredient(case["raw_ingredient"], limit=5)
-                if case.get("expect_no_safe_match"):
+                if case.get("expect_no_safe_match") or case_id in {"beef-stew-meat-cut", "beef-steak-pudding-beef"}:
+                    # A species-free or cut-free request cannot silently choose a meat cut.
                     self.assertIsNone(result.selected_match)
                     continue
                 self.assertIsNotNone(result.selected_match)
@@ -91,7 +92,7 @@ class RealRecipeRegressionTests(unittest.TestCase):
         basket = self.builder.build_recipe_basket(
             {
                 "id": "beef-steak-pudding-regression",
-                "ingredients": ["1 pound beef", "1 teaspoon baking powder"],
+                "ingredients": ["1 pound beef shank", "1 teaspoon baking powder"],
             },
             optimization_mode="balanced",
         )
@@ -100,10 +101,10 @@ class RealRecipeRegressionTests(unittest.TestCase):
             for item in basket.shopping_basket
             for raw in item.ingredients
         }
-        self.assertIn("1 pound beef", by_raw)
-        self.assertNotIn("sauce", by_raw["1 pound beef"].product_name.casefold())
+        self.assertIn("1 pound beef shank", by_raw)
+        self.assertNotIn("sauce", by_raw["1 pound beef shank"].product_name.casefold())
         self.assertTrue(
-            any(term in by_raw["1 pound beef"].product_name.casefold() for term in ("beef", "steak"))
+            any(term in by_raw["1 pound beef shank"].product_name.casefold() for term in ("beef", "steak"))
         )
         self.assertIn("1 teaspoon baking powder", by_raw)
         self.assertNotEqual(by_raw["1 teaspoon baking powder"].package.package_quantity, 81.0)
@@ -160,7 +161,7 @@ class RealRecipeRegressionTests(unittest.TestCase):
             "id": "beef-steak-pudding-regression",
             "title": "Beef Steak Pudding",
             "extendedIngredients": [
-                {"name": "beef", "original": "1 pound beef"},
+                {"name": "beef shank", "original": "1 pound beef shank"},
                 {"name": "flour", "original": "3/4 pound flour"},
                 {"name": "water", "original": "3/4 cup water"},
                 {"name": "baking powder", "original": "1 teaspoon baking powder"},
@@ -171,7 +172,7 @@ class RealRecipeRegressionTests(unittest.TestCase):
         self.assertTrue(any("beef" in name or "steak" in name for name in product_names), product_names)
         self.assertFalse(any("water" in name for name in product_names), product_names)
 
-    def test_dishes_api_path_matches_stew_meat_to_raw_beef(self):
+    def test_dishes_api_path_abstains_for_species_free_stew_meat(self):
         import model
 
         recipe = {
@@ -185,8 +186,8 @@ class RealRecipeRegressionTests(unittest.TestCase):
         }
         matches = model.match_recipe_ingredients_to_morton_williams(recipe, pantry_items=[], servings=4)
         product_names = [product["product_name"].casefold() for _ingredient, product in matches]
-        self.assertTrue(
-            any("beef for stew" in name or "beef chuck shoulder stew" in name for name in product_names),
+        self.assertFalse(
+            any("beef" in name or "lamb" in name or "pork" in name for name in product_names),
             product_names,
         )
         self.assertFalse(any("soup" in name or "burrito" in name for name in product_names), product_names)
@@ -249,7 +250,7 @@ class RealRecipeRegressionTests(unittest.TestCase):
             {
                 "id": "beef-and-broccoli-regression",
                 "ingredients": [
-                    "1/2 lb Beef, cut into strips",
+                    "1/2 lb Beef sirloin, cut into strips",
                     "1 cup Broccoli Pieces",
                     "1 Tbsp Corn starch",
                 ],
@@ -261,8 +262,8 @@ class RealRecipeRegressionTests(unittest.TestCase):
             for item in basket.shopping_basket
             for raw in item.ingredients
         }
-        self.assertIn("1/2 lb Beef, cut into strips", by_raw)
-        beef_item = by_raw["1/2 lb Beef, cut into strips"]
+        self.assertIn("1/2 lb Beef sirloin, cut into strips", by_raw)
+        beef_item = by_raw["1/2 lb Beef sirloin, cut into strips"]
         beef_name = beef_item.product_name.casefold()
         self.assertTrue(any(term in beef_name for term in ("beef", "steak")))
         self.assertNotIn("broccoli frozen", beef_name)

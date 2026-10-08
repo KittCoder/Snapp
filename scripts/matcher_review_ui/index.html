@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Matcher human review</title>
+<style>
+body{font:17px system-ui;margin:24px auto;max-width:1150px;padding:0 18px;background:#f5f6f8;color:#17202a}button,input,select,textarea{font:inherit;padding:10px;border:1px solid #818995;border-radius:5px}button{cursor:pointer;background:white}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #246cc2;outline-offset:2px}button[aria-pressed=true]{background:#174e86;color:white}.controls,.labels{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:15px 0}.labels button{font-weight:bold;min-height:58px}.panel{background:white;padding:20px;border-radius:8px;margin:15px 0}h1{font-size:27px}h2{font-size:21px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:14px ui-monospace,monospace}dl{display:grid;grid-template-columns:180px 1fr;gap:10px}dd{margin:0;overflow-wrap:anywhere}textarea{width:95%;min-height:85px}.warning{background:#fff4d8;padding:12px}.error{color:#a51414}#status{font-weight:bold}progress{width:100%}.attributes{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:15px}.alternative{border-top:1px solid #aaa;margin:15px 0;padding:10px 0}small{display:block;margin:8px 0}input[type=checkbox]{width:20px;height:20px}fieldset{border:0;padding:0}fieldset:disabled{opacity:.6}
+</style>
+<h1>Independent matcher review</h1>
+<p>Labels come only from you. Matcher scores are context, not an answer key. Original sample membership and case IDs stay fixed.</p>
+<div id="progress" role="status"></div><progress id="bar" value="0" max="950"></progress>
+<div class="controls"><label>Sample group <select id="group"><option value="">All groups</option></select></label><label><input type="checkbox" id="unreviewed"> Unreviewed only</label><label>Reviewer <input id="reviewer" placeholder="Your name" size="15"></label></div>
+<div class="controls"><button id="prev">← Previous</button><button id="next">Next →</button><label>Jump to original case number or ID <input id="jump" size="23"></label><button id="go">Go</button></div>
+<p id="status" role="status" aria-live="polite">Loading…</p>
+<section id="decisionToolbar" style="position:sticky;top:0;background:#f5f6f8;padding:8px 0;z-index:2"><div id="interpretation" class="warning"></div><div id="labels" class="labels" aria-label="Manual review labels"></div></section>
+<main id="case" class="panel"></main>
+<fieldset id="reviewFields">
+<p>Keyboard: <strong>1 CORRECT · 2 ACCEPTABLE_SUBSTITUTE · 3 WRONG · 4 SHOULD_HAVE_MATCHED · 5 AMBIGUOUS</strong>. Arrow keys navigate when you are outside an input. All labels are allowed; the interpretation above explains the normal choices.</p>
+<div class="controls"><label>Failure cause <select id="failure_cause"><option value="">Not assessed</option></select></label><label>Wrong family? <select id="wrong_family"><option value="">Not assessed</option><option>yes</option><option>no</option></select></label><label>Prepared-food false positive? <select id="prepared_food_false_positive"><option value="">Not assessed</option><option>yes</option><option>no</option></select></label><label>Structurally correct? <select id="structurally_correct"><option value="">Not assessed</option><option>yes</option><option>no</option></select></label></div>
+<label>Review / investigation notes <textarea id="review_notes" placeholder="Explain material errors; note ambiguous identity or missing inventory evidence."></textarea></label>
+<small>Labels save immediately. Other fields save when changed or when you leave the field. Wait for “Saved” before closing. No flags or answers are inferred. For final family/prepared and cheese/meat metrics, complete the corresponding assessments.</small>
+</fieldset>
+<script src="/review.js"></script>
+</html>

@@ -536,6 +536,27 @@ class ProductCandidateRetriever:
 
         return sorted(selected_docs, key=cheap_rank)[: self.max_lexical_search_space]
 
+    def gated_lexical_space(self, query, allowed_ids):
+        if allowed_ids is None:
+            return self.lexical_search_space(query)
+        if not hasattr(self, "_lexical_doc_by_id"):
+            self._lexical_doc_by_id = {doc["feature"]["product_id"]: doc for doc in self.lexical_docs}
+        return [self._lexical_doc_by_id[pid] for pid in sorted(allowed_ids) if pid in self._lexical_doc_by_id]
+
+    @staticmethod
+    def allowed_vector_rows(rows, allowed_ids):
+        if allowed_ids is None:
+            return np.arange(len(rows))
+        return np.asarray([i for i, row in enumerate(rows) if row["product_id"] in allowed_ids], dtype=np.int64)
+
+    @staticmethod
+    def safe_vector_scores(matrix, vector):
+        # Float64 dot avoids backend float32 BLAS overflow/warnings on this host.
+        # Non-finite input can never become positive matching evidence.
+        with np.errstate(invalid="ignore", over="ignore", divide="ignore"):
+            scores = np.einsum("ij,j->i", matrix.astype(np.float64), np.asarray(vector, dtype=np.float64))
+        return np.where(np.isfinite(scores), np.clip(scores, -1.0, 1.0), -1.0)
+
     def load_index(self) -> bool:
         if self._index_embeddings is not None and self._index_metadata is not None:
             return True
@@ -608,6 +629,7 @@ class ProductCandidateRetriever:
         ingredient_text: str,
         limit: int = 30,
         use_semantic: bool = True,
+        allowed_product_ids: set[str] | None = None,
     ) -> CandidateRetrievalResult:
         started_at = time.perf_counter()
         normalized_query, parsed = query_embedding_text(ingredient_text)
@@ -616,7 +638,7 @@ class ProductCandidateRetriever:
 
         lexical_started = time.perf_counter()
         self.stats.lexical_searches += 1
-        lexical_space = self.lexical_search_space(normalized_query)
+        lexical_space = self.gated_lexical_space(normalized_query, allowed_product_ids)
         lexical = lexical_candidates(lexical_space, normalized_query, parsed, query_category, limit=max(80, limit * 3))
         lexical_latency = round((time.perf_counter() - lexical_started) * 1000, 2)
         self.stats.lexical_ms += lexical_latency
@@ -634,13 +656,16 @@ class ProductCandidateRetriever:
             elif vector is not None:
                 semantic_started = time.perf_counter()
                 self.stats.vector_searches += 1
-                scores = self._index_embeddings @ vector
+                rows = self._index_metadata.get("rows") or []
+                row_ids = self.allowed_vector_rows(rows, allowed_product_ids)
+                scores = self.safe_vector_scores(self._index_embeddings[row_ids], vector)
                 top_count = min(max(80, limit * 3), len(scores))
                 if top_count:
                     top_indices = np.argpartition(-scores, top_count - 1)[:top_count]
-                    top_indices = top_indices[np.argsort(-scores[top_indices])]
+                    top_indices = top_indices[np.lexsort((top_indices, -scores[top_indices]))]
                     rows = self._index_metadata.get("rows") or []
-                    for rank, index in enumerate(top_indices):
+                    for rank, local_index in enumerate(top_indices):
+                        index = row_ids[local_index]
                         if index >= len(rows):
                             continue
                         row = rows[int(index)]
@@ -651,7 +676,7 @@ class ProductCandidateRetriever:
                                 normalized_name=row["normalized_name"],
                                 record_status=row.get("record_status"),
                                 canonical_ingredient=row.get("canonical_name"),
-                                semantic_similarity=round(float(scores[index]), 4),
+                                semantic_similarity=round(float(scores[local_index]), 4),
                                 category_match_signal=category_signal(query_category, row.get("category")),
                                 retrieval_reason_codes=["semantic_vector"],
                                 source_rank=rank,
@@ -689,8 +714,12 @@ class ProductCandidateRetriever:
         embedding_batch_size: int = 64,
         vector_batch_size: int = 128,
         use_semantic: bool = True,
+        allowed_product_ids: list[set[str]] | None = None,
     ) -> list[CandidateRetrievalResult]:
         started_at = time.perf_counter()
+        if allowed_product_ids is not None and len(allowed_product_ids) != len(ingredient_texts):
+            raise ValueError("one product gate is required per ingredient")
+        gates = allowed_product_ids if allowed_product_ids is not None else [None] * len(ingredient_texts)
         normalized_items = [query_embedding_text(text) for text in ingredient_texts]
         normalized_queries = [item[0] for item in normalized_items]
         query_categories = [infer_category(query)[0] for query in normalized_queries]
@@ -698,9 +727,9 @@ class ProductCandidateRetriever:
 
         lexical_started = time.perf_counter()
         lexical_results = []
-        for normalized_query, parsed, query_category in zip(normalized_queries, [item[1] for item in normalized_items], query_categories):
+        for normalized_query, parsed, query_category, gate in zip(normalized_queries, [item[1] for item in normalized_items], query_categories, gates):
             self.stats.lexical_searches += 1
-            lexical_space = self.lexical_search_space(normalized_query)
+            lexical_space = self.gated_lexical_space(normalized_query, gate)
             lexical_results.append(lexical_candidates(lexical_space, normalized_query, parsed, query_category, limit=max(80, limit * 3)))
         lexical_total = round((time.perf_counter() - lexical_started) * 1000, 2)
         self.stats.lexical_ms += lexical_total
@@ -717,24 +746,30 @@ class ProductCandidateRetriever:
                 for bucket in errors_by_query:
                     bucket.extend(errors)
             rows = (self._index_metadata or {}).get("rows") or []
-            unique_vectors = [(query, vectors_by_text[query]) for query in dict.fromkeys(normalized_queries) if query in vectors_by_text]
+            jobs = [(query, frozenset(gate) if gate is not None else None) for query, gate in zip(normalized_queries, gates)]
+            unique_vectors = [(job, vectors_by_text[job[0]]) for job in dict.fromkeys(jobs) if job[0] in vectors_by_text]
             semantic_by_query: dict[str, tuple[list[Candidate], float]] = {}
             top_count = min(max(80, limit * 3), len(rows))
             for offset in range(0, len(unique_vectors), vector_batch_size):
                 batch = unique_vectors[offset : offset + vector_batch_size]
                 if not batch or not top_count:
                     continue
-                matrix = np.vstack([item[1] for item in batch])
                 semantic_started = time.perf_counter()
                 self.stats.vector_searches += 1
-                scores_matrix = matrix @ self._index_embeddings.T
-                for row_offset, (query, _vector) in enumerate(batch):
-                    scores = scores_matrix[row_offset]
-                    top_indices = np.argpartition(-scores, top_count - 1)[:top_count]
+                for row_offset, (job, _vector) in enumerate(batch):
+                    query, gate = job
+                    row_ids = self.allowed_vector_rows(rows, gate)
+                    scores = self.safe_vector_scores(self._index_embeddings[row_ids], _vector)
+                    count = min(top_count, len(scores))
+                    if not count:
+                        semantic_by_query[job] = ([], 0.0)
+                        continue
+                    top_indices = np.argpartition(-scores, count - 1)[:count]
                     top_indices = top_indices[np.lexsort((top_indices, -scores[top_indices]))]
                     candidates = []
                     query_category = infer_category(query)[0]
-                    for rank, index in enumerate(top_indices):
+                    for rank, local_index in enumerate(top_indices):
+                        index = row_ids[local_index]
                         if index >= len(rows):
                             continue
                         row = rows[int(index)]
@@ -745,20 +780,20 @@ class ProductCandidateRetriever:
                                 normalized_name=row["normalized_name"],
                                 record_status=row.get("record_status"),
                                 canonical_ingredient=row.get("canonical_name"),
-                                semantic_similarity=round(float(scores[index]), 4),
+                                semantic_similarity=round(float(scores[local_index]), 4),
                                 category_match_signal=category_signal(query_category, row.get("category")),
                                 retrieval_reason_codes=["semantic_vector"],
                                 source_rank=rank,
                             )
                         )
-                    semantic_by_query[query] = (candidates, 0.0)
+                    semantic_by_query[job] = (candidates, 0.0)
                 vector_latency = round((time.perf_counter() - semantic_started) * 1000, 2)
                 self.stats.vector_ms += vector_latency
-                for query, _vector in batch:
-                    candidates, _ = semantic_by_query[query]
-                    semantic_by_query[query] = (candidates, vector_latency)
-            for index, query in enumerate(normalized_queries):
-                candidates, latency = semantic_by_query.get(query, ([], None))
+                for job, _vector in batch:
+                    candidates, _ = semantic_by_query[job]
+                    semantic_by_query[job] = (candidates, vector_latency)
+            for index, job in enumerate(jobs):
+                candidates, latency = semantic_by_query.get(job, ([], None))
                 semantic_results[index] = candidates
                 semantic_latencies[index] = latency
         elif not use_semantic:

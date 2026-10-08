@@ -6,7 +6,7 @@
   "embedding_model_name": "BAAI/bge-small-en-v1.5",
   "generation_command": "manual refresh for database.scrape-20260721-143928.json",
   "index_hash": "9aceb7daf52321e1c896d24b84ec170ffbadad4c3ebccc0ea0769edbd8f2a8c8",
-  "matcher_version": "ingredient-product-matcher-v1.10",
+  "matcher_version": "ingredient-product-matcher-v3.7",
   "minimum_compatible_application_version": "phase-5",
   "normalized_feature_count": 10528,
   "normalized_feature_hash": "9a760080ba0f3548c04ae674473a3d5d73702e7842a6bfc8f9318cb64b0fde7a",

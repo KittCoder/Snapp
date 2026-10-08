@@ -35,6 +35,13 @@ def recipe(recipe_id, name, ingredients):
 
 class SaleIngredientTests(unittest.TestCase):
     def setUp(self):
+        # Other tests can warm the module singleton. Give these endpoint tests
+        # their own manager without resetting or disturbing a running manager.
+        warmup_patch = mock.patch.object(
+            model.matcher_warmup, "_MANAGER", model.matcher_warmup.WarmupManager()
+        )
+        warmup_patch.start()
+        self.addCleanup(warmup_patch.stop)
         model.sale_ingredient_pool_cache = None
         model.sale_candidate_artifact_cache = None
         model.sale_recipe_index_cache = None

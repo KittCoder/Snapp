@@ -3,12 +3,15 @@ from __future__ import annotations
 import json
 import copy
 import re
+import math
 import time
 from collections import OrderedDict
 from dataclasses import asdict, dataclass, field
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
+
+from product_ontology import FoodIdentity, IdentityCatalog, compatibility as identity_compatibility, describe, ONTOLOGY_VERSION
 
 from ingredient_normalization import COMMON_PRODUCE_CANONICALS, apply_alias, canonical_for_product, normalize_text, parse_ingredient
 from product_retrieval import (
@@ -22,7 +25,7 @@ from product_retrieval import (
 )
 
 
-MATCHER_VERSION = "ingredient-product-matcher-v1.12"
+MATCHER_VERSION = "ingredient-product-matcher-v3.7"
 DEFAULT_OVERRIDES_PATH = Path(__file__).resolve().parent / "product_match_overrides.json"
 DEFAULT_EVALUATION_FIXTURE = Path(__file__).resolve().parent / "evaluation" / "product_match_cases.jsonl"
 
@@ -101,6 +104,7 @@ class IngredientProfile:
     dietary_requirements: set[str] = field(default_factory=set)
     brand: str | None = None
     raw_text: str = ""
+    ontology: FoodIdentity | None = None
 
 
 @dataclass
@@ -128,6 +132,10 @@ class RankedCandidate:
     lexical_similarity: float
     semantic_similarity: float | None
     is_substitution: bool = False
+    match_type: str = "none"
+    confidence_score: float = 0.0
+    confidence_calibration_status: str = "proxy_evaluated_not_human_calibrated"
+    ontology: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -153,6 +161,11 @@ class MatchResult:
     matcher_version: str
     product_index_version: str | None
     override_version: str | None
+    match_type: str = "none"
+    confidence_score: float = 0.0
+    confidence_calibration_status: str = "proxy_evaluated_not_human_calibrated"
+    ontology: dict[str, Any] = field(default_factory=dict)
+    diagnostics: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)
@@ -986,12 +999,13 @@ def profile_from_query(ingredient_text: str, overrides: OverrideStore | None = N
         profile.normalized_signature = profile.culinary_type.replace("_", " ")
     else:
         profile.normalized_signature = normalize_text(normalized)
+    profile.ontology = describe(ingredient_text)
     return profile, parsed.to_dict()
 
 
 def profile_from_feature(feature: dict[str, Any]) -> IngredientProfile:
     text = feature.get("normalized_name") or ""
-    return classify_identity(
+    profile = classify_identity(
         text,
         canonical=feature.get("canonical_name"),
         category=feature.get("category"),
@@ -1005,6 +1019,8 @@ def profile_from_feature(feature: dict[str, Any]) -> IngredientProfile:
         raw_text=feature.get("original_product_name") or text,
     )
 
+    profile.ontology = describe(feature.get("original_product_name") or text, feature=feature, product=True)
+    return profile
 
 def classify_identity(
     text: str,
@@ -2214,6 +2230,55 @@ def merge_retrieval_results(primary: CandidateRetrievalResult, expansions: list[
     )
 
 
+def rank_identity_candidate(candidate, query, product, decision):
+    allowed = decision.allowed or decision.match_type == "substitute"
+    semantic = candidate.semantic_similarity
+    semantic = max(0.0, min(1.0, semantic)) if semantic is not None and math.isfinite(semantic) else 0.0
+    lexical = candidate.lexical_similarity
+    lexical = max(0.0, min(1.0, lexical)) if math.isfinite(lexical) else 0.0
+    breakdown = {
+        "family_compatibility": .20 if allowed else 0.0,
+        "canonical_identity": .32 if allowed else 0.0,
+        "subtype_compatibility": .18 if allowed else 0.0,
+        "form_compatibility": .03 if allowed else 0.0,
+        "state_compatibility": .03 if allowed else 0.0,
+        "dietary_compatibility": .03 if allowed else 0.0,
+        "cut_compatibility": .03 if allowed else 0.0,
+        "required_attributes": .06 if allowed else 0.0,
+        "token_similarity": .07 * lexical if allowed else 0.0,
+        "embedding_similarity": .05 * semantic if allowed else 0.0,
+        "prepared_food_penalty": -1.0 if product.family in {"prepared", "nonfood"} else 0.0,
+        "structural_rejection": -1.0 if not allowed else 0.0,
+        "brand": 0.0,
+        "quantity_or_price": 0.0,
+    }
+    # Prefer an unmodified dairy variant for generic requests. This cannot
+    # rescue structural conflicts and is independent of brand/package/price.
+    breakdown["unrequested_variant"] = -.04 if query.family == "dairy" and not query.fat_level and product.fat_level and query.subfamily != "milk" else 0.0
+    score = max(0.0, min(1.0, sum(breakdown.values())))
+    if decision.match_type == "substitute": score = min(score, .70)
+    conflicts = [{"rule": reason, "classification": HARD_REJECT, "message": reason.replace("_", " ")}
+                 for reason in decision.reasons if not allowed]
+    ranked = RankedCandidate(candidate.product_id, candidate.original_product_name, candidate.normalized_name,
+        candidate.canonical_ingredient, candidate.record_status, NO_SAFE_MATCH,
+        round(score,4), {key:round(value,4) for key,value in breakdown.items()}, conflicts,
+        list(decision.uncertain), list(decision.reasons) + list(candidate.retrieval_reason_codes),
+        candidate.exact_match, candidate.alias_match, lexical,
+        candidate.semantic_similarity if candidate.semantic_similarity is not None and math.isfinite(candidate.semantic_similarity) else None,
+        is_substitution=decision.match_type == "substitute", match_type=decision.match_type,
+        confidence_score=round(score,4), ontology=product.to_dict())
+    ranked.confidence = identity_confidence(ranked)
+    return ranked
+
+
+def identity_confidence(candidate):
+    if candidate is None or candidate.match_type == "none":return NO_SAFE_MATCH
+    if candidate.match_type == "substitute":return SUBSTITUTION_ONLY
+    if candidate.exact_match and candidate.match_type == "exact" and candidate.final_score >= .94:return EXACT
+    if candidate.final_score >= .90:return HIGH
+    return MEDIUM
+
+
 class ProductMatchService:
     def __init__(
         self,
@@ -2221,7 +2286,12 @@ class ProductMatchService:
         overrides: OverrideStore | None = None,
         config: MatchScoringConfig | None = None,
         cache: MatchCache | None = None,
+        match_mode: str = "exact",
     ):
+        if match_mode not in {"exact", "substitute"}:
+            raise ValueError("match_mode must be exact or substitute")
+        self.match_mode = match_mode
+        self._identity_catalog = None
         self.retriever = retriever or ProductCandidateRetriever()
         self.overrides = overrides or OverrideStore()
         self.config = config or MatchScoringConfig()
@@ -2259,51 +2329,35 @@ class ProductMatchService:
                 self._product_profile_cache[product_id] = cached
         return cached
 
+    @property
+    def identity_catalog(self):
+        if self._identity_catalog is None:
+            self._identity_catalog = IdentityCatalog(self.retriever.features)
+        return self._identity_catalog
+
     def cache_key(self, profile: IngredientProfile, use_semantic: bool = True) -> str:
-        index_version = self.product_index_version() or "no-index"
-        return "|".join(
-            [
-                MATCHER_VERSION,
-                "semantic" if use_semantic else "lexical",
-                index_version,
-                self.overrides.version,
-                profile.normalized_signature,
-                profile.fat_level or "",
-                profile.salted_status or "",
-                profile.freshness or "",
-                ",".join(sorted(profile.dietary_requirements)),
-            ]
-        )
+        identity = profile.ontology.to_dict() if profile.ontology else {}
+        # Package sizes/recipe quantities never alter identity cache decisions.
+        identity.pop("normalized_text", None)
+        identity.pop("evidence", None)
+        return json.dumps([MATCHER_VERSION, ONTOLOGY_VERSION, self.match_mode, profile.normalized_signature,
+                           "semantic" if use_semantic else "lexical", self.product_index_version(),
+                           self.overrides.version, asdict(self.config), identity], sort_keys=True)
 
-    def _retrieve_with_substitution_expansion(
-        self,
-        query_profile: IngredientProfile,
-        candidate_limit: int,
-        use_semantic: bool,
-    ) -> CandidateRetrievalResult:
+    def _retrieve_with_substitution_expansion(self, query_profile, candidate_limit, use_semantic):
+        allowed = self.identity_catalog.candidate_ids(query_profile.ontology, self.match_mode)
+        if isinstance(self.retriever, ProductCandidateRetriever):
+            return self.retriever.retrieve_product_candidates(
+                query_profile.normalized_signature, limit=candidate_limit,
+                use_semantic=use_semantic, allowed_product_ids=allowed)
+        # Third-party/test retrievers may not support a pre-retrieval gate.
+        # The mandatory identical reranking gate still rejects their bad IDs.
         try:
-            retrieval = self.retriever.retrieve_product_candidates(
-                query_profile.normalized_signature,
-                limit=candidate_limit,
-                use_semantic=use_semantic,
-            )
+            return self.retriever.retrieve_product_candidates(query_profile.normalized_signature,
+                limit=candidate_limit, use_semantic=use_semantic)
         except TypeError as exc:
-            if "use_semantic" not in str(exc):
-                raise
-            retrieval = self.retriever.retrieve_product_candidates(query_profile.normalized_signature, limit=candidate_limit)
-
-        expansions = []
-        for alternate_query, substitution_score in culinary_substitution_queries(query_profile):
-            try:
-                expanded = self.retriever.retrieve_product_candidates(
-                    alternate_query,
-                    limit=max(12, candidate_limit // 4),
-                    use_semantic=False,
-                )
-            except TypeError:
-                expanded = self.retriever.retrieve_product_candidates(alternate_query, limit=max(12, candidate_limit // 4))
-            expansions.append((expanded, substitution_score))
-        return merge_retrieval_results(retrieval, expansions) if expansions else retrieval
+            if "use_semantic" not in str(exc): raise
+            return self.retriever.retrieve_product_candidates(query_profile.normalized_signature, limit=candidate_limit)
 
     def match_recipe_ingredient(
         self,
@@ -2314,11 +2368,13 @@ class ProductMatchService:
     ) -> MatchResult:
         started = time.perf_counter()
         query_profile, parsed = profile_from_query(ingredient_text, self.overrides)
-        key = self.cache_key(query_profile, use_semantic=use_semantic)
+        key = self.cache_key(query_profile, use_semantic=use_semantic) + f"|{limit}|{candidate_limit}"
         cached = self.cache.get(key)
-        if cached and self._cached_selection_is_valid(cached):
+        if cached and self._cached_selection_is_valid(cached, query_profile):
             result = copy.deepcopy(cached)
             result.cache_hit = True
+            result.raw_ingredient = ingredient_text
+            result.parsed_ingredient = parsed
             result.total_timing_ms = round((time.perf_counter() - started) * 1000, 2)
             return result
 
@@ -2347,14 +2403,6 @@ class ProductMatchService:
             item.get("product_id")
             for item in self.overrides.matching_items("forbidden_products", query_profile.normalized_signature)
         }
-        approved_ids = {
-            item.get("product_id")
-            for item in self.overrides.matching_items("approved_matches", query_profile.normalized_signature)
-        }
-        substitution_ids = {
-            item.get("product_id")
-            for item in self.overrides.matching_items("substitutions", query_profile.normalized_signature)
-        }
         incompatible_families = {
             normalize_text(item.get("family"))
             for item in self.overrides.matching_items("incompatible_families", query_profile.normalized_signature)
@@ -2368,38 +2416,43 @@ class ProductMatchService:
             if not feature or not feature.get("eligible_for_retrieval"):
                 continue
             product_profile = self.product_profile(feature)
-            signals = compatibility_signals(query_profile, product_profile)
-            if candidate.product_id in forbidden_ids:
-                signals.append(CompatibilitySignal("manual_forbidden", HARD_REJECT, "product is manually forbidden"))
-            if product_profile.family and normalize_text(product_profile.family) in incompatible_families:
-                signals.append(CompatibilitySignal("manual_incompatible_family", HARD_REJECT, "product family is manually incompatible"))
-            ranked = score_candidate(
-                candidate,
-                feature,
-                query_profile,
-                product_profile,
-                signals,
-                self.config,
-                override_approved=candidate.product_id in approved_ids,
-            )
-            if candidate.product_id in substitution_ids:
+            decision = identity_compatibility(query_profile.ontology, product_profile.ontology, self.match_mode)
+            veto = candidate.product_id in forbidden_ids or (
+                product_profile.family and normalize_text(product_profile.family) in incompatible_families or
+                normalize_text(product_profile.ontology.family) in incompatible_families)
+            ranked = rank_identity_candidate(candidate, query_profile.ontology, product_profile.ontology, decision)
+            if veto:
+                ranked.conflicts.append({"rule": "manual_veto", "classification": HARD_REJECT, "message": "product is manually forbidden"})
+                ranked.reason_codes.append("manual_veto")
+                ranked.match_type = "none"
+                rejected.append(ranked)
+            elif decision.match_type == "substitute":
                 ranked.is_substitution = True
+                ranked.confidence = SUBSTITUTION_ONLY
                 substitutions.append(ranked)
-            elif has_hard_reject(signals):
-                if is_substitution_candidate(query_profile, product_profile, signals):
-                    ranked.is_substitution = True
-                    ranked.confidence = SUBSTITUTION_ONLY
-                    substitutions.append(ranked)
-                else:
-                    rejected.append(ranked)
-            else:
+            elif decision.allowed:
                 accepted.append(ranked)
+            else:
+                rejected.append(ranked)
 
         accepted.sort(key=lambda item: item.final_score, reverse=True)
         substitutions.sort(key=lambda item: item.final_score, reverse=True)
         rejected.sort(key=lambda item: item.final_score, reverse=True)
         selected = accepted[0] if accepted and accepted[0].final_score >= self.config.minimum_selection_score else None
-        confidence = confidence_for(selected, accepted[1] if len(accepted) > 1 else None, self.config)
+        if selected is None and self.match_mode == "substitute" and substitutions:
+            selected = substitutions[0]
+        material_margin = None
+        if len(accepted) > 1:
+            first, second = accepted[:2]
+            first_identity = self.identity_catalog.identities.get(first.product_id)
+            second_identity = self.identity_catalog.identities.get(second.product_id)
+            if first_identity and second_identity:
+                keys = ('family', 'subfamily', 'species', 'cut', 'dietary_identity')
+                differs = any(getattr(first_identity, key) != getattr(second_identity, key) for key in keys)
+                material_margin = round(first.final_score - second.final_score, 4) if differs else None
+                if differs and material_margin < .005 and not query_profile.ontology.alternatives:
+                    selected = None
+        confidence = identity_confidence(selected)
         if selected:
             selected.confidence = confidence
         elif substitutions:
@@ -2407,7 +2460,7 @@ class ProductMatchService:
         else:
             confidence = NO_SAFE_MATCH
         for item in accepted[1:limit]:
-            item.confidence = confidence_for(item, None, self.config)
+            item.confidence = identity_confidence(item)
 
         result = MatchResult(
             raw_ingredient=ingredient_text,
@@ -2420,7 +2473,11 @@ class ProductMatchService:
             confidence=confidence,
             final_score=selected.final_score if selected else 0.0,
             warnings=[] if selected else ["No safe exact match selected."],
-            reason_codes=selected.reason_codes if selected else [confidence],
+            reason_codes=selected.reason_codes if selected else (
+                ["unknown_family"] if not query_profile.ontology.family else
+                ["ambiguous_identity_or_variant"] if query_profile.ontology.ambiguous else
+                sorted({reason for candidate in rejected for reason in candidate.reason_codes if reason in {c["rule"] for c in candidate.conflicts}}) or
+                ["no_inventory_with_verified_required_identity"]),
             cache_hit=False,
             retrieval_timing_ms=retrieval.retrieval_latency_ms,
             reranking_timing_ms=round((time.perf_counter() - rerank_started) * 1000, 2),
@@ -2428,14 +2485,28 @@ class ProductMatchService:
             matcher_version=MATCHER_VERSION,
             product_index_version=retrieval.index_version or self.product_index_version(),
             override_version=self.overrides.version,
+            match_type=selected.match_type if selected else "none",
+            confidence_score=selected.confidence_score if selected else 0.0,
+            ontology=query_profile.ontology.to_dict(),
         )
+        result.diagnostics = {'material_top1_top2_margin': material_margin,
+                              'material_margin_abstention_threshold': .005,
+                              'compatible_candidate_count': len(accepted)}
+        if material_margin is not None and selected is None and accepted:
+            result.warnings.append('Materially different compatible identities have a near-tied score.')
+            result.reason_codes = ['ambiguous_material_identity_margin']
+        elif selected is None and accepted and accepted[0].final_score < self.config.minimum_selection_score:
+            result.reason_codes = ['score_below_threshold']
         return result
 
-    def _cached_selection_is_valid(self, result: MatchResult) -> bool:
+    def _cached_selection_is_valid(self, result: MatchResult, query_profile=None) -> bool:
         if result.selected_match is None:
             return True
         feature = self.feature_by_id.get(result.selected_match.product_id)
-        return bool(feature and feature.get("eligible_for_retrieval"))
+        if not feature or not feature.get("eligible_for_retrieval"):return False
+        query = query_profile or profile_from_query(result.raw_ingredient, self.overrides)[0]
+        decision = identity_compatibility(query.ontology, self.product_profile(feature).ontology, self.match_mode)
+        return decision.allowed or self.match_mode == "substitute" and decision.match_type == "substitute"
 
     def _forced_result(
         self,
@@ -2466,9 +2537,15 @@ class ProductMatchService:
                 exact_match=True,
                 retrieval_reason_codes=["manual_forced"],
             )
-            product_profile = profile_from_feature(feature)
-            ranked = score_candidate(candidate, feature, query_profile, product_profile, [], self.config, override_approved=True)
-            ranked.confidence = EXACT
+            product_profile = self.product_profile(feature)
+            if any(normalize_text(veto.get("family")) in {normalize_text(product_profile.family), normalize_text(product_profile.ontology.family)} for veto in self.overrides.matching_items("incompatible_families", query_profile.normalized_signature)):
+                continue
+            decision = identity_compatibility(query_profile.ontology, product_profile.ontology, self.match_mode)
+            if not decision.allowed:
+                continue
+            ranked = rank_identity_candidate(candidate, query_profile.ontology, product_profile.ontology, decision)
+            ranked.reason_codes.append("manual_forced")
+            ranked.confidence = identity_confidence(ranked)
             return MatchResult(
                 raw_ingredient=ingredient_text,
                 parsed_ingredient=parsed,
@@ -2477,7 +2554,7 @@ class ProductMatchService:
                 compatible_alternatives=[],
                 substitution_candidates=[],
                 rejected_candidates=[],
-                confidence=EXACT,
+                confidence=ranked.confidence,
                 final_score=ranked.final_score,
                 warnings=[],
                 reason_codes=["manual_forced"],
@@ -2488,6 +2565,8 @@ class ProductMatchService:
                 matcher_version=MATCHER_VERSION,
                 product_index_version=self.product_index_version(),
                 override_version=self.overrides.version,
+                match_type=ranked.match_type, confidence_score=ranked.confidence_score,
+                ontology=query_profile.ontology.to_dict(),
             )
         return None
 
@@ -2515,10 +2594,10 @@ class ProductMatchService:
         misses: list[tuple[str, IngredientProfile, dict[str, Any], str]] = []
         for text in texts:
             query_profile, parsed = profile_from_query(text, self.overrides)
-            key = self.cache_key(query_profile, use_semantic=use_semantic)
+            key = self.cache_key(query_profile, use_semantic=use_semantic) + f"|{limit}|80"
             profiles[text] = (query_profile, parsed, key)
             cached = self.cache.get(key)
-            if cached and self._cached_selection_is_valid(cached):
+            if cached and self._cached_selection_is_valid(cached, query_profile):
                 result = copy.deepcopy(cached)
                 result.cache_hit = True
                 result.total_timing_ms = round((time.perf_counter() - started_by_text[text]) * 1000, 2)
@@ -2536,11 +2615,13 @@ class ProductMatchService:
         if misses:
             miss_texts = [query_profile.normalized_signature for _text, query_profile, _parsed, _key in misses]
             try:
-                retrievals = self.retriever.retrieve_product_candidates_batch(
-                    miss_texts,
-                    limit=80,
-                    use_semantic=use_semantic,
-                )
+                if isinstance(self.retriever, ProductCandidateRetriever):
+                    retrievals = self.retriever.retrieve_product_candidates_batch(
+                        miss_texts, limit=80, use_semantic=use_semantic,
+                        allowed_product_ids=[self.identity_catalog.candidate_ids(profile.ontology, self.match_mode)
+                                             for _, profile, _, _ in misses])
+                else:
+                    retrievals = self.retriever.retrieve_product_candidates_batch(miss_texts, limit=80, use_semantic=use_semantic)
             except (AttributeError, TypeError):
                 retrievals = [
                     self._retrieve_with_substitution_expansion(query_profile, 80, use_semantic)
@@ -2548,13 +2629,6 @@ class ProductMatchService:
                 ]
             for (text, query_profile, parsed, key), retrieval in zip(misses, retrievals):
                 result = self._match_from_retrieval(text, query_profile, parsed, retrieval, started_by_text[text], limit, 80)
-                if (
-                    result.selected_match is None
-                    and culinary_substitution_queries(query_profile)
-                    and not any("deterministic_substitution_query" in candidate.retrieval_reason_codes for candidate in retrieval.candidates)
-                ):
-                    expanded_retrieval = self._retrieve_with_substitution_expansion(query_profile, 80, use_semantic)
-                    result = self._match_from_retrieval(text, query_profile, parsed, expanded_retrieval, started_by_text[text], limit, 80)
                 self.cache.set(key, copy.deepcopy(result))
                 results_by_key[key] = result
 
@@ -2562,7 +2636,9 @@ class ProductMatchService:
         emitted_keys = set()
         for text in texts:
             _profile, _parsed, key = profiles[text]
-            result = results_by_key[key]
+            result = copy.deepcopy(results_by_key[key])
+            result.raw_ingredient = text
+            result.parsed_ingredient = profiles[text][1]
             if key in emitted_keys:
                 ordered.append(copy.deepcopy(result))
             else:

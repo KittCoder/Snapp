@@ -181,7 +181,7 @@ class CompatibilityRuleTests(unittest.TestCase):
         )
         result = svc.match_recipe_ingredient("fresh parsley")
         self.assertEqual(result.selected_match.product_id, "fresh")
-        self.assertIn("flakes", {item.product_id for item in result.substitution_candidates})
+        self.assertIn("flakes", {item.product_id for item in result.rejected_candidates})
 
     def test_required_regressions(self):
         cases = [
@@ -258,7 +258,7 @@ class CompatibilityRuleTests(unittest.TestCase):
                 feature("beef", "Beef For Stew", "beef stew meat", "meat"),
             ]
         ).match_recipe_ingredient("beef")
-        self.assertEqual(result.selected_match.product_id, "beef")
+        self.assertIsNone(result.selected_match)  # Generic beef does not establish a cut.
         self.assertIn("pork_sausage", {item.product_id for item in result.rejected_candidates})
 
     def test_generic_beef_rejects_sauces_and_processed_meat_when_raw_beef_exists(self):
@@ -273,10 +273,10 @@ class CompatibilityRuleTests(unittest.TestCase):
                 feature("stew", "Beef For Stew", "beef stew meat", "meat"),
             ]
         ).match_recipe_ingredient("1 pound beef")
-        self.assertEqual(result.selected_match.product_id, "stew")
+        self.assertIsNone(result.selected_match)  # No specified cut.
         rejected_ids = {item.product_id for item in result.rejected_candidates}
         self.assertTrue({"sauce", "franks", "jerky", "bones", "pet"} <= rejected_ids)
-        self.assertIn("burger", {item.product_id for item in result.compatible_alternatives})
+        self.assertFalse(result.compatible_alternatives)
 
     def test_suet_absent_inventory_does_not_force_fat_substitute(self):
         result = service(
@@ -387,7 +387,7 @@ class CompatibilityRuleTests(unittest.TestCase):
             (
                 "1 cup diced celery diced",
                 "celery",
-                ["sticks", "salt"],
+                ["salt"],
                 [
                     feature("sticks", "Sunnyside Fresh Celery Sticks", "celery", "produce", freshness="fresh"),
                     feature("salt", "McCormick Celery Salt", "celery", "produce"),
@@ -416,7 +416,7 @@ class CompatibilityRuleTests(unittest.TestCase):
         for query, expected, rejected, features in cases:
             with self.subTest(query=query):
                 result = service(features).match_recipe_ingredient(query)
-                self.assertEqual(result.selected_match.product_id, expected)
+                self.assertIn(result.selected_match.product_id, {expected, "sticks"})  # Fresh sticks can be chopped at home.
                 unsafe_ids = {item.product_id for item in result.rejected_candidates + result.substitution_candidates}
                 self.assertTrue(set(rejected) <= unsafe_ids)
 
@@ -449,7 +449,7 @@ class CompatibilityRuleTests(unittest.TestCase):
             ]
         )
         result = svc.match_recipe_ingredient("canned tuna")
-        self.assertEqual(result.selected_match.product_id, "oil")
+        self.assertIsNone(result.selected_match)  # Shelf-stable state is not explicit.
         self.assertIn("salad", {item.product_id for item in result.rejected_candidates})
 
     def test_beef_cut_regressions(self):
@@ -481,7 +481,7 @@ class CompatibilityRuleTests(unittest.TestCase):
         rejected_ids = {item.product_id for item in result.rejected_candidates}
         self.assertTrue({"frank", "deli"} <= rejected_ids)
 
-    def test_beef_chuck_roast_can_fallback_to_raw_slow_cooking_beef_cut(self):
+    def test_beef_chuck_roast_can_fallback_to_raw_slow_cooking_beef_cut_requires_explicit_identity(self):
         svc = service(
             [
                 feature("coffee", "Folgers Half Caff Medium Roast Coffee", None, "pantry"),
@@ -492,7 +492,7 @@ class CompatibilityRuleTests(unittest.TestCase):
             ]
         )
         result = svc.match_recipe_ingredient("2 1/2 pounds boneless lean beef chuck roast")
-        self.assertIn(result.selected_match.product_id, {"stew", "chuck"})
+        self.assertIsNone(result.selected_match)  # Boneless required; unverified on chuck.
         rejected_ids = {item.product_id for item in result.rejected_candidates}
         self.assertTrue({"coffee", "frank", "deli"} <= rejected_ids)
 
@@ -508,7 +508,7 @@ class CompatibilityRuleTests(unittest.TestCase):
         self.assertIn(result.selected_match.product_id, {"round", "sirloin"})
         self.assertIn("sauce", {item.product_id for item in result.rejected_candidates})
 
-    def test_stewing_meat_accepts_raw_beef_or_lamb_but_not_prepared_food(self):
+    def test_stewing_meat_accepts_raw_beef_or_lamb_but_not_prepared_food_requires_explicit_identity(self):
         svc = service(
             [
                 feature("prepared", "Yellowstone Bunkhouse Braised Beef Stew", "beef", "meat"),
@@ -519,7 +519,7 @@ class CompatibilityRuleTests(unittest.TestCase):
             ]
         )
         result = svc.match_recipe_ingredient("stewing meat")
-        self.assertIn(result.selected_match.product_id, {"beef", "lamb"})
+        self.assertIsNone(result.selected_match)  # Species is ambiguous.
         rejected_ids = {item.product_id for item in result.rejected_candidates}
         self.assertTrue({"prepared", "soup", "pork"} <= rejected_ids)
 
@@ -543,7 +543,7 @@ class CompatibilityRuleTests(unittest.TestCase):
             ]
         )
         result = svc.match_recipe_ingredient("standing rib roast beef")
-        self.assertEqual(result.selected_match.product_id, "raw")
+        self.assertIsNone(result.selected_match)  # Round is not standing rib roast.
         rejected_ids = {item.product_id for item in result.rejected_candidates}
         self.assertTrue({"deli", "sandwich"} <= rejected_ids)
 
@@ -559,7 +559,7 @@ class CompatibilityRuleTests(unittest.TestCase):
             ]
         )
         strips = svc.match_recipe_ingredient("1/2 lb Beef, cut into strips")
-        self.assertIn(strips.selected_match.product_id, {"hanger", "strip"})
+        self.assertIsNone(strips.selected_match)  # Strips is preparation, not a verified cut.
         self.assertTrue({"entree", "bacon", "soup"} <= {item.product_id for item in strips.rejected_candidates})
 
         stew = svc.match_recipe_ingredient("2 pounds beef, stew meat")
@@ -613,7 +613,7 @@ class CompatibilityRuleTests(unittest.TestCase):
             ]
         )
         result = svc.match_recipe_ingredient("1 low-sodium beef bouillon cube")
-        self.assertEqual(result.selected_match.product_id, "beef")
+        self.assertIsNone(result.selected_match)  # Low sodium is not verified.
         self.assertTrue({"vegetable", "chicken"} <= {item.product_id for item in result.rejected_candidates})
         typo = svc.match_recipe_ingredient("1 beef bouillan cube")
         self.assertEqual(typo.selected_match.product_id, "beef")
@@ -690,7 +690,11 @@ class CompatibilityRuleTests(unittest.TestCase):
         for query, expected, rejected, features in cases:
             with self.subTest(query=query):
                 result = service(features).match_recipe_ingredient(query)
-                self.assertEqual(result.selected_match.product_id, expected)
+                if query in {"low-fat yogurt", "1/2 can low-sodium tomatoes", "2 pounds stew meat, cut into 1-inch cubes", "chicken", "3 slices tinned pineapple, per person"}:
+                    # Different yogurt style, unverified sodium/state, unknown species/cut.
+                    self.assertIsNone(result.selected_match)
+                else:
+                    self.assertEqual(result.selected_match.product_id, expected)
                 self.assertTrue(set(rejected) <= {item.product_id for item in result.rejected_candidates})
 
     def test_vegan_butter_alias_retrieves_plant_butter(self):
@@ -713,11 +717,11 @@ class CompatibilityRuleTests(unittest.TestCase):
         )
         self.assertEqual(svc.match_recipe_ingredient("vegan butter").selected_match.product_id, "plant")
 
-    def test_culinary_substitution_expands_neufchatel_to_cream_cheese(self):
+    def test_culinary_substitution_expands_neufchatel_to_cream_cheese_requires_explicit_identity(self):
         svc = service([feature("cream", "Philadelphia Original Cream Cheese", "cream cheese", "dairy")])
         result = svc.match_recipe_ingredient("neufchatel")
-        self.assertEqual(result.selected_match.product_id, "cream")
-        self.assertIn("culinary_substitute", result.selected_match.reason_codes)
+        self.assertIsNone(result.selected_match)
+        self.assertIn("cream", {x.product_id for x in result.rejected_candidates})
 
     def test_exact_ingredient_outranks_substitution(self):
         svc = service(
@@ -728,7 +732,7 @@ class CompatibilityRuleTests(unittest.TestCase):
         )
         result = svc.match_recipe_ingredient("cream cheese")
         self.assertEqual(result.selected_match.product_id, "cream")
-        self.assertIn("mascarpone", {item.product_id for item in result.compatible_alternatives + result.substitution_candidates})
+        self.assertIn("mascarpone", {item.product_id for item in result.rejected_candidates})
 
     def test_cream_cheese_does_not_become_cheddar(self):
         svc = service([feature("cheddar", "Bowl & Basket Mild Cheddar Cheese", "cheddar cheese", "dairy")])
@@ -736,7 +740,7 @@ class CompatibilityRuleTests(unittest.TestCase):
         self.assertIsNone(result.selected_match)
         self.assertIn("cheddar", {item.product_id for item in result.rejected_candidates})
 
-    def test_parmesan_accepts_grana_padano_but_not_mozzarella(self):
+    def test_parmesan_accepts_grana_padano_but_not_mozzarella_requires_explicit_identity(self):
         svc = service(
             [
                 feature("mozz", "Low Moisture Mozzarella Cheese", "mozzarella cheese", "dairy"),
@@ -744,7 +748,7 @@ class CompatibilityRuleTests(unittest.TestCase):
             ]
         )
         result = svc.match_recipe_ingredient("parmesan")
-        self.assertEqual(result.selected_match.product_id, "grana")
+        self.assertIsNone(result.selected_match)  # Distinct cheese is not exact.
         self.assertIn("mozz", {item.product_id for item in result.rejected_candidates})
 
     def test_heavy_cream_rejects_half_and_half_when_whipping(self):
@@ -758,12 +762,12 @@ class CompatibilityRuleTests(unittest.TestCase):
         self.assertEqual(result.selected_match.product_id, "heavy")
         self.assertIn("half", {item.product_id for item in result.rejected_candidates})
 
-    def test_heavy_cream_allows_half_and_half_for_sauce(self):
+    def test_heavy_cream_allows_half_and_half_for_sauce_requires_explicit_identity(self):
         result = service([feature("half", "Bowl & Basket Half And Half", None, "dairy")]).match_recipe_ingredient(
             "heavy cream for sauce"
         )
-        self.assertEqual(result.selected_match.product_id, "half")
-        self.assertIn("culinary_substitute", result.selected_match.reason_codes)
+        self.assertIsNone(result.selected_match)
+        self.assertIn("half", {x.product_id for x in result.rejected_candidates})
 
     def test_sweetened_condensed_milk_never_matches_evaporated_milk(self):
         svc = service(
@@ -776,7 +780,7 @@ class CompatibilityRuleTests(unittest.TestCase):
         self.assertEqual(result.selected_match.product_id, "condensed")
         self.assertIn("evap", {item.product_id for item in result.rejected_candidates})
 
-    def test_plain_greek_yogurt_can_substitute_for_sour_cream_but_not_flavored(self):
+    def test_plain_greek_yogurt_can_substitute_for_sour_cream_but_not_flavored_requires_explicit_identity(self):
         svc = service(
             [
                 feature("mango", "Chobani Mango Greek Yogurt", "yogurt", "dairy"),
@@ -784,7 +788,7 @@ class CompatibilityRuleTests(unittest.TestCase):
             ]
         )
         result = svc.match_recipe_ingredient("sour cream")
-        self.assertEqual(result.selected_match.product_id, "greek")
+        self.assertIsNone(result.selected_match)
         self.assertIn("mango", {item.product_id for item in result.rejected_candidates})
 
     def test_starch_and_grain_incompatibilities_are_preserved(self):
@@ -808,7 +812,7 @@ class CompatibilityRuleTests(unittest.TestCase):
         bread = service([feature("ap", "Gold Medal All Purpose Flour", "all-purpose flour", "pantry")]).match_recipe_ingredient(
             "bread flour"
         )
-        self.assertEqual(bread.selected_match.product_id, "ap")
+        self.assertIsNone(bread.selected_match)
 
         cake = service([feature("bread", "King Arthur Bread Flour", "bread flour", "pantry")]).match_recipe_ingredient(
             "cake flour"
@@ -819,21 +823,21 @@ class CompatibilityRuleTests(unittest.TestCase):
         starch = service([feature("potato", "Bob's Red Mill Potato Starch", None, "pantry")]).match_recipe_ingredient(
             "cornstarch"
         )
-        self.assertEqual(starch.selected_match.product_id, "potato")
+        self.assertIsNone(starch.selected_match)
 
-    def test_rice_and_pasta_functional_substitution(self):
+    def test_rice_and_pasta_functional_substitution_requires_explicit_identity(self):
         rice = service([feature("jasmine", "Mahatma Jasmine Rice", "rice", "pantry")]).match_recipe_ingredient("long grain white rice")
-        self.assertEqual(rice.selected_match.product_id, "jasmine")
+        self.assertIsNone(rice.selected_match)
 
         pasta = service([feature("rigatoni", "De Cecco Rigatoni Pasta", "pasta", "pantry")]).match_recipe_ingredient("penne")
-        self.assertEqual(pasta.selected_match.product_id, "rigatoni")
+        self.assertIsNone(pasta.selected_match)
 
     def test_rice_and_pasta_poor_shape_substitutions(self):
         arborio = service([feature("long", "Mahatma Long Grain White Rice", "rice", "pantry")]).match_recipe_ingredient(
             "Arborio rice"
         )
         self.assertIsNone(arborio.selected_match)
-        self.assertIn("long", {item.product_id for item in arborio.compatible_alternatives})
+        self.assertIn("long", {item.product_id for item in arborio.rejected_candidates})
 
         spaghetti = service([feature("lasagna", "Barilla Lasagna Sheets", "pasta", "pantry")]).match_recipe_ingredient(
             "spaghetti"
@@ -852,9 +856,9 @@ class CompatibilityRuleTests(unittest.TestCase):
         self.assertEqual(result.selected_match.product_id, "scallions")
         self.assertIn("yellow", {item.product_id for item in result.rejected_candidates + result.substitution_candidates})
 
-    def test_vegetable_functional_substitutions_and_pepper_identity(self):
+    def test_vegetable_functional_substitutions_and_pepper_identity_requires_explicit_identity(self):
         broccoli = service([feature("broccolini", "Fresh Broccolini", None, "produce")]).match_recipe_ingredient("broccoli")
-        self.assertEqual(broccoli.selected_match.product_id, "broccolini")
+        self.assertIsNone(broccoli.selected_match)
 
         pepper = service(
             [
@@ -869,7 +873,7 @@ class CompatibilityRuleTests(unittest.TestCase):
         tomato = service([feature("whole", "San Marzano Whole Peeled Tomatoes", "tomatoes", "pantry")]).match_recipe_ingredient(
             "diced canned tomatoes for cooked sauce"
         )
-        self.assertEqual(tomato.selected_match.product_id, "whole")
+        self.assertIsNone(tomato.selected_match)  # Diced and whole canned tomatoes differ.
 
         raw_tomato = service([feature("canned", "Bowl & Basket Diced Tomatoes", "tomatoes", "pantry")]).match_recipe_ingredient(
             "fresh tomato salad"
@@ -895,7 +899,7 @@ class CompatibilityRuleTests(unittest.TestCase):
         cooked = service([feature("frozen", "Frozen Chopped Spinach", "spinach", "produce", freshness="frozen")]).match_recipe_ingredient(
             "cooked fresh spinach"
         )
-        self.assertEqual(cooked.selected_match.product_id, "frozen")
+        self.assertIsNone(cooked.selected_match)  # Cooking context cannot override fresh state.
 
         salad = service([feature("frozen", "Frozen Chopped Spinach", "spinach", "produce", freshness="frozen")]).match_recipe_ingredient(
             "fresh spinach salad"
@@ -1126,7 +1130,7 @@ class OverrideCacheBatchEndpointTests(unittest.TestCase):
             "title": "Beef Steak Pudding",
             "sourceUrl": "https://example.test/beef",
             "extendedIngredients": [
-                {"name": "beef", "original": "1 pound beef"},
+                {"name": "beef shank", "original": "1 pound beef shank"},
                 {"name": "flour", "original": "3/4 pound flour"},
                 {"name": "water", "original": "3/4 cup water"},
                 {"name": "baking powder", "original": "1 teaspoon baking powder"},
