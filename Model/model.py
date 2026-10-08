@@ -491,6 +491,10 @@ CORS_ORIGINS = {
 MATCHER_WARMUP_EXEMPT_ENDPOINTS = {
     "health",
     "static",
+    "recipe_search",
+    "recipe_search_options",
+    "recipe_chat",
+    "recipe_chat_options",
     "sale_ingredients",
     "sale_ingredients_options",
     "dishes",
@@ -5612,6 +5616,160 @@ def dev_product_match():
     except Exception as exc:
         return jsonify({"error": "Product matching failed.", "details": str(exc)}), 503
     return jsonify(result.to_dict())
+
+
+@app.post("/api/recipes/search")
+def recipe_search():
+    request_started = time.perf_counter()
+    data, error = validated_json_payload()
+    if error:
+        return error
+    query = re.sub(r"\s+", " ", str(data.get("query") or "")).strip()
+    if not query:
+        return json_error("Recipe search query is required.", 400)
+    if len(query) > MAX_DISH_PROMPT_CHARS:
+        return json_error("Recipe search query is too long.", 400)
+    try:
+        limit = max(1, min(int(data.get("limit") or 10), 50))
+    except (TypeError, ValueError):
+        return json_error("limit must be an integer.", 400)
+
+    try:
+        from recipe_search_typesense import TypesenseUnavailable, search_recipes
+
+        result = search_recipes(
+            query,
+            limit=limit,
+            max_time=data.get("max_time"),
+            min_time=data.get("min_time"),
+            include_ingredients=data.get("include_ingredients"),
+            exclude_ingredients=data.get("exclude_ingredients"),
+            categories=data.get("categories"),
+            dietary=data.get("dietary"),
+            state=data.get("state"),
+        )
+    except TypesenseUnavailable:
+        log_event(
+            "recipe_search_unavailable",
+            request_id=request.snapp_request_id,
+            total_ms=round((time.perf_counter() - request_started) * 1000, 2),
+        )
+        return json_error("Recipe search is temporarily unavailable.", 503)
+    except Exception as exc:
+        log_event("recipe_search_failed", request_id=request.snapp_request_id, error_type=type(exc).__name__)
+        return json_error("Recipe search failed.", 503)
+
+    metrics.observe_latency("recipe_search", result["total_latency_ms"])
+    log_event(
+        "recipe_search_complete",
+        request_id=request.snapp_request_id,
+        result_count=len(result["results"]),
+        found=result.get("found"),
+        typesense_ms=result["typesense_latency_ms"],
+        total_ms=result["total_latency_ms"],
+    )
+    return jsonify({"request_id": request.snapp_request_id, **result})
+
+
+@app.route("/api/recipes/search", methods=["OPTIONS"])
+def recipe_search_options():
+    return ("", 204)
+
+
+def recipe_chat_detail_record(recipe_id):
+    """Typesense owns generated recipe facts; Dishes keeps its own source."""
+    from recipe_chat import configured_service
+    from recipe_search_typesense import get_recipe_by_id
+    indexed = get_recipe_by_id(recipe_id, configured_service().config)
+    if indexed is None:
+        return None, None
+    names = indexed.get("ingredient_names") or []
+    lines = indexed.get("ingredients_text") or names
+    instructions = indexed.get("instructions") or ""
+    matcher_instructions = (
+        "\n".join(step for step in instructions if isinstance(step, str))
+        if isinstance(instructions, list) else instructions
+    )
+    recipe = {
+        "id": recipe_id, "title": indexed.get("title"),
+        "extendedIngredients": [
+            {"name": names[i] if i < len(names) else line, "original": line}
+            for i, line in enumerate(lines)],
+        "instructions": matcher_instructions,
+        "servings": indexed.get("servings"),
+        "_snapp_recipe_provider": "SNAPP recipe index",
+    }
+    detail = spoonacular_recipe_from_recipe(recipe)
+    # Keep original step order/text rather than the Dishes string conversion.
+    detail["instructions"] = indexed.get("instructions") or ""
+    detail["servings"] = indexed.get("servings")
+    detail["categories"] = indexed.get("categories", [])
+    detail["equipment"] = indexed.get("equipment", [])
+    detail["source_id"] = indexed.get("source_id")
+    detail["stored_ingredients"] = indexed.get("ingredients", [])
+    for key in ("total_time_minutes", "cook_time_minutes"):
+        if indexed.get(key) is not None:
+            detail[key] = indexed[key]
+    return recipe, detail
+
+
+@app.route("/api/recipes/detail", methods=["POST", "OPTIONS"])
+def recipe_chat_detail():
+    if request.method == "OPTIONS":
+        return ("", 204)
+    data, error = validated_json_payload()
+    if error:
+        return error
+    recipe_id = data.get("recipe_id")
+    if not isinstance(recipe_id, str) or not recipe_id.strip() or len(recipe_id) > 500:
+        return json_error("A recipe ID is required.", 400)
+    try:
+        recipe, detail = recipe_chat_detail_record(recipe_id)
+        if recipe is None:
+            return json_error("Recipe is no longer available.", 404)
+        dish = {"recipe_id": recipe_id, "name": detail.get("name"), "recipe": detail}
+        if data.get("for_schedule"):
+            pantry = parse_pantry_items(data.get("pantry_items"))
+            if len(pantry) > MAX_PANTRY_ITEMS_PER_REQUEST:
+                return json_error("Too many pantry items in request.", 400)
+            matches = match_recipe_ingredients_to_morton_williams(
+                recipe, pantry_items=pantry, servings=source_recipe_servings(recipe))
+            dish = spoonacular_recipe_to_demo_dish(
+                recipe, matches, morton_williams_store_lookup(),
+                parse_household_size(data.get("household_size")), grocery_label="Morton Williams")
+            dish["recipe"] = detail
+            dish.pop("servings", None)
+            dish.pop("servings_display", None)
+        return jsonify({"dish": dish})
+    except Exception as exc:
+        log_event("recipe_detail_failed", request_id=request.snapp_request_id, error_type=type(exc).__name__)
+        return json_error("Recipe could not be loaded. Try again shortly.", 503)
+
+
+@app.post("/api/recipes/chat", provide_automatic_options=False)
+def recipe_chat():
+    data, error = validated_json_payload()
+    if error:
+        return error
+    from recipe_chat import configured_service
+    from recipe_search_typesense import TypesenseUnavailable
+
+    try:
+        result = configured_service().handle_message(data.get("message"), data.get("state"))
+    except ValueError as exc:
+        return json_error(str(exc), 400)
+    except TypesenseUnavailable:
+        return json_error("Recipe search is temporarily unavailable.", 503)
+    except Exception as exc:
+        log_event("recipe_chat_failed", request_id=request.snapp_request_id, error_type=type(exc).__name__)
+        return json_error("Recipe chat is temporarily unavailable.", 503)
+    metrics.observe_latency("recipe_chat", result["search_metadata"]["latency_ms"])
+    return jsonify({"request_id": request.snapp_request_id, **result})
+
+
+@app.route("/api/recipes/chat", methods=["OPTIONS"])
+def recipe_chat_options():
+    return ("", 204)
 
 
 @app.post("/chat")

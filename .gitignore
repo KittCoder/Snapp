@@ -12,3 +12,26 @@ Model/database.merged.json
 Model/artifact_rollbacks/
 Model/.product_match_overrides.lock
 Model/product_match_overrides.json.*.bak
+
+# Local recipe corpus and generated Typesense artifacts
+/data/snapp_search_corpus.jsonl
+/data/snapp_typesense_documents.jsonl
+/typesense_recipe_indexing_report.json
+/typesense_recipe_search_review.json
+/typesense_recipe_search_hybrid_review.json
+/typesense_recipe_search_hybrid_report.md
+/recipe_chat_review.json
+
+# Local Typesense storage and binaries
+/.local/typesense/
+/typesense-data/
+.vercel
+
+# Generated QA / population replay / local search corpora (keep local files)
+/data/
+/Model/evaluation/ingredient_inventory_benchmark.json
+/ingredient_matcher_review.json
+/ingredient_matcher_report.md
+/recipe_chat_language_review.json
+/typesense*benchmark*.json
+/typesense*benchmark*.md

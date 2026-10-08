@@ -27,6 +27,7 @@
         <button data-target="home" data-app-view="snapp" class="nav-button active">Home</button>
         <button data-target="account" data-app-view="snapp" data-auth-view="signed-out" class="nav-button">Account</button>
         <button data-target="dishes" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Dishes</button>
+        <button data-target="recipe-chat" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Recipe Chat</button>
         <button data-target="my" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Stores</button>
         <button data-target="pantry" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Pantry</button>
         <button data-target="schedule" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Schedule</button>
@@ -644,6 +645,38 @@
         <p id="dish-source" class="dish-source" hidden>
           Grocery data: SNAPP demo grocery database. Recipes: TheMealDB.
         </p>
+      </section>
+
+      <!-- Experimental Recipe Chat: independent of the Dishes panel. -->
+      <section id="recipe-chat" class="panel recipe-chat-panel" aria-labelledby="recipe-chat-heading">
+        <div class="recipe-chat-header">
+          <div>
+            <p class="eyebrow">Recipe discovery · Experimental</p>
+            <h1 id="recipe-chat-heading">Recipe Chat</h1>
+          </div>
+          <button id="recipe-chat-new" class="secondary-button" type="button">New Chat</button>
+        </div>
+        <div id="recipe-chat-empty" class="recipe-chat-empty">
+          <h2>What are you in the mood for?</h2>
+          <p>Tell SNAPP what you want to eat, what ingredients you have, or what you want to avoid.</p>
+          <div class="recipe-chat-prompts" aria-label="Try a recipe search">
+            <button type="button">Warm dinner with beef</button>
+            <button type="button">Quick chicken meal</button>
+            <button type="button">Breakfast with eggs</button>
+            <button type="button">Something spicy with rice</button>
+          </div>
+        </div>
+        <div id="recipe-chat-history" class="recipe-chat-history" role="log" aria-label="Recipe conversation" aria-live="polite" aria-relevant="additions" tabindex="0" hidden></div>
+        <form id="recipe-chat-form" class="recipe-chat-form">
+          <label for="recipe-chat-input">Your message</label>
+          <div class="recipe-chat-input-row">
+            <textarea id="recipe-chat-input" name="message" rows="2" maxlength="300" required placeholder="A dinner idea, an ingredient, or a follow-up…" aria-describedby="recipe-chat-input-hint"></textarea>
+            <button id="recipe-chat-send" type="submit">Send</button>
+          </div>
+          <p id="recipe-chat-input-hint" class="recipe-chat-hint">Enter to send · Shift+Enter for a new line · Up to 300 characters</p>
+        </form>
+        <p id="recipe-chat-status" class="recipe-chat-feedback" role="status" aria-live="polite"></p>
+        <p id="recipe-chat-error" class="recipe-chat-feedback recipe-chat-error" role="alert" hidden></p>
       </section>
 
       <section id="schedule" class="panel">

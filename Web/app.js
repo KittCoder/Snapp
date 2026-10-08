@@ -448,6 +448,7 @@ const SNAPP_PANEL_IDS = new Set([
   "onboarding",
   "home",
   "dishes",
+  "recipe-chat",
   "schedule",
   "shopping",
   "my",
@@ -765,6 +766,7 @@ function clearDishSession() {
 }
 
 function clearUserScopedTransientState() {
+  recipeChat.reset(false);
   selectedShoppingIngredientIds.clear();
   pantryHandledShoppingIngredientIds.clear();
   scheduledMeals.splice(0, scheduledMeals.length);
@@ -2866,21 +2868,22 @@ function cleanIngredientRequirementText(text) {
     .trim();
 }
 
-function appendModalSection(title, items, formatter) {
-  const heading = document.createElement("h4");
-  const list = document.createElement("ul");
-  heading.textContent = title;
-  list.className = "dish-modal-list";
-  if (!items.length) {
-    const item = document.createElement("li");
-    item.textContent = "None available.";
-    list.appendChild(item);
-  }
+function recipeItemList(items, formatter, ordered = false) {
+  const list = document.createElement(ordered ? "ol" : "ul");
   items.forEach((value) => {
     const item = document.createElement("li");
     item.textContent = formatter(value);
     list.appendChild(item);
   });
+  return list;
+}
+
+function appendModalSection(title, items, formatter) {
+  const heading = document.createElement("h4");
+  heading.textContent = title;
+  const list = recipeItemList(items.length ? items : [null],
+    (value) => value === null ? "None available." : formatter(value));
+  list.className = "dish-modal-list";
   dishModalContent.append(heading, list);
 }
 
@@ -3961,6 +3964,294 @@ dietSelect.addEventListener("change", () => {
   setSettingsStatus(`Dietary preference set to ${dietSelect.value}.`);
   queueSettingsSave();
 });
+
+// Experimental Recipe Chat. State and rendering stay separate from Dishes.
+const recipeChat = (() => {
+  const panel = document.getElementById("recipe-chat");
+  const form = document.getElementById("recipe-chat-form");
+  const input = document.getElementById("recipe-chat-input");
+  const sendButton = document.getElementById("recipe-chat-send");
+  const history = document.getElementById("recipe-chat-history");
+  const empty = document.getElementById("recipe-chat-empty");
+  const status = document.getElementById("recipe-chat-status");
+  const error = document.getElementById("recipe-chat-error");
+  const prompts = [...panel.querySelectorAll(".recipe-chat-prompts button")];
+  let currentState = null;
+  let activeRequest = null;
+  let detailRequest = null;
+  let detailVersion = 0;
+  const detailView = document.createElement("section");
+  detailView.className = "recipe-chat-card recipe-chat-detail";
+  detailView.hidden = true;
+  history.after(detailView);
+
+  function backToResults() {
+    detailVersion += 1;
+    detailRequest?.abort();
+    detailRequest = null;
+    detailView.hidden = true;
+    history.hidden = !history.childElementCount;
+    empty.hidden = Boolean(history.childElementCount);
+  }
+
+  async function fetchDetail(recipeId, forSchedule = false) {
+    const controller = new AbortController();
+    detailRequest?.abort();
+    detailRequest = controller;
+    const timeout = window.setTimeout(() => controller.abort(), 60000);
+    try {
+      const response = await fetch(endpoint().replace(/chat$/, "detail"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipe_id: recipeId, for_schedule: forSchedule,
+          household_size: householdSizeInput.value,
+          pantry_items: pantryItems.map(({ name, quantity }) => ({ name, quantity })),
+        }),
+        signal: controller.signal,
+      });
+      if (!response.ok) throw new Error("Recipe load failed");
+      const data = await response.json();
+      if (data.dish?.recipe_id !== recipeId || !data.dish.recipe) throw new Error("Invalid recipe");
+      return data.dish;
+    } finally {
+      window.clearTimeout(timeout);
+      if (detailRequest === controller) detailRequest = null;
+    }
+  }
+
+  async function openRecipeDetail(recipe) {
+    backToResults();
+    const version = detailVersion;
+    history.hidden = true;
+    empty.hidden = true;
+    detailView.hidden = false;
+    detailView.replaceChildren();
+    const back = textElement("button", "", "← Back to results");
+    back.type = "button";
+    back.addEventListener("click", backToResults);
+    const feedback = textElement("p", "recipe-chat-text", "Loading recipe…");
+    feedback.setAttribute("role", "status");
+    detailView.append(back, feedback);
+    try {
+      const dish = await fetchDetail(recipe.id);
+      if (version !== detailVersion) return;
+      const full = dish.recipe;
+      const card = recipeCard({
+        ...full, title: dish.name,
+        ingredients_text: (full.ingredients || []).map((item) => item.display || item.measure || item.name),
+      }, 0, true);
+      detailView.append(card);
+      const servings = formatServings(dish);
+      if (servings) card.append(textElement("p", "", servings));
+      const equipment = stringList(full.equipment);
+      if (equipment.length) card.append(textElement("p", "", `Equipment: ${equipment.join(", ")}`));
+      if (!full.instructions) card.append(textElement("p", "", "Cooking instructions are unavailable for this recipe."));
+      feedback.textContent = "";
+      const schedule = textElement("button", "", "Add to Schedule");
+      schedule.type = "button";
+      schedule.addEventListener("click", async () => {
+        schedule.disabled = true;
+        feedback.textContent = "Preparing recipe for your schedule…";
+        try {
+          const scheduledDish = scheduledMeals.find((meal) => meal.recipe_id === recipe.id)
+            || await fetchDetail(recipe.id, true);
+          if (version !== detailVersion) return;
+          await addMealToSchedule(scheduledDish);
+          feedback.textContent = "Recipe is in your schedule.";
+        } catch {
+          if (version === detailVersion) feedback.textContent = "Couldn't add this recipe to your schedule. Try again.";
+        } finally {
+          schedule.disabled = false;
+        }
+      });
+      detailView.append(schedule);
+    } catch {
+      if (version === detailVersion) feedback.textContent = "Couldn't load this recipe. Return to results and try again.";
+    }
+  }
+
+  function setPending(pending) {
+    input.disabled = pending;
+    sendButton.disabled = pending;
+    prompts.forEach((button) => { button.disabled = pending; });
+    sendButton.textContent = pending ? "Searching…" : "Send";
+    status.textContent = pending ? "SNAPP is checking recipes…" : "";
+    history.setAttribute("aria-busy", String(pending));
+  }
+
+  function reset(focus = true) {
+    activeRequest?.abort();
+    activeRequest = null;
+    currentState = null;
+    backToResults();
+    history.replaceChildren();
+    history.hidden = true;
+    empty.hidden = false;
+    input.value = "";
+    error.hidden = true;
+    error.textContent = "";
+    setPending(false);
+    if (focus) input.focus();
+  }
+
+  function textElement(tag, className, text) {
+    const element = document.createElement(tag);
+    if (className) element.className = className;
+    element.textContent = text;
+    return element;
+  }
+
+  function stringList(value) {
+    return Array.isArray(value) ? value.filter((item) => typeof item === "string" && item.trim()) : [];
+  }
+
+  function recipeCard(recipe, index, selected = false) {
+    const card = document.createElement("article");
+    card.className = `recipe-chat-card${selected ? " recipe-chat-card-selected" : ""}`;
+    card.append(textElement("p", "recipe-chat-card-label", selected ? "Selected recipe" : `Result ${index + 1}`));
+    if (typeof recipe.title === "string") card.append(textElement("h3", "", recipe.title));
+    const total = recipe.total_time_minutes;
+    const cook = recipe.cook_time_minutes;
+    if (typeof total === "number" && Number.isFinite(total)) {
+      card.append(textElement("p", "recipe-chat-card-time", `${total} minutes total`));
+    } else if (typeof cook === "number" && Number.isFinite(cook)) {
+      card.append(textElement("p", "recipe-chat-card-time", `${cook} minutes cooking`));
+    }
+    const categories = stringList(recipe.categories);
+    if (categories.length) {
+      card.append(textElement("p", "recipe-chat-card-categories", categories.map((value) => value.replace(/_/g, " ")).join(" · ")));
+    }
+    const ingredients = selected
+      ? stringList(recipe.ingredients_text).length ? stringList(recipe.ingredients_text) : stringList(recipe.ingredient_names)
+      : stringList(recipe.key_ingredients).length ? stringList(recipe.key_ingredients) : stringList(recipe.ingredient_names);
+    if (ingredients.length) {
+      card.append(textElement("p", "recipe-chat-card-label", selected ? "Stored ingredients" : "Ingredients include"));
+      if (selected) {
+        card.append(recipeItemList(ingredients, (ingredient) => ingredient));
+      } else {
+        card.append(textElement("p", "", ingredients.slice(0, 8).join(", ")));
+      }
+    }
+    if (selected) {
+      const steps = stringList(recipe.instructions);
+      if (steps.length || typeof recipe.instructions === "string" && recipe.instructions.trim()) {
+        card.append(textElement("p", "recipe-chat-card-label", "Stored instructions"));
+        if (steps.length) {
+          card.append(recipeItemList(steps, (step) => step, true));
+        } else {
+          card.append(textElement("p", "recipe-chat-text", recipe.instructions));
+        }
+      }
+    }
+    if (!selected) {
+      card.tabIndex = 0;
+      card.setAttribute("role", "button");
+      card.setAttribute("aria-label", `View recipe: ${recipe.title || "Recipe"}`);
+      card.addEventListener("click", () => openRecipeDetail(recipe));
+      card.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openRecipeDetail(recipe);
+        }
+      });
+    }
+    return card;
+  }
+
+  function messageElement(speaker, message) {
+    const article = document.createElement("article");
+    article.className = `recipe-chat-message recipe-chat-message-${speaker === "You" ? "user" : "snapp"}`;
+    article.append(textElement("p", "recipe-chat-speaker", speaker), textElement("p", "recipe-chat-text", message));
+    return article;
+  }
+
+  function endpoint() {
+    // Only this experimental feature targets Flask locally. Shared API routing is unchanged.
+    const override = document.querySelector('meta[name="snapp-recipe-chat-api-base-url"]')?.content?.trim().replace(/\/+$/, "");
+    if (override) return `${override}/api/recipes/chat`;
+    if (["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname)) {
+      return "http://127.0.0.1:5001/api/recipes/chat";
+    }
+    return getApiEndpoints("/api/recipes/chat")[0];
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const message = input.value.trim();
+    if (activeRequest || !message || !form.reportValidity()) return;
+    backToResults();
+    const controller = new AbortController();
+    activeRequest = controller;
+    const timeout = window.setTimeout(() => controller.abort(), 30000);
+    error.hidden = true;
+    error.textContent = "";
+    empty.hidden = true;
+    history.hidden = false;
+    setPending(true);
+    const userMessage = messageElement("You", message);
+    history.append(userMessage);
+    history.scrollTop = history.scrollHeight;
+    try {
+      const url = endpoint();
+      if (!url) throw new Error("Recipe Chat endpoint is not configured");
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message, state: currentState }),
+        signal: controller.signal,
+      });
+      if (!response.ok) throw new Error("Recipe Chat request failed");
+      const data = await response.json();
+      if (activeRequest !== controller) return;
+      if (typeof data.message !== "string" || !data.state || typeof data.state !== "object" || Array.isArray(data.state) || !Array.isArray(data.results)) {
+        throw new Error("Invalid Recipe Chat response");
+      }
+      const reply = messageElement("SNAPP", data.message);
+      if (data.results.length) {
+        const results = document.createElement("div");
+        results.className = "recipe-chat-results";
+        results.setAttribute("aria-label", "Recipes in result order");
+        data.results.forEach((recipe, index) => results.append(recipeCard(recipe, index)));
+        reply.append(results);
+      }
+      if (data.selected_recipe) reply.append(recipeCard(data.selected_recipe, 0));
+      history.append(reply);
+      currentState = data.state;
+      input.value = "";
+      // Bring the start of this response into view, without scrolling the entire page.
+      history.scrollTop = reply.offsetTop;
+    } catch {
+      if (activeRequest !== controller) return;
+      userMessage.remove();
+      empty.hidden = history.childElementCount > 0;
+      history.hidden = !empty.hidden;
+      error.textContent = "SNAPP couldn't search recipes right now. Try again in a moment.";
+      error.hidden = false;
+    } finally {
+      window.clearTimeout(timeout);
+      if (activeRequest === controller) {
+        activeRequest = null;
+        setPending(false);
+        if (panel.classList.contains("visible")) input.focus({ preventScroll: true });
+      }
+    }
+  });
+
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+      event.preventDefault();
+      form.requestSubmit();
+    }
+  });
+  prompts.forEach((button) => button.addEventListener("click", () => {
+    input.value = button.textContent;
+    form.requestSubmit();
+  }));
+  document.getElementById("recipe-chat-new").addEventListener("click", () => reset());
+  return { reset };
+})();
+// End experimental Recipe Chat.
 
 populatePantrySpiceSuggestions();
 updatePantryQuantityVisibility();

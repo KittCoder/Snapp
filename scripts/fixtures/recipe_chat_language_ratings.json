@@ -1,0 +1,1287 @@
+{
+  "reviewer": "Codex manual trace review",
+  "rubric": "GOOD: correct intent, filters, semantic cleanup and state preservation; all recipes grounded. MINOR: correct interpretation with ambiguity or limited usefulness from frozen retrieval/metadata. BAD: incorrect or unsafe interpretation, state loss or fabricated facts. Not a guarantee of subjective taste, allergen safety or dietary suitability.",
+  "limitations": [
+    "Soft preferences depend on frozen MiniLM/hybrid retrieval; vague warmth, comfort, lightness and ease are not verifiable facts.",
+    "Indexed dietary and meal categories are incomplete; ingredient tokens include derivatives such as rice flour or chicken broth.",
+    "Approximate time is soft; explicit upper bounds and relative 75% refinements are enforced.",
+    "Alternatives skip the immediately previous five IDs in a pool of up to 50; no long-term result history."
+  ],
+  "turns": {
+    "inclusion_0:0": {
+      "fingerprint": "7486acec47652122331150953c60154e7c5779b73a78bf96a12f1267cca473ab",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_1:0": {
+      "fingerprint": "663dfcd6b0dcaf8930c637dd98b1be17bd518256f6659ef67261f9a5abb02c44",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_2:0": {
+      "fingerprint": "796f646a4cc70f58f35faa0853419d3b3768165bd9f0d10affe642247bb7242d",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_3:0": {
+      "fingerprint": "19a5bd9ebc212f3f9e3d46410ade73f5d76632f243c6a848ebf3d998b7eb381b",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_4:0": {
+      "fingerprint": "06a4a4e35f6c1af22259a1543a873bc7b0143a227815e868ccda45735a8f5bc6",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_5:0": {
+      "fingerprint": "3afceae13d9fdd4a2bc39e369c842b619bc0396f4a0faf4aa746a1ca852a417e",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_6:0": {
+      "fingerprint": "4fefb6086d4aa29bada6ec68c870ae8cdba650e80db375aed37698c23ec5b792",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_7:0": {
+      "fingerprint": "eb53446218e5bd9bf09427d165556ebcfc4bbbe1f58bd4b947addfb0a32816d7",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_8:0": {
+      "fingerprint": "f0bdb55db6a10e7b235653f4f1a571dd6279bf0072722fc91f54faa3c90a04b1",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_9:0": {
+      "fingerprint": "58da7a7169474fcbfcce045759ef6c5a54c064da15b2b24a0aa31b44963025cd",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_10:0": {
+      "fingerprint": "21310b103a5987f34708e14022a4dc199a9d9bd7f17e40706b6c08202b1830df",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_11:0": {
+      "fingerprint": "a4bfbe37960b9e40240ad2dc6809f39bffad48e63d50dbbcdd9120a411b64f1c",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_12:0": {
+      "fingerprint": "a6e031882187af5d000bc61c1c0742d0eed0c807909da31efc0ebcbe59c963f3",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_13:0": {
+      "fingerprint": "c8fdcb08b1c7ba4b4f829dbcc38c9b8111abaf5374ba9b1b222c92fdd206a9d7",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_14:0": {
+      "fingerprint": "90e018a10fb821940baaee5ffb56c0bd849873f1811ed325a13e6536c0927be3",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_15:0": {
+      "fingerprint": "c296656eb4b96a2d2c5f2d111689ce371b21b255ee1a7434046763015146d65f",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_16:0": {
+      "fingerprint": "bbf44574c12d5f8bb3e77d82d143d9065cb4e75481cc1719d613d08dc9f74bd3",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_17:0": {
+      "fingerprint": "d83f634e1deba54a114a27fb71806c11d9b547e07ebbd98a887c940b0c225f56",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_18:0": {
+      "fingerprint": "40769d56597cac15a16ad78d8805c6ff01e36fb886b1436a1c6f6fdc7d93715f",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_19:0": {
+      "fingerprint": "d44921945756907fc5e1dcd9b28aab9297289b446d65b56b0998ba1bbc328a1c",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_20:0": {
+      "fingerprint": "aa22c5de940db2fe86c90beec67612b636a9408cdcb52157cd39cba222ff01b5",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_21:0": {
+      "fingerprint": "6173f4b01d567f2a598c7e4a00ce60275778b74718ac23628da6ff9d4b86ad03",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_22:0": {
+      "fingerprint": "b1a71f8147b7cdd848e6f3a5d1ad22808b3df7f5c591b60a063c6fce7c33c0bc",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_23:0": {
+      "fingerprint": "7e1f366aa8ff72bba60ec5e9da103838a65693c55b770e5ffe0ea19366264f7d",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_24:0": {
+      "fingerprint": "bba20b37c9e388ee09693e83073558ce757e8eab9adf19ccdd346a8e0390b5f2",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_25:0": {
+      "fingerprint": "1f6d8fbe0d07ce6bba91e170feaba951d637d3efa88e4824faf31125f2667573",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_26:0": {
+      "fingerprint": "9a7e0712640be17bb55af087f7cff6a5a0148e40846fcf884a106f26e7c19e48",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_27:0": {
+      "fingerprint": "c140ba22db2bca1e6d0ce8c032cd6d55c9745857b5e3041b28d62c1cda5ea3b4",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_28:0": {
+      "fingerprint": "b89f653e10bb80de919fbcbbf5efb7efcbc6ee9841af7b094c2f313b6ac2b3ea",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_29:0": {
+      "fingerprint": "574c383f78ef79cab75f2ec926fcda2446eb87ea4434860627c593ae19048f24",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_30:0": {
+      "fingerprint": "faa80bf308ec8efe7fbfa3ea22d3a94cbf68fe6c0b8b80ed50c8e369cc931d80",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_31:0": {
+      "fingerprint": "2c888f7883cb4bb9207f27e46daf77acc10bd1249d829b39ba0e92bc3796454d",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_32:0": {
+      "fingerprint": "6ced640be7c6fce877c62c6ec572f39fd333ba4ed770a16e730056454febb935",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_33:0": {
+      "fingerprint": "95f6c02479b5930321515ab267a159e558f19338c0bea2e6f1034ecdffb7194d",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_34:0": {
+      "fingerprint": "a59fabc0793dbea521699b11af05088775e5df0fda7e8b49a6751dcbf5a935e9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_35:0": {
+      "fingerprint": "893f9500a8291b0ebd127dacd0718ca64d7f48c50ebba9b2f00ec1f4c3313c54",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_36:0": {
+      "fingerprint": "1325fbc83933fac8c4152851bb49dae0dc73bdb2f7427ae2d9420121256efb61",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_37:0": {
+      "fingerprint": "30fbc39efaa55f9d47b60f98f0b65af9f95de583d4870244bb576859f8cf2814",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_38:0": {
+      "fingerprint": "a295e045a07f05b92161b92dc10b722600cf964aef74a30f8680da904c85edc8",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_39:0": {
+      "fingerprint": "b110e148af5eeae174317ae92b171c560b824ddf33c529fa87ee9d962a676e64",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_40:0": {
+      "fingerprint": "fc5d68d3014976addfefba844820e83a38ce203fb2b8d7bd6bda44965dd5a38a",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_41:0": {
+      "fingerprint": "e3300dd231276af6eea7aba5e9ede90a7703e21414ece8e0b27961d8ce204076",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_42:0": {
+      "fingerprint": "560362a6d9d425f8a2c2f0581b8ddc4ebb7c3656801de6e474de8490acec2e92",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_43:0": {
+      "fingerprint": "1415237d35608fc013c5a2e2ba4789a393109e0bef7c51582cfbac035e596b09",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_44:0": {
+      "fingerprint": "caf15d3761a36559b37c3e364a6ebe4f7d434dbeff4f0b28c5e373639b7d7918",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_45:0": {
+      "fingerprint": "df0e30dca32aa160b301d5f4891db8f97fc82ffde09325a9499182b71894866f",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_46:0": {
+      "fingerprint": "796b1059177280479abcadcd00cd8012946d8550000986a92d6ee5818b664520",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_47:0": {
+      "fingerprint": "fad90808fd19e3c4835878a81763424fdf303077a8c3d610ab9b01f088abbebb",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_48:0": {
+      "fingerprint": "8fa23f2ffbe548a409c844e9d23e187a67ce23a40e0228f3bf07e5ce6ed33c96",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_49:0": {
+      "fingerprint": "0645fe9c89fa5c869194bb23f5eac9a1a6a47e5eacb3d42af9d9bbefe5f9744c",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_50:0": {
+      "fingerprint": "f558fe14b5a4a13f4fe181743ef1054cdc5dae904f06294327c1440caacb671d",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_51:0": {
+      "fingerprint": "79acfb9bc242a292a13ec4b9061f0107cca822b34e02022821347e7d7c6b8e31",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_52:0": {
+      "fingerprint": "10399a23453e0485a8e9b6cf999559381417891e71fa1d4109db0c0b13b42760",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_53:0": {
+      "fingerprint": "14a4ec99035d1d773ccd403f7c78699941fe7e742aa8aedb14a2a296f9f39ceb",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_54:0": {
+      "fingerprint": "cacb2ac53b7b5f53d2cf4d1ae790295703267bd9c7ecf579015964ede0e262d8",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_55:0": {
+      "fingerprint": "15e45a4de5da11394cd9fa2f62bbe17019e526c4a552c748b82ec71138b17364",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_56:0": {
+      "fingerprint": "3ab38b7c2dd3d603310921afc57e7c1fe91bb9cfea3dfb541c60663bcbb83b54",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_57:0": {
+      "fingerprint": "23551be929f8f7e6d28789bd4badb7e51501e19d3ccd25ec4f80069f206f90d2",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_58:0": {
+      "fingerprint": "66b6af8625d010c779be8f664999b9f3193674c60cd7ed050e7476c340781273",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_59:0": {
+      "fingerprint": "2e89437e0930a7190f405772e9690479f508e32e21b96823157c93a0dfa0ce0f",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_60:0": {
+      "fingerprint": "aa1a71ddc069a74563f837d05709b6bf7fe1729776b1210529d8bb8ac1235281",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_61:0": {
+      "fingerprint": "ac9690e6e46b88dd30fee53f9e2b85fe6ab23327257675ba683cc698e7855715",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_62:0": {
+      "fingerprint": "9079c35cd3b7599e67b5125d2299073acbd6792a58b0f9d81179dbf9778f54b5",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_63:0": {
+      "fingerprint": "b1b106b0f653d6b3758b80cb7271bf3288630762d8e957313c882e15c43ff468",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "inclusion_64:0": {
+      "fingerprint": "981a1de098e6f10a8d0e3932de5e4f3bda1ca1046163d1d4167e0de49803dd5a",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_65:0": {
+      "fingerprint": "0162efe0de56c151c2fc14e3365f383ce93ad7871a4728e321671db9885201f9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_65:1": {
+      "fingerprint": "e4be5f44929dec549001c240e7038c4fe28217496f5ad67929e7857d436c0a13",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_66:0": {
+      "fingerprint": "0162efe0de56c151c2fc14e3365f383ce93ad7871a4728e321671db9885201f9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_66:1": {
+      "fingerprint": "e8b779ed4864cb3085043892dd3e65fcd246f38993328f7e3f31b8d604311227",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_67:0": {
+      "fingerprint": "0162efe0de56c151c2fc14e3365f383ce93ad7871a4728e321671db9885201f9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_67:1": {
+      "fingerprint": "75bc06ef0e286eec906e1f25b332450d96d6e0531fed648f3a6af52efb1c12a8",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_68:0": {
+      "fingerprint": "0162efe0de56c151c2fc14e3365f383ce93ad7871a4728e321671db9885201f9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_68:1": {
+      "fingerprint": "7cec0c158b74680f567d9d72a946f22850ae8489ec461b7cee2a1f72a9e3e3f6",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_69:0": {
+      "fingerprint": "0162efe0de56c151c2fc14e3365f383ce93ad7871a4728e321671db9885201f9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_69:1": {
+      "fingerprint": "a38e2148755635e5738c1038829cb2020effa197c895354f97776de9a3b73822",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_70:0": {
+      "fingerprint": "0162efe0de56c151c2fc14e3365f383ce93ad7871a4728e321671db9885201f9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_70:1": {
+      "fingerprint": "5d5e2bb1035a0ff88c63f354d97e001372a6447aec590d0106d8f49ef72f9d18",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_71:0": {
+      "fingerprint": "0162efe0de56c151c2fc14e3365f383ce93ad7871a4728e321671db9885201f9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_71:1": {
+      "fingerprint": "77bc4ee8862bbd8fae86c464c77e984ab7a33049194f77ee2b5bd01b5071b217",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_72:0": {
+      "fingerprint": "0162efe0de56c151c2fc14e3365f383ce93ad7871a4728e321671db9885201f9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_72:1": {
+      "fingerprint": "3cdb04b5de073feda1231f08a3205f5ca54dd1b8697fc62834a6042a05205832",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_73:0": {
+      "fingerprint": "0162efe0de56c151c2fc14e3365f383ce93ad7871a4728e321671db9885201f9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_73:1": {
+      "fingerprint": "d5f17b0995a858c361b937197c2f90272e21fc9895b2cbb14bf7edbb2c3656cf",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_74:0": {
+      "fingerprint": "0162efe0de56c151c2fc14e3365f383ce93ad7871a4728e321671db9885201f9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_74:1": {
+      "fingerprint": "5a5094b95cdfa27d0de3fe03f3380389138b7183a349a5d36e51f64822a007b5",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_75:0": {
+      "fingerprint": "0162efe0de56c151c2fc14e3365f383ce93ad7871a4728e321671db9885201f9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_75:1": {
+      "fingerprint": "23f4d843431c9d6d077fe076d768ec7d14173adcb421faf3c6f5343133db4ff4",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_76:0": {
+      "fingerprint": "0162efe0de56c151c2fc14e3365f383ce93ad7871a4728e321671db9885201f9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_76:1": {
+      "fingerprint": "820a31a4db7638ffc69505eb1080f13ff1c1940ef1eae05ff6208fd298e251ae",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_77:0": {
+      "fingerprint": "0162efe0de56c151c2fc14e3365f383ce93ad7871a4728e321671db9885201f9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_77:1": {
+      "fingerprint": "420ce72f09ff8d88ced135052c94eb3f49a54bf016e47d25a24f02b6d236c972",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_78:0": {
+      "fingerprint": "0162efe0de56c151c2fc14e3365f383ce93ad7871a4728e321671db9885201f9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_78:1": {
+      "fingerprint": "9fce06f6fa48057145f362da04d28504a9c2098f3b6df7d1c4859c5f5ab374bb",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_79:0": {
+      "fingerprint": "0162efe0de56c151c2fc14e3365f383ce93ad7871a4728e321671db9885201f9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_79:1": {
+      "fingerprint": "e0ed88bde90b985903af4682114e44826650cecce333047d2c198cc95f79c30e",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_80:0": {
+      "fingerprint": "0162efe0de56c151c2fc14e3365f383ce93ad7871a4728e321671db9885201f9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_80:1": {
+      "fingerprint": "3d4f024cb05638e93129245ba499aabbddbf9cb7ae4f8569c5d603ea1fd25023",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_81:0": {
+      "fingerprint": "0162efe0de56c151c2fc14e3365f383ce93ad7871a4728e321671db9885201f9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_81:1": {
+      "fingerprint": "3f4b67c04b68e302e9e353fb95a43c1d35e2fc178ff77d5aa678e9caa2b3e5e3",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_82:0": {
+      "fingerprint": "0162efe0de56c151c2fc14e3365f383ce93ad7871a4728e321671db9885201f9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_82:1": {
+      "fingerprint": "77faa67499d335c9a75236a86a5fd4c4d48aa05ea13a45dea14d19074b78579b",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_83:0": {
+      "fingerprint": "0162efe0de56c151c2fc14e3365f383ce93ad7871a4728e321671db9885201f9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_83:1": {
+      "fingerprint": "b27337f2d143afc0f55e67cf9f79e28d4d14476981a73249d22f38607d4a678b",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_84:0": {
+      "fingerprint": "0162efe0de56c151c2fc14e3365f383ce93ad7871a4728e321671db9885201f9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_84:1": {
+      "fingerprint": "4d8771464b7c16d1268d75351ee1fd3ba77b2ba366ab8d5e66bf58625652b2da",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_85:0": {
+      "fingerprint": "0162efe0de56c151c2fc14e3365f383ce93ad7871a4728e321671db9885201f9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_85:1": {
+      "fingerprint": "a765563976cd88edd3e7e45f1e3900a5a81e2aaadc6cfa5484dd60f2c31c8711",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_86:0": {
+      "fingerprint": "0162efe0de56c151c2fc14e3365f383ce93ad7871a4728e321671db9885201f9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_86:1": {
+      "fingerprint": "2028beaf237e0e26781a42647f1f33f547a9dd678b9a1896856600caa575d42b",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_87:0": {
+      "fingerprint": "0162efe0de56c151c2fc14e3365f383ce93ad7871a4728e321671db9885201f9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_87:1": {
+      "fingerprint": "13b345516a7be7277a221028c7a46a3684faeae654f7f9e15e7a207ba27b39d5",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_88:0": {
+      "fingerprint": "0162efe0de56c151c2fc14e3365f383ce93ad7871a4728e321671db9885201f9",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negation_88:1": {
+      "fingerprint": "5811b70229e699023c0de439ac5eb200c4db564dc203e8d617fa980c3134c28f",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "preference_warm:0": {
+      "fingerprint": "1cab0edb0d1a127fc8c3c8620d11774632c08b4608f799db0b083354c29c3688",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "preference_cozy:0": {
+      "fingerprint": "aa6b2046d84676a7225bf96cf6ccf1302610b7b425c9f1d5dfba071725170e4b",
+      "classification": "MINOR",
+      "reason": "Intent and soft query are correct; broad cozy retrieval returns a cocktail among leading results."
+    },
+    "preference_comforting:0": {
+      "fingerprint": "b6b3c15bafb6eefa00c2ba69e17f33d325398f611be63df1c15b3df03da854e8",
+      "classification": "MINOR",
+      "reason": "Correct soft preference; cold fruit soups are weak comfort matches in frozen retrieval."
+    },
+    "preference_light:0": {
+      "fingerprint": "f377c43e7edaa749be603efc0fb82a6cd1d003e88415c127a7244242b6db3cf1",
+      "classification": "MINOR",
+      "reason": "Correct semantic light preference; cocktail/pie results do not reliably establish lightness."
+    },
+    "preference_hearty:0": {
+      "fingerprint": "bb7c941e400d0a82c73d9d796fccbc1cecc68464b603911863b36b2a23a527f0",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "preference_spicy:0": {
+      "fingerprint": "f51bf1fe0288dde6e700d0bc0e5cc8d5721aa383b1dcd4676ae81ba7402d6165",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "preference_creamy:0": {
+      "fingerprint": "bbf72c7f070964a1f9cf97c50129fbdfa20c4b697e0384921cdea0d6949b8c2a",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "preference_fresh:0": {
+      "fingerprint": "36444a4125707616ea8569ec7f4a75ab17d6980a436c098e5e107428c3608d26",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "preference_simple:0": {
+      "fingerprint": "baae7dd55ea4312c1766e919fcdd0238a5cff92cd766f651fbc18c533e4d4fa3",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "preference_easy:0": {
+      "fingerprint": "6a5c61870fc9edb4fe88b238c80499e7a094c787ecb5166d3e02eace7ecb8a7f",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "preference_summery:0": {
+      "fingerprint": "33e5f52c1132fa85cd5c73432ea1c8ab4498585db2d28f3ada5c0fd3b913f082",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "preference_winter:0": {
+      "fingerprint": "ffb359d73e23bbb5289e3d25ae5d8a3c1295071c375cb07dadb2ca94aa4c1742",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "preference_cold:0": {
+      "fingerprint": "b6c91841a84528b3ba08506a5e1ac55e93e22765295069f78bd4ad158540b6fa",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "preference_hot:0": {
+      "fingerprint": "003ab06038f193628db61d9e30f53d296a6ea7220bda3039d01660ecff4efae6",
+      "classification": "MINOR",
+      "reason": "No invented temperature filter, but lexical hot-dog matches can miss temperature intent."
+    },
+    "preference_lighter:0": {
+      "fingerprint": "4698fe6d799691adfded0052f8b45777ef3de3d1aa34dc0d422d2f8dff2aa876",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "preference_heartier:0": {
+      "fingerprint": "da9dde39e878648f32808fcceb006259e1b6ef712ad6292f191141efc1566552",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "preference_cozier:0": {
+      "fingerprint": "669162f307908ac0539facbbf4ba1470328c80fea62b25f79240c2640d9551fb",
+      "classification": "MINOR",
+      "reason": "Comparative preference is preserved, but unconstrained cozier retrieval is weak."
+    },
+    "preference_easier:0": {
+      "fingerprint": "e63c2bb64ff95d26d65eaf6843df1e9dfa77ba01c1b90c73a6a341a7cbd4cac2",
+      "classification": "MINOR",
+      "reason": "Ease remains semantic; leading drink results may be unhelpful for someone seeking cooking ideas."
+    },
+    "preference_spicier:0": {
+      "fingerprint": "dd817aaae626c5ba537b97b2304664672e22029c8dd12a53c4ea89e1ea61daa3",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "time_108:0": {
+      "fingerprint": "b2699673582df547c7c060b0a833c2667b0801bfec9261cb2e32c15df7ed8ef4",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "time_109:0": {
+      "fingerprint": "db5de63c04f1213a171ca9cba554ba7be37a66d4117d69641b6bcda3c2897fdc",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "time_110:0": {
+      "fingerprint": "a49fff849cb4047b320ed5cac14ecfd2601da39006d64540646e7d838dceb6b6",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "time_111:0": {
+      "fingerprint": "68b0759c05357ac4096a4986cbea35c4ff8792b6ec71d50c36082639860f30a4",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "time_112:0": {
+      "fingerprint": "282a2c1bca15e3baaf2493d5deedd628c1c70333d7eb0c4bc9ac6fec994ee1d5",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "time_113:0": {
+      "fingerprint": "37e189957383cf600f3732b1c892dc0d8d8b39c6e68d32e1fafede9a5145836f",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "time_114:0": {
+      "fingerprint": "73284913cd75ceb32ae1e5941a1f279ad40cb7655372101894fcb11623651e4f",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "time_115:0": {
+      "fingerprint": "7211e78d2496f6284c8d5b08e27da6e9732b98b33e513a9ed835d5aa1d70f588",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "time_116:0": {
+      "fingerprint": "d07e88a3570d8c3615d8ef49af10583a60a4359155d56d02ffe7f998d327d837",
+      "classification": "MINOR",
+      "reason": "Around 30 minutes is correctly kept approximate; semantic matching returns seven-minute frosting, so time usefulness is weak."
+    },
+    "meal_breakfast:0": {
+      "fingerprint": "6b1bcaea05c085c566541bdd50205f4692478505605f0caad49a0020bf218c4c",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "meal_brunch:0": {
+      "fingerprint": "d947ea4c4faf3ddab0b44bffb449d57087380065609818fc6486858748d366d6",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "meal_lunch:0": {
+      "fingerprint": "4bbbeb981375c45c1c8a653e0bc17d6eeda19e8acc4998a724818867fb2abb0f",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "meal_dinner:0": {
+      "fingerprint": "bd346a8c92d6768d70c53766ab44ca726ad22b6a650202947fbd7d9dfa96cd0c",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "meal_snack:0": {
+      "fingerprint": "9650031160144da766d47114a1be542bde7d7cf0286bf2b169d32a6fe9c01c97",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "meal_dessert:0": {
+      "fingerprint": "29dd46f3833c8f6c10d91990cb7f6c5e0f218a5bb029f5ea08d454ff7039676e",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "replacement_123:0": {
+      "fingerprint": "f4b9315d40ed9b707247fc20cd182c1fe39c0afb6e92ac29e4e88d2bc9e5475b",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "replacement_123:1": {
+      "fingerprint": "55e42fc54bf6d2cb39b0fc28bb4270d1a0e9e428ff6f66c3353a954a741ccc7a",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "replacement_123:2": {
+      "fingerprint": "4372a7b89bd27654066d82e1eb0b4a437e5f12b19fcfbda526cd190a96e0ab44",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "replacement_123:3": {
+      "fingerprint": "23a637cf6ecf9211357710f1bd38e7bdd0dc168ceef7a1350e814639a9ffab4c",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "replacement_124:0": {
+      "fingerprint": "f4b9315d40ed9b707247fc20cd182c1fe39c0afb6e92ac29e4e88d2bc9e5475b",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "replacement_124:1": {
+      "fingerprint": "55e42fc54bf6d2cb39b0fc28bb4270d1a0e9e428ff6f66c3353a954a741ccc7a",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "replacement_124:2": {
+      "fingerprint": "4372a7b89bd27654066d82e1eb0b4a437e5f12b19fcfbda526cd190a96e0ab44",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "replacement_124:3": {
+      "fingerprint": "506bbe8f24a112262896f7e7f2c132ea8434a51327008181fc7b03fc59a64e5d",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "replacement_125:0": {
+      "fingerprint": "f4b9315d40ed9b707247fc20cd182c1fe39c0afb6e92ac29e4e88d2bc9e5475b",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "replacement_125:1": {
+      "fingerprint": "55e42fc54bf6d2cb39b0fc28bb4270d1a0e9e428ff6f66c3353a954a741ccc7a",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "replacement_125:2": {
+      "fingerprint": "4372a7b89bd27654066d82e1eb0b4a437e5f12b19fcfbda526cd190a96e0ab44",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "replacement_125:3": {
+      "fingerprint": "6fbfa2e5dee12462bdcf48df8b8100b36e3d3f3625cf6a404f2011de66ffc09b",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "replacement_126:0": {
+      "fingerprint": "f4b9315d40ed9b707247fc20cd182c1fe39c0afb6e92ac29e4e88d2bc9e5475b",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "replacement_126:1": {
+      "fingerprint": "55e42fc54bf6d2cb39b0fc28bb4270d1a0e9e428ff6f66c3353a954a741ccc7a",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "replacement_126:2": {
+      "fingerprint": "4372a7b89bd27654066d82e1eb0b4a437e5f12b19fcfbda526cd190a96e0ab44",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "replacement_126:3": {
+      "fingerprint": "734f7194e1b9a6e59699e08379dc9385bcd1dd97ed94d2943647b1c98b71e835",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "replacement_127:0": {
+      "fingerprint": "f4b9315d40ed9b707247fc20cd182c1fe39c0afb6e92ac29e4e88d2bc9e5475b",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "replacement_127:1": {
+      "fingerprint": "55e42fc54bf6d2cb39b0fc28bb4270d1a0e9e428ff6f66c3353a954a741ccc7a",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "replacement_127:2": {
+      "fingerprint": "4372a7b89bd27654066d82e1eb0b4a437e5f12b19fcfbda526cd190a96e0ab44",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "replacement_127:3": {
+      "fingerprint": "4db52274cd2603534a6065286136cc7fafae3bb339154960abf5faf8515d3639",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "replacement_128:0": {
+      "fingerprint": "f4b9315d40ed9b707247fc20cd182c1fe39c0afb6e92ac29e4e88d2bc9e5475b",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "replacement_128:1": {
+      "fingerprint": "55e42fc54bf6d2cb39b0fc28bb4270d1a0e9e428ff6f66c3353a954a741ccc7a",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "replacement_128:2": {
+      "fingerprint": "4372a7b89bd27654066d82e1eb0b4a437e5f12b19fcfbda526cd190a96e0ab44",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "replacement_128:3": {
+      "fingerprint": "b0735b48efb605152f0f7f99f2eddb77b336889954ae1cd7750a688627a44fac",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "relative_129:0": {
+      "fingerprint": "ebc952f4158bfe222d00cf6ee0d7619231dda3dd59e07d8845ee38e39d087345",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "relative_129:1": {
+      "fingerprint": "03f3df540e63f0860ef0de39472abdc4606332baca927c4f6608a1d673f394a6",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "relative_130:0": {
+      "fingerprint": "ebc952f4158bfe222d00cf6ee0d7619231dda3dd59e07d8845ee38e39d087345",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "relative_130:1": {
+      "fingerprint": "29b81e0b62700add7f705831ff5326f9f43fb7355a686ea3e71479be3998f1ef",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "relative_131:0": {
+      "fingerprint": "ebc952f4158bfe222d00cf6ee0d7619231dda3dd59e07d8845ee38e39d087345",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "relative_131:1": {
+      "fingerprint": "71186905bb4c66d9a7f90e195355fd27421ffce3b4f0a0d6bfdf6d2c258f0c5d",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "relative_132:0": {
+      "fingerprint": "ebc952f4158bfe222d00cf6ee0d7619231dda3dd59e07d8845ee38e39d087345",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "relative_132:1": {
+      "fingerprint": "0c68b12c22ca0ec3a24400f516306219a94f8fef9062902802ab86cbca732fdc",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "alternatives_133:0": {
+      "fingerprint": "b6157ba56ba76af6652a15ca560d06ae0a5b72e0dc385511cecbab0d01386a98",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "alternatives_133:1": {
+      "fingerprint": "f44e55ef7a999091bf00eb760439ff454b06eb516d94365a7771dda95876c7da",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "alternatives_133:2": {
+      "fingerprint": "bcd95b988c297f8028f0a31cf0cb0283835ee29b75130359519754ec0cdded11",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "alternatives_134:0": {
+      "fingerprint": "b6157ba56ba76af6652a15ca560d06ae0a5b72e0dc385511cecbab0d01386a98",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "alternatives_134:1": {
+      "fingerprint": "f44e55ef7a999091bf00eb760439ff454b06eb516d94365a7771dda95876c7da",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "alternatives_134:2": {
+      "fingerprint": "45f9c8a063acd283a41a1197d9a3e092fcb5cda6639f2d8959896bd535e30bdc",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "alternatives_135:0": {
+      "fingerprint": "b6157ba56ba76af6652a15ca560d06ae0a5b72e0dc385511cecbab0d01386a98",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "alternatives_135:1": {
+      "fingerprint": "f44e55ef7a999091bf00eb760439ff454b06eb516d94365a7771dda95876c7da",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "alternatives_135:2": {
+      "fingerprint": "260d313667c4410eb8025207d173a0a58bd34768c9c5199a542e00288e55c281",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "alternatives_136:0": {
+      "fingerprint": "b6157ba56ba76af6652a15ca560d06ae0a5b72e0dc385511cecbab0d01386a98",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "alternatives_136:1": {
+      "fingerprint": "f44e55ef7a999091bf00eb760439ff454b06eb516d94365a7771dda95876c7da",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "alternatives_136:2": {
+      "fingerprint": "c59edcf952f885a214b6a904a081e0c9078d8d1d5d4c5ae4db33315f34802c94",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "alternatives_137:0": {
+      "fingerprint": "b6157ba56ba76af6652a15ca560d06ae0a5b72e0dc385511cecbab0d01386a98",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "alternatives_137:1": {
+      "fingerprint": "f44e55ef7a999091bf00eb760439ff454b06eb516d94365a7771dda95876c7da",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "alternatives_137:2": {
+      "fingerprint": "41f41fc2b40860f7bb952d21faec1b68f3fc834f610bdde2a5656670ee81d46e",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "alternatives_138:0": {
+      "fingerprint": "b6157ba56ba76af6652a15ca560d06ae0a5b72e0dc385511cecbab0d01386a98",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "alternatives_138:1": {
+      "fingerprint": "f44e55ef7a999091bf00eb760439ff454b06eb516d94365a7771dda95876c7da",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "alternatives_138:2": {
+      "fingerprint": "f70ce43bae6a96d1d1d2d701b8166983ef5d2f823b39b1c4167de65432e1f506",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "alternatives_139:0": {
+      "fingerprint": "b6157ba56ba76af6652a15ca560d06ae0a5b72e0dc385511cecbab0d01386a98",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "alternatives_139:1": {
+      "fingerprint": "f44e55ef7a999091bf00eb760439ff454b06eb516d94365a7771dda95876c7da",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "alternatives_139:2": {
+      "fingerprint": "79fef1d71173c3fb5512ec9322363e61a929d01458d2d880b5a0e9194381eb24",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "neutral_negation:0": {
+      "fingerprint": "25846af565ee23c047c146982ac8d1cbf3ff27afb927b84c02cfbe45648f8395",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "low_spice:0": {
+      "fingerprint": "1e1ca53c9cbfe01b35457bb657edb777d02c9b966e803565e0e7d5b21a6104e1",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "less_spice:0": {
+      "fingerprint": "4633d02bc30b6cfb563c5f99d0a675975c0ad68a2181887573fb9de7393ab6c0",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "mixed_polarity:0": {
+      "fingerprint": "d161a0f3ecff4e7d481a82e794786e3f97fe0217674f26aa5c48b5528e7debc3",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "available_list:0": {
+      "fingerprint": "56ef2ed8532a062431eae8211690aad960b4333938e9b3354c54175bd6437137",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "permission_salmon:0": {
+      "fingerprint": "79b6bd42b2793135891ba7143b9b26a5cfb1e2003e48ec1a75480c4d81eacbfa",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "dairy_exclusion:0": {
+      "fingerprint": "eb56109b114712842f39caa093b38cb2523541f7ef9e3f0b7568ae0e9bd0a375",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "context_vegetarian:0": {
+      "fingerprint": "549612e29e452f3620ebcfbeed312c6d412412d10bf86d03e99338039d3e549e",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "context_vegetarian:1": {
+      "fingerprint": "237b57ad17d9d962e08dd100e2986ef68c47bbc2ca3bba375582206175f30fe4",
+      "classification": "MINOR",
+      "reason": "Correct dietary filter and preserved spicy/rice state; incomplete indexed vegetarian tags produce no matches."
+    },
+    "context_exclusion:0": {
+      "fingerprint": "39f9e5a31f4a73293d7804e6315355e66b796aea458b8049b935e251d2989c95",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "context_exclusion:1": {
+      "fingerprint": "8dccf7037e12fcbcc9ababe9efa5441010fa14b04a7f01121e487b38a3531117",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "clear_time:0": {
+      "fingerprint": "34ff4c9845f66312c7a27c52b37fbcc418b05ce9b8ebe390cae4f3351ab79093",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "clear_time:1": {
+      "fingerprint": "5618772ac1d03f8ca45d7dca8e2930aefe450b191cc44be9f4495963f3fe261d",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "clear_restriction:0": {
+      "fingerprint": "eadca8e5e3e6b0176c53cef604cc724541151c1d66cc7cbd7f7f7c3d9efa7902",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "clear_restriction:1": {
+      "fingerprint": "20171730db1f087c0609bed31faeeb420b480f900d49c1511058bab83722f2cc",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "natural_allowance:0": {
+      "fingerprint": "d852011f952e7699271a332ae7a2bd3e83a502c5f996de9b7c7d838408f7ea87",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "natural_allowance:1": {
+      "fingerprint": "78f25c36fa2d4be9cb711060da14460c287c265208740143de299e7ca0b596ce",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "clear_meal:0": {
+      "fingerprint": "f65a85d114848a10188d0a3ff71b673807273b4bd76a14ff5c6681bdcea45551",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "clear_meal:1": {
+      "fingerprint": "b1bae33660d9f50ed2f6040d007b5d3e138409f30add268a2e57a6444008fa31",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "reset:0": {
+      "fingerprint": "da61dd0f8398b540cbf02e78012735d7f49df87251f2e93d8612857708c558fc",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "reset:1": {
+      "fingerprint": "fb8d9f3046782f8735e3747a2a4abf2091bcea3f35242ce3832ad9c8cbb9328e",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "reset_with_search:0": {
+      "fingerprint": "da61dd0f8398b540cbf02e78012735d7f49df87251f2e93d8612857708c558fc",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "reset_with_search:1": {
+      "fingerprint": "1908d078066700a87e958ac5fc135e091df6f3a9ec700578ea724bf028c3af03",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negative_inclusion_removed:0": {
+      "fingerprint": "df9f2c013bb0b303dbd35bd8ab4d9c82caddf7141ba0f5725ece5815f4bff79c",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negative_inclusion_removed:1": {
+      "fingerprint": "9b219f091b3b5eeb9ec8cb4c643b168c81396fc10f3358c99c0046ccbdb737f8",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "numeric_beats_relative:0": {
+      "fingerprint": "ebc952f4158bfe222d00cf6ee0d7619231dda3dd59e07d8845ee38e39d087345",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "numeric_beats_relative:1": {
+      "fingerprint": "6faf40732a6d4963425d473309842d467a3bf456835516cd08646796a1fb76c1",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "ingredient_replacement:0": {
+      "fingerprint": "df9f2c013bb0b303dbd35bd8ab4d9c82caddf7141ba0f5725ece5815f4bff79c",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "ingredient_replacement:1": {
+      "fingerprint": "85acb7c9324ca619257b684d0b52d91ac15cb569aa258174684e504dc2298fed",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "neutral_preserves_exclusion:0": {
+      "fingerprint": "d852011f952e7699271a332ae7a2bd3e83a502c5f996de9b7c7d838408f7ea87",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "neutral_preserves_exclusion:1": {
+      "fingerprint": "feea35ec885d81f2feac03976afd1ad2b49fdce2217285eb6ffc1386ac40656d",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "question_after_selection:0": {
+      "fingerprint": "f65a85d114848a10188d0a3ff71b673807273b4bd76a14ff5c6681bdcea45551",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "question_after_selection:1": {
+      "fingerprint": "83e7acda6061451bad10d9c7696263465a3cbc3f46052c75864935b4c3bb0ce7",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "question_after_selection:2": {
+      "fingerprint": "ff0443979ca5a50ef2b2775c5f6590d6a0ca454a5a4e3cf1ec41e7c594f18e56",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "question_vs_search:0": {
+      "fingerprint": "1e1df48f018a37f02b99fe4021936bafb18090aaa7e059a35b14bd2efe195b77",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "conflicting_positive_is_safe:0": {
+      "fingerprint": "eadca8e5e3e6b0176c53cef604cc724541151c1d66cc7cbd7f7f7c3d9efa7902",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "conflicting_positive_is_safe:1": {
+      "fingerprint": "8ed07f78886b2761c99e366b6ac91397d64dd85a8e135f4237805701d3542fe7",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "requested_warm_beef:0": {
+      "fingerprint": "f4843055977b78ffa070717ee7f2401ec2bc691afd94a5601ce1b385bda52d66",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "requested_spicy:0": {
+      "fingerprint": "181425ed5d6a393478ac7de1fc0e76cc9863463fb49ddbb9a1fa3322a437a9c0",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "requested_cozy_dinner:0": {
+      "fingerprint": "32da424f4638dc728811f0f7ce7c0da2da878175305937947dddeff18b357cc3",
+      "classification": "MINOR",
+      "reason": "Cozy/dinner correctly parsed; cocktail in leading dinner matches reflects indexed categories and frozen ranking."
+    },
+    "requested_easy:0": {
+      "fingerprint": "e02391d5b8ca01f8d8e48db8a5f5f0707434b21310dc5643e280fbf4e1d1fddb",
+      "classification": "MINOR",
+      "reason": "Ease correctly stays semantic; leading cocktail is a weak general cooking suggestion."
+    },
+    "available_eggs:0": {
+      "fingerprint": "29a41474d27f5144fd7e462b2494c0f332954f84ee40ecc79bc609672b55ea49",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "available_rice:0": {
+      "fingerprint": "68d79076d3e60bcce96c59509e7faad367fc2d60da367f5ff1bd2d3df4efb582",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "natural_replacement_chicken:0": {
+      "fingerprint": "fe977b3c9a8afb46669e05e9406ef1b4363c6e7e40d0983862f7fc3c7f3f0a2b",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "natural_replacement_chicken:1": {
+      "fingerprint": "ccd87f08387363b11dbd12a7f7a16d567e9e50a71a823e1ea7088d7a804e5c73",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "changed_mind_salmon:0": {
+      "fingerprint": "5c6e9a15979f26e38b899761e40b45e6532a9372833a708c2c03123e45d65310",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "changed_mind_salmon:1": {
+      "fingerprint": "2313105bb840c621ce9bd28ad1db35dad1822c501d9ba338d6781357d8c2406c",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negative_category_not_positive:0": {
+      "fingerprint": "b6157ba56ba76af6652a15ca560d06ae0a5b72e0dc385511cecbab0d01386a98",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negative_category_not_positive:1": {
+      "fingerprint": "c227032e3551adf0b63da511500ed7c4998dad3c5889b9a1090d25a1d6e284e2",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negative_meal_not_positive:0": {
+      "fingerprint": "f65a85d114848a10188d0a3ff71b673807273b4bd76a14ff5c6681bdcea45551",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "negative_meal_not_positive:1": {
+      "fingerprint": "fcbbb2fbb5c9eb05f00a2d11d46901e8ce66123a7b6df69a4b17e3141078c2b1",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "numeric_negative_bound:0": {
+      "fingerprint": "01dca4603a9ee19a8d122237371a9286fa7a39bfc7434ba4c3e1037ec09d0e51",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "compound_neutral_negative:0": {
+      "fingerprint": "83a984646812514abbc1e39f9b2601f836863d148a9be8e1dc483b8eace33c6e",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "neutral_comfort_context:0": {
+      "fingerprint": "b197e005ae8c478d10ef274fdd273d0e048b862a84d6d2ebd6eda6ae6f0e1b70",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    },
+    "neutral_comfort_context:1": {
+      "fingerprint": "0a9ed13d481bc5fad081ddf2f5d766522be73f056408cc7180431782fe253a5d",
+      "classification": "GOOD",
+      "reason": "Reviewed intent, extracted constraints, cleaned query, retained state and grounded returned IDs are appropriate for this turn."
+    }
+  }
+}

@@ -4,7 +4,7 @@ A web application that generates healthy recipes for SNAP benefits users, using 
            
 ## Backend Deployment on Render 
  
-The backend is configured for Render with [render.yaml](/Users/2027kstarkie/Desktop/SNAPP/render.yaml:1).
+The backend is configured for Render with [render.yaml](render.yaml).
  
 1. Create a new Render Blueprint from this GitHub repository, or create a Web Service manually.
 2. If using the blueprint, Render reads `render.yaml` automatically.
@@ -41,7 +41,7 @@ https://snapp-1d5j-b7g466kuj-snapp-app.vercel.app
 
 ## Frontend on Vercel
 
-After Render deploys the backend, copy the Render service URL and set it in [Web/index.html](/Users/2027kstarkie/Desktop/SNAPP/Web/index.html:7):
+After Render deploys the backend, copy the Render service URL and set it in [Web/index.html](Web/index.html):
 
 ```html
 <meta name="snapp-api-base-url" content="https://your-render-service.onrender.com" />
@@ -118,7 +118,7 @@ Recipe search uses the user's query against a small allowlist of real web recipe
 
 ## Public Domain Recipe Data
 
-[Model/recipes.json](/Users/2027kstarkie/Desktop/SNAPP/Model/recipes.json:1) contains recipes scraped from Public Domain Recipes with names, parsed ingredient quantities, equipment, categories, and instructions.
+[Model/recipes.json](Model/recipes.json) contains recipes scraped from Public Domain Recipes with names, parsed ingredient quantities, equipment, categories, and instructions.
 
 Refresh the recipe file with:
 
@@ -127,16 +127,103 @@ cd Model
 python recipe_scraper.py --max-pages 5 --max-recipes 100
 ```
 
-The Dishes backend searches [Model/all_recipes_search.sqlite](/Users/2027kstarkie/Desktop/SNAPP/Model/all_recipes_search.sqlite:1), a generated SQLite FTS database built from `all_recipes.json`. Regenerate it after changing recipe data:
+The Dishes backend searches [Model/all_recipes_search.sqlite](Model/all_recipes_search.sqlite), a generated SQLite FTS database built from `all_recipes.json`. Regenerate it after changing recipe data:
 
 ```sh
 cd Model
 python build_recipe_search_db.py
 ```
 
+## Typesense Recipe Search
+
+The canonical recipe-search corpus remains local at `data/snapp_search_corpus.jsonl`. Do not edit or commit it. Pass its path with `--corpus`; the default location `data/snapp_search_corpus.jsonl` in this checkout is also ignored by Git. Exported documents and generated review reports are ignored too. The checked-in `Model/ingredient_vocabulary.json` contains derived ingredient-name counts used by the parser, not recipes.
+
+Local Typesense development uses [docker-compose.typesense.yml](docker-compose.typesense.yml) and these environment variables:
+
+Export these variables in the shell used for the backend and scripts (they do not automatically load `Model/.env.example`). Set `TYPESENSE_API_KEY` to your own local secret before starting Compose; no key is included.
+
+```sh
+export TYPESENSE_HOST=localhost
+export TYPESENSE_PORT=8108
+export TYPESENSE_PROTOCOL=http
+export TYPESENSE_COLLECTION=snapp_recipes
+```
+
+Export the corpus into Typesense-ready documents:
+
+```sh
+python3 scripts/export_recipes_typesense.py --corpus data/snapp_search_corpus.jsonl
+```
+
+Start Typesense locally, then recreate and import the configured collection (indexing deletes that collection first):
+
+```sh
+docker compose -f docker-compose.typesense.yml up -d
+python3 scripts/index_recipes_typesense.py --skip-export
+```
+
+Recipe search uses Typesense 30.2 auto-embeddings from `ts/all-MiniLM-L12-v2`
+(384 dimensions). Typesense downloads the model once and runs inference locally.
+No external embedding API or OpenAI key is needed. The embedding combines title,
+normalized title, ingredient names, categories, and search text; it excludes
+instructions. The canonical corpus and exported recipe facts remain unchanged.
+
+Rebuild the corpus ingredient vocabulary after exporting a new corpus:
+
+```sh
+python3 scripts/build_recipe_ingredient_vocabulary.py
+```
+
+The parser uses frequent complete ingredient names and a small set of common
+ingredient heads backed by corpus vocabulary. Ingredient filters expand to
+observed names (e.g. beef includes ground beef); single-word filters use a compact
+index-only `ingredient_filter_tokens` field with explicit punctuation and
+singular/plural normalization. Exclusions use the same tokens, including
+hyphenated names such as tomato-basil. The derived index-only `has_named_dairy` flag compacts the dairy-name
+exclusion without changing recipe fields or corpus facts.
+Time, ingredient, category, and dietary filters apply to both retrieval branches.
+Vegetarian/vegan remain authoritative category filters; the present corpus has no
+such tags, so these return no results. Dairy-free uses conservative ingredient-name
+exclusions and is not a certified dietary classification. Cost and serving intent
+remain semantic text; they are not validated constraints.
+
+Search defaults to hybrid rank fusion with `alpha=0.7`, preserved from the source copy’s
+50-query comparison. `alpha` is the semantic weight. Generated comparison artifacts
+are not included in this checkout. Embedding
+errors fall back to keyword search with identical filters and explicit `fallback`
+metadata; service/authentication errors stay errors. Results are deduplicated by
+normalized title plus the full normalized ingredient-name set, with overfetching
+and additional pages as needed. Counts describe duplicates skipped before filling
+the requested unique limit. Ingredients or quantities are never merged.
+
+Run the paired 50-query comparison (three rounds, rotated mode order, warmup
+excluded, strict hybrid with no fallback):
+
+```sh
+python3 scripts/review_typesense_recipe_search.py
+python3 scripts/review_typesense_recipe_search_hybrid.py
+```
+
+This writes `typesense_recipe_search_hybrid_review.json`. Indexing writes
+`typesense_recipe_indexing_report.json`, including model, dimensions, counts,
+failures, import duration, and total duration including model setup/download.
+The original keyword review script explicitly runs keyword mode.
+
+The backend exposes `POST /api/recipes/search` with a JSON `query`, optional `limit`,
+time/ingredient/category/dietary filters, and conversational `state`. It returns
+ranked results, constraints, timing, deduplication counts, and fallback metadata.
+Search is exempt from product-matcher warmup.
+
+Run the focused retrieval and API tests (API tests need the backend dependencies;
+no running Typesense service is required):
+
+```sh
+python3 -m unittest discover -s Model/tests -p 'test_recipe_search_*.py'
+```
+
 ## Trader Joe's Price Data
 
-The backend loads [Model/data.json](/Users/2027kstarkie/Desktop/SNAPP/Model/data.json:1) first for grocery products and prices. If that file has no products, it falls back to the demo grocery database.
+The backend loads [Model/data.json](Model/data.json) first for grocery products and prices. If that file has no products, it falls back to the demo grocery database.
 
 Refresh Trader Joe's pricing once or twice a week:
 
