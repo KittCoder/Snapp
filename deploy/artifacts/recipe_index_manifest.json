@@ -1,0 +1,7 @@
+{
+  "documents": 28522,
+  "unique_ids": 28522,
+  "uncompressed_sha256": "f4ad9e0274ad1aeeb3da18e402410ef14213088d1379e4d9faf6b0fd29496df1",
+  "artifact": "snapp_recipes.documents.jsonl.gz",
+  "source": "Previously approved Typesense export; no recipe regeneration"
+}

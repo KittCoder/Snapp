@@ -1,0 +1,25 @@
+# Optional dependency Blueprint. Check existing service IDs before applying.
+services:
+  - type: web
+    name: snapp-typesense
+    runtime: image
+    image:
+      url: docker.io/typesense/typesense:30.2
+    plan: 1c-2g
+    healthCheckPath: /health
+    disk:
+      name: typesense-data
+      mountPath: /var/lib/typesense
+      sizeGB: 10
+    envVars:
+      - key: TYPESENSE_DATA_DIR
+        value: /var/lib/typesense
+      - key: TYPESENSE_API_PORT
+        value: "10000"
+      - key: TYPESENSE_API_KEY
+        sync: false
+  - type: keyvalue
+    name: snapp-rate-limits
+    plan: 256mb
+    ipAllowList: []
+    maxmemoryPolicy: noeviction

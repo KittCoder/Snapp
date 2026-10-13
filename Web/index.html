@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="snapp-api-base-url" content="https://snapp-a64d.onrender.com" />
     <meta name="snapp-supabase-url" content="https://wmagmsatawlwvcobtkxh.supabase.co" />
@@ -9,7 +10,7 @@
     <title>SNAPP</title>
     <link
       rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous"
     />
     <link rel="stylesheet" href="looks.css" />
   </head>
@@ -19,28 +20,28 @@
         <span class="brand-logo">S</span>
         <span class="brand-name">SNAPP</span>
       </div>
-      <div class="app-switch" aria-label="Application section">
+      <div class="app-switch" aria-label="Application section" data-i18n-aria-label-key="copy.application.section">
         <button id="app-switch-snapp" type="button" class="active" data-app-mode="snapp">SNAPP</button>
         <button id="app-switch-snap101" type="button" data-app-mode="snap101">SNAP 101</button>
       </div>
+      <label class="global-language-control"><span data-i18n="settings.language">Language</span><select id="global-language-select" aria-label="Language" data-i18n-aria-label-key="settings.language"><option value="en">English</option><option value="es">Español</option><option value="zh-CN">简体中文</option><option value="zh-TW">繁體中文</option><option value="ru">Русский</option><option value="bn">বাংলা</option><option value="ht">Kreyòl ayisyen</option><option value="ko">한국어</option><option value="ar">العربية</option><option value="fr">Français</option><option value="ur">اردو</option><option value="pl">Polski</option></select></label>
       <nav class="nav-buttons">
-        <button data-target="home" data-app-view="snapp" class="nav-button active">Home</button>
-        <button data-target="account" data-app-view="snapp" data-auth-view="signed-out" class="nav-button">Account</button>
-        <button data-target="dishes" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Dishes</button>
-        <button data-target="recipe-chat" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Recipe Chat</button>
-        <button data-target="my" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Stores</button>
-        <button data-target="pantry" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Pantry</button>
-        <button data-target="schedule" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Schedule</button>
-        <button data-target="shopping" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Shopping</button>
-        <button data-target="budget" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Budget</button>
-        <button data-target="settings" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden>Profile</button>
+        <button data-target="home" data-app-view="snapp" class="nav-button active"><span data-i18n="nav.home">Home</span></button>
+        <button data-target="account" data-app-view="snapp" data-auth-view="signed-out" class="nav-button"><span data-i18n="nav.account">Account</span></button>
+        <button data-target="recipe-chat" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden><span data-i18n="nav.recipeChat">Recipe Chat</span></button>
+        <button data-target="my" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden><span data-i18n="nav.stores">Stores</span></button>
+        <button data-target="pantry" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden><span data-i18n="nav.pantry">Pantry</span></button>
+        <button data-target="schedule" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden><span data-i18n="nav.schedule">Schedule</span></button>
+        <button data-target="shopping" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden><span data-i18n="nav.shopping">Shopping</span></button>
+        <button data-target="budget" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden><span data-i18n="nav.budget">Budget</span></button>
+        <button data-target="settings" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden><span data-i18n="nav.profile">Profile</span></button>
         <button data-target="snap101-snap" data-app-view="snap101" class="nav-button" hidden>SNAP</button>
-        <button data-target="snap101-nutrition" data-app-view="snap101" class="nav-button" hidden>Nutrition</button>
-        <button data-target="snap101-signup" data-app-view="snap101" class="nav-button" hidden>Sign up for SNAP</button>
+        <button data-target="snap101-nutrition" data-app-view="snap101" class="nav-button" hidden><span data-i18n="copy.nutrition">Nutrition</span></button>
+        <button data-target="snap101-signup" data-app-view="snap101" class="nav-button" hidden><span data-i18n="copy.sign.up.for.snap">Sign up for SNAP</span></button>
       </nav>
       <div class="account-status" hidden>
-        <span id="account-username">Signed out</span>
-        <button id="sign-out-button" type="button" hidden>Sign out</button>
+        <span id="account-username"><span data-i18n="copy.signed.out">Signed out</span></span>
+        <button id="sign-out-button" type="button" hidden><span data-i18n="copy.sign.out">Sign out</span></button>
       </div>
     </header>
 
@@ -48,23 +49,23 @@
       <section id="account" class="panel">
         <div class="auth-layout">
           <div class="auth-copy">
-            <p class="eyebrow">SNAPP Account</p>
-            <h1>Save your planning session with Supabase.</h1>
+            <p class="eyebrow"><span data-i18n="copy.snapp.account">SNAPP Account</span></p>
+            <h1><span data-i18n="copy.save.your.planning.session.with.supabase">Save your planning session with Supabase.</span></h1>
             <p>
-              Create an account or sign in to use SNAPP. This prototype uses a
+              <span data-i18n="copy.create.an.account.or.sign.in.to.use.snapp">Create an account or sign in to use SNAPP. This prototype uses a
               username and password while Supabase keeps you signed in on this
-              browser.
+              browser.</span>
             </p>
           </div>
           <div class="auth-card">
-            <div class="auth-tabs" role="tablist" aria-label="Account actions">
-              <button id="show-sign-in" type="button" class="active">Sign in</button>
-              <button id="show-sign-up" type="button">Create account</button>
+            <div class="auth-tabs" role="tablist" aria-label="Account actions" data-i18n-aria-label-key="copy.account.actions">
+              <button id="show-sign-in" type="button" class="active"><span data-i18n="copy.sign.in">Sign in</span></button>
+              <button id="show-sign-up" type="button"><span data-i18n="copy.create.account">Create account</span></button>
             </div>
 
             <form id="sign-in-form" class="auth-form">
               <label>
-                Username
+                <span data-i18n="copy.username">Username</span>
                 <input
                   type="text"
                   id="sign-in-username"
@@ -74,15 +75,15 @@
                 />
               </label>
               <label>
-                Password
+                <span data-i18n="copy.password">Password</span>
                 <input type="password" id="sign-in-password" autocomplete="current-password" required />
               </label>
-              <button type="submit">Sign in</button>
+              <button type="submit"><span data-i18n="copy.sign.in">Sign in</span></button>
             </form>
 
             <form id="sign-up-form" class="auth-form" hidden>
               <label>
-                Username
+                <span data-i18n="copy.username">Username</span>
                 <input
                   type="text"
                   id="sign-up-username"
@@ -92,7 +93,7 @@
                 />
               </label>
               <label>
-                Password
+                <span data-i18n="copy.password">Password</span>
                 <input
                   type="password"
                   id="sign-up-password"
@@ -101,14 +102,14 @@
                   required
                 />
               </label>
-              <button type="submit">Create account</button>
+              <button type="submit"><span data-i18n="copy.create.account">Create account</span></button>
             </form>
 
             <div id="signed-in-account" class="signed-in-account" hidden>
-              <p class="account-kicker">Signed in</p>
-              <h2 id="signed-in-account-name">SNAPP account</h2>
-              <p>Your saved profile, stores, pantry, schedule, and shopping list are available on this browser.</p>
-              <button id="account-panel-sign-out-button" type="button">Sign out</button>
+              <p class="account-kicker"><span data-i18n="copy.signed.in">Signed in</span></p>
+              <h2 id="signed-in-account-name"><span data-i18n="copy.snapp.account.eeecad">SNAPP account</span></h2>
+              <p><span data-i18n="copy.your.saved.profile.stores.pantry.schedule.and.shopping.list">Your saved profile, stores, pantry, schedule, and shopping list are available on this browser.</span></p>
+              <button id="account-panel-sign-out-button" type="button"><span data-i18n="copy.sign.out">Sign out</span></button>
             </div>
 
             <div id="auth-status" class="auth-status" role="status" aria-live="polite"></div>
@@ -116,23 +117,38 @@
         </div>
       </section>
 
-      <section id="onboarding" class="panel onboarding-panel" aria-labelledby="onboarding-title">
+      <section id="onboarding" class="panel onboarding-panel" aria-label="Set up your SNAPP account" data-i18n-aria-label-key="copy.set.up.your.snapp.account">
         <div class="onboarding-shell">
+          <aside class="onboarding-welcome">
+            <span class="onboarding-brand">S <span>SNAPP</span></span>
+            <p class="onboarding-kicker"><span data-i18n="copy.made.for.your.everyday">Made for your everyday</span></p>
+            <h2><span data-i18n="copy.good.food">Good food.</span><br /><span data-i18n="copy.less.guesswork">Less guesswork.</span></h2>
+            <p><span data-i18n="copy.a.few.small.details.a.meal.plan.that.feels">A few small details. A meal plan that feels like you.</span></p>
+            <div class="onboarding-welcome-photo"><img src="https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&amp;fit=crop&amp;w=850&amp;q=80" alt="Fresh vegetables and ingredients ready for cooking" width="850" height="600" data-i18n-alt-key="copy.fresh.vegetables.and.ingredients.ready.for.cooking" /><span><span data-i18n="copy.fresh.ideas.for.your.next.meal">Fresh ideas for your next meal</span></span></div>
+            <ul class="onboarding-benefits"><li><span aria-hidden="true">↗</span> <span data-i18n="copy.stores.close.to.home">Stores close to home</span></li><li><span aria-hidden="true">♡</span> <span data-i18n="copy.meals.that.fit.your.household">Meals that fit your household</span></li><li><span aria-hidden="true">✓</span> <span data-i18n="copy.a.simpler.shopping.list">A simpler shopping list</span></li></ul>
+          </aside>
+          <div class="onboarding-workspace">
           <div class="onboarding-progress-row">
-            <span id="onboarding-progress-label">1 of 4</span>
+            <span id="onboarding-progress-label"><span data-i18n="copy.1.of.4">1 of 4</span></span>
             <div class="onboarding-progress-track" aria-hidden="true">
               <span id="onboarding-progress-bar"></span>
             </div>
           </div>
 
+          <ol class="onboarding-step-labels" aria-label="Setup progress" data-i18n-aria-label-key="copy.setup.progress">
+            <li class="onboarding-step-label is-current" aria-current="step"><span>01</span> <span data-i18n="copy.location">Location</span></li>
+            <li class="onboarding-step-label"><span>02</span> <span data-i18n="copy.household">Household</span></li>
+            <li class="onboarding-step-label"><span>03</span> <span data-i18n="copy.food.fit">Food fit</span></li>
+            <li class="onboarding-step-label"><span>04</span> <span data-i18n="copy.ready">Ready</span></li>
+          </ol>
           <form id="onboarding-form" class="onboarding-card" novalidate>
             <div class="onboarding-step active" data-step="0">
               <div class="onboarding-icon" aria-hidden="true">🥬</div>
-              <p class="eyebrow">Fresh start</p>
-              <h1 id="onboarding-title">Where are you shopping?</h1>
-              <p>We'll use this to find stores and deals near you.</p>
+              <p class="eyebrow"><span data-i18n="copy.fresh.start">Fresh start</span></p>
+              <h1 id="onboarding-title"><span data-i18n="copy.where.are.you.shopping">Where are you shopping?</span></h1>
+              <p><span data-i18n="copy.we.ll.use.this.to.find.stores.and.deals">We'll use this to find stores and deals near you.</span></p>
               <label class="onboarding-field" for="onboarding-zip-code">
-                ZIP code
+                <span data-i18n="copy.zip.code">ZIP code</span>
                 <input
                   type="text"
                   id="onboarding-zip-code"
@@ -141,59 +157,60 @@
                   pattern="[0-9]{5}"
                   maxlength="5"
                   placeholder="e.g. 10001"
-                  required
-                />
+                  required data-i18n-placeholder-key="copy.e.g.10001" />
               </label>
             </div>
 
             <div class="onboarding-step" data-step="1" hidden>
               <div class="onboarding-icon" aria-hidden="true">🍽️</div>
-              <p class="eyebrow">Servings</p>
-              <h1>How many people are you cooking for?</h1>
-              <p>SNAPP can use this when scaling recipe quantities.</p>
-              <div class="number-selector" role="group" aria-label="Household size">
-                <button id="onboarding-household-minus" type="button" aria-label="Decrease household size">−</button>
+              <p class="eyebrow"><span data-i18n="copy.servings">Servings</span></p>
+              <h1><span data-i18n="copy.how.many.people.are.you.cooking.for">How many people are you cooking for?</span></h1>
+              <p><span data-i18n="copy.snapp.can.use.this.when.scaling.recipe.quantities">SNAPP can use this when scaling recipe quantities.</span></p>
+              <div class="number-selector" role="group" aria-label="Household size" data-i18n-aria-label-key="copy.household.size">
+                <button id="onboarding-household-minus" type="button" aria-label="Decrease household size" data-i18n-aria-label-key="copy.decrease.household.size">−</button>
                 <output id="onboarding-household-output" for="onboarding-household-size">1</output>
-                <button id="onboarding-household-plus" type="button" aria-label="Increase household size">+</button>
+                <button id="onboarding-household-plus" type="button" aria-label="Increase household size" data-i18n-aria-label-key="copy.increase.household.size">+</button>
               </div>
               <input type="number" id="onboarding-household-size" min="1" max="20" value="1" hidden />
             </div>
 
             <div class="onboarding-step" data-step="2" hidden>
               <div class="onboarding-icon" aria-hidden="true">🥑</div>
-              <p class="eyebrow">Food fit</p>
-              <h1>Any dietary preferences?</h1>
-              <p>We'll use these to recommend recipes that fit you.</p>
-              <div id="onboarding-preference-chips" class="preference-chip-grid" aria-label="Popular dietary preferences"></div>
+              <p class="eyebrow"><span data-i18n="copy.food.fit">Food fit</span></p>
+              <h1><span data-i18n="copy.any.dietary.preferences">Any dietary preferences?</span></h1>
+              <p><span data-i18n="copy.we.ll.use.these.to.recommend.recipes.that.fit">We'll use these to recommend recipes that fit you.</span></p>
+              <div id="onboarding-preference-chips" class="preference-chip-grid" aria-label="Popular dietary preferences" data-i18n-aria-label-key="copy.popular.dietary.preferences"></div>
               <div class="tag-entry">
-                <label for="onboarding-custom-preference">Add your own</label>
+                <label for="onboarding-custom-preference"><span data-i18n="copy.add.your.own">Add your own</span></label>
                 <div class="tag-entry-row">
                   <input
                     type="text"
                     id="onboarding-custom-preference"
                     autocomplete="off"
                     maxlength="80"
-                    placeholder="e.g. No mushrooms"
-                  />
-                  <button id="onboarding-add-preference" type="button">Add</button>
+                    placeholder="e.g. No mushrooms" data-i18n-placeholder-key="copy.e.g.no.mushrooms" />
+                  <button id="onboarding-add-preference" type="button"><span data-i18n="copy.add">Add</span></button>
                 </div>
               </div>
-              <div id="onboarding-selected-preferences" class="selected-tags" aria-label="Selected dietary preferences"></div>
+              <div id="onboarding-selected-preferences" class="selected-tags" aria-label="Selected dietary preferences" data-i18n-aria-label-key="copy.selected.dietary.preferences"></div>
             </div>
 
             <div class="onboarding-step" data-step="3" hidden>
               <div class="onboarding-icon" aria-hidden="true">✨</div>
-              <p class="eyebrow">Ready</p>
-              <h1>You're all set!</h1>
-              <p>Your SNAPP setup is ready to personalize meals, stores, and shopping plans.</p>
+              <p class="eyebrow"><span data-i18n="copy.ready">Ready</span></p>
+              <h1><span data-i18n="copy.your.next.chapter.starts.here">Your next chapter starts here.</span></h1>
+              <p><span data-i18n="copy.here.s.your.setup.head.back.to.change.anything">Here's your setup. Head back to change anything, or save it and make yourself at home.</span></p>
+              <dl class="onboarding-summary"><div><dt><span data-i18n="copy.your.neighborhood">Your neighborhood</span></dt><dd id="onboarding-summary-zip"><span data-i18n="copy.not.set">Not set</span></dd></div><div><dt><span data-i18n="copy.at.your.table">At your table</span></dt><dd id="onboarding-summary-household"><span data-i18n="copy.1.person">1 person</span></dd></div><div><dt><span data-i18n="copy.your.food.preferences">Your food preferences</span></dt><dd id="onboarding-summary-preferences"><span data-i18n="copy.open.to.everything">Open to everything</span></dd></div></dl>
             </div>
 
             <div id="onboarding-status" class="onboarding-status" role="status" aria-live="polite"></div>
             <div class="onboarding-actions">
-              <button id="onboarding-back" type="button" class="secondary-button">Back</button>
-              <button id="onboarding-continue" type="submit">Continue</button>
+              <button id="onboarding-back" type="button" class="secondary-button"><span data-i18n="copy.back">Back</span></button>
+              <button id="onboarding-continue" type="submit"><span data-i18n="copy.continue">Continue</span></button>
             </div>
           </form>
+          <p class="onboarding-edit-note"><span data-i18n="copy.your.preferences.can.always.change.update.them.anytime.in">Your preferences can always change. Update them anytime in My profile.</span></p>
+          </div>
         </div>
       </section>
 
@@ -201,159 +218,157 @@
         <div class="snap101-hero">
           <div>
             <p class="eyebrow">SNAP 101</p>
-            <h1>Understanding SNAP</h1>
+            <h1><span data-i18n="copy.understanding.snap">Understanding SNAP</span></h1>
             <p>
-              SNAP stands for the Supplemental Nutrition Assistance Program. It
+              <span data-i18n="copy.snap.stands.for.the.supplemental.nutrition.assistance.program.it">SNAP stands for the Supplemental Nutrition Assistance Program. It
               helps eligible households pay for groceries by adding benefits to
               an EBT card each month. Each state handles applications, and the
-              USDA sets many of the rules that apply nationwide.
+              USDA sets many of the rules that apply nationwide.</span>
             </p>
           </div>
           <img
             src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1100&q=80"
-            alt="Fresh produce at a grocery market."
-          />
+            alt="Fresh produce at a grocery market." data-i18n-alt-key="copy.fresh.produce.at.a.grocery.market" />
         </div>
 
         <div class="snap101-grid">
           <article>
-            <h2>What SNAP can buy</h2>
+            <h2><span data-i18n="copy.what.snap.can.buy">What SNAP can buy</span></h2>
             <p>
-              SNAP can generally be used for foods like fruits, vegetables,
+              <span data-i18n="copy.snap.can.generally.be.used.for.foods.like.fruits">SNAP can generally be used for foods like fruits, vegetables,
               bread, cereal, dairy, meat, poultry, fish, snacks, non-alcoholic
-              drinks, and seeds or plants that grow food.
+              drinks, and seeds or plants that grow food.</span>
             </p>
           </article>
           <article>
-            <h2>What it usually cannot buy</h2>
+            <h2><span data-i18n="copy.what.it.usually.cannot.buy">What it usually cannot buy</span></h2>
             <p>
-              SNAP usually cannot buy alcohol, tobacco, vitamins, medicine,
+              <span data-i18n="copy.snap.usually.cannot.buy.alcohol.tobacco.vitamins.medicine.household">SNAP usually cannot buy alcohol, tobacco, vitamins, medicine,
               household supplies, pet food, or hot prepared foods meant to be
-              eaten right away.
+              eaten right away.</span>
             </p>
           </article>
           <article>
-            <h2>How benefits are estimated</h2>
+            <h2><span data-i18n="copy.how.benefits.are.estimated">How benefits are estimated</span></h2>
             <p>
-              A simple estimate starts with the maximum allotment for household
+              <span data-i18n="copy.a.simple.estimate.starts.with.the.maximum.allotment.for">A simple estimate starts with the maximum allotment for household
               size, then subtracts about 30% of countable monthly income. Real
-              eligibility uses deductions and state-specific details.
+              eligibility uses deductions and state-specific details.</span>
             </p>
           </article>
         </div>
 
         <section class="snap-calculator">
           <div>
-            <p class="eyebrow">Placeholder calculator</p>
-            <h2>Estimate a monthly SNAP amount</h2>
+            <p class="eyebrow"><span data-i18n="copy.placeholder.calculator">Placeholder calculator</span></p>
+            <h2><span data-i18n="copy.estimate.a.monthly.snap.amount">Estimate a monthly SNAP amount</span></h2>
             <p>
-              This quick placeholder uses your saved family size when available:
-              maximum allotment minus 30% of monthly income.
+              <span data-i18n="copy.this.quick.placeholder.uses.your.saved.family.size.when">This quick placeholder uses your saved family size when available:
+              maximum allotment minus 30% of monthly income.</span>
             </p>
           </div>
           <form id="snap-calculator-form" class="snap-calculator-form">
             <label>
-              Household size
+              <span data-i18n="copy.household.size">Household size</span>
               <input id="snap-household-size" type="number" min="1" max="20" step="1" inputmode="numeric" value="1" />
             </label>
             <label>
-              Monthly income
-              <input id="snap-income" type="number" min="0" step="1" inputmode="decimal" placeholder="e.g. 1200" />
+              <span data-i18n="copy.monthly.income">Monthly income</span>
+              <input id="snap-income" type="number" min="0" step="1" inputmode="decimal" placeholder="e.g. 1200" data-i18n-placeholder-key="copy.e.g.1200" />
             </label>
-            <output id="snap-estimate-output" class="snap-estimate-output">$298 estimated monthly food budget</output>
+            <output id="snap-estimate-output" class="snap-estimate-output"><span data-i18n="copy.298.estimated.monthly.food.budget">$306 estimated monthly food budget</span></output>
           </form>
           <p class="snap101-note">
-            This is not an eligibility decision. Official applications consider
+            <span data-i18n="copy.this.is.not.an.eligibility.decision.official.applications.consider">This is not an eligibility decision. Official applications consider
             deductions, expenses, resources, immigration status, student rules,
-            work rules, and state policy.
+            work rules, and state policy.</span>
           </p>
         </section>
 
         <section class="allotment-section">
-          <h2>FY2026 maximum monthly allotments</h2>
-          <div class="allotment-list" aria-label="Maximum monthly SNAP allotments by household size">
-            <span><strong>1</strong>$298</span>
-            <span><strong>2</strong>$546</span>
-            <span><strong>3</strong>$785</span>
-            <span><strong>4</strong>$994</span>
-            <span><strong>5</strong>$1,183</span>
-            <span><strong>6</strong>$1,421</span>
-            <span><strong>7</strong>$1,571</span>
-            <span><strong>8</strong>$1,789</span>
+          <h2><span data-i18n="copy.fy2026.maximum.monthly.allotments">FY2027 maximum monthly allotments</span></h2>
+          <div class="allotment-list" aria-label="Maximum monthly SNAP allotments by household size" data-i18n-aria-label-key="copy.maximum.monthly.snap.allotments.by.household.size">
+            <span><strong>1</strong>$306</span>
+            <span><strong>2</strong>$562</span>
+            <span><strong>3</strong>$808</span>
+            <span><strong>4</strong>$1,023</span>
+            <span><strong>5</strong>$1,217</span>
+            <span><strong>6</strong>$1,463</span>
+            <span><strong>7</strong>$1,616</span>
+            <span><strong>8</strong>$1,841</span>
           </div>
-          <p>Each additional person: +$218 per month.</p>
+          <p><span data-i18n="copy.each.additional.person.218.per.month">Each additional person: +$225 per month. (9–17); 18+: $3,887.</span></p>
+                  <p class="muted"><a href="https://fns-prod.azureedge.us/snap/allotment/cola" target="_blank" rel="noopener noreferrer">USDA · 48 states / DC · 2026-10-01 – 2027-09-30</a></p>
         </section>
       </section>
 
       <section id="snap101-nutrition" class="panel snap101-panel">
         <div class="snap101-hero nutrition-hero">
           <div>
-            <p class="eyebrow">Nutrition</p>
-            <h1>Eat steady, not perfect</h1>
+            <p class="eyebrow"><span data-i18n="copy.nutrition">Nutrition</span></p>
+            <h1><span data-i18n="copy.eat.steady.not.perfect">Eat steady, not perfect</span></h1>
             <p>
-              Good nutrition is mostly about repeatable basics: enough protein,
+              <span data-i18n="copy.good.nutrition.is.mostly.about.repeatable.basics.enough.protein">Good nutrition is mostly about repeatable basics: enough protein,
               fiber-rich carbs, colorful produce, healthy fats, water, and meals
-              that actually fit your day.
+              that actually fit your day.</span>
             </p>
           </div>
           <img
             src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1100&q=80"
-            alt="Balanced bowls with vegetables, grains, and protein."
-          />
+            alt="Balanced bowls with vegetables, grains, and protein." data-i18n-alt-key="copy.balanced.bowls.with.vegetables.grains.and.protein" />
         </div>
 
         <section class="nutrition-story">
           <article>
-            <h2>Build the plate</h2>
+            <h2><span data-i18n="copy.build.the.plate">Build the plate</span></h2>
             <p>
-              Start with the plate method: half produce, one quarter protein,
+              <span data-i18n="copy.start.with.the.plate.method.half.produce.one.quarter">Start with the plate method: half produce, one quarter protein,
               and one quarter grains or starchy foods. Add a little fat for
-              flavor and fullness.
+              flavor and fullness.</span>
             </p>
-            <div class="plate-infographic" aria-label="Plate method infographic">
-              <span class="plate-half">Produce</span>
-              <span class="plate-quarter protein">Protein</span>
-              <span class="plate-quarter carbs">Grains</span>
+            <div class="plate-infographic" aria-label="Plate method infographic" data-i18n-aria-label-key="copy.plate.method.infographic">
+              <span class="plate-half"><span data-i18n="copy.produce">Produce</span></span>
+              <span class="plate-quarter protein"><span data-i18n="copy.protein">Protein</span></span>
+              <span class="plate-quarter carbs"><span data-i18n="copy.grains">Grains</span></span>
             </div>
           </article>
           <article>
-            <h2>Think in simple swaps</h2>
+            <h2><span data-i18n="copy.think.in.simple.swaps">Think in simple swaps</span></h2>
             <p>
-              Add beans to rice, choose whole-grain bread when it works, keep
+              <span data-i18n="copy.add.beans.to.rice.choose.whole.grain.bread.when">Add beans to rice, choose whole-grain bread when it works, keep
               frozen vegetables around, and pair snacks with protein when you
-              want them to last longer.
+              want them to last longer.</span>
             </p>
             <img
               src="https://images.unsplash.com/photo-1518843875459-f738682238a6?auto=format&fit=crop&w=900&q=80"
-              alt="Colorful vegetables prepared for cooking."
-            />
+              alt="Colorful vegetables prepared for cooking." data-i18n-alt-key="copy.colorful.vegetables.prepared.for.cooking" />
           </article>
         </section>
 
         <div class="nutrition-cards">
           <article>
             <span>1</span>
-            <h3>Protein helps meals stick</h3>
-            <p>Eggs, beans, yogurt, tofu, fish, chicken, and lentils all count.</p>
+            <h3><span data-i18n="copy.protein.helps.meals.stick">Protein helps meals stick</span></h3>
+            <p><span data-i18n="copy.eggs.beans.yogurt.tofu.fish.chicken.and.lentils.all">Eggs, beans, yogurt, tofu, fish, chicken, and lentils all count.</span></p>
           </article>
           <article>
             <span>2</span>
-            <h3>Fiber is the quiet helper</h3>
-            <p>Oats, beans, fruit, vegetables, and whole grains support fullness.</p>
+            <h3><span data-i18n="copy.fiber.is.the.quiet.helper">Fiber is the quiet helper</span></h3>
+            <p><span data-i18n="copy.oats.beans.fruit.vegetables.and.whole.grains.support.fullness">Oats, beans, fruit, vegetables, and whole grains support fullness.</span></p>
           </article>
           <article>
             <span>3</span>
-            <h3>Frozen and canned are useful</h3>
-            <p>They are budget-friendly, last longer, and can reduce food waste.</p>
+            <h3><span data-i18n="copy.frozen.and.canned.are.useful">Frozen and canned are useful</span></h3>
+            <p><span data-i18n="copy.they.are.budget.friendly.last.longer.and.can.reduce">They are budget-friendly, last longer, and can reduce food waste.</span></p>
           </article>
         </div>
 
-        <section class="nutrition-games" aria-label="Quick nutrition games">
-          <h2>Quick nutrition games</h2>
+        <section class="nutrition-games" aria-label="Quick nutrition games" data-i18n-aria-label-key="copy.quick.nutrition.games">
+          <h2><span data-i18n="copy.quick.nutrition.games">Quick nutrition games</span></h2>
           <div class="nutrition-game-grid">
             <article class="nutrition-game balance-game">
               <div class="game-heading">
-                <span>Plate balance</span>
+                <span><span data-i18n="copy.plate.balance">Plate balance</span></span>
                 <strong id="plate-balance-score">50%</strong>
               </div>
               <div class="mini-plate" aria-hidden="true">
@@ -361,7 +376,7 @@
                 <span id="plate-grain-fill"></span>
               </div>
               <label for="plate-balance-slider">
-                Move toward half produce
+                <span data-i18n="copy.move.toward.half.produce">Move toward half produce</span>
                 <input
                   type="range"
                   id="plate-balance-slider"
@@ -370,38 +385,38 @@
                   value="50"
                 />
               </label>
-              <p id="plate-balance-message">Half produce leaves room for protein and grains.</p>
+              <p id="plate-balance-message"><span data-i18n="copy.half.produce.leaves.room.for.protein.and.grains">Half produce leaves room for protein and grains.</span></p>
             </article>
 
             <article class="nutrition-game snack-game">
               <div class="game-heading">
-                <span>Snack staying power</span>
+                <span><span data-i18n="copy.snack.staying.power">Snack staying power</span></span>
                 <strong id="snack-score">2/4</strong>
               </div>
               <div class="snack-meter" aria-hidden="true">
                 <span id="snack-meter-fill"></span>
               </div>
-              <div class="snack-options" aria-label="Snack additions">
-                <button type="button" class="active" data-snack-points="1">Apple</button>
-                <button type="button" data-snack-points="1">Crackers</button>
-                <button type="button" class="active" data-snack-points="2">Yogurt</button>
-                <button type="button" data-snack-points="2">Peanut butter</button>
+              <div class="snack-options" aria-label="Snack additions" data-i18n-aria-label-key="copy.snack.additions">
+                <button type="button" class="active" data-snack-points="1"><span data-i18n="copy.apple">Apple</span></button>
+                <button type="button" data-snack-points="1"><span data-i18n="copy.crackers">Crackers</span></button>
+                <button type="button" class="active" data-snack-points="2"><span data-i18n="copy.yogurt">Yogurt</span></button>
+                <button type="button" data-snack-points="2"><span data-i18n="copy.peanut.butter">Peanut butter</span></button>
               </div>
-              <p id="snack-message">Fruit plus protein lasts longer than fruit alone.</p>
+              <p id="snack-message"><span data-i18n="copy.fruit.plus.protein.lasts.longer.than.fruit.alone">Fruit plus protein lasts longer than fruit alone.</span></p>
             </article>
 
             <article class="nutrition-game water-game">
               <div class="game-heading">
-                <span>Hydration taps</span>
+                <span><span data-i18n="copy.hydration.taps">Hydration taps</span></span>
                 <strong id="water-count">3/6</strong>
               </div>
-              <button id="water-tap-button" class="water-button" type="button" aria-label="Add one water tap">
+              <button id="water-tap-button" class="water-button" type="button" aria-label="Add one water tap" data-i18n-aria-label-key="copy.add.one.water.tap">
                 <span id="water-fill"></span>
               </button>
               <div class="water-actions">
-                <button id="water-reset-button" type="button">Reset</button>
+                <button id="water-reset-button" type="button"><span data-i18n="copy.reset">Reset</span></button>
               </div>
-              <p id="water-message">Small drinks across the day add up.</p>
+              <p id="water-message"><span data-i18n="copy.small.drinks.across.the.day.add.up">Small drinks across the day add up.</span></p>
             </article>
           </div>
         </section>
@@ -409,34 +424,60 @@
 
       <section id="snap101-signup" class="panel snap101-panel snap101-signup-panel" aria-labelledby="snap101-signup-heading">
         <p class="eyebrow">SNAP 101</p>
-        <h1 id="snap101-signup-heading">Sign up for SNAP</h1>
-        <p class="snap101-signup-intro">Ready to take the next step? Apply directly or explore how to get started.</p>
+        <h1 id="snap101-signup-heading"><span data-i18n="copy.sign.up.for.snap">Sign up for SNAP</span></h1>
+        <p class="snap101-signup-intro"><span data-i18n="copy.ready.to.take.the.next.step.apply.directly.or">Ready to take the next step? Apply directly or explore how to get started.</span></p>
         <div class="snap101-signup-actions">
-          <a class="snap101-signup-action snap101-signup-primary" href="https://www.ny.gov/services/apply-snap" target="_blank" rel="noopener noreferrer" aria-label="Sign Up (opens in a new tab)">Sign Up <span aria-hidden="true">↗</span></a>
-          <button id="snap101-signup-how" type="button" class="snap101-signup-action snap101-signup-secondary">How to Sign Up <span aria-hidden="true">→</span></button>
-          <button type="button" class="snap101-signup-action">Sign Up Centers Near Me</button>
+          <a class="snap101-signup-action snap101-signup-primary" href="https://a069-access.nyc.gov/accesshra/" target="_blank" rel="noopener noreferrer" aria-label="Sign up now (opens in a new tab)" data-i18n-aria-label-key="copy.sign.up.now.opens.in.a.new.tab"><span data-i18n="copy.sign.up.now">Sign up now</span> <span aria-hidden="true">↗</span></a>
+          <button id="snap101-signup-how" type="button" class="snap101-signup-action snap101-signup-secondary"><span data-i18n="copy.how.to.sign.up">How to Sign Up</span> <span aria-hidden="true">→</span></button>
+          <button id="snap101-signup-centers" type="button" class="snap101-signup-action"><span data-i18n="copy.sign.up.centers.near.me">Sign Up Centers Near Me</span> <span aria-hidden="true">→</span></button>
         </div>
       </section>
 
       <section id="snap101-signup-options" class="panel snap101-panel snap101-signup-panel" aria-labelledby="snap101-signup-options-heading">
-        <button id="snap101-signup-back" type="button" class="snap101-signup-back"><span aria-hidden="true">←</span> Back to Sign up for SNAP</button>
+        <button id="snap101-signup-back" type="button" class="snap101-signup-back"><span aria-hidden="true">←</span> <span data-i18n="copy.back.to.sign.up.for.snap">Back to Sign up for SNAP</span></button>
         <div><p class="eyebrow">SNAP 101</p></div>
-        <h1 id="snap101-signup-options-heading" tabindex="-1">How would you like to sign up?</h1>
+        <h1 id="snap101-signup-options-heading" tabindex="-1"><span data-i18n="copy.how.would.you.like.to.sign.up">How would you like to sign up?</span></h1>
         <div class="snap101-signup-actions">
-          <button type="button" class="snap101-signup-action snap101-signup-secondary">Do it myself</button>
-          <button type="button" class="snap101-signup-action">Get help</button>
+          <a class="snap101-signup-action snap101-signup-secondary" href="https://www.nyc.gov/site/hra/help/access-hra-resources.page" target="_blank" rel="noopener noreferrer"><span data-i18n="copy.do.it.myself">Do it myself</span> <span aria-hidden="true">↗</span></a>
+          <button id="snap101-signup-help" type="button" class="snap101-signup-action"><span data-i18n="copy.get.help">Get help</span> <span aria-hidden="true">→</span></button>
+        </div>
+      </section>
+
+      <section id="snap101-centers" class="panel snap101-panel snap101-centers-panel" aria-labelledby="snap101-centers-heading">
+        <button id="snap101-centers-back" type="button" class="snap101-signup-back"><span aria-hidden="true">←</span> <span data-i18n="copy.back">Back</span></button>
+        <p class="eyebrow"><span data-i18n="copy.snap.101.local.support">SNAP 101 · Local support</span></p>
+        <h1 id="snap101-centers-heading" tabindex="-1"><span data-i18n="copy.sign.up.centers.near.me.492c3a">Sign up centers near me</span></h1>
+        <p><span data-i18n="copy.get.help.applying.for.snap.from.these.new.york">Get help applying for SNAP from these New York City organizations.</span></p>
+        <form id="snap101-centers-zip-form" class="snap101-centers-zip-form">
+          <label for="snap101-centers-zip"><span data-i18n="copy.your.zip.code">Your ZIP code</span></label>
+          <div><input id="snap101-centers-zip" name="zip" type="text" inputmode="numeric" autocomplete="postal-code" pattern="[0-9]{5}" maxlength="5" placeholder="e.g. 10024" required aria-describedby="snap101-centers-location" data-i18n-placeholder-key="copy.e.g.10024" /><button type="submit"><span data-i18n="copy.update.zip.code">Update ZIP code</span></button></div>
+        </form>
+        <p id="snap101-centers-location" class="snap101-centers-location" role="status" aria-live="polite"><span data-i18n="copy.enter.your.zip.code.to.see.local.support.options">Enter your ZIP code to see local support options.</span></p>
+        <div class="snap101-center-list">
+          <article class="snap101-center-card">
+            <figure><img src="assets/centers/hunger-free-nyc.jpg" alt="Hunger Free NYC team outside their office" width="1000" height="633" loading="lazy" data-i18n-alt-key="copy.hunger.free.nyc.team.outside.their.office" /><figcaption><span data-i18n="copy.hunger.free.nyc">Hunger Free NYC ·</span> <a href="https://www.berollnews.com/post/meet-the-team-behind-hunger-free-nyc" target="_blank" rel="noopener noreferrer"><span data-i18n="copy.photo.be.roll.news">Photo: Be-Roll News</span></a></figcaption></figure>
+            <div class="snap101-center-content"><p class="eyebrow"><span data-i18n="copy.support.across.nyc">Support across NYC</span></p><h2><span data-i18n="copy.hunger.free.america">Hunger Free America</span></h2><p><span data-i18n="copy.connect.with.the.hunger.free.nyc.benefits.access.team">Connect with the Hunger Free NYC benefits access team for help with SNAP applications and recertification.</span></p><p><span data-i18n="copy.contact.the.team.to.arrange.assistance.and.confirm.where">Contact the team to arrange assistance and confirm where to meet.</span></p><a class="snap101-center-link" href="https://hungerfreeamerica.org/en-us/benefits-access" target="_blank" rel="noopener noreferrer"><span data-i18n="copy.get.benefits.access.help">Get benefits access help</span> <span aria-hidden="true">↗</span></a></div>
+          </article>
+          <article class="snap101-center-card">
+            <figure><img src="assets/centers/wscah.jpg" alt="A West Side Campaign Against Hunger benefits access specialist helping a client" width="720" height="481" loading="lazy" data-i18n-alt-key="copy.a.west.side.campaign.against.hunger.benefits.access.specialist" /><figcaption><span data-i18n="copy.benefits.support.at.wscah">Benefits support at WSCAH ·</span> <a href="https://www.wscah.org/services" target="_blank" rel="noopener noreferrer"><span data-i18n="copy.photo.wscah">Photo: WSCAH</span></a></figcaption></figure>
+            <div class="snap101-center-content"><p class="eyebrow"><span data-i18n="copy.manhattan.10024">Manhattan · 10024</span></p><h2><span data-i18n="copy.west.side.campaign.against.hunger">West Side Campaign Against Hunger</span></h2><p><span data-i18n="copy.benefits.specialists.can.help.you.understand.eligibility.and.apply">Benefits specialists can help you understand eligibility and apply for SNAP in your preferred language.</span></p><address><span data-i18n="copy.263.west.86th.street">263 West 86th Street</span><br /><span data-i18n="copy.new.york.ny.10024">New York, NY 10024</span></address><p><span data-i18n="copy.call">Call</span> <a href="tel:+12123623662;ext=3"><span data-i18n="copy.212.362.3662.extension.3">212-362-3662, extension 3</span></a> <span data-i18n="copy.to.arrange.benefits.assistance.before.visiting">to arrange benefits assistance before visiting.</span></p><a class="snap101-center-link" href="https://www.wscah.org/services" target="_blank" rel="noopener noreferrer"><span data-i18n="copy.explore.services">Explore services</span> <span aria-hidden="true">↗</span></a></div>
+          </article>
+          <article class="snap101-center-card">
+            <figure><img src="assets/centers/hra-williamsburg.jpg" alt="Entrance to the HRA Williamsburg SNAP Center at 2 George Street" width="2000" height="1500" loading="lazy" data-i18n-alt-key="copy.entrance.to.the.hra.williamsburg.snap.center.at.2" /><figcaption><span data-i18n="copy.shown.williamsburg.snap.center">Shown: Williamsburg SNAP Center ·</span> <a href="https://bklyner.com/social-service-centers-coming-to-new-bushwick-location-across-the-luxury-rheingold-development/" target="_blank" rel="noopener noreferrer"><span data-i18n="copy.photo.irina.groushevaia.bklyner">Photo: Irina Groushevaia / Bklyner</span></a></figcaption></figure>
+            <div class="snap101-center-content"><p class="eyebrow"><span data-i18n="copy.nyc.in.person.support">NYC · In-person support</span></p><h2><span data-i18n="copy.hra.snap.centers">HRA SNAP Centers</span></h2><p><span data-i18n="copy.visit.a.city.snap.center.for.application.assistance.centers">Visit a city SNAP center for application assistance. Centers are open Monday–Friday, 8:30 a.m.–5 p.m.</span></p><p id="snap101-hra-location-note"><span data-i18n="copy.explore.centers.across.all.five.boroughs.below">Explore centers across all five boroughs below.</span></p><ul id="snap101-hra-centers" class="snap101-hra-centers"></ul><a class="snap101-center-link" href="https://www.nyc.gov/site/hra/locations/snap-locations.page" target="_blank" rel="noopener noreferrer">Official HRA center directory &amp; map <span aria-hidden="true">↗</span></a></div>
+          </article>
         </div>
       </section>
 
       <section id="home" class="panel visible">
         <div class="home-hero signed-out-home">
           <div>
-            <p class="eyebrow">Nourishment Made Practical</p>
-            <h1>Welcome to SNAPP</h1>
+            <p class="eyebrow"><span data-i18n="copy.nourishment.made.practical">Nourishment Made Practical</span></p>
+            <h1><span data-i18n="copy.welcome.to.snapp">Welcome to SNAPP</span></h1>
             <p>
-              Build balanced meals with clarity. SNAPP helps you plan your week,
+              <span data-i18n="copy.build.balanced.meals.with.clarity.snapp.helps.you.plan">Build balanced meals with clarity. SNAPP helps you plan your week,
               understand nutrition foundations, and turn food choices into habits
-              that are realistic for your schedule.
+              that are realistic for your schedule.</span>
             </p>
           </div>
           <div class="hero-image-stack" aria-hidden="true">
@@ -454,11 +495,11 @@
         <div class="signed-in-home" hidden>
           <div class="home-dashboard-header">
             <div>
-              <p class="eyebrow">Today's Store Plan</p>
-              <h1>Hello <span id="home-username">there</span></h1>
+              <p class="eyebrow"><span data-i18n="copy.today.s.store.plan">Today's Store Plan</span></p>
+              <h1><span data-i18n="copy.hello">Hello</span> <span id="home-username"><span data-i18n="copy.there">there</span></span></h1>
               <p>
-                Start with sale ingredients that already have recipe matches and
-                Morton Williams price estimates.
+                <span data-i18n="copy.start.with.sale.ingredients.that.already.have.recipe.matches">Start with sale ingredients that already have recipe matches and
+                Morton Williams price estimates.</span>
               </p>
             </div>
           </div>
@@ -467,10 +508,10 @@
         <section class="home-section sale-ingredients-section signed-in-home" hidden>
           <div class="section-heading-row">
             <div>
-              <h2>Best sale ingredients today</h2>
-              <p>Ranked from current Morton Williams sale data and matched to recipes SNAPP can price.</p>
+              <h2><span data-i18n="copy.best.sale.ingredients.today">Best sale ingredients today</span></h2>
+              <p><span data-i18n="copy.ranked.from.current.morton.williams.sale.data.and.matched">Ranked from current Morton Williams sale data and matched to recipes SNAPP can price.</span></p>
             </div>
-            <span id="sale-ingredients-status" class="sale-ingredients-status" role="status" aria-live="polite">Loading sales...</span>
+            <span id="sale-ingredients-status" class="sale-ingredients-status" role="status" aria-live="polite"><span data-i18n="copy.loading.sales">Loading sales...</span></span>
           </div>
           <div id="sale-ingredients-grid" class="sale-ingredients-grid"></div>
         </section>
@@ -478,132 +519,131 @@
         <section class="home-section home-store-preview signed-in-home" hidden>
           <div class="section-heading-row">
             <div>
-              <h2>My stores</h2>
-              <p>Saved local store support is coming soon. These placeholders show where selected stores will appear.</p>
+              <h2><span data-i18n="copy.my.stores">My stores</span></h2>
+              <p><span data-i18n="copy.saved.local.store.support.is.coming.soon.these.placeholders">Saved local store support is coming soon. These placeholders show where selected stores will appear.</span></p>
             </div>
           </div>
           <div class="store-preview-grid">
             <article>
-              <h3>Morton Williams 23rd Street</h3>
-              <p>311 East 23rd Street, New York, NY 10010</p>
-              <span>Placeholder active source</span>
+              <h3><span data-i18n="copy.morton.williams.23rd.street">Morton Williams 23rd Street</span></h3>
+              <p><span data-i18n="copy.311.east.23rd.street.new.york.ny.10010">311 East 23rd Street, New York, NY 10010</span></p>
+              <span><span data-i18n="copy.placeholder.active.source">Placeholder active source</span></span>
             </article>
             <article>
-              <h3>Neighborhood Market</h3>
-              <p>Local grocery placeholder</p>
-              <span>Coming soon</span>
+              <h3><span data-i18n="copy.neighborhood.market">Neighborhood Market</span></h3>
+              <p><span data-i18n="copy.local.grocery.placeholder">Local grocery placeholder</span></p>
+              <span><span data-i18n="copy.coming.soon">Coming soon</span></span>
             </article>
             <article>
-              <h3>Community Food Co-op</h3>
-              <p>Local grocery placeholder</p>
-              <span>Coming soon</span>
+              <h3><span data-i18n="copy.community.food.co.op">Community Food Co-op</span></h3>
+              <p><span data-i18n="copy.local.grocery.placeholder">Local grocery placeholder</span></p>
+              <span><span data-i18n="copy.coming.soon">Coming soon</span></span>
             </article>
           </div>
         </section>
 
         <section class="home-section signed-out-home">
-          <h2>Core Food Groups</h2>
+          <h2><span data-i18n="copy.core.food.groups">Core Food Groups</span></h2>
           <p>
-            A balanced plate generally includes complex carbohydrates, lean
+            <span data-i18n="copy.a.balanced.plate.generally.includes.complex.carbohydrates.lean.proteins">A balanced plate generally includes complex carbohydrates, lean
             proteins, healthy fats, fiber-rich produce, and hydration support.
             The goal is not perfection at every meal, but consistency across the
-            week.
+            week.</span>
           </p>
           <div class="food-groups-grid">
             <article>
-              <h3>Vegetables and Fruits</h3>
+              <h3><span data-i18n="copy.vegetables.and.fruits">Vegetables and Fruits</span></h3>
               <p>
-                Rich in vitamins, minerals, antioxidants, and fiber. Prioritize
+                <span data-i18n="copy.rich.in.vitamins.minerals.antioxidants.and.fiber.prioritize.color">Rich in vitamins, minerals, antioxidants, and fiber. Prioritize
                 color variety to broaden nutrient coverage and support long-term
-                health.
+                health.</span>
               </p>
             </article>
             <article>
-              <h3>Whole Grains and Smart Carbs</h3>
+              <h3><span data-i18n="copy.whole.grains.and.smart.carbs">Whole Grains and Smart Carbs</span></h3>
               <p>
-                Oats, brown rice, quinoa, and whole-grain breads provide steady
-                energy and help maintain focus through the day.
+                <span data-i18n="copy.oats.brown.rice.quinoa.and.whole.grain.breads.provide">Oats, brown rice, quinoa, and whole-grain breads provide steady
+                energy and help maintain focus through the day.</span>
               </p>
             </article>
             <article>
-              <h3>Protein Sources</h3>
+              <h3><span data-i18n="copy.protein.sources">Protein Sources</span></h3>
               <p>
-                Fish, poultry, legumes, tofu, eggs, and Greek yogurt support
-                muscle repair, satiety, and stable appetite control.
+                <span data-i18n="copy.fish.poultry.legumes.tofu.eggs.and.greek.yogurt.support">Fish, poultry, legumes, tofu, eggs, and Greek yogurt support
+                muscle repair, satiety, and stable appetite control.</span>
               </p>
             </article>
             <article>
-              <h3>Healthy Fats</h3>
+              <h3><span data-i18n="copy.healthy.fats">Healthy Fats</span></h3>
               <p>
-                Avocado, nuts, seeds, olive oil, and fatty fish support hormone
-                function and improve absorption of fat-soluble vitamins.
+                <span data-i18n="copy.avocado.nuts.seeds.olive.oil.and.fatty.fish.support">Avocado, nuts, seeds, olive oil, and fatty fish support hormone
+                function and improve absorption of fat-soluble vitamins.</span>
               </p>
             </article>
           </div>
         </section>
 
         <section class="home-section signed-out-home">
-          <h2>Simple Plate Method</h2>
+          <h2><span data-i18n="copy.simple.plate.method">Simple Plate Method</span></h2>
           <div class="plate-layout">
             <div class="plate-text">
               <p>
-                Use this quick visual method when planning lunches and dinners:
+                <span data-i18n="copy.use.this.quick.visual.method.when.planning.lunches.and">Use this quick visual method when planning lunches and dinners:
                 half your plate vegetables, one quarter lean protein, and one
-                quarter complex carbohydrates.
+                quarter complex carbohydrates.</span>
               </p>
               <p>
-                Add a small serving of healthy fat and keep water nearby. This
+                <span data-i18n="copy.add.a.small.serving.of.healthy.fat.and.keep">Add a small serving of healthy fat and keep water nearby. This
                 structure helps improve fullness, nutrient diversity, and energy
-                consistency without counting every macro.
+                consistency without counting every macro.</span>
               </p>
             </div>
             <img
               src="https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=1200&q=80"
-              alt="Balanced meal plate with vegetables, grains, and protein."
-            />
+              alt="Balanced meal plate with vegetables, grains, and protein." data-i18n-alt-key="copy.balanced.meal.plate.with.vegetables.grains.and.protein" />
           </div>
         </section>
 
         <section class="home-section signed-out-home">
-          <h2>Weekly Nutrition Focus</h2>
+          <h2><span data-i18n="copy.weekly.nutrition.focus">Weekly Nutrition Focus</span></h2>
           <p>
-            Instead of overhauling everything at once, anchor one weekly focus:
+            <span data-i18n="copy.instead.of.overhauling.everything.at.once.anchor.one.weekly">Instead of overhauling everything at once, anchor one weekly focus:
             add one vegetable to breakfast, include protein at every meal, or
             swap refined snacks for fiber-rich options. Small repeated changes
-            create durable progress.
+            create durable progress.</span>
           </p>
           <div class="nutrition-highlights">
             <article>
-              <h3>Fiber Target</h3>
+              <h3><span data-i18n="copy.fiber.target">Fiber Target</span></h3>
               <p>
-                Include produce, beans, whole grains, and seeds throughout the
-                day to support digestion and appetite control.
+                <span data-i18n="copy.include.produce.beans.whole.grains.and.seeds.throughout.the">Include produce, beans, whole grains, and seeds throughout the
+                day to support digestion and appetite control.</span>
               </p>
             </article>
             <article>
-              <h3>Hydration</h3>
+              <h3><span data-i18n="copy.hydration">Hydration</span></h3>
               <p>
-                Build a routine with water at meals and between tasks to support
-                concentration and overall performance.
+                <span data-i18n="copy.build.a.routine.with.water.at.meals.and.between">Build a routine with water at meals and between tasks to support
+                concentration and overall performance.</span>
               </p>
             </article>
             <article>
-              <h3>Protein Distribution</h3>
+              <h3><span data-i18n="copy.protein.distribution">Protein Distribution</span></h3>
               <p>
-                Spread protein across breakfast, lunch, and dinner for better
-                satiety and recovery than loading it into one meal.
+                <span data-i18n="copy.spread.protein.across.breakfast.lunch.and.dinner.for.better">Spread protein across breakfast, lunch, and dinner for better
+                satiety and recovery than loading it into one meal.</span>
               </p>
             </article>
           </div>
         </section>
 
         <section class="home-section signed-out-home">
-          <h2>Use SNAPP Throughout Your Day</h2>
+          <h2><span data-i18n="copy.use.snapp.throughout.your.day">Use SNAPP Throughout Your Day</span></h2>
           <p>
-            Morning: verify your meals and prep ingredients. Midday: ask the
+            <span data-i18n="copy.morning.verify.your.meals.and.prep.ingredients.midday.ask">Morning: verify your meals and prep ingredients. Midday: ask the
             chatbot for substitutions based on what you have. Evening: review
             tomorrow's plan and update preferences so the schedule keeps adapting
-            with you.
+            with you.</span>
           </p>
           <div class="gallery-grid" aria-hidden="true">
             <img
@@ -623,11 +663,11 @@
       </section>
 
       <section id="dishes" class="panel">
-        <h2>Dishes</h2>
-        <p>Ask for a meal idea. SNAPP uses your saved profile, pantry, budget, diet, and store settings automatically.</p>
+        <h2><span data-i18n="copy.dishes">Dishes</span></h2>
+        <p><span data-i18n="copy.ask.for.a.meal.idea.snapp.uses.your.saved">Ask for a meal idea. SNAPP uses your saved profile, pantry, budget, diet, and store settings automatically.</span></p>
         <div class="dish-window">
           <div id="dish-empty-state" class="dish-empty-state">
-            Ask for a meal idea to get started.
+            <span data-i18n="copy.ask.for.a.meal.idea.to.get.started">Ask for a meal idea to get started.</span>
           </div>
           <ul id="dish-results" class="dish-results"></ul>
         </div>
@@ -637,13 +677,12 @@
             id="dish-input"
             placeholder="What meal do you want?"
             autocomplete="off"
-            required
-          />
-          <button type="submit">Send</button>
+            required data-i18n-placeholder-key="copy.what.meal.do.you.want" />
+          <button type="submit"><span data-i18n="chat.send">Send</span></button>
         </form>
         <div id="dish-status" class="dish-status" role="status" aria-live="polite"></div>
         <p id="dish-source" class="dish-source" hidden>
-          Grocery data: SNAPP demo grocery database. Recipes: TheMealDB.
+          <span data-i18n="copy.grocery.data.snapp.demo.grocery.database.recipes.themealdb">Grocery data: SNAPP demo grocery database. Recipes: TheMealDB.</span>
         </p>
       </section>
 
@@ -651,50 +690,48 @@
       <section id="recipe-chat" class="panel recipe-chat-panel" aria-labelledby="recipe-chat-heading">
         <div class="recipe-chat-header">
           <div>
-            <p class="eyebrow">Recipe discovery · Experimental</p>
-            <h1 id="recipe-chat-heading">Recipe Chat</h1>
+            <p class="eyebrow"><span data-i18n="copy.a.little.inspiration.for.your.table">A little inspiration for your table</span></p>
+            <h1 id="recipe-chat-heading"><span data-i18n="nav.recipeChat">Recipe Chat</span></h1>
           </div>
-          <button id="recipe-chat-new" class="secondary-button" type="button">New Chat</button>
+          <button id="recipe-chat-new" class="secondary-button" type="button"><span data-i18n="chat.newChat">New Chat</span></button>
         </div>
         <div id="recipe-chat-empty" class="recipe-chat-empty">
-          <h2>What are you in the mood for?</h2>
-          <p>Tell SNAPP what you want to eat, what ingredients you have, or what you want to avoid.</p>
-          <div class="recipe-chat-prompts" aria-label="Try a recipe search">
-            <button type="button">Warm dinner with beef</button>
-            <button type="button">Quick chicken meal</button>
-            <button type="button">Breakfast with eggs</button>
-            <button type="button">Something spicy with rice</button>
+          <h2><span data-i18n="copy.what.are.you.in.the.mood.for">What are you in the mood for?</span></h2>
+          <p><span data-i18n="copy.tell.snapp.what.you.want.to.eat.what.ingredients">Tell SNAPP what you want to eat, what ingredients you have, or what you want to avoid.</span></p>
+          <div class="recipe-chat-prompts" aria-label="Try a recipe search" data-i18n-aria-label-key="copy.try.a.recipe.search">
+            <button type="button"><span data-i18n="copy.healthy.dinner.under.30.minutes">Healthy dinner under 30 minutes</span></button>
+            <button type="button"><span data-i18n="copy.something.with.chicken">Something with chicken</span></button>
+            <button type="button"><span data-i18n="copy.use.what.i.already.have">Use what I already have</span></button>
           </div>
         </div>
-        <div id="recipe-chat-history" class="recipe-chat-history" role="log" aria-label="Recipe conversation" aria-live="polite" aria-relevant="additions" tabindex="0" hidden></div>
+        <div id="recipe-chat-history" class="recipe-chat-history" role="log" aria-label="Recipe conversation" aria-live="polite" aria-relevant="additions" tabindex="0" hidden data-i18n-aria-label-key="copy.recipe.conversation"></div>
         <form id="recipe-chat-form" class="recipe-chat-form">
-          <label for="recipe-chat-input">Your message</label>
+          <label for="recipe-chat-input"><span data-i18n="copy.your.message">Your message</span></label>
           <div class="recipe-chat-input-row">
-            <textarea id="recipe-chat-input" name="message" rows="2" maxlength="300" required placeholder="A dinner idea, an ingredient, or a follow-up…" aria-describedby="recipe-chat-input-hint"></textarea>
-            <button id="recipe-chat-send" type="submit">Send</button>
+            <textarea id="recipe-chat-input" name="message" rows="2" maxlength="300" required placeholder="A dinner idea, an ingredient, or a follow-up…" aria-describedby="recipe-chat-input-hint" data-i18n-placeholder-key="copy.a.dinner.idea.an.ingredient.or.a.follow.up"></textarea>
+            <button id="recipe-chat-send" type="submit"><span data-i18n="chat.send">Send</span></button>
           </div>
-          <p id="recipe-chat-input-hint" class="recipe-chat-hint">Enter to send · Shift+Enter for a new line · Up to 300 characters</p>
+          <p id="recipe-chat-input-hint" class="recipe-chat-hint"><span data-i18n="copy.enter.to.send.shift.enter.for.a.new.line">Enter to send · Shift+Enter for a new line · Up to 300 characters</span></p>
         </form>
         <p id="recipe-chat-status" class="recipe-chat-feedback" role="status" aria-live="polite"></p>
         <p id="recipe-chat-error" class="recipe-chat-feedback recipe-chat-error" role="alert" hidden></p>
       </section>
 
       <section id="schedule" class="panel">
-        <h2>Weekly Meal Schedule</h2>
-        <p>Meals you select from Dishes appear here. Click a meal to view its recipe and ingredients.</p>
+        <div class="schedule-intro"><p class="eyebrow"><span data-i18n="copy.a.week.worth.looking.forward.to">A week worth looking forward to</span></p><h2><span data-i18n="copy.your.week.well.fed">Your week, well fed.</span></h2><p><span data-i18n="copy.find.a.meal.in.recipe.chat.add.it.here">Find a meal in Recipe Chat, add it here, and make room for something delicious.</span></p></div>
         <section class="macro-tracker" aria-labelledby="macro-tracker-title">
           <div class="macro-tracker-heading">
             <div>
-              <h3 id="macro-tracker-title">Weekly macro tracker</h3>
-              <p>One portion from each scheduled meal counts toward your weekly goals.</p>
+              <h3 id="macro-tracker-title"><span data-i18n="copy.weekly.nutrition.goals">Weekly nutrition goals</span></h3>
+              <p><span data-i18n="copy.placeholder.weekly.targets.one.portion.per.added.meal">Placeholder weekly targets · One portion per added meal.</span></p>
             </div>
-            <strong id="macro-tracker-meal-count">0 meals</strong>
+            <strong id="macro-tracker-meal-count"><span data-i18n="copy.0.meals">0 meals</span></strong>
           </div>
           <div class="macro-bars" aria-live="polite">
             <article class="macro-bar-card macro-protein">
               <div class="macro-bar-label">
-                <span>Protein</span>
-                <strong><span id="macro-protein-total">0g</span> / <span id="macro-protein-goal">350g</span></strong>
+                <span><span data-i18n="copy.protein">Protein</span></span>
+                <strong><span id="macro-protein-total"><span data-i18n="copy.0g">0g</span></span> / <span id="macro-protein-goal"><span data-i18n="copy.350g">350g</span></span></strong>
               </div>
               <div class="macro-bar-track" aria-hidden="true">
                 <span id="macro-protein-fill"></span>
@@ -702,8 +739,8 @@
             </article>
             <article class="macro-bar-card macro-carbs">
               <div class="macro-bar-label">
-                <span>Carbs</span>
-                <strong><span id="macro-carbs-total">0g</span> / <span id="macro-carbs-goal">1,925g</span></strong>
+                <span><span data-i18n="copy.carbs">Carbs</span></span>
+                <strong><span id="macro-carbs-total"><span data-i18n="copy.0g">0g</span></span> / <span id="macro-carbs-goal"><span data-i18n="copy.1.925g">1,925g</span></span></strong>
               </div>
               <div class="macro-bar-track" aria-hidden="true">
                 <span id="macro-carbs-fill"></span>
@@ -711,8 +748,8 @@
             </article>
             <article class="macro-bar-card macro-fat">
               <div class="macro-bar-label">
-                <span>Fat</span>
-                <strong><span id="macro-fat-total">0g</span> / <span id="macro-fat-goal">546g</span></strong>
+                <span><span data-i18n="copy.fat">Fat</span></span>
+                <strong><span id="macro-fat-total"><span data-i18n="copy.0g">0g</span></span> / <span id="macro-fat-goal"><span data-i18n="copy.546g">546g</span></span></strong>
               </div>
               <div class="macro-bar-track" aria-hidden="true">
                 <span id="macro-fat-fill"></span>
@@ -720,14 +757,15 @@
             </article>
           </div>
         </section>
+        <p id="weekly-nutrition-status" class="nutrition-coverage" role="status"></p>
         <div class="schedule-layout">
           <div id="schedule-calendar" class="schedule-calendar"></div>
-          <aside id="schedule-recipe-tray" class="schedule-recipe-tray" aria-label="Recipes to schedule">
+          <aside id="schedule-recipe-tray" class="schedule-recipe-tray" aria-label="Recipes to schedule" data-i18n-aria-label-key="copy.recipes.to.schedule">
             <div class="schedule-tray-header">
-              <h3>Recipes</h3>
-              <button id="schedule-favorite-recipes-button" type="button">favorite recipes</button>
+              <h3><span data-i18n="copy.recipes">Recipes</span></h3>
+              <button id="schedule-favorite-recipes-button" type="button"><span data-i18n="copy.favorite.recipes">favorite recipes</span></button>
             </div>
-            <p>Drag recipes into a breakfast, lunch, or dinner slot.</p>
+            <p><span data-i18n="copy.drag.recipes.into.a.breakfast.lunch.or.dinner.slot">Drag recipes into a breakfast, lunch, or dinner slot.</span></p>
             <div id="schedule-favorite-recipes-panel" class="favorite-recipes-panel" hidden>
               <div id="favorite-recipes-status" class="favorite-recipes-status" role="status" aria-live="polite"></div>
               <div id="favorite-recipes-list" class="favorite-recipes-list"></div>
@@ -740,20 +778,19 @@
       <section id="shopping" class="panel">
         <div class="shopping-header">
           <div>
-            <h2>Shopping list</h2>
-            <p>Ingredients from dishes you added to your schedule appear here.</p>
+            <p class="eyebrow"><span data-i18n="copy.ready.for.your.next.shop">Ready for your next shop</span></p><h2><span data-i18n="copy.shopping.list">Shopping list</span></h2>
+            <p><span data-i18n="copy.everything.you.need.for.the.meals.in.your.schedule">Everything you need for the meals in your schedule.</span></p>
           </div>
-          <button id="shopping-add-pantry-button" type="button">Add all to pantry</button>
+          <button id="shopping-add-pantry-button" type="button"><span data-i18n="copy.add.all.to.pantry">Add all to pantry</span></button>
         </div>
         <div id="shopping-status" class="store-search-status" role="status" aria-live="polite"></div>
         <ul id="shopping-list" class="shopping-list"></ul>
       </section>
 
       <section id="my" class="panel">
-        <h2>My stores</h2>
-        <p>Enter a 5-digit US ZIP code to find nearby grocery stores, then select the stores you want to use.</p>
+        <div class="my-stores-intro"><p class="eyebrow"><span data-i18n="copy.good.food.close.to.home">Good food, close to home</span></p><h2><span data-i18n="copy.my.stores">My stores</span></h2><p><span data-i18n="copy.find.your.neighborhood.favorites.select.where.you.like.to">Find your neighborhood favorites. Select where you like to shop.</span></p></div>
         <form id="my-store-form" class="store-search-form">
-          <label for="my-zip-code">ZIP code</label>
+          <label for="my-zip-code"><span data-i18n="copy.zip.code">ZIP code</span></label>
           <div class="store-search-controls">
             <input
               type="text"
@@ -764,32 +801,34 @@
               pattern="[0-9]{5}"
               maxlength="5"
               placeholder="e.g. 10001"
-              required
-            />
-            <button type="submit">Find nearby stores</button>
+              required data-i18n-placeholder-key="copy.e.g.10001" />
+            <button type="submit"><span data-i18n="copy.find.nearby.stores">Find nearby stores</span></button>
           </div>
         </form>
         <div id="my-store-status" class="store-search-status" role="status" aria-live="polite"></div>
-        <div id="my-store-map" class="store-map" aria-label="Nearby grocery store map"></div>
+        <div id="my-store-start" class="my-store-start">
+          <svg viewBox="0 0 80 80" fill="none" aria-hidden="true"><rect x="14" y="32" width="52" height="34" rx="5"/><path d="M10 32l8-18h44l8 18M10 32h60M30 32V14M50 32V14M27 66V45h15v21M51 44h7v9"/></svg>
+          <div><h3><span data-i18n="copy.your.neighborhood.on.the.menu">Your neighborhood, on the menu.</span></h3><p><span data-i18n="copy.enter.your.zip.code.above.to.see.nearby.grocery">Enter your ZIP code above to see nearby grocery stores and save your favorites.</span></p></div>
+        </div>
+        <div id="my-store-map" class="store-map" aria-label="Nearby grocery store map" hidden data-i18n-aria-label-key="copy.nearby.grocery.store.map"></div>
         <div class="my-store-layout">
           <ul id="my-store-results" class="store-results selectable-store-results"></ul>
           <div class="selected-store-panel">
-            <h3>Selected stores</h3>
+            <h3><span data-i18n="copy.selected.stores">Selected stores</span></h3>
             <ul id="selected-store-list"></ul>
           </div>
         </div>
         <p id="my-store-source" class="store-source" hidden>
-          Store data and map tiles ©
-          <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>.
+          <span data-i18n="copy.store.data.and.map.tiles">Store data and map tiles ©</span>
+          <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a><span data-i18n="copy.label.3a52ce">.</span>
         </p>
       </section>
 
       <section id="pantry" class="panel">
-        <h2>My pantry</h2>
-        <p>Add foods you already have so SNAPP can consider them when suggesting dishes.</p>
+        <div class="pantry-intro"><p class="eyebrow"><span data-i18n="copy.start.with.what.you.have">Start with what you have</span></p><h2><span data-i18n="copy.my.pantry">My pantry</span></h2><p><span data-i18n="copy.keep.your.kitchen.staples.here.we.ll.keep.them">Keep your kitchen staples here. We’ll keep them in mind when planning meals.</span></p></div>
         <form id="pantry-form" class="pantry-form">
           <label>
-            Food
+            <span data-i18n="copy.food">Food</span>
             <input
               type="text"
               id="pantry-name"
@@ -797,60 +836,63 @@
               autocomplete="off"
               maxlength="80"
               placeholder="e.g. rice"
-              required
-            />
+              required data-i18n-placeholder-key="copy.e.g.rice" />
             <datalist id="pantry-spice-suggestions"></datalist>
           </label>
           <label id="pantry-quantity-label">
-            Quantity
+            <span data-i18n="copy.quantity">Quantity</span>
             <input
               type="text"
               id="pantry-quantity"
               autocomplete="off"
               maxlength="60"
               placeholder="e.g. 2 cups"
-              required
-            />
+              required data-i18n-placeholder-key="copy.e.g.2.cups" />
           </label>
-          <button type="submit">Add item</button>
+          <button type="submit"><span data-i18n="copy.add.item">Add item</span></button>
         </form>
         <div id="pantry-status" class="store-search-status" role="status" aria-live="polite"></div>
         <ul id="pantry-list" class="pantry-list"></ul>
       </section>
 
       <section id="budget" class="panel">
-        <h2>Budget</h2>
-        <p>Your monthly food budget is used here. SNAPP subtracts the estimated price of each scheduled meal.</p>
+        <h2><span data-i18n="nav.budget">Budget</span></h2>
+        <p><span data-i18n="copy.set.a.monthly.food.budget.and.see.how.your">Set a monthly food budget and see how your planned meals fit.</span></p>
+        <form id="budget-editor-form" class="budget-editor-form">
+          <label for="budget-monthly-input"><span data-i18n="copy.monthly.food.budget">Monthly food budget ($)</span></label>
+          <div class="budget-editor-controls"><input id="budget-monthly-input" type="number" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 300" required data-i18n-placeholder-key="copy.e.g.300" /><button type="submit"><span data-i18n="copy.save.budget">Save budget</span></button></div>
+          <p id="budget-editor-status" role="status" aria-live="polite"></p>
+        </form>
         <p id="budget-empty-message" class="budget-empty-message" hidden>
-          No monthly budget has been added yet. Use SNAP 101 to estimate one.
-          <button id="budget-open-snap101" type="button">Open SNAP 101</button>
+          <span data-i18n="copy.set.a.budget.above.or.use.snap.101.to">Set a budget above, or use SNAP 101 to estimate one.</span>
+          <button id="budget-open-snap101" type="button"><span data-i18n="copy.open.snap.101">Open SNAP 101</span></button>
         </p>
         <div class="budget-display" aria-live="polite">
-          <span class="budget-label">Remaining monthly budget</span>
+          <span class="budget-label"><span data-i18n="copy.remaining.monthly.budget">Remaining monthly budget</span></span>
           <strong id="remaining-budget">$0.00</strong>
         </div>
         <div class="budget-summary">
-          <span>Monthly food budget: <strong id="current-budget">$0.00</strong></span>
-          <span>Scheduled meals: <strong id="budget-meal-count">0</strong></span>
-          <span>Scheduled cost: <strong id="scheduled-meal-cost">$0.00</strong></span>
+          <span><span data-i18n="copy.monthly.food.budget.b199ea">Monthly food budget:</span> <strong id="current-budget">$0.00</strong></span>
+          <span><span data-i18n="copy.scheduled.meals">Scheduled meals:</span> <strong id="budget-meal-count">0</strong></span>
+          <span><span data-i18n="copy.scheduled.cost">Scheduled cost:</span> <strong id="scheduled-meal-cost">$0.00</strong></span>
         </div>
       </section>
 
       <section id="settings" class="panel">
-        <h2>Profile</h2>
+        <h2><span data-i18n="nav.profile">Profile</span></h2>
         <section class="settings-section">
-          <h3>Account and Nutritional Information</h3>
+          <h3><span data-i18n="copy.account.and.nutritional.information">Account and Nutritional Information</span></h3>
           <div class="settings-form">
             <label>
-              Username
-              <input type="text" id="profile-name" autocomplete="username" placeholder="Signed out" readonly />
+              <span data-i18n="copy.username">Username</span>
+              <input type="text" id="profile-name" autocomplete="username" placeholder="Signed out" readonly data-i18n-placeholder-key="copy.signed.out" />
             </label>
             <label>
-              How many people are you cooking for?
-              <input type="number" id="household-size" min="1" max="20" step="1" inputmode="numeric" value="1" placeholder="e.g. 4" />
+              <span data-i18n="copy.how.many.people.are.you.cooking.for">How many people are you cooking for?</span>
+              <input type="number" id="household-size" min="1" max="20" step="1" inputmode="numeric" value="1" placeholder="e.g. 4" data-i18n-placeholder-key="copy.e.g.4" />
             </label>
             <label>
-              ZIP code
+              <span data-i18n="copy.zip.code">ZIP code</span>
               <input
                 type="text"
                 id="profile-zip-code"
@@ -858,72 +900,66 @@
                 autocomplete="postal-code"
                 pattern="[0-9]{5}"
                 maxlength="5"
-                placeholder="e.g. 10001"
-              />
+                placeholder="e.g. 10001" data-i18n-placeholder-key="copy.e.g.10001" />
             </label>
             <label>
-              Budget
+              <span data-i18n="nav.budget">Budget</span>
               <input
                 type="number"
                 id="budget-input"
                 min="0"
                 step="0.01"
                 inputmode="decimal"
-                placeholder="e.g. 75.00"
-              />
+                placeholder="e.g. 75.00" data-i18n-placeholder-key="copy.e.g.75.00" />
             </label>
           </div>
           <div id="settings-status" class="settings-status" role="status" aria-live="polite"></div>
         </section>
         <section class="settings-section">
-          <h3>Dietary Restrictions</h3>
+          <h3><span data-i18n="copy.dietary.restrictions">Dietary Restrictions</span></h3>
           <div class="settings-form">
             <div class="settings-wide">
-              <div id="settings-preference-chips" class="preference-chip-grid" aria-label="Popular dietary preferences"></div>
+              <div id="settings-preference-chips" class="preference-chip-grid" aria-label="Popular dietary preferences" data-i18n-aria-label-key="copy.popular.dietary.preferences"></div>
               <div class="tag-entry">
-                <label for="settings-custom-preference">Add your own</label>
+                <label for="settings-custom-preference"><span data-i18n="copy.add.your.own">Add your own</span></label>
                 <div class="tag-entry-row">
                   <input
                     type="text"
                     id="settings-custom-preference"
                     autocomplete="off"
                     maxlength="80"
-                    placeholder="e.g. Prefer spicy food"
-                  />
-                  <button id="settings-add-preference" type="button">Add</button>
+                    placeholder="e.g. Prefer spicy food" data-i18n-placeholder-key="copy.e.g.prefer.spicy.food" />
+                  <button id="settings-add-preference" type="button"><span data-i18n="copy.add">Add</span></button>
                 </div>
               </div>
-              <div id="settings-selected-preferences" class="selected-tags" aria-label="Selected dietary preferences"></div>
+              <div id="settings-selected-preferences" class="selected-tags" aria-label="Selected dietary preferences" data-i18n-aria-label-key="copy.selected.dietary.preferences"></div>
             </div>
             <label class="settings-wide">
-              Additional notes for dish recommendations
+              <span data-i18n="copy.additional.notes.for.dish.recommendations">Additional notes for dish recommendations</span>
               <textarea
                 id="dietary-restrictions"
                 rows="4"
                 placeholder="e.g. no peanuts, lactose-free, low sodium, avoid shellfish"
-              ></textarea>
+               data-i18n-placeholder-key="copy.e.g.no.peanuts.lactose.free.low.sodium.avoid"></textarea>
             </label>
           </div>
         </section>
         <section class="settings-section">
-          <h3>Preferences</h3>
+          <h3><span data-i18n="copy.preferences">Preferences</span></h3>
           <div class="settings-form">
             <label>
-              Theme
+              <span data-i18n="copy.theme">Theme</span>
               <select id="theme-select">
                 <option value="light" selected>Light</option>
                 <option value="dark">Dark</option>
               </select>
             </label>
             <label>
-              Language
-              <select id="language-select">
-                <option value="en" selected>English</option>
-                <option value="es">Español</option>
-              </select>
+              <span data-i18n="settings.language">Language</span>
+              <select id="language-select"><option value="en">English</option><option value="es">Español</option><option value="zh-CN">简体中文</option><option value="zh-TW">繁體中文</option><option value="ru">Русский</option><option value="bn">বাংলা</option><option value="ht">Kreyòl ayisyen</option><option value="ko">한국어</option><option value="ar">العربية</option><option value="fr">Français</option><option value="ur">اردو</option><option value="pl">Polski</option></select>
             </label>
             <label>
-              Dietary Preference
+              <span data-i18n="copy.dietary.preference">Dietary Preference</span>
               <select id="diet-select">
                 <option value="balanced" selected>Balanced</option>
                 <option value="vegetarian">Vegetarian</option>
@@ -933,7 +969,7 @@
             </label>
             <label class="toggle">
               <input type="checkbox" id="notifications-toggle" checked />
-              <span>Enable daily reminders</span>
+              <span><span data-i18n="copy.enable.daily.reminders">Enable daily reminders</span></span>
             </label>
           </div>
         </section>
@@ -943,13 +979,15 @@
     <dialog id="dish-modal" class="dish-modal">
       <div class="dish-modal-header">
         <h3 id="dish-modal-title"></h3>
-        <button type="button" id="dish-modal-close" aria-label="Close recipe">&times;</button>
+        <button type="button" id="dish-modal-close" aria-label="Close recipe" data-i18n-aria-label-key="copy.close.recipe">&times;</button>
       </div>
       <div id="dish-modal-content" class="dish-modal-content"></div>
     </dialog>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+    <script src="i18n/catalog.js"></script>
+    <script src="i18n.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

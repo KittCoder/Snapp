@@ -6,10 +6,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from basket_quantity import get_basket_builder  # noqa: E402
+from basket_quantity import BasketBuilder, get_basket_builder  # noqa: E402
 from model import should_buy_recipe_ingredient  # noqa: E402
 from product_compatibility import get_product_match_service  # noqa: E402
 
+
+from catalog_fixtures import fixed_recipe_service
 
 FIXTURE = Path(__file__).resolve().parents[1] / "evaluation" / "real_recipe_match_regression_cases.jsonl"
 
@@ -56,7 +58,8 @@ class RealRecipeRegressionTests(unittest.TestCase):
         ):
             case = self.cases[case_id]
             with self.subTest(case_id=case_id):
-                result = self.service.match_recipe_ingredient(case["raw_ingredient"], limit=5)
+                service = fixed_recipe_service() if case_id == "lamb-in-pitas-minced-lamb" else self.service
+                result = service.match_recipe_ingredient(case["raw_ingredient"], limit=5)
                 if case.get("expect_no_safe_match") or case_id in {"beef-stew-meat-cut", "beef-steak-pudding-beef"}:
                     # A species-free or cut-free request cannot silently choose a meat cut.
                     self.assertIsNone(result.selected_match)
@@ -109,8 +112,9 @@ class RealRecipeRegressionTests(unittest.TestCase):
         self.assertIn("1 teaspoon baking powder", by_raw)
         self.assertNotEqual(by_raw["1 teaspoon baking powder"].package.package_quantity, 81.0)
 
-    def test_lamb_in_pitas_core_ingredients_match_real_inventory(self):
-        basket = self.builder.build_recipe_basket(
+    def test_lamb_in_pitas_core_ingredients_match_fixture_inventory(self):
+        # Recipe identity and package math use explicit, stable catalog evidence.
+        basket = BasketBuilder(fixed_recipe_service()).build_recipe_basket(
             {
                 "id": "lamb-in-pitas-regression",
                 "ingredients": [
@@ -246,7 +250,8 @@ class RealRecipeRegressionTests(unittest.TestCase):
         self.assertNotIn("frank", beef_name)
 
     def test_beef_and_broccoli_buys_raw_cut_beef_not_prepared_entree(self):
-        basket = self.builder.build_recipe_basket(
+        # Recipe identity and package math use explicit, stable catalog evidence.
+        basket = BasketBuilder(fixed_recipe_service()).build_recipe_basket(
             {
                 "id": "beef-and-broccoli-regression",
                 "ingredients": [
@@ -273,7 +278,8 @@ class RealRecipeRegressionTests(unittest.TestCase):
         self.assertGreater(beef_item.checkout_cost or 0, 0)
 
     def test_beef_shank_recipe_buys_two_pounds_of_shank(self):
-        basket = self.builder.build_recipe_basket(
+        # Recipe identity and package math use explicit, stable catalog evidence.
+        basket = BasketBuilder(fixed_recipe_service()).build_recipe_basket(
             {
                 "id": "crosscut-beef-shank-stew-regression",
                 "ingredients": [

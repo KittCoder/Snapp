@@ -1,0 +1,36 @@
+{
+  "10002": {
+    "name": {
+      "Heavenly White Cake": "Sou entènèt jwèt Heavenly White Cake"
+    },
+    "ingredients": {
+      "2 3/4 cup sifted cake flour": "2 3/4 tas tamize farin gato",
+      "4 teaspoon baking powder": "4 ti kiyè poud boulanjri",
+      "3/4 teaspoon salt": "3/4 ti kiyè sèl",
+      "4 egg whites": "4 blan ze",
+      "1 1/2 cup white sugar": "1 1/2 tas sik blan",
+      "3/4 cup butter": "3/4 tas bè",
+      "1 cup milk": "1 tas lèt",
+      "1 teaspoon vanilla extract": "1 ti kiyè ekstrè vaniy",
+      "1 teaspoon almond extract": "1 ti kiyè ekstrè zanmann"
+    },
+    "equipment": {
+      "bowl": "bòl",
+      "15 x 10 x 1 inch pan": "15 x 10 x 1 pous chodyè",
+      "parchment paper": "papye parchemin"
+    },
+    "instructions": {
+      "Sift together the cake flour, baking powder, and salt three times": "Separe farin gato a, poud boulanjri, ak sèl twa fwa",
+      "Beat the egg whites in a bowl until foamy": "Bat blan ze yo nan yon bòl jiskaske mous",
+      "Add 1/2 cup of the sugar and beat until the meringue will hold up in soft peaks": "Ajoute 1/2 tas sik la epi bat jiskaske meringue a ap kenbe nan pik mou.",
+      "Beat the butter until smooth": "Bat bè a jiskaske lis",
+      "Add the remaining 1 cup sugar and beat until light and fluffy": "Ajoute rès 1 tas sik la epi bat jiskaske limyè ak an gonfle",
+      "Add the milk and beat until smooth": "Ajoute lèt la ak bat jiskaske lis",
+      "Mix in the vanilla extract and almond extract": "Melanje ekstrè vaniy la ak ekstrè zanmann",
+      "Mix in the flour mixture to make a batter": "Melanje nan melanj farin lan pou fè yon pat",
+      "Spread the batter in a 15 x 10 x 1 inch pan lined with parchment paper": "Gaye farin lan nan yon chodyè 15 x 10 x 1 pous aliyen ak papye parchemin.",
+      "Bake at 350 degrees F for 30 to 35 minutes": "Kwit nan 350 degre F pou 30 a 35 minit",
+      "Transfer and let stand for 10 minutes": "Transfere epi kite kanpe pou 10 minit"
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "10002": {
+    "name": {
+      "Heavenly White Cake": "Niebiańskie Białe Ciasto"
+    },
+    "ingredients": {
+      "2 3/4 cup sifted cake flour": "2 3/4 szklanki przesianej mąki tortowej",
+      "4 teaspoon baking powder": "4 łyżeczki proszku do pieczenia",
+      "3/4 teaspoon salt": "3/4 łyżeczki soli",
+      "4 egg whites": "4 białka jaj",
+      "1 1/2 cup white sugar": "1 1/2 szklanki białego cukru",
+      "3/4 cup butter": "3/4 szklanki masła",
+      "1 cup milk": "1 szklanka mleka",
+      "1 teaspoon vanilla extract": "1 łyżeczka ekstraktu waniliowego",
+      "1 teaspoon almond extract": "1 łyżeczka ekstraktu migdałowego"
+    },
+    "equipment": {
+      "bowl": "miska",
+      "15 x 10 x 1 inch pan": "Patelnia o wymiarach 15 x 10 x 1 cal",
+      "parchment paper": "papier pergaminowy"
+    },
+    "instructions": {
+      "Sift together the cake flour, baking powder, and salt three times": "Trzykrotnie przesiej mąkę tortową, proszek do pieczenia i sól",
+      "Beat the egg whites in a bowl until foamy": "Białka ubić w misce, aż powstanie piana",
+      "Add 1/2 cup of the sugar and beat until the meringue will hold up in soft peaks": "Dodaj 1/2 szklanki cukru i ubijaj, aż beza będzie się trzymać miękkich szczytów",
+      "Beat the butter until smooth": "Ubij masło, aż będzie gładkie",
+      "Add the remaining 1 cup sugar and beat until light and fluffy": "Dodaj pozostałą 1 szklankę cukru i ubijaj, aż masa będzie jasna i puszysta",
+      "Add the milk and beat until smooth": "Dodaj mleko i ubijaj, aż masa będzie gładka",
+      "Mix in the vanilla extract and almond extract": "Wymieszaj ekstrakt waniliowy i ekstrakt migdałowy",
+      "Mix in the flour mixture to make a batter": "Wymieszaj mieszaninę mąki, aby uzyskać ciasto",
+      "Spread the batter in a 15 x 10 x 1 inch pan lined with parchment paper": "Rozłóż ciasto na blaszce o wymiarach 15x10x1 cali wyłożonej papierem pergaminowym",
+      "Bake at 350 degrees F for 30 to 35 minutes": "Piec w temperaturze 350 stopni F przez 30 do 35 minut",
+      "Transfer and let stand for 10 minutes": "Przełożyć i odstawić na 10 minut"
+    }
+  }
+}

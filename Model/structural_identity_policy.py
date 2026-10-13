@@ -13,10 +13,12 @@ class Evidence(str,Enum):
     UNKNOWN='UNKNOWN'
 
 REQUIRED_ATTRIBUTES=('state','fat_level','salt_level','sweetness','flavor','variety','bone','skin','prepared','grade','ripeness','packing_medium','treatment')
-DERIVED_FAMILIES=frozenset({'juice','sauce','soup','fruit_preserve','dressing','dip','pastry','baking_mix','dessert','dessert_mix','cookie','cracker','chips','confection','chocolate','cereal','gravy','syrup','condiment_paste','nut_butter','seed_butter','plant_milk','plant_yogurt','plant_cream','plant_meat','plant_cheese','deli_meat','sausage','produce_mix','imitation_food','prepared_side','creamer','prepared'})
+DERIVED_FAMILIES=frozenset({'juice','sauce','soup','fruit_preserve','dressing','dip','pastry','baking_mix','dessert','dessert_mix','cookie','cracker','chips','confection','chocolate','cereal','gravy','syrup','condiment_paste','nut_butter','seed_butter','plant_milk','plant_yogurt','plant_cream','plant_meat','plant_cheese','deli_meat','sausage','produce_mix','imitation_food','prepared_side','creamer','prepared','beverage'})
 KITCHEN_OPERATIONS=frozenset({'chopped','diced','sliced','peeled','minced','cubed','grated','shredded','cooked'})
 PURCHASE_DIMENSIONS=frozenset({'state','treatment','grade','variety','grain_type','dietary_identity','fat_level','salt_level','species','cut','packing_medium','purchase_variants'})
 GENERIC_CHILDREN={
+ ('beverage','drink'):frozenset({'cola','soda','flavored_water','drink'}),
+ ('beverage','soda'):frozenset({'cola','soda'}),
  ('pasta','generic'):None,('juice','generic'):None,('cereal','generic'):None,
  ('syrup','generic'):None,('nuts','generic'):None,('dressing','generic'):None,
  ('acid','vinegar'):frozenset({'cider_vinegar','rice_vinegar','white_vinegar','white_wine_vinegar','red_wine_vinegar','balsamic_vinegar','raspberry_vinegar'}),
@@ -70,6 +72,12 @@ def derived_parts(text):
     return match.groups() if match else None
 
 PURCHASED_COMPOUND_HEADS=(
+    ('bread','focaccia',r'\bfocaccia\b'),
+    ('bread','english_muffin',r'\benglish muffins?\b'),
+    ('confection','sprinkles',r'\b(?:sprinkles?|nonpareils?|jimmies)\b'),
+    ('cracker','rice',r'\brice crackers?\b'),
+    ('prepared_side','noodle_meal',r'\bramen\b'),
+    ('prepared_side','rice_mix',r'\b(?:seasoned rice|yellow rice|rice mix(?:es)?)\b'),
     ('dessert','ice_cream',r'\bice cream\b'),
     ('chips','rice_snack',r'\brice snaps?\b'),
     ('prepared_side','side_dish',r'\bside dish(?:es)?\b'),

@@ -7,17 +7,18 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, replace
 from functools import lru_cache
 import re, unicodedata
-from ingredient_normalization import parse_ingredient
+from ingredient_normalization import parse_ingredient, contextual_ingredient_text
 from food_identity_rules import (FOUNDATION_HEADS, BASIC_COMPOUNDS, COMPOSITE_MARKERS,
     KITCHEN_FORMS, CUTTABLE_FAMILIES, head_identity, purchased_identity, normalize_food_words, query_branches, final_identity, PURCHASED_FINAL_FAMILIES, strip_final_head, micro_identity, strip_micro_head, precision_identity, strip_precision_head, purchased_specificity, domain_evidence)
 
 from structural_identity_policy import (Evidence, REQUIRED_ATTRIBUTES, identity_form, semantic_head, required_evidence, generic_child, attribute_exception, derived_parts, purchased_compound_head, verified_whole_produce_base)
 
-ONTOLOGY_VERSION = 'food-identity-v3.7'
+ONTOLOGY_VERSION = 'food-identity-v3.12'
 
 @dataclass(frozen=True)
 class FoodIdentity:
     alternatives: tuple[FoodIdentity, ...] = ()
+    absence_claims: tuple[str, ...] = ()
     head: str | None = None
     domain: str = 'food'
     grade: str | None = None
@@ -92,7 +93,7 @@ CHEESES = (
  ('american',r'american (?:cheese|singles)|kraft singles'),('havarti',r'havarti'),
  ('asiago',r'asiago'),('fontina',r'fontina'),('munster',r'muenster|munster'),
 )
-SPECIES = (('chicken',r'chicken|chkn'),('turkey',r'turkey'),('beef',r'beef|rib ?eye|sirloin|filet mignon|new york strip|hamburger meat|skirt steak|flank steak|chuck roast|round steak|round roast|fillet beef'),
+SPECIES = (('chicken',r'chicken|chkn'),('turkey',r'turkey'),('beef',r'beef|rib ?eye|sirloin|filet mignon|new york strip|hamburger meat|hanger steak|skirt steak|flank steak|chuck roast|round steak|round roast|fillet beef'),
  ('pork',r'pork|bacon|prosciutto|ham'),('lamb',r'lamb'),('duck',r'duck'),('veal',r'veal'))
 CUTS = (
  ('corned',r'corned beef'),('bacon',r'bacon'),('ham',r'\bham\b|prosciutto'),
@@ -100,7 +101,7 @@ CUTS = (
  ('ground',r'ground|hamburger meat|minced (?:beef|pork|chicken|turkey|lamb)'),
  ('ribeye',r'rib ?eye'),('tenderloin',r'tenderloin|filet mignon|fillet beef'),
  ('sirloin',r'sirloin'),('strip',r'new york strip|strip steak'),('flank',r'flank'),
- ('skirt',r'skirt'),('chuck',r'chuck'),('shoulder',r'shoulder|boston butt|pork butt'),
+ ('hanger',r'hanger'),('skirt',r'skirt'),('chuck',r'chuck'),('shoulder',r'shoulder|boston butt|pork butt'),
  ('shank',r'shank|hindshank'),('chop',r'chops?'),('loin',r'loin'),('round',r'round'),('brisket',r'brisket'),('stew',r'stew'),
  ('breast',r'breasts?|tenders?'),('thigh',r'thighs?'),('wing',r'wings?'),
  ('drumstick',r'drumsticks?'),('whole',r'whole (?:chicken|turkey)|cornish hen'),
@@ -242,6 +243,10 @@ def describe(text, *, feature=None, product=False):
     if not product and has(raw,r'\b(?:cooking (?:liquor|liquid)|(?:liquor|liquid) from (?:the )?(?:salmon|chicken|beef|fish|pork))\b'):
         return FoodIdentity(normalized_text=raw,evidence=('unverified_cooking_liquid_head',))
     if not product:
+        # Negative/open-ended substitution notes are not positive identities.
+        # In exact shopping mode retain the named primary ingredient instead of
+        # interpreting e.g. 'non-balsamic' as permission to purchase balsamic.
+        raw=re.sub(r'\bor (?:any )?(?:non\b|not\b|anything but\b|other than\b|except\b).*$', '', raw).strip()
         # Quantity/preparation notes are not food alternatives.
         raw=re.sub(r'\bor (?:more as needed|enough to moisten|can)\b.*$','',raw).strip()
         raw=re.sub(r'\bor other (?:toppings|dried fruit)\b.*$','',raw).strip()
@@ -279,7 +284,7 @@ def describe(text, *, feature=None, product=False):
     parsed=None if product else parse_ingredient(text)
     # Preserve original identity evidence: legacy normalization removes cut/form
     # words. Remove only the alternate branch, not explicit fat/salt/style words.
-    detection=raw if product else re.split(r'\bor\b',raw,maxsplit=1)[0]
+    detection=raw if product else re.split(r'\bor\b',norm(contextual_ingredient_text(raw)),maxsplit=1)[0]
     if not product:
         detection=detection.replace('for stew','stew')
         if has(raw,r'\bsteak\b') and has(detection,r'\b(?:round|flank|skirt)\b') and not has(detection,r'beef|pork|chicken|lamb|veal'):detection+=' steak'
@@ -295,19 +300,29 @@ def describe(text, *, feature=None, product=False):
     if not product and has(detection,r'\bpepper\b') and not has(detection,r'black|white|cayenne|bell|green|red|jalapeno|serrano|lemon|hot'):
         if has(detection,r'\b(?:tsp|teaspoons?|tbsp|tablespoons?|ground|grains?|pinch|speck)\b') or detection=='pepper':detection+=' black pepper'
         else: detection+=' bell pepper'
-    values={'normalized_text':detection,'brand':feature.get('brand') if product else parsed.brand}
+    from absence_claims import separate_absence_claims
+    claim_text = detection
+    detection, absence_claims = separate_absence_claims(detection)
+    values={'absence_claims':absence_claims,'normalized_text':claim_text,'brand':feature.get('brand') if product else parsed.brand}
     evidence=[]
     def set_identity(family,subfamily,species=None,cut=None):
         values.update(family=family,subfamily=subfamily,canonical=f'{family}:{subfamily}',species=species,cut=cut,head=(cut or subfamily).replace('_',' '))
         evidence.append(f'name_identity:{family}:{subfamily}')
     if not product and has(detection,r'\bsour cream dressing\b'):detection=detection.replace('sour cream dressing','sour cream')
-    precision=purchased_compound_head(detection) or precision_identity(detection)
+    beverage = None
+    if has(detection, r'\bcola\b'):
+        beverage = ('beverage', 'cola', 'cola')
+    elif has(detection, r'\b(?:soft drink|soda)\b') and not has(detection, r'\bbaking soda\b'):
+        beverage = ('beverage', 'soda', 'soda')
+    elif has(detection, r'\bbeverages?\b|(?<!to )(?<!can )\bdrinks?\b(?! (?:it|them)\b)'):
+        beverage = ('beverage', 'drink', 'drink')
+    precision=beverage or purchased_compound_head(detection) or precision_identity(detection)
     if product and precision and precision[:2]==('extract','vanilla') and not has(detection,r'vanilla (?:extract|essence)'):
         precision=('prepared','unverified_flavor_head','vanilla')
     micro=micro_identity(detection)
     outer=precision or micro or final_identity(detection)
     compound=outer or head_identity(detection)
-    purchased=outer if outer and outer[0] in (PURCHASED_FINAL_FAMILIES | {'bread','chips','cracker','pickle','syrup','cereal','pastry'}) else purchased_identity(detection)
+    purchased=outer if outer and outer[0] in (PURCHASED_FINAL_FAMILIES | {'bread','chips','cracker','pickle','syrup','cereal','pastry','beverage'}) else purchased_identity(detection)
     ready=purchased[:2] if outer and purchased else None
     if not ready and has(detection,r'potato pancake mix'):ready=('baking_mix','potato_pancake')
     elif not ready and has(detection,r'pancake mix'):ready=('baking_mix','pancake')
@@ -365,7 +380,7 @@ def describe(text, *, feature=None, product=False):
         if has(detection,r'plant[- ]based|vegan|meatless') and any(has(detection,pattern) for _,pattern in SPECIES):
             species=next(name for name,pattern in SPECIES if has(detection,pattern))
             set_identity('plant_meat',species);values['dietary_identity']='plant'
-        elif cheeses and has(detection,r'vegan|plant[- ]based|dairy[- ]free'):
+        elif cheeses and has(claim_text,r'vegan|plant[- ]based|dairy[- ]free'):
             set_identity('plant_cheese',cheeses[0]);values['dietary_identity']='plant'
         elif cheeses:
             set_identity('cheese',cheeses[0]);values['ambiguous']=len(set(cheeses))>1
@@ -397,7 +412,7 @@ def describe(text, *, feature=None, product=False):
                 # ingredients cannot replace the product's primary identity.
                 matches=[]
                 for order,(family,subfamily,pattern) in enumerate(FOUNDATIONS):
-                    identity_text=re.sub(r'\b(?:no salt added|low[- ]sodium|salt free|no added sugar)\b',' ',detection)
+                    identity_text=re.sub(r'\blow[- ]sodium\b',' ',detection)
                     match=regex(rf'\b(?:{pattern})\b').search(identity_text)
                     if match:matches.append((match.start(),order,family,subfamily))
                 if matches:
@@ -413,6 +428,9 @@ def describe(text, *, feature=None, product=False):
     # An unrecognized juice derivative cannot inherit a basic ingredient head.
     if has(detection,r'\bjuice\b') and not has(detection,r'(?:in|packed in)\s+(?:100\s*%\s*)?juice') and values.get('family') not in ('juice','produce','prepared','nonfood'):
         set_identity('prepared','unverified_juice_head');values['prepared']='prepared'
+    # Identity was established from positive evidence only. The original claims
+    # remain available for required dietary/absence attributes.
+    detection = claim_text
     # Explicit metadata is evidence; broad category alone cannot establish state.
     metadata_rules={'state':('freshness',{'fresh':'fresh','frozen':'frozen','canned':'canned','dried':'dried'}),
         'fat_level':('fat_level',{'nonfat':'skim','non-fat':'skim','fat-free':'skim','whole':'whole','2 percent':'2%','1 percent':'1%','low-fat':'low_fat'}),
@@ -452,6 +470,11 @@ def describe(text, *, feature=None, product=False):
         if anatomical:values['cut']=anatomical;values['head']=anatomical
     if product and values.get('family')=='produce' and values.get('subfamily') in ('parsley','basil','chives','mint') and has(detection,r'flakes|freeze[- ]dried'):
         values['state']='dried';values['form']='flakes'
+    if product and values.get('family')=='produce' and values.get('subfamily') in ('onion','garlic') and not values.get('state'):
+        source_aisles = re.sub(r'[-_]', ' ', ' '.join(str(x) for x in feature.get('source_categories', [])))
+        if has(source_aisles, r'\bspices?\b|\bseasonings?\b') and has(detection, r'\b(?:minced|flakes|granulated|dehydrated)\b'):
+            values['state']='dried'
+            evidence.append('processed_allium_in_source_spice_aisle')
     if values.get('family')=='seasoning' and values.get('subfamily') in ('cumin','cinnamon','paprika','chili_powder','curry_powder','white_pepper','black_pepper','cayenne') and values.get('form')=='powdered':values['form']='ground'
     flavor=next((name for name in ('cherry','guava','acai','pineapple','mango','raspberry','lemon','coconut','coffee','honey','mixed berry','vanilla','strawberry','chocolate','banana','blueberry','peach','plain') if has(detection,rf'\b{name}\b')),None)
     if values.get('family')=='plant_milk':
@@ -627,7 +650,7 @@ def describe(text, *, feature=None, product=False):
         elif has(detection,r'\bhot\b'):values['flavor']='hot'
     if values.get('family')=='seasoning' and has(detection,r'\bsmoked\b'):values['treatment']='smoked'
     if values.get('family')=='fat' and values.get('subfamily')=='olive_oil':
-        values['grade']=next((v for v,p in [('extra_virgin',r'extra virgin|e v o o|evoo'),('virgin',r'\bvirgin\b'),('refined',r'refined|light flavor|extra light')] if has(detection,p)),None)
+        values['grade']=next((v for v,p in [('extra_virgin',r'extra virgin|e v o o|evoo'),('virgin',r'\bvirgin\b'),('refined',r'refined|light olive oil|light flavor|extra light')] if has(detection,p)),None)
     if values.get('family')=='produce':
         if has(detection,r'\bcandied\b'):values['treatment']='candied'
         elif has(detection,r'\bpreserved\b'):values['treatment']='preserved'
@@ -661,6 +684,11 @@ def describe(text, *, feature=None, product=False):
     if not product and compound_options:values['ambiguous']=True;evidence.append('unresolved_compound_options')
     if product and values.get('family')=='water' and has(detection,r'vitamin|flavou?r|essence|dragonfruit|lemon|berry'):set_identity('beverage','flavored_water');values['prepared']='prepared'
     if values.get('family')=='fish' and precision:values['species']=values['subfamily'];values['dietary_identity']='animal'
+    # Absence evidence is required directionally for explicit dietary requests.
+    if 'salt' in absence_claims:
+        values['salt_level']='unsalted'
+    if 'fat' in absence_claims:
+        values['fat_level']='fat_free' if values.get('family') in ('cheese','plant_cheese') else 'skim'
     if product:
         domain=domain_evidence(raw,feature)
         if domain:values['domain']='ineligible';evidence.append(domain)
@@ -677,6 +705,20 @@ def describe(text, *, feature=None, product=False):
                 values['head']=derived_head;values['prepared']='prepared'
                 evidence.append('compositional_derived_head')
     if compound_query:values['ambiguous']=True;evidence.append('multiple_ingredient_heads_in_query')
+    from food_identity_rules import commodity_product_head, herb_product_head
+    commodity_head = herb_product_head(detection, values.get('family')) or commodity_product_head(detection, values.get('family'), feature if product else None)
+    if product and not commodity_head and values.get('family')=='produce':
+        source_aisles = re.sub(r'[-_]', ' ', ' '.join(str(x) for x in feature.get('source_categories', [])))
+        if has(source_aisles, r'\bpickled goods\b'):
+            values['treatment']='preserved'
+            evidence.append('source_pickled_goods_aisle')
+        if has(source_aisles, r'\bfrozen snacks\b'):
+            # A flavor-only snack title does not establish a produce head.
+            commodity_head = ('prepared', 'source_snack')
+    if commodity_head:
+        set_identity(*commodity_head)
+        values['prepared'] = 'prepared'
+        evidence.append('outer_commodity_product_head')
     values['evidence']=tuple(evidence)
     return FoodIdentity(**values)
 
@@ -735,6 +777,8 @@ def compatibility(query, product, mode='exact'):
     if query.family=='produce' and query.treatment is None and product.treatment in ('preserved','candied'):failures.append('unrequested_produce_processing')
     if query.family=='produce' and query.state is None and product.state=='dried' and query.subfamily in ('cranberry','strawberry','cherry','pineapple','apple','pear','peach','blueberry','banana','mango','apricot'):
         failures.append('unrequested_dried_fruit_state')
+    if query.family=='produce' and query.state is None and product.state=='dried' and query.subfamily in ('onion','garlic'):
+        failures.append('unrequested_dried_allium_state')
     if query.family=='flour' and query.subfamily in ('all_purpose','bread','cake','whole_wheat','self_rising') and 'gluten_free' not in query.dietary_requirements and 'gluten_free' in product.dietary_requirements:failures.append('unrequested_gluten_free_flour')
     if (query.family=='plant_milk' or query.family=='dairy' and query.subfamily=='milk') and not query.flavor and product.flavor not in (None,'plain'):failures.append('unrequested_milk_flavor')
     if query.family in ('dairy','plant_yogurt') and query.subfamily in ('yogurt','greek_yogurt') and not query.flavor and product.flavor not in (None,'plain'):
@@ -743,6 +787,11 @@ def compatibility(query, product, mode='exact'):
         if not (query.family=='sauce' and query.subfamily=='mustard' and product.flavor=='hot'):failures.append('unrequested_flavor')
     for variant in query.purchase_variants:
         if variant not in product.purchase_variants:failures.append('unverified_purchase_variant:'+variant)
+    for claim in query.absence_claims:
+        verified = claim in product.absence_claims or (claim=='fat' and product.fat_level in ('skim','fat_free')) or (claim=='salt' and product.salt_level=='unsalted') or claim+'_free' in product.dietary_requirements
+        if not verified and query.family=='produce' and claim in ('seed','seeds','stalk','stalks','skin','peel'):
+            verified=True;equivalent=True  # ordinary post-purchase removal
+        if not verified:failures.append('unverified_absence:'+claim)
     for requirement in query.dietary_requirements:
         if requirement not in product.dietary_requirements:failures.append('unverified_'+requirement)
     if query.family=='produce' and query.form=='spears' and product.form is None and not verified_whole_produce_base(product):failures.append('unverified_whole_base_for_spears')

@@ -24,6 +24,8 @@ from ops_metrics import log_event, metrics, request_id
 from review_workflow import mutate_override, override_summary, require_admin
 
 app = Flask(__name__)
+from request_security import install_security, apply_route_limits
+security_limiter = install_security(app)
 
 SYSTEM_PROMPT = (
     "You are a helpful meal generating assistant who generates concise meal ideas initially, asks for feedback, iterates, then returns recipes upon confirmation of meals from user. "
@@ -472,7 +474,7 @@ PRICE_PER_100G_RULES = (
     (r"\b(sauce|salsa|dressing|yogurt|cream|broth|stock)\b", 0.55),
 )
 DEFAULT_CORS_ORIGINS = (
-    "http://localhost:5173,"
+    "http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,"
     "http://127.0.0.1:5173,"
     "https://snapp-1d5j.vercel.app,"
     "https://snapp.vercel.app"
@@ -485,7 +487,7 @@ LOCAL_DEVELOPMENT_ORIGIN_PATTERN = re.compile(
 )
 CORS_ORIGINS = {
     origin.strip().rstrip("/")
-    for origin in os.getenv("CORS_ORIGINS", DEFAULT_CORS_ORIGINS).split(",")
+    for origin in os.getenv("ALLOWED_ORIGINS", os.getenv("CORS_ORIGINS", DEFAULT_CORS_ORIGINS)).split(",")
     if origin.strip()
 }
 MATCHER_WARMUP_EXEMPT_ENDPOINTS = {
@@ -504,7 +506,7 @@ MATCHER_WARMUP_EXEMPT_ENDPOINTS = {
 
 @app.before_request
 def attach_request_context():
-    request.snapp_request_id = request.headers.get("X-Request-ID") or request_id()
+    request.snapp_request_id = getattr(request, "snapp_request_id", request_id())
     if (
         request.endpoint not in MATCHER_WARMUP_EXEMPT_ENDPOINTS
         and os.getenv("SNAPP_DISABLE_MATCHER_WARMUP", "").lower() not in {"1", "true", "yes"}
@@ -538,23 +540,10 @@ def admin_required():
 @app.after_request
 def add_cors_headers(response):
     origin = request.headers.get("Origin", "").rstrip("/")
-    is_allowed_vercel_deployment = bool(
-        origin and VERCEL_DEPLOYMENT_ORIGIN_PATTERN.fullmatch(origin)
-    )
-    is_allowed_local_development = bool(
-        origin and LOCAL_DEVELOPMENT_ORIGIN_PATTERN.fullmatch(origin)
-    )
-    if (
-        "*" in CORS_ORIGINS
-        or origin in CORS_ORIGINS
-        or is_allowed_vercel_deployment
-        or is_allowed_local_development
-    ):
-        response.headers["Access-Control-Allow-Origin"] = (
-            "*" if "*" in CORS_ORIGINS else origin
-        )
-        response.headers["Vary"] = "Origin"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type,X-SNAPP-Admin-Token,X-Request-ID"
+    if origin and origin in CORS_ORIGINS and origin != "*":
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.vary.add("Origin")
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization,X-SNAPP-Admin-Token,X-Request-ID"
         response.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS"
     return response
 
@@ -562,7 +551,7 @@ def add_cors_headers(response):
 @app.errorhandler(Exception)
 def handle_unexpected_error(exc):
     log_event("unhandled_backend_error", error_type=type(exc).__name__)
-    return jsonify({"error": "Backend request failed.", "details": str(exc), "request_id": getattr(request, "snapp_request_id", None)}), 500
+    return jsonify({"error": "Backend request failed.", "request_id": getattr(request, "snapp_request_id", None)}), 500
 
 
 def generate_reply(message):
@@ -571,7 +560,7 @@ def generate_reply(message):
         raise RuntimeError("OPENAI_API_KEY is not set.")
 
     client = OpenAI(api_key=api_key, timeout=8, max_retries=0)
-    history = conversation_history[-MAX_TURNS * 2 :]
+    history = []  # Legacy route must never share conversation data across users.
     prompt = [{"role": "system", "content": SYSTEM_PROMPT}]
     prompt.extend(history)
     prompt.append({"role": "user", "content": message})
@@ -581,8 +570,6 @@ def generate_reply(message):
         store=False,
     )
     reply = response.output_text
-    conversation_history.append({"role": "user", "content": message})
-    conversation_history.append({"role": "assistant", "content": reply})
     return reply, response.usage.total_tokens
 
 
@@ -3804,6 +3791,17 @@ def pantry_spice_keys(pantry_items):
     return keys
 
 
+def pantry_ingredient_identity_key(text):
+    # Pantry coverage cannot erase a subtype/cut/grade requirement either.
+    from product_ontology import describe
+    identity = describe(text).to_dict()
+    if not identity.get("family"):
+        return ingredient_identity_key(text)
+    for key in ("normalized_text", "evidence", "brand"):
+        identity.pop(key, None)
+    return json.dumps(identity, sort_keys=True)
+
+
 def pantry_quantity_buckets(pantry_items):
     from basket_quantity import canonical_quantity
     from ingredient_normalization import parse_ingredient
@@ -3812,7 +3810,7 @@ def pantry_quantity_buckets(pantry_items):
     for item in pantry_items or []:
         text = pantry_entry_text(item)
         parsed = parse_ingredient(text)
-        key = ingredient_identity_key(text)
+        key = pantry_ingredient_identity_key(text)
         if not key:
             continue
         quantity = canonical_quantity(parsed.quantity, parsed.unit, parsed.canonical_name)
@@ -3839,18 +3837,12 @@ def pantry_adjusted_ingredient_text(ingredient, pantry_buckets, spice_keys, serv
     spice_terms = spice_requirements_for_text(text)
     if spice_terms and spice_terms <= spice_keys:
         return None
-    key = ingredient_identity_key(text)
+    key = pantry_ingredient_identity_key(text)
     parsed = parse_ingredient(text)
     if servings and parsed.quantity is not None and re.search(r"\bper person\b", normalize_cuisine_text(text)):
         parsed.quantity *= max(1, int(servings))
-        name = parsed.canonical_name or ingredient.get("name") or ""
-        unit = parsed.unit or ""
-        if unit and name and normalize_cuisine_text(name).startswith(normalize_cuisine_text(unit)):
-            text = f"{parsed.quantity:g} {name}".strip()
-        elif unit:
-            text = f"{parsed.quantity:g} {unit} {name}".strip()
-        else:
-            text = f"{parsed.quantity:g} {name}".strip()
+        from recipe_ingredient_adapter import ingredient_with_quantity
+        text = ingredient_with_quantity(text, parsed.quantity, parsed.unit)
     required = canonical_quantity(parsed.quantity, parsed.unit, parsed.canonical_name)
     bucket = pantry_buckets.get(key)
     if not bucket or required.base_quantity is None:
@@ -3888,10 +3880,8 @@ def pantry_adjusted_ingredient_text(ingredient, pantry_buckets, spice_keys, serv
     )
     if remaining.quantity is None:
         return text
-    name = parsed.canonical_name or ingredient.get("name") or text
-    if remaining.dimension == "count" and name:
-        return f"{remaining.quantity:g} {name}".strip()
-    return f"{remaining.quantity:g} {remaining.unit or ''} {name}".strip()
+    from recipe_ingredient_adapter import ingredient_with_quantity
+    return ingredient_with_quantity(text, remaining.quantity, remaining.unit)
 
 
 def pantry_adjusted_recipe_ingredients(recipe, pantry_items=None, servings=None):
@@ -3941,6 +3931,8 @@ def morton_williams_feature_to_demo_product(feature, ranked_match=None):
         "package_grams": package_grams,
         "price": round(float(checkout_price), 2) if checkout_price is not None else 0,
         "sale_price": None,
+        "is_on_sale": feature.get("is_on_sale") is True,
+        "sale_offer": feature.get("raw_sale_price") if feature.get("is_on_sale") is True else None,
         "calories_per_100g": 0,
         "match_confidence": getattr(ranked_match, "confidence", None),
         "match_score": getattr(ranked_match, "final_score", None),
@@ -3969,6 +3961,8 @@ def basket_item_to_morton_williams_product(item, feature):
     product["quantity_optimization_warnings"] = item.warnings
     product["pricing_source"] = "morton_williams_quantity_engine"
     product["purchase_quantity_display"] = purchase_quantity_display(product)
+    from deal_presentation import shopping_deal_fields
+    product["deal"] = shopping_deal_fields(getattr(item, "optimized_purchase", None))
     return product
 
 
@@ -4115,6 +4109,10 @@ def spoonacular_recipe_to_demo_dish(
     household_size,
     grocery_label="grocery database",
 ):
+    from recipe_nutrition import recipe_nutrition
+    source_servings = source_recipe_servings(recipe)
+    nutrition = recipe_nutrition(recipe, source_servings or household_size,
+                                 servings_source="recipe" if source_servings else "household")
     ingredient_lines = []
     total_price = 0
     placeholder_nutrients = {
@@ -4126,7 +4124,7 @@ def spoonacular_recipe_to_demo_dish(
         "sodium_mg": "x g",
     }
 
-    for recipe_ingredient, product in matched_products[:10]:
+    for recipe_ingredient, product in matched_products:
         if not product:
             continue
         package_grams = int(product.get("package_grams") or 0)
@@ -4149,6 +4147,8 @@ def spoonacular_recipe_to_demo_dish(
         ingredient_lines.append(
             {
                 "product_id": product.get("id"),
+                "is_on_sale": product.get("is_on_sale") is True,
+                "sale_offer": product.get("sale_offer"),
                 "name": product.get("ingredient"),
                 "recipe_ingredient": recipe_ingredient["name"],
                 "recipe_measure": recipe_ingredient["measure"],
@@ -4164,6 +4164,7 @@ def spoonacular_recipe_to_demo_dish(
                 "purchase_quantity_display": product.get("purchase_quantity_display"),
                 "required_quantity": product.get("required_quantity"),
                 "leftover_quantity": product.get("leftover_quantity"),
+                "deal": product.get("deal"),
                 "grams_total": grams_total,
                 "grams_per_person": round(grams_total / max(1, household_size)),
                 "calories_total": 0,
@@ -4198,6 +4199,7 @@ def spoonacular_recipe_to_demo_dish(
         "spoonacular_id": recipe["id"],
         "spoonacular_source": recipe["source"],
         "recipe_provider": provider,
+        **nutrition,
     }
 
 
@@ -4669,8 +4671,6 @@ def recipe_result_from_recipe(
     dish["estimated_price_per_serving"] = round(
         dish["estimated_price_total"] / max(1, dish["servings"]), 2
     )
-    dish["calories_total"] = 0
-    dish["calories_per_person"] = 0
     dish["recipe"] = recipe_details
     dish["cook_time_minutes"] = recipe_details["cook_time_minutes"]
     dish["dietary_tags"] = recipe_details["dietary_tags"]
@@ -5372,6 +5372,10 @@ def health():
 
 @app.get("/ready")
 def ready():
+    if os.getenv("SNAPP_ENV", "").lower() == "production" and os.getenv("SNAPP_DEPENDENCY_READINESS", "1") == "1":
+        from security_readiness import dependencies_ready
+        if not dependencies_ready():
+            return jsonify({"status": "unavailable", "dependencies": "unavailable"}), 503
     state = matcher_warmup.get_warmup_status()
     artifact_validation = validate_runtime_artifacts().safe_dict()
     allow_degraded = os.getenv("SNAPP_ALLOW_LEXICAL_ONLY", "").lower() in {"1", "true", "yes"}
@@ -5713,6 +5717,51 @@ def recipe_chat_detail_record(recipe_id):
     return recipe, detail
 
 
+def recipe_chat_grocery_estimate(recipe, matches, pantry):
+    required, _ = pantry_adjusted_recipe_ingredients(
+        recipe, pantry, servings=source_recipe_servings(recipe))
+    covered, total = set(), 0.0
+    for ingredient, product in matches:
+        if not product:
+            continue
+        price = product.get("estimated_price_total")
+        if price is None:
+            price = product.get("price")
+        try:
+            price = float(price)
+        except (TypeError, ValueError):
+            continue
+        if not math.isfinite(price) or price <= 0:
+            continue
+        total += price
+        covered.update(product.get("source_ingredients") or [ingredient.get("measure") or ingredient.get("display")])
+    missing = sum(line not in covered for line in required)
+    status = "complete" if not missing else "partial" if total > 0 else "unavailable"
+    return {"total": round(total, 2) if status != "unavailable" else None,
+            "currency": "USD", "status": status, "unpriced_ingredients": missing}
+
+
+@app.route("/api/recipes/nutrition", methods=["POST", "OPTIONS"])
+def recipe_nutrition_preview():
+    if request.method == "OPTIONS":
+        return ("", 204)
+    data, error = validated_json_payload()
+    if error:
+        return error
+    recipe = data.get("recipe")
+    if not isinstance(recipe, dict):
+        return json_error("A recipe is required.", 400)
+    ingredients = recipe.get("ingredients") or recipe.get("extendedIngredients") or []
+    if not isinstance(ingredients, list) or not 1 <= len(ingredients) <= 100:
+        return json_error("Provide between 1 and 100 ingredient lines.", 400)
+    if any(len(json.dumps(item)) > 4000 for item in ingredients):
+        return json_error("Ingredient line is too long.", 400)
+    from recipe_nutrition import recipe_nutrition
+    source_servings = source_recipe_servings(recipe)
+    servings = source_servings or parse_household_size(data.get("household_size"))
+    return jsonify(recipe_nutrition(recipe, servings, servings_source="recipe" if source_servings else "household"))
+
+
 @app.route("/api/recipes/detail", methods=["POST", "OPTIONS"])
 def recipe_chat_detail():
     if request.method == "OPTIONS":
@@ -5728,18 +5777,53 @@ def recipe_chat_detail():
         if recipe is None:
             return json_error("Recipe is no longer available.", 404)
         dish = {"recipe_id": recipe_id, "name": detail.get("name"), "recipe": detail}
-        if data.get("for_schedule"):
+        matches = None
+        if data.get("for_schedule") or data.get("include_price_estimate"):
             pantry = parse_pantry_items(data.get("pantry_items"))
             if len(pantry) > MAX_PANTRY_ITEMS_PER_REQUEST:
                 return json_error("Too many pantry items in request.", 400)
-            matches = match_recipe_ingredients_to_morton_williams(
-                recipe, pantry_items=pantry, servings=source_recipe_servings(recipe))
+            try:
+                matches = match_recipe_ingredients_to_morton_williams(
+                    recipe, pantry_items=pantry, servings=source_recipe_servings(recipe))
+                dish["grocery_estimate"] = recipe_chat_grocery_estimate(recipe, matches, pantry)
+            except Exception:
+                if data.get("for_schedule"):
+                    raise
+                dish["grocery_estimate"] = {"total": None, "currency": "USD", "status": "unavailable"}
+        if data.get("for_schedule"):
+            estimate = dish["grocery_estimate"]
             dish = spoonacular_recipe_to_demo_dish(
                 recipe, matches, morton_williams_store_lookup(),
                 parse_household_size(data.get("household_size")), grocery_label="Morton Williams")
             dish["recipe"] = detail
             dish.pop("servings", None)
             dish.pop("servings_display", None)
+            dish["grocery_estimate"] = estimate
+        elif data.get("include_nutrition"):
+            from recipe_nutrition import recipe_nutrition
+            source_servings = source_recipe_servings(recipe)
+            dish.update(recipe_nutrition(recipe, source_servings or parse_household_size(data.get("household_size")),
+                                        servings_source="recipe" if source_servings else "household"))
+        if data.get("include_sale_matches"):
+            # Presentation metadata from existing matching; never infer offers from recipe words.
+            try:
+                sale_matches = match_recipe_ingredients_to_morton_williams(
+                    recipe, pantry_items=[], servings=source_recipe_servings(recipe))
+                dish["sale_ingredients"] = [
+                    {"recipe_measure": ingredient.get("measure"),
+                     "recipe_display": ingredient.get("display"),
+                     "product_name": product.get("product_name"),
+                     "is_on_sale": True, "sale_offer": product.get("sale_offer")}
+                    for ingredient, product in sale_matches
+                    if product and product.get("is_on_sale") is True]
+            except Exception as exc:
+                log_event("recipe_sale_metadata_failed", request_id=request.snapp_request_id,
+                          error_type=type(exc).__name__)
+                dish["sale_metadata_unavailable"] = True
+        from recipe_chat_presentation import localize_detail
+        display = localize_detail(recipe_id, detail, data.get("locale", "en"))
+        if display is not None:
+            dish["localized_recipe"] = display
         return jsonify({"dish": dish})
     except Exception as exc:
         log_event("recipe_detail_failed", request_id=request.snapp_request_id, error_type=type(exc).__name__)
@@ -5755,7 +5839,11 @@ def recipe_chat():
     from recipe_search_typesense import TypesenseUnavailable
 
     try:
-        result = configured_service().handle_message(data.get("message"), data.get("state"))
+        from recipe_chat_multilingual import handle_message as localized_chat
+        result = localized_chat(configured_service(), data.get("message"), data.get("state"),
+                                locale=data.get("locale", "en"),
+                                pantry_items=parse_pantry_items(data.get("pantry_items")),
+                                household_size=parse_household_size(data.get("household_size")))
     except ValueError as exc:
         return json_error(str(exc), 400)
     except TypesenseUnavailable:
@@ -5785,7 +5873,7 @@ def chat():
     try:
         reply, total_tokens = generate_reply(message)
     except Exception as exc:
-        return jsonify({"error": "Model request failed.", "details": str(exc)}), 500
+        return json_error("Model request failed.", 503)
     return jsonify({"reply": reply, "usage": {"total_tokens": total_tokens}})
 
 
@@ -5805,7 +5893,7 @@ def grocery_stores():
     try:
         location, stores, center = find_grocery_stores(zip_code, radius_miles, snap_only=snap_only)
     except RuntimeError as exc:
-        return jsonify({"error": str(exc)}), 503
+        return json_error("Store search is temporarily unavailable.", 503)
 
     if location is None:
         return jsonify({"error": "ZIP code not found."}), 404
@@ -5837,7 +5925,7 @@ def trader_joes_store():
     try:
         result = find_trader_joes_store(zip_code)
     except RuntimeError as exc:
-        return jsonify({"error": str(exc)}), 503
+        return json_error("Store search is temporarily unavailable.", 503)
 
     if not result:
         return jsonify({"error": "ZIP code not found."}), 404
@@ -5932,6 +6020,17 @@ def dishes():
                 grocery_label=grocery_label,
                 pantry_items=pantry_items,
             )
+        from recipe_chat_multilingual import locale_code
+        if locale_code(data.get("locale", "en")) != "en":
+            from concurrent.futures import ThreadPoolExecutor
+            from recipe_chat_presentation import localize_detail
+            def translate_dish(dish):
+                detail = dict(dish.get("recipe") or {})
+                detail.setdefault("name", dish.get("name", ""))
+                dish["localized_recipe"] = localize_detail(
+                    str(dish.get("recipe_id") or dish.get("name")), detail, data["locale"])
+            with ThreadPoolExecutor(max_workers=3) as executor:
+                list(executor.map(translate_dish, dishes))
         ingredient_count = sum(len(dish.get("recipe", {}).get("ingredients", [])) for dish in dishes)
         unmatched_count = sum(
             1
@@ -5997,6 +6096,8 @@ def dishes():
 def dishes_options():
     return ("", 204)
 
+
+apply_route_limits(app, security_limiter)
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "5000"))

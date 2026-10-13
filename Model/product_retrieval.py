@@ -178,7 +178,11 @@ class SentenceTransformerEmbeddingBackend:
         try:
             from sentence_transformers import SentenceTransformer
 
-            self._model = SentenceTransformer(self.model_name)
+            # Server workers use CPU: macOS Metal initialization is unsafe after
+            # Gunicorn forks with the security-updated PyTorch runtime.
+            self._model = SentenceTransformer(
+                self.model_name, device=os.getenv("SNAPP_EMBEDDING_DEVICE", "cpu")
+            )
         except Exception as exc:
             self._load_error = str(exc)
             self._model = None

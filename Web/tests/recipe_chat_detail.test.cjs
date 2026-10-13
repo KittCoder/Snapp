@@ -20,10 +20,13 @@ class Element {
 function text(node) { return [node.textContent || '', ...node.children.map(text)].join(' '); }
 function setup() {
   const elements = new Map();
-  const document = { getElementById(id) { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); }, createElement: tag => new Element(tag), querySelector: () => null };
+  const listeners = {};
+  const document = { getElementById(id) { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); }, createElement: tag => new Element(tag), querySelector: () => null, addEventListener: (event, callback) => { listeners[event] = callback; } };
   const calls = []; let scheduledMeals = [];
   const context = vm.createContext({ document, AbortController, console,
     window: { location: { hostname: 'localhost' }, setTimeout, clearTimeout },
+    t: (key, values = {}) => { const catalog = JSON.parse(fs.readFileSync(require('node:path').join(__dirname, '../i18n/en.json'), 'utf8')); return (catalog[key] || '').replace(/\{(\w+)\}/g, (m,k) => values[k] == null ? m : String(values[k])); },
+    getLanguage: () => 'en', getHouseholdSize: () => 2,
     householdSizeInput: { value: '2' }, pantryItems: [],
     getApiEndpoints: () => [],
     formatServings: dish => dish.recipe.servings ? `${dish.recipe.servings} servings` : '',
@@ -38,6 +41,7 @@ function setup() {
     getShoppingCategory: () => 'Other',
   });
   for (const [start, end] of [
+    ['function demoPrice(', 'function getHouseholdSize('],
     ['function recipeItemList(', 'function appendModalSection('],
     ['async function addMealToSchedule(', 'function openDishModal('],
     ['function getIngredientName(', 'function getIngredientQuantity('],
@@ -48,7 +52,7 @@ function setup() {
     vm.runInContext(source.slice(a, b), context);
   }
   vm.runInContext(source.slice(source.indexOf('const recipeChat = (() =>'), source.indexOf('// End experimental Recipe Chat.')), context);
-  return { context, elements, calls, scheduledMeals };
+  return { context, elements, calls, scheduledMeals, listeners };
 }
 test('click opens full recipe; back preserves draft, history and follow-up state; schedule feeds shared shopping list', async () => {
   const { context, elements, calls, scheduledMeals } = setup();
@@ -59,7 +63,7 @@ test('click opens full recipe; back preserves draft, history and follow-up state
   await card.listeners.click();
   const detail = history.afterNode;
   assert.match(text(detail), /2 eggs/); assert.match(text(detail), /1 cup rice/); assert.match(text(detail), /Beat eggs/);
-  assert.equal(calls[1].body.recipe_id, 'r2');
+  assert.equal(calls.find(call => call.body.include_sale_matches).body.recipe_id, 'r2');
   assert.doesNotMatch(text(detail), /servings|nutrition|rating|estimated/);
   await detail.children.at(-1).listeners.click();
   assert.equal(scheduledMeals.length, 1); assert.equal(scheduledMeals[0].recipe_id, 'r2'); assert.equal(scheduledMeals[0].name, 'Full second');
@@ -67,7 +71,7 @@ test('click opens full recipe; back preserves draft, history and follow-up state
   detail.children[0].listeners.click();
   assert.equal(history.hidden, false); assert.equal(history.children[1], reply); assert.equal(input.value, 'my draft');
   input.value = 'something quicker'; await form.listeners.submit({ preventDefault() {} });
-  assert.deepEqual(calls.at(-1).body.state, { last_result_ids: ['r1', 'r2'] });
+  assert.deepEqual(calls.filter(call => call.url.endsWith('/chat')).at(-1).body.state, { last_result_ids: ['r1', 'r2'] });
   await vm.runInContext('addMealToSchedule({recipe_id:"r2",name:"Duplicate"})', context);
   assert.equal(scheduledMeals.length, 1);
   await vm.runInContext('addMealToSchedule({recipe_id:"dishes-id",name:"Dishes meal",recipe:{ingredients:[{name:"salt"}]}})', context);
@@ -126,4 +130,162 @@ test('shared list renderer preserves Dishes ingredient text', () => {
   assert.match(text(context.dishModalContent), /Recipe ingredients.*2 eggs/);
   vm.runInContext('appendModalSection("Ingredients to buy", [], item => item.display)', context);
   assert.match(text(context.dishModalContent), /None available/);
+});
+
+test('recipe sale badges require verified offers and preserve original ingredient text', async () => {
+  const { context, elements } = setup();
+  const form = elements.get('recipe-chat-form');
+  elements.get('recipe-chat-input').value = 'eggs';
+  await form.listeners.submit({ preventDefault() {} });
+  context.fetch = async () => ({ ok: true, json: async () => ({ dish: {
+    recipe_id: 'r1', name: 'Eggs', recipe: { ingredients: [{ display: '2 eggs' }, { display: 'rice' }] },
+    sale_ingredients: [
+      { recipe_display: '2 eggs', is_on_sale: true, product_name: 'Farm eggs', sale_offer: '2 for $5' },
+      { recipe_display: 'rice', is_on_sale: false, product_name: 'Rice' },
+    ],
+  } }) });
+  await elements.get('recipe-chat-history').children[1].children[2].children[0].listeners.click();
+  const detailText = text(elements.get('recipe-chat-history').afterNode);
+  assert.match(detailText, /2 eggs On sale Farm eggs · 2 for \$5/);
+  assert.equal((detailText.match(/On sale/g) || []).length, 1);
+});
+
+test('weekly nutrition sums one portion, handles totals and excludes missing data', () => {
+  const meals = [
+    { nutrition_per_person: { protein_g: 20, carbohydrates_g: 30, fat_g: 10 } },
+    { servings: 2, nutrition_total: { protein_g: 60, carbohydrates_g: 80, fat_g: 30 } },
+    { nutrition_per_person: { protein_g: 'x g', carbohydrates_g: 'x g', fat_g: 'x g' } },
+  ];
+  const context = vm.createContext({ scheduledMeals: meals, getServingCount: meal => meal.servings || 1 });
+  vm.runInContext(source.slice(source.indexOf('function getPortionMacroValue('), source.indexOf('function setMacroBar(')), context);
+  assert.deepEqual(JSON.parse(vm.runInContext('JSON.stringify(getScheduledMacroTotals())', context)), { protein: 50, carbs: 70, fat: 25 });
+  meals.splice(0, 1);
+  assert.equal(vm.runInContext('getScheduledMacroTotals().protein', context), 30);
+});
+
+test('populated pantry renders food names and quantities without store data', () => {
+  const { context } = setup();
+  const pantryList = new Element('ul');
+  Object.assign(context, { pantryList, currentUser: { id: 'user' },
+    pantryItems: [{ id: 'rice', name: 'Rice', quantity: '2 cups' }],
+    isTraditionalSpice: () => false, canonicalSpiceName: value => value,
+    setPantryStatus: () => {}, deletePantryItem: () => {},
+  });
+  vm.runInContext(source.slice(source.indexOf('function renderPantryItems('), source.indexOf('async function loadPantryItems(')), context);
+  vm.runInContext('renderPantryItems()', context);
+  assert.match(text(pantryList), /Rice 2 cups Remove/);
+});
+test('recipe cards and detail use translated titles and every translated recipe line', async () => {
+  const { context, elements } = setup();
+  context.getLanguage = () => 'es';
+  context.fetch = async (url) => ({ ok: true, json: async () => url.endsWith('/chat') ? {
+    message: 'Recetas', state: { last_result_ids: ['translated'] },
+    results: [{ id: 'translated', title: 'Chicken dinner', ingredient_names: ['chicken'] }],
+    localized_results: [{ id: 'translated', title: 'Cena de pollo', ingredient_names: ['pollo'] }],
+  } : { dish: {
+    recipe_id: 'translated', name: 'Chicken dinner',
+    recipe: { name: 'Chicken dinner', ingredients: [{ display: '2 eggs' }], instructions: ['Beat eggs.'] },
+    localized_recipe: { name: 'Cena de pollo', ingredients: [{ display: '2 huevos' }],
+      instructions: ['Bate los huevos.'], _translation_status: 'translated' },
+  } } });
+  const input = elements.get('recipe-chat-input'); input.value = 'pollo';
+  await elements.get('recipe-chat-form').listeners.submit({ preventDefault() {} });
+  const history = elements.get('recipe-chat-history');
+  assert.match(text(history), /Cena de pollo/);
+  assert.doesNotMatch(text(history), /Chicken dinner/);
+  await history.children[1].children[2].children[0].listeners.click();
+  assert.match(text(history.afterNode), /Cena de pollo/);
+  assert.match(text(history.afterNode), /2 huevos/);
+  assert.match(text(history.afterNode), /Bate los huevos/);
+  assert.doesNotMatch(text(history.afterNode), /Chicken dinner|2 eggs|Beat eggs/);
+});
+test('switching language reloads existing recipe cards in the chosen language', async () => {
+  const { context, elements, listeners } = setup();
+  elements.get('recipe-chat-input').value = 'dinner';
+  await elements.get('recipe-chat-form').listeners.submit({ preventDefault() {} });
+  const history = elements.get('recipe-chat-history');
+  const resultList = history.children[1].children[2];
+  const card = resultList.children[0];
+  card.isConnected = true;
+  card.replaceWith = replacement => { resultList.children[0] = replacement; };
+  history.querySelectorAll = () => [card];
+  history.afterNode.hidden = true;
+  context.getLanguage = () => 'fr';
+  context.fetch = async () => ({ ok: true, json: async () => ({ dish: {
+    recipe_id: 'r1', name: 'First', recipe: { name: 'First' },
+    localized_recipe: { name: 'Premier plat', ingredients: [{ display: '2 œufs' }] },
+  } }) });
+  listeners['snapp:localechange']({ detail: { locale: 'fr' } });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.match(text(resultList.children[0]), /Premier plat/);
+  assert.match(text(resultList.children[0]), /2 œufs/);
+  assert.doesNotMatch(text(resultList.children[0]), /First/);
+});
+test('grocery estimates appear on chat results and detail before scheduling', async () => {
+  const { context, elements, calls, scheduledMeals } = setup();
+  const originalFetch = context.fetch;
+  context.fetch = async (url, options) => {
+    const response = await originalFetch(url, options);
+    const data = await response.json();
+    if (data.dish) data.dish.grocery_estimate = { total: 12.5, status: 'complete', currency: 'USD' };
+    return { ok: true, json: async () => data };
+  };
+  elements.get('recipe-chat-input').value = 'dinner';
+  await elements.get('recipe-chat-form').listeners.submit({ preventDefault() {} });
+  await new Promise(resolve => setImmediate(resolve));
+  const history = elements.get('recipe-chat-history');
+  assert.match(text(history), /\$12\.50 estimated groceries/);
+  assert.match(text(history), /Full recipe · pantry items excluded/);
+  assert.equal(scheduledMeals.length, 0);
+  assert.ok(calls.some(call => call.body.include_price_estimate));
+  await history.children[1].children[2].children[0].listeners.click();
+  assert.match(text(history.afterNode), /\$12\.50 estimated groceries/);
+  assert.equal(scheduledMeals.length, 0);
+});
+test('partial estimates are labeled as subtotals and never look like a complete price', async () => {
+  const { context, elements } = setup();
+  const originalFetch = context.fetch;
+  context.fetch = async (url, options) => {
+    const data = await (await originalFetch(url, options)).json();
+    if (data.dish) data.dish.grocery_estimate = { total: 8.25, status: 'partial' };
+    return { ok: true, json: async () => data };
+  };
+  elements.get('recipe-chat-input').value = 'dinner';
+  await elements.get('recipe-chat-form').listeners.submit({ preventDefault() {} });
+  await new Promise(resolve => setImmediate(resolve));
+  const history = elements.get('recipe-chat-history');
+  assert.match(text(history), /\$8\.25\+ estimated groceries/);
+  assert.match(text(history), /Some ingredients are not priced/);
+});
+test('sale ingredient action routes to Recipe Chat and starts an ingredient search', async () => {
+  const { context, elements } = setup();
+  context.URLSearchParams = URLSearchParams;
+  context.window.location.search = ''; context.window.location.pathname = '/';
+  let panel, destination, submissions = 0;
+  context.showPanel = value => { panel = value; };
+  context.window.history = { replaceState: (state, title, url) => { destination = url; } };
+  elements.get('recipe-chat-form').requestSubmit = () => { submissions++; };
+  vm.runInContext(source.slice(source.indexOf('async function generateRecipesForSaleIngredient('), source.indexOf('async function handleInitialUrlState(')), context);
+  await vm.runInContext('generateRecipesForSaleIngredient({ingredient_id:"chicken",ingredient_name:"Chicken"})', context);
+  assert.equal(panel, 'recipe-chat');
+  assert.match(destination, /panel=recipe-chat/);
+  assert.equal(elements.get('recipe-chat-input').value, 'Recipes with Chicken');
+  assert.equal(submissions, 1);
+});
+test('adding a saved dish calculates USDA nutrition before persisting it', async () => {
+  const { context, scheduledMeals } = setup();
+  context.fetch = async (url, options) => {
+    assert.ok(url.endsWith('/nutrition'));
+    const data = JSON.parse(options.body);
+    assert.equal(data.recipe.ingredients[0].display, '2 eggs');
+    return { ok: true, json: async () => ({
+      nutrition_source: 'USDA FoodData Central', nutrition_status: 'complete', nutrition_servings: 2,
+      nutrition_total: { protein_g: 12, carbohydrates_g: 2, fat_g: 10 },
+      nutrition_per_person: { protein_g: 6, carbohydrates_g: 1, fat_g: 5 },
+    }) };
+  };
+  await vm.runInContext('addMealToSchedule({recipe_id:"saved-eggs",name:"Eggs",recipe:{servings:2,ingredients:[{display:"2 eggs"}]}})', context);
+  assert.equal(scheduledMeals.length, 1);
+  assert.equal(scheduledMeals[0].nutrition_source, 'USDA FoodData Central');
+  assert.equal(scheduledMeals[0].nutrition_per_person.protein_g, 6);
 });

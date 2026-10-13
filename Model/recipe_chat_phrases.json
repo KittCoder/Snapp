@@ -1,0 +1,2055 @@
+{
+  "familyDinner": {
+    "canonical": "I need dinner for my family",
+    "forms": {
+      "es": [
+        "necesito cena para mi familia"
+      ],
+      "zh-TW": [
+        "我需要為我的家人準備晚餐"
+      ],
+      "zh-CN": [
+        "我需要为我的家人准备晚餐"
+      ],
+      "ru": [
+        "Мне нужен ужин для моей семьи"
+      ],
+      "bn": [
+        "আমার পরিবারের জন্য রাতের খাবার দরকার"
+      ],
+      "ht": [
+        "Mwen bezwen dine pou fanmi mwen"
+      ],
+      "ko": [
+        "가족들을 위한 저녁이 필요해요"
+      ],
+      "ar": [
+        "أحتاج العشاء لعائلتي"
+      ],
+      "fr": [
+        "J'ai besoin d'un dîner pour ma famille"
+      ],
+      "ur": [
+        "مجھے اپنے خاندان کے لیے رات کا کھانا چاہیے۔"
+      ],
+      "pl": [
+        "Potrzebuję obiadu dla mojej rodziny"
+      ]
+    }
+  },
+  "cheap": {
+    "canonical": "something cheap",
+    "forms": {
+      "es": [
+        "algo barato"
+      ],
+      "zh-TW": [
+        "便宜的東西"
+      ],
+      "zh-CN": [
+        "便宜的东西"
+      ],
+      "ru": [
+        "что-то дешевое"
+      ],
+      "bn": [
+        "সস্তা কিছু"
+      ],
+      "ht": [
+        "yon bagay bon mache"
+      ],
+      "ko": [
+        "뭔가 싼 것"
+      ],
+      "ar": [
+        "شيء رخيص"
+      ],
+      "fr": [
+        "quelque chose de bon marché"
+      ],
+      "ur": [
+        "کچھ سستا؟"
+      ],
+      "pl": [
+        "coś taniego"
+      ]
+    }
+  },
+  "healthier": {
+    "canonical": "something healthier",
+    "forms": {
+      "es": [
+        "algo más saludable"
+      ],
+      "zh-TW": [
+        "更健康的東西"
+      ],
+      "zh-CN": [
+        "更健康的东西"
+      ],
+      "ru": [
+        "что-то более здоровое"
+      ],
+      "bn": [
+        "স্বাস্থ্যকর কিছু"
+      ],
+      "ht": [
+        "yon bagay ki pi an sante"
+      ],
+      "ko": [
+        "뭔가 더 건강한 것"
+      ],
+      "ar": [
+        "شيء أكثر صحة"
+      ],
+      "fr": [
+        "quelque chose de plus sain"
+      ],
+      "ur": [
+        "کچھ صحت مند"
+      ],
+      "pl": [
+        "coś zdrowszego"
+      ]
+    }
+  },
+  "replaceChicken": {
+    "canonical": "make it chicken instead",
+    "forms": {
+      "es": [
+        "hazlo pollo en su lugar"
+      ],
+      "zh-TW": [
+        "改為雞肉"
+      ],
+      "zh-CN": [
+        "改为鸡肉"
+      ],
+      "ru": [
+        "вместо этого приготовь курицу"
+      ],
+      "bn": [
+        "পরিবর্তে এটি মুরগির করা"
+      ],
+      "ht": [
+        "fè li poul pito"
+      ],
+      "ko": [
+        "대신 치킨으로 해라"
+      ],
+      "ar": [
+        "اجعله دجاجًا بدلاً من ذلك"
+      ],
+      "fr": [
+        "fais-en du poulet à la place"
+      ],
+      "ur": [
+        "اس کے بجائے اسے چکن بنائیں"
+      ],
+      "pl": [
+        "zamiast tego zrób kurczaka"
+      ]
+    }
+  },
+  "excludeCheese": {
+    "canonical": "no cheese",
+    "forms": {
+      "es": [
+        "sin queso"
+      ],
+      "zh-TW": [
+        "沒有起司"
+      ],
+      "zh-CN": [
+        "没有奶酪"
+      ],
+      "ru": [
+        "нет сыра"
+      ],
+      "bn": [
+        "কোন পনির"
+      ],
+      "ht": [
+        "pa gen fwomaj"
+      ],
+      "ko": [
+        "치즈 없음"
+      ],
+      "ar": [
+        "لا الجبن"
+      ],
+      "fr": [
+        "pas de fromage"
+      ],
+      "ur": [
+        "کوئی پنیر نہیں"
+      ],
+      "pl": [
+        "bez sera"
+      ]
+    }
+  },
+  "allowCheese": {
+    "canonical": "actually cheese is fine",
+    "forms": {
+      "es": [
+        "en realidad el queso está bien"
+      ],
+      "zh-TW": [
+        "其實起司很好"
+      ],
+      "zh-CN": [
+        "其实奶酪很好"
+      ],
+      "ru": [
+        "на самом деле сыр хорош"
+      ],
+      "bn": [
+        "আসলে পনির ঠিক আছে"
+      ],
+      "ht": [
+        "aktyèlman fwomaj se byen"
+      ],
+      "ko": [
+        "사실 치즈는 괜찮아요"
+      ],
+      "ar": [
+        "في الواقع الجبن جيد"
+      ],
+      "fr": [
+        "en fait, le fromage, c'est bien"
+      ],
+      "ur": [
+        "اصل میں پنیر ٹھیک ہے"
+      ],
+      "pl": [
+        "właściwie ser jest w porządku"
+      ]
+    }
+  },
+  "time20": {
+    "canonical": "under 20 minutes",
+    "forms": {
+      "es": [
+        "menos de 20 minutos"
+      ],
+      "zh-TW": [
+        "20分鐘內"
+      ],
+      "zh-CN": [
+        "20分钟以内"
+      ],
+      "ru": [
+        "менее 20 минут"
+      ],
+      "bn": [
+        "20 মিনিটের নিচে"
+      ],
+      "ht": [
+        "anba 20 minit"
+      ],
+      "ko": [
+        "20분 이내"
+      ],
+      "ar": [
+        "أقل من 20 دقيقة"
+      ],
+      "fr": [
+        "moins de 20 minutes"
+      ],
+      "ur": [
+        "20 منٹ سے کم"
+      ],
+      "pl": [
+        "poniżej 20 minut"
+      ]
+    }
+  },
+  "skilletOnly": {
+    "canonical": "I only have a skillet",
+    "forms": {
+      "es": [
+        "solo tengo una sartén"
+      ],
+      "zh-TW": [
+        "我只有一個煎鍋"
+      ],
+      "zh-CN": [
+        "我只有一个煎锅"
+      ],
+      "ru": [
+        "у меня есть только сковорода"
+      ],
+      "bn": [
+        "আমার শুধু একটা স্কিললেট আছে"
+      ],
+      "ht": [
+        "Mwen gen sèlman yon soteuz"
+      ],
+      "ko": [
+        "프라이팬만 있어요"
+      ],
+      "ar": [
+        "ليس لدي سوى مقلاة"
+      ],
+      "fr": [
+        "je n'ai qu'une poêle"
+      ],
+      "ur": [
+        "میرے پاس صرف ایک کڑاہی ہے۔"
+      ],
+      "pl": [
+        "Mam tylko patelnię"
+      ]
+    }
+  },
+  "noOven": {
+    "canonical": "I don't have an oven",
+    "forms": {
+      "es": [
+        "no tengo horno"
+      ],
+      "zh-TW": [
+        "我沒有烤箱"
+      ],
+      "zh-CN": [
+        "我没有烤箱"
+      ],
+      "ru": [
+        "у меня нет духовки"
+      ],
+      "bn": [
+        "আমার ওভেন নেই"
+      ],
+      "ht": [
+        "Mwen pa gen yon fou"
+      ],
+      "ko": [
+        "오븐이 없어요"
+      ],
+      "ar": [
+        "ليس لدي فرن"
+      ],
+      "fr": [
+        "je n'ai pas de four"
+      ],
+      "ur": [
+        "میرے پاس تندور نہیں ہے۔"
+      ],
+      "pl": [
+        "Nie mam piekarnika"
+      ]
+    }
+  },
+  "kids": {
+    "canonical": "something my kids will eat",
+    "forms": {
+      "es": [
+        "algo que mis hijos comerán"
+      ],
+      "zh-TW": [
+        "我的孩子會吃的東西"
+      ],
+      "zh-CN": [
+        "我的孩子们会吃的东西"
+      ],
+      "ru": [
+        "что-нибудь, что будут есть мои дети"
+      ],
+      "bn": [
+        "কিছু আমার বাচ্চারা খাবে"
+      ],
+      "ht": [
+        "yon bagay pitit mwen yo pral manje"
+      ],
+      "ko": [
+        "우리 아이들이 먹을 것"
+      ],
+      "ar": [
+        "شيء سوف يأكله أطفالي"
+      ],
+      "fr": [
+        "quelque chose que mes enfants vont manger"
+      ],
+      "ur": [
+        "کچھ میرے بچے کھائیں گے۔"
+      ],
+      "pl": [
+        "coś, co zjedzą moje dzieci"
+      ]
+    }
+  },
+  "warmFilling": {
+    "canonical": "I want something warm and filling",
+    "forms": {
+      "es": [
+        "quiero algo cálido y abundante"
+      ],
+      "zh-TW": [
+        "我想要一些溫暖而充實的東西"
+      ],
+      "zh-CN": [
+        "我想要一些温暖而充实的东西"
+      ],
+      "ru": [
+        "хочется чего-то теплого и сытного"
+      ],
+      "bn": [
+        "আমি উষ্ণ এবং ভরাট কিছু চাই"
+      ],
+      "ht": [
+        "Mwen vle yon bagay cho ak ranpli"
+      ],
+      "ko": [
+        "따뜻하고 포만감을 주는 걸 원해"
+      ],
+      "ar": [
+        "أريد شيئا دافئا وملء"
+      ],
+      "fr": [
+        "Je veux quelque chose de chaud et copieux"
+      ],
+      "ur": [
+        "میں گرم اور بھرنے والی چیز چاہتا ہوں۔"
+      ],
+      "pl": [
+        "Chcę czegoś ciepłego i sycącego"
+      ]
+    }
+  },
+  "availableList": {
+    "canonical": "I have chicken, rice, and tomatoes",
+    "forms": {
+      "es": [
+        "Tengo pollo, arroz y tomates."
+      ],
+      "zh-TW": [
+        "我有雞肉、米飯和西紅柿"
+      ],
+      "zh-CN": [
+        "我有鸡肉、米饭和西红柿"
+      ],
+      "ru": [
+        "У меня есть курица, рис и помидоры"
+      ],
+      "bn": [
+        "আমার কাছে মুরগি, ভাত এবং টমেটো আছে"
+      ],
+      "ht": [
+        "Mwen gen poul, diri, ak tomat"
+      ],
+      "ko": [
+        "닭고기, 밥, 토마토가 있어요"
+      ],
+      "ar": [
+        "لدي الدجاج والأرز والطماطم"
+      ],
+      "fr": [
+        "J'ai du poulet, du riz et des tomates"
+      ],
+      "ur": [
+        "میرے پاس چکن، چاول اور ٹماٹر ہیں۔"
+      ],
+      "pl": [
+        "Mam kurczaka, ryż i pomidory"
+      ]
+    }
+  },
+  "pantry": {
+    "canonical": "what can I make with what I have?",
+    "forms": {
+      "es": [
+        "¿Qué puedo hacer con lo que tengo?"
+      ],
+      "zh-TW": [
+        "我能用我擁有的東西做什麼？"
+      ],
+      "zh-CN": [
+        "我能用我拥有的东西做什么？"
+      ],
+      "ru": [
+        "что я могу сделать с тем, что у меня есть?"
+      ],
+      "bn": [
+        "আমার যা আছে তা দিয়ে আমি কি করতে পারি?"
+      ],
+      "ht": [
+        "kisa mwen ka fè ak sa mwen genyen?"
+      ],
+      "ko": [
+        "내가 가진 것으로 무엇을 만들 수 있나요?"
+      ],
+      "ar": [
+        "ماذا يمكنني أن أصنع بما لدي؟"
+      ],
+      "fr": [
+        "que puis-je faire avec ce que j'ai ?"
+      ],
+      "ur": [
+        "میرے پاس جو کچھ ہے اس سے میں کیا بنا سکتا ہوں؟"
+      ],
+      "pl": [
+        "co mogę zrobić z tego co mam?"
+      ]
+    }
+  },
+  "higherProtein": {
+    "canonical": "something higher protein",
+    "forms": {
+      "es": [
+        "algo más rico en proteínas"
+      ],
+      "zh-TW": [
+        "蛋白質較高的東西"
+      ],
+      "zh-CN": [
+        "蛋白质更高的东西"
+      ],
+      "ru": [
+        "что-то с более высоким содержанием белка"
+      ],
+      "bn": [
+        "কিছু উচ্চ প্রোটিন"
+      ],
+      "ht": [
+        "yon bagay ki pi wo pwoteyin"
+      ],
+      "ko": [
+        "뭔가 더 높은 단백질"
+      ],
+      "ar": [
+        "شيء أعلى من البروتين"
+      ],
+      "fr": [
+        "quelque chose de plus riche en protéines"
+      ],
+      "ur": [
+        "کچھ اعلی پروٹین"
+      ],
+      "pl": [
+        "coś z wyższą zawartością białka"
+      ]
+    }
+  },
+  "lessSpicy": {
+    "canonical": "less spicy",
+    "forms": {
+      "es": [
+        "menos picante"
+      ],
+      "zh-TW": [
+        "少辣"
+      ],
+      "zh-CN": [
+        "少辣"
+      ],
+      "ru": [
+        "менее острый"
+      ],
+      "bn": [
+        "কম মশলাদার"
+      ],
+      "ht": [
+        "mwens pikant"
+      ],
+      "ko": [
+        "덜 매운"
+      ],
+      "ar": [
+        "أقل حارًا"
+      ],
+      "fr": [
+        "moins épicé"
+      ],
+      "ur": [
+        "کم مسالہ دار"
+      ],
+      "pl": [
+        "mniej pikantny"
+      ]
+    }
+  },
+  "vegetarian": {
+    "canonical": "vegetarian instead",
+    "forms": {
+      "es": [
+        "vegetariano en su lugar"
+      ],
+      "zh-TW": [
+        "改為素食"
+      ],
+      "zh-CN": [
+        "改为素食"
+      ],
+      "ru": [
+        "вместо этого вегетарианец"
+      ],
+      "bn": [
+        "পরিবর্তে নিরামিষ"
+      ],
+      "ht": [
+        "vejetaryen olye"
+      ],
+      "ko": [
+        "대신 채식주의자"
+      ],
+      "ar": [
+        "نباتي بدلا من ذلك"
+      ],
+      "fr": [
+        "végétarien à la place"
+      ],
+      "ur": [
+        "اس کے بجائے سبزی خور"
+      ],
+      "pl": [
+        "zamiast tego wegetarianin"
+      ]
+    }
+  },
+  "similar": {
+    "canonical": "show me something similar",
+    "forms": {
+      "es": [
+        "muéstrame algo similar"
+      ],
+      "zh-TW": [
+        "給我看類似的東西"
+      ],
+      "zh-CN": [
+        "给我看看类似的东西"
+      ],
+      "ru": [
+        "покажи мне что-нибудь подобное"
+      ],
+      "bn": [
+        "আমাকে অনুরূপ কিছু দেখান"
+      ],
+      "ht": [
+        "montre m yon bagay ki sanble"
+      ],
+      "ko": [
+        "비슷한 걸 보여줘"
+      ],
+      "ar": [
+        "أرني شيئا مماثلا"
+      ],
+      "fr": [
+        "montre-moi quelque chose de similaire"
+      ],
+      "ur": [
+        "مجھے کچھ ایسا ہی دکھائیں"
+      ],
+      "pl": [
+        "pokaż mi coś podobnego"
+      ]
+    }
+  },
+  "another": {
+    "canonical": "give me another one",
+    "forms": {
+      "es": [
+        "dame otro"
+      ],
+      "zh-TW": [
+        "再給我一個"
+      ],
+      "zh-CN": [
+        "再给我一个"
+      ],
+      "ru": [
+        "дай мне еще один"
+      ],
+      "bn": [
+        "আমাকে আরেকটা দাও"
+      ],
+      "ht": [
+        "ban mwen yon lòt"
+      ],
+      "ko": [
+        "하나 더 줘"
+      ],
+      "ar": [
+        "أعطني واحدة أخرى"
+      ],
+      "fr": [
+        "donne-m'en un autre"
+      ],
+      "ur": [
+        "مجھے ایک اور دو"
+      ],
+      "pl": [
+        "daj mi jeszcze jeden"
+      ]
+    }
+  },
+  "third": {
+    "canonical": "the third one",
+    "forms": {
+      "es": [
+        "el tercero"
+      ],
+      "zh-TW": [
+        "第三個"
+      ],
+      "zh-CN": [
+        "第三个"
+      ],
+      "ru": [
+        "третий"
+      ],
+      "bn": [
+        "তৃতীয় এক"
+      ],
+      "ht": [
+        "twazyèm lan"
+      ],
+      "ko": [
+        "세 번째"
+      ],
+      "ar": [
+        "الثالث"
+      ],
+      "fr": [
+        "le troisième"
+      ],
+      "ur": [
+        "تیسرا"
+      ],
+      "pl": [
+        "trzeci"
+      ]
+    }
+  },
+  "compareFirstTwo": {
+    "canonical": "compare the first two",
+    "forms": {
+      "es": [
+        "comparar los dos primeros"
+      ],
+      "zh-TW": [
+        "比較前兩個"
+      ],
+      "zh-CN": [
+        "比较前两个"
+      ],
+      "ru": [
+        "сравни первые два"
+      ],
+      "bn": [
+        "প্রথম দুটি তুলনা করুন"
+      ],
+      "ht": [
+        "konpare de premye yo"
+      ],
+      "ko": [
+        "처음 두 개를 비교해 보세요"
+      ],
+      "ar": [
+        "قارن بين الأولين"
+      ],
+      "fr": [
+        "comparez les deux premiers"
+      ],
+      "ur": [
+        "پہلے دو کا موازنہ کریں۔"
+      ],
+      "pl": [
+        "porównaj dwa pierwsze"
+      ]
+    }
+  },
+  "fastest": {
+    "canonical": "which of these is fastest?",
+    "forms": {
+      "es": [
+        "¿Cuál de estos es más rápido?"
+      ],
+      "zh-TW": [
+        "其中哪一個最快？"
+      ],
+      "zh-CN": [
+        "其中哪一个最快？"
+      ],
+      "ru": [
+        "какой из них самый быстрый?"
+      ],
+      "bn": [
+        "এর মধ্যে কোনটি দ্রুত?"
+      ],
+      "ht": [
+        "kiyès nan sa yo ki pi rapid?"
+      ],
+      "ko": [
+        "이 중 어느 것이 가장 빠른가요?"
+      ],
+      "ar": [
+        "أي منها هو الأسرع؟"
+      ],
+      "fr": [
+        "lequel de ces éléments est le plus rapide ?"
+      ],
+      "ur": [
+        "ان میں سے کون تیز ہے؟"
+      ],
+      "pl": [
+        "który z nich jest najszybszy?"
+      ]
+    }
+  },
+  "cheapest": {
+    "canonical": "which is cheapest?",
+    "forms": {
+      "es": [
+        "cual es mas barato?"
+      ],
+      "zh-TW": [
+        "哪個最便宜？"
+      ],
+      "zh-CN": [
+        "哪个最便宜？"
+      ],
+      "ru": [
+        "какой самый дешевый?"
+      ],
+      "bn": [
+        "কোনটি সবচেয়ে সস্তা?"
+      ],
+      "ht": [
+        "ki pi bon mache?"
+      ],
+      "ko": [
+        "어느 것이 가장 저렴합니까?"
+      ],
+      "ar": [
+        "وهو أرخص؟"
+      ],
+      "fr": [
+        "lequel est le moins cher ?"
+      ],
+      "ur": [
+        "سب سے سستا کون سا ہے؟"
+      ],
+      "pl": [
+        "co jest najtańsze?"
+      ]
+    }
+  },
+  "ingredients": {
+    "canonical": "what ingredients do I need for that?",
+    "forms": {
+      "es": [
+        "¿Qué ingredientes necesito para eso?"
+      ],
+      "zh-TW": [
+        "我需要什麼成分？"
+      ],
+      "zh-CN": [
+        "我需要什么成分？"
+      ],
+      "ru": [
+        "какие ингредиенты мне для этого нужны?"
+      ],
+      "bn": [
+        "এটার জন্য আমার কি উপকরণ লাগবে?"
+      ],
+      "ht": [
+        "ki engredyan mwen bezwen pou sa?"
+      ],
+      "ko": [
+        "그러기 위해서는 어떤 재료가 필요한가요?"
+      ],
+      "ar": [
+        "ما هي المكونات التي أحتاجها لذلك؟"
+      ],
+      "fr": [
+        "de quels ingrédients ai-je besoin pour cela ?"
+      ],
+      "ur": [
+        "اس کے لیے مجھے کن اجزاء کی ضرورت ہے؟"
+      ],
+      "pl": [
+        "jakie składniki są mi do tego potrzebne?"
+      ]
+    }
+  },
+  "timeQuestion": {
+    "canonical": "how long does that take?",
+    "forms": {
+      "es": [
+        "¿Cuánto tiempo lleva eso?"
+      ],
+      "zh-TW": [
+        "這需要多長時間？"
+      ],
+      "zh-CN": [
+        "这需要多长时间？"
+      ],
+      "ru": [
+        "сколько времени это занимает?"
+      ],
+      "bn": [
+        "এটা কতক্ষণ লাগে?"
+      ],
+      "ht": [
+        "konbyen tan sa pran?"
+      ],
+      "ko": [
+        "그건 얼마나 걸리나요?"
+      ],
+      "ar": [
+        "كم من الوقت يستغرق ذلك؟"
+      ],
+      "fr": [
+        "ça prend combien de temps ?"
+      ],
+      "ur": [
+        "اس میں کتنا وقت لگتا ہے؟"
+      ],
+      "pl": [
+        "jak długo to zajmuje?"
+      ]
+    }
+  },
+  "dairyQuestion": {
+    "canonical": "does that contain dairy?",
+    "forms": {
+      "es": [
+        "¿Eso contiene lácteos?"
+      ],
+      "zh-TW": [
+        "含有乳製品嗎？"
+      ],
+      "zh-CN": [
+        "含有乳制品吗？"
+      ],
+      "ru": [
+        "это содержит молочные продукты?"
+      ],
+      "bn": [
+        "এতে কি দুগ্ধজাত খাবার রয়েছে?"
+      ],
+      "ht": [
+        "èske sa gen letye?"
+      ],
+      "ko": [
+        "그거 유제품 들어있나요?"
+      ],
+      "ar": [
+        "هل يحتوي على منتجات الألبان؟"
+      ],
+      "fr": [
+        "est-ce que ça contient des produits laitiers ?"
+      ],
+      "ur": [
+        "کیا اس میں ڈیری ہے؟"
+      ],
+      "pl": [
+        "czy to zawiera nabiał?"
+      ]
+    }
+  },
+  "substitution": {
+    "canonical": "can I substitute turkey for beef?",
+    "forms": {
+      "es": [
+        "¿Puedo sustituir la carne de res por pavo?"
+      ],
+      "zh-TW": [
+        "我可以用火雞代替牛肉嗎？"
+      ],
+      "zh-CN": [
+        "我可以用火鸡代替牛肉吗？"
+      ],
+      "ru": [
+        "можно ли заменить говядину индейкой?"
+      ],
+      "bn": [
+        "আমি কি গরুর মাংসের জন্য টার্কি প্রতিস্থাপন করতে পারি?"
+      ],
+      "ht": [
+        "Èske mwen ka ranplase vyann bèf pou kodenn?"
+      ],
+      "ko": [
+        "쇠고기 대신 칠면조를 먹을 수 있나요?"
+      ],
+      "ar": [
+        "هل يمكنني استبدال الديك الرومي باللحم البقري؟"
+      ],
+      "fr": [
+        "puis-je remplacer la dinde par du bœuf ?"
+      ],
+      "ur": [
+        "کیا میں ترکی کو گائے کے گوشت سے بدل سکتا ہوں؟"
+      ],
+      "pl": [
+        "czy mogę zastąpić indyka wołowiną?"
+      ]
+    }
+  },
+  "clearTime": {
+    "canonical": "clear the time limit",
+    "forms": {
+      "es": [
+        "borrar el límite de tiempo"
+      ],
+      "zh-TW": [
+        "清除時間限制"
+      ],
+      "zh-CN": [
+        "清除时间限制"
+      ],
+      "ru": [
+        "очистить лимит времени"
+      ],
+      "bn": [
+        "সময়সীমা পরিষ্কার করুন"
+      ],
+      "ht": [
+        "klè limit tan an"
+      ],
+      "ko": [
+        "시간 제한을 클리어하다"
+      ],
+      "ar": [
+        "مسح الحد الزمني"
+      ],
+      "fr": [
+        "effacer le délai"
+      ],
+      "ur": [
+        "وقت کی حد کو صاف کریں"
+      ],
+      "pl": [
+        "wyczyść limit czasu"
+      ]
+    }
+  },
+  "reset": {
+    "canonical": "start over",
+    "forms": {
+      "es": [
+        "empezar de nuevo"
+      ],
+      "zh-TW": [
+        "重新開始"
+      ],
+      "zh-CN": [
+        "重新开始"
+      ],
+      "ru": [
+        "начать сначала"
+      ],
+      "bn": [
+        "শুরু"
+      ],
+      "ht": [
+        "rekòmanse"
+      ],
+      "ko": [
+        "다시 시작하다"
+      ],
+      "ar": [
+        "البدء من جديد"
+      ],
+      "fr": [
+        "recommencer"
+      ],
+      "ur": [
+        "دوبارہ شروع کریں"
+      ],
+      "pl": [
+        "zacznij od nowa"
+      ]
+    }
+  },
+  "healthyDinner": {
+    "canonical": "Healthy dinner under 30 minutes",
+    "forms": {
+      "es": [
+        "Cena saludable en menos de 30 minutos"
+      ],
+      "zh-TW": [
+        "30分鐘內的健康晚餐"
+      ],
+      "zh-CN": [
+        "30分钟内的健康晚餐"
+      ],
+      "ru": [
+        "Здоровый ужин до 30 минут"
+      ],
+      "bn": [
+        "30 মিনিটের নিচে স্বাস্থ্যকর ডিনার"
+      ],
+      "ht": [
+        "Dine an sante anba 30 minit"
+      ],
+      "ko": [
+        "30분 이내의 건강한 저녁식사"
+      ],
+      "ar": [
+        "عشاء صحي في أقل من 30 دقيقة"
+      ],
+      "fr": [
+        "Dîner sain en moins de 30 minutes"
+      ],
+      "ur": [
+        "30 منٹ کے اندر صحت مند رات کا کھانا"
+      ],
+      "pl": [
+        "Zdrowy obiad w niecałe 30 minut"
+      ]
+    }
+  },
+  "chickenIdea": {
+    "canonical": "Something with chicken",
+    "forms": {
+      "es": [
+        "algo con pollo",
+        "Algo con pollo"
+      ],
+      "zh-TW": [
+        "有雞肉的東西"
+      ],
+      "zh-CN": [
+        "有鸡肉的东西"
+      ],
+      "ru": [
+        "Что-то с курицей"
+      ],
+      "bn": [
+        "মুরগির সাথে কিছু"
+      ],
+      "ht": [
+        "Yon bagay ak poul"
+      ],
+      "ko": [
+        "치킨이랑 뭔가"
+      ],
+      "ar": [
+        "شيء مع الدجاج"
+      ],
+      "fr": [
+        "Quelque chose avec du poulet"
+      ],
+      "ur": [
+        "چکن کے ساتھ کچھ"
+      ],
+      "pl": [
+        "Coś z kurczakiem"
+      ]
+    }
+  },
+  "pantryExample": {
+    "canonical": "Use what I already have",
+    "forms": {
+      "es": [
+        "Usa lo que ya tengo"
+      ],
+      "zh-TW": [
+        "使用我已有的"
+      ],
+      "zh-CN": [
+        "使用我已有的"
+      ],
+      "ru": [
+        "Используйте то, что у меня уже есть"
+      ],
+      "bn": [
+        "আমার ইতিমধ্যে যা আছে তা ব্যবহার করুন"
+      ],
+      "ht": [
+        "Sèvi ak sa mwen genyen deja"
+      ],
+      "ko": [
+        "내가 이미 가지고 있는 것을 활용하세요"
+      ],
+      "ar": [
+        "استخدم ما لدي بالفعل"
+      ],
+      "fr": [
+        "Utiliser ce que j'ai déjà"
+      ],
+      "ur": [
+        "جو میرے پاس پہلے سے موجود ہے اسے استعمال کریں۔"
+      ],
+      "pl": [
+        "Wykorzystaj to, co już mam"
+      ]
+    }
+  },
+  "fewest": {
+    "canonical": "which has the fewest ingredients?",
+    "forms": {
+      "es": [
+        "¿Cuál tiene menos ingredientes?"
+      ],
+      "zh-TW": [
+        "哪個成分最少？"
+      ],
+      "zh-CN": [
+        "哪个成分最少？"
+      ],
+      "ru": [
+        "в котором меньше всего ингредиентов?"
+      ],
+      "bn": [
+        "কোনটিতে সবচেয়ে কম উপাদান আছে?"
+      ],
+      "ht": [
+        "ki gen mwens engredyan?"
+      ],
+      "ko": [
+        "성분이 가장 적은 것은 무엇입니까?"
+      ],
+      "ar": [
+        "الذي يحتوي على أقل المكونات؟"
+      ],
+      "fr": [
+        "lequel contient le moins d’ingrédients ?"
+      ],
+      "ur": [
+        "جس میں سب سے کم اجزاء ہیں؟"
+      ],
+      "pl": [
+        "który ma najmniej składników?"
+      ]
+    }
+  },
+  "cheeseResults": {
+    "canonical": "which ones have cheese?",
+    "forms": {
+      "es": [
+        "¿Cuáles tienen queso?"
+      ],
+      "zh-TW": [
+        "哪些有起司？"
+      ],
+      "zh-CN": [
+        "哪些有奶酪？"
+      ],
+      "ru": [
+        "в каких есть сыр?"
+      ],
+      "bn": [
+        "কোনটি পনির আছে?"
+      ],
+      "ht": [
+        "kiyès ki gen fwomaj?"
+      ],
+      "ko": [
+        "어느 것 치즈가 있어요?"
+      ],
+      "ar": [
+        "أي منها لديه الجبن؟"
+      ],
+      "fr": [
+        "lesquels ont du fromage ?"
+      ],
+      "ur": [
+        "کس کے پاس پنیر ہے؟"
+      ],
+      "pl": [
+        "które mają ser?"
+      ]
+    }
+  },
+  "secondOven": {
+    "canonical": "does the second one use an oven?",
+    "forms": {
+      "es": [
+        "¿El segundo usa horno?"
+      ],
+      "zh-TW": [
+        "第二個用烤箱嗎？"
+      ],
+      "zh-CN": [
+        "第二个用烤箱吗？"
+      ],
+      "ru": [
+        "второй использует духовку?"
+      ],
+      "bn": [
+        "দ্বিতীয়টি কি ওভেন ব্যবহার করে?"
+      ],
+      "ht": [
+        "èske dezyèm lan sèvi ak yon fou?"
+      ],
+      "ko": [
+        "두 번째는 오븐을 사용하나요?"
+      ],
+      "ar": [
+        "والثاني يستخدم الفرن؟"
+      ],
+      "fr": [
+        "le second utilise-t-il un four ?"
+      ],
+      "ur": [
+        "کیا دوسرا تندور استعمال کرتا ہے؟"
+      ],
+      "pl": [
+        "czy ten drugi używa piekarnika?"
+      ]
+    }
+  },
+  "compare13": {
+    "canonical": "compare 1 and 3",
+    "forms": {
+      "es": [
+        "comparar 1 y 3"
+      ],
+      "zh-TW": [
+        "比較 1 和 3"
+      ],
+      "zh-CN": [
+        "比较 1 和 3"
+      ],
+      "ru": [
+        "сравни 1 и 3"
+      ],
+      "bn": [
+        "1 এবং 3 তুলনা করুন"
+      ],
+      "ht": [
+        "konpare 1 ak 3"
+      ],
+      "ko": [
+        "1과 3을 비교하다"
+      ],
+      "ar": [
+        "قارن 1 و 3"
+      ],
+      "fr": [
+        "comparer 1 et 3"
+      ],
+      "ur": [
+        "1 اور 3 کا موازنہ کریں۔"
+      ],
+      "pl": [
+        "porównaj 1 i 3"
+      ]
+    }
+  },
+  "firstIngredients": {
+    "canonical": "what do I need for the first one?",
+    "forms": {
+      "es": [
+        "¿Qué necesito para el primero?"
+      ],
+      "zh-TW": [
+        "第一個我需要什麼？"
+      ],
+      "zh-CN": [
+        "第一个我需要什么？"
+      ],
+      "ru": [
+        "что мне нужно для первого?"
+      ],
+      "bn": [
+        "প্রথমটির জন্য আমার কী দরকার?"
+      ],
+      "ht": [
+        "kisa mwen bezwen pou premye a?"
+      ],
+      "ko": [
+        "첫 번째에는 무엇이 필요합니까?"
+      ],
+      "ar": [
+        "ماذا أحتاج للأول؟"
+      ],
+      "fr": [
+        "de quoi ai-je besoin pour le premier ?"
+      ],
+      "ur": [
+        "مجھے پہلے کی کیا ضرورت ہے؟"
+      ],
+      "pl": [
+        "czego potrzebuję do pierwszego?"
+      ]
+    }
+  },
+  "instructions": {
+    "canonical": "how do I make that?",
+    "forms": {
+      "es": [
+        "¿Cómo hago eso?"
+      ],
+      "zh-TW": [
+        "我該怎麼做？"
+      ],
+      "zh-CN": [
+        "我该怎么做？"
+      ],
+      "ru": [
+        "как мне это сделать?"
+      ],
+      "bn": [
+        "আমি এটা কিভাবে করতে পারি?"
+      ],
+      "ht": [
+        "kijan poum fè sa?"
+      ],
+      "ko": [
+        "그걸 어떻게 만들죠?"
+      ],
+      "ar": [
+        "كيف أفعل ذلك؟"
+      ],
+      "fr": [
+        "comment je fais ça ?"
+      ],
+      "ur": [
+        "میں اسے کیسے بناؤں؟"
+      ],
+      "pl": [
+        "jak to zrobić?"
+      ]
+    }
+  },
+  "vegetarianQuestion": {
+    "canonical": "is it vegetarian?",
+    "forms": {
+      "es": [
+        "¿es vegetariano?"
+      ],
+      "zh-TW": [
+        "是素食嗎？"
+      ],
+      "zh-CN": [
+        "是素食吗？"
+      ],
+      "ru": [
+        "это вегетарианец?"
+      ],
+      "bn": [
+        "এটা কি নিরামিষ?"
+      ],
+      "ht": [
+        "èske se vejetaryen?"
+      ],
+      "ko": [
+        "채식주의자인가요?"
+      ],
+      "ar": [
+        "هل هو نباتي؟"
+      ],
+      "fr": [
+        "est-ce végétarien ?"
+      ],
+      "ur": [
+        "کیا یہ سبزی ہے؟"
+      ],
+      "pl": [
+        "czy to wegetariańskie?"
+      ]
+    }
+  },
+  "clearPreferences": {
+    "canonical": "clear preferred ingredients",
+    "forms": {
+      "es": [
+        "ingredientes claros preferidos"
+      ],
+      "zh-TW": [
+        "明確首選成分"
+      ],
+      "zh-CN": [
+        "明确首选成分"
+      ],
+      "ru": [
+        "очистить предпочтительные ингредиенты"
+      ],
+      "bn": [
+        "পছন্দের উপাদান পরিষ্কার করুন"
+      ],
+      "ht": [
+        "klè engredyan pi pito yo"
+      ],
+      "ko": [
+        "선호하는 성분을 명확하게"
+      ],
+      "ar": [
+        "واضح المكونات المفضلة"
+      ],
+      "fr": [
+        "ingrédients préférés clairs"
+      ],
+      "ur": [
+        "ترجیحی اجزاء کو صاف کریں۔"
+      ],
+      "pl": [
+        "jasne preferowane składniki"
+      ]
+    }
+  },
+  "20Max": {
+    "canonical": "20 minutes max",
+    "forms": {
+      "es": [
+        "20 minutos máximo"
+      ],
+      "zh-TW": [
+        "最多 20 分鐘"
+      ],
+      "zh-CN": [
+        "最多 20 分钟"
+      ],
+      "ru": [
+        "20 минут максимум"
+      ],
+      "bn": [
+        "সর্বোচ্চ 20 মিনিট"
+      ],
+      "ht": [
+        "20 minit max"
+      ],
+      "ko": [
+        "최대 20분"
+      ],
+      "ar": [
+        "20 دقيقة كحد أقصى"
+      ],
+      "fr": [
+        "20 minutes maximum"
+      ],
+      "ur": [
+        "20 منٹ زیادہ سے زیادہ"
+      ],
+      "pl": [
+        "Maksymalnie 20 minut"
+      ]
+    }
+  },
+  "range": {
+    "canonical": "between 30 and 45 minutes",
+    "forms": {
+      "es": [
+        "entre 30 y 45 minutos"
+      ],
+      "zh-TW": [
+        "30 至 45 分鐘之間"
+      ],
+      "zh-CN": [
+        "30 至 45 分钟之间"
+      ],
+      "ru": [
+        "от 30 до 45 минут"
+      ],
+      "bn": [
+        "30 থেকে 45 মিনিটের মধ্যে"
+      ],
+      "ht": [
+        "ant 30 ak 45 minit"
+      ],
+      "ko": [
+        "30~45분 사이"
+      ],
+      "ar": [
+        "بين 30 و45 دقيقة"
+      ],
+      "fr": [
+        "entre 30 et 45 minutes"
+      ],
+      "ur": [
+        "30 اور 45 منٹ کے درمیان"
+      ],
+      "pl": [
+        "od 30 do 45 minut"
+      ]
+    }
+  },
+  "hour": {
+    "canonical": "I have an hour",
+    "forms": {
+      "es": [
+        "tengo una hora"
+      ],
+      "zh-TW": [
+        "我有一個小時"
+      ],
+      "zh-CN": [
+        "我有一个小时"
+      ],
+      "ru": [
+        "у меня есть час"
+      ],
+      "bn": [
+        "আমার এক ঘণ্টা আছে"
+      ],
+      "ht": [
+        "Mwen gen yon èdtan"
+      ],
+      "ko": [
+        "나에겐 한 시간이 있다"
+      ],
+      "ar": [
+        "لدي ساعة"
+      ],
+      "fr": [
+        "j'ai une heure"
+      ],
+      "ur": [
+        "میرے پاس ایک گھنٹہ ہے۔"
+      ],
+      "pl": [
+        "Mam godzinę"
+      ]
+    }
+  },
+  "aboutHour": {
+    "canonical": "about an hour",
+    "forms": {
+      "es": [
+        "aproximadamente una hora"
+      ],
+      "zh-TW": [
+        "大約一個小時"
+      ],
+      "zh-CN": [
+        "大约一个小时"
+      ],
+      "ru": [
+        "около часа"
+      ],
+      "bn": [
+        "প্রায় এক ঘন্টা"
+      ],
+      "ht": [
+        "apeprè inèdtan"
+      ],
+      "ko": [
+        "약 한 시간"
+      ],
+      "ar": [
+        "حوالي ساعة"
+      ],
+      "fr": [
+        "environ une heure"
+      ],
+      "ur": [
+        "ایک گھنٹے کے بارے میں"
+      ],
+      "pl": [
+        "około godziny"
+      ]
+    }
+  },
+  "vagueTime": {
+    "canonical": "nothing that takes forever",
+    "forms": {
+      "es": [
+        "nada que tome una eternidad"
+      ],
+      "zh-TW": [
+        "沒有什麼是永恆的"
+      ],
+      "zh-CN": [
+        "没有什么是永恒的"
+      ],
+      "ru": [
+        "ничего, что занимает вечность"
+      ],
+      "bn": [
+        "কিছুই যে চিরতরে লাগে"
+      ],
+      "ht": [
+        "pa gen anyen ki pran pou tout tan"
+      ],
+      "ko": [
+        "영원히 걸리는 건 없어"
+      ],
+      "ar": [
+        "لا شيء يستغرق إلى الأبد"
+      ],
+      "fr": [
+        "rien qui prenne une éternité"
+      ],
+      "ur": [
+        "کچھ بھی نہیں جو ہمیشہ کے لئے لیتا ہے"
+      ],
+      "pl": [
+        "nic, co trwa wiecznie"
+      ]
+    }
+  },
+  "broccoli": {
+    "canonical": "use up my broccoli",
+    "forms": {
+      "es": [
+        "Usa mi brócoli"
+      ],
+      "zh-TW": [
+        "用完我的西蘭花"
+      ],
+      "zh-CN": [
+        "用完我的西兰花"
+      ],
+      "ru": [
+        "израсходуй мою брокколи"
+      ],
+      "bn": [
+        "আমার ব্রোকলি ব্যবহার করুন"
+      ],
+      "ht": [
+        "itilize bwokoli mwen an"
+      ],
+      "ko": [
+        "내 브로콜리 다 써버려"
+      ],
+      "ar": [
+        "استخدم البروكلي الخاص بي"
+      ],
+      "fr": [
+        "j'utilise mon brocoli"
+      ],
+      "ur": [
+        "میری بروکولی استعمال کریں۔"
+      ],
+      "pl": [
+        "wykorzystaj moje brokuły"
+      ]
+    }
+  },
+  "noGarlic": {
+    "canonical": "I don't have garlic",
+    "forms": {
+      "es": [
+        "no tengo ajo"
+      ],
+      "zh-TW": [
+        "我沒有大蒜"
+      ],
+      "zh-CN": [
+        "我没有大蒜"
+      ],
+      "ru": [
+        "у меня нет чеснока"
+      ],
+      "bn": [
+        "আমার রসুন নেই"
+      ],
+      "ht": [
+        "Mwen pa gen lay"
+      ],
+      "ko": [
+        "마늘이 없어요"
+      ],
+      "ar": [
+        "ليس لدي الثوم"
+      ],
+      "fr": [
+        "je n'ai pas d'ail"
+      ],
+      "ur": [
+        "میرے پاس لہسن نہیں ہے۔"
+      ],
+      "pl": [
+        "Nie mam czosnku"
+      ]
+    }
+  },
+  "avoidMushrooms": {
+    "canonical": "avoid mushrooms",
+    "forms": {
+      "es": [
+        "evitar los hongos"
+      ],
+      "zh-TW": [
+        "避免蘑菇"
+      ],
+      "zh-CN": [
+        "避免蘑菇"
+      ],
+      "ru": [
+        "избегайте грибов"
+      ],
+      "bn": [
+        "মাশরুম এড়িয়ে চলুন"
+      ],
+      "ht": [
+        "evite dyondyon"
+      ],
+      "ko": [
+        "버섯을 피하세요"
+      ],
+      "ar": [
+        "تجنب الفطر"
+      ],
+      "fr": [
+        "éviter les champignons"
+      ],
+      "ur": [
+        "مشروم سے بچیں"
+      ],
+      "pl": [
+        "unikaj grzybów"
+      ]
+    }
+  },
+  "cheaper": {
+    "canonical": "make it cheaper",
+    "forms": {
+      "es": [
+        "hazlo más barato"
+      ],
+      "zh-TW": [
+        "讓它更便宜"
+      ],
+      "zh-CN": [
+        "让它更便宜"
+      ],
+      "ru": [
+        "сделать это дешевле"
+      ],
+      "bn": [
+        "এটা সস্তা করা"
+      ],
+      "ht": [
+        "fè li pi bon mache"
+      ],
+      "ko": [
+        "더 싸게 만들어라"
+      ],
+      "ar": [
+        "جعلها أرخص"
+      ],
+      "fr": [
+        "le rendre moins cher"
+      ],
+      "ur": [
+        "اسے سستا بنائیں"
+      ],
+      "pl": [
+        "zrób to taniej"
+      ]
+    }
+  },
+  "quicker": {
+    "canonical": "something like that but quicker",
+    "forms": {
+      "es": [
+        "algo asi pero mas rapido"
+      ],
+      "zh-TW": [
+        "類似的東西但更快"
+      ],
+      "zh-CN": [
+        "类似的东西但更快"
+      ],
+      "ru": [
+        "что-то вроде этого, но быстрее"
+      ],
+      "bn": [
+        "এরকম কিছু কিন্তু দ্রুত"
+      ],
+      "ht": [
+        "yon bagay konsa men pi rapid"
+      ],
+      "ko": [
+        "그런 것 같지만 더 빠르다"
+      ],
+      "ar": [
+        "شيء من هذا القبيل ولكن أسرع"
+      ],
+      "fr": [
+        "quelque chose comme ça mais plus rapide"
+      ],
+      "ur": [
+        "اس طرح کچھ لیکن تیز"
+      ],
+      "pl": [
+        "coś w tym stylu, ale szybciej"
+      ]
+    }
+  },
+  "forgetBeef": {
+    "canonical": "actually forget the beef",
+    "forms": {
+      "es": [
+        "en realidad olvídate de la carne"
+      ],
+      "zh-TW": [
+        "實際上忘了牛肉"
+      ],
+      "zh-CN": [
+        "实际上忘记了牛肉"
+      ],
+      "ru": [
+        "на самом деле забудь о говядине"
+      ],
+      "bn": [
+        "আসলে গরুর মাংস ভুলে যান"
+      ],
+      "ht": [
+        "aktyèlman bliye vyann bèf la"
+      ],
+      "ko": [
+        "사실 쇠고기는 잊어버려"
+      ],
+      "ar": [
+        "ننسى فعلا لحوم البقر"
+      ],
+      "fr": [
+        "en fait, oublie le bœuf"
+      ],
+      "ur": [
+        "اصل میں گائے کا گوشت بھول جاؤ"
+      ],
+      "pl": [
+        "właściwie zapomnij o wołowinie"
+      ]
+    }
+  },
+  "allowance": {
+    "canonical": "nevermind, cheese is okay",
+    "forms": {
+      "es": [
+        "no importa, el queso está bien"
+      ],
+      "zh-TW": [
+        "沒關係，起司還可以"
+      ],
+      "zh-CN": [
+        "没关系，奶酪还可以"
+      ],
+      "ru": [
+        "ничего, с сыром все в порядке"
+      ],
+      "bn": [
+        "কিছু মনে করবেন না, পনির ঠিক আছে"
+      ],
+      "ht": [
+        "pa janm bliye, fwomaj se oke"
+      ],
+      "ko": [
+        "신경쓰지마, 치즈는 괜찮아"
+      ],
+      "ar": [
+        "لا يهم، الجبن على ما يرام"
+      ],
+      "fr": [
+        "tant pis, le fromage, c'est bien"
+      ],
+      "ur": [
+        "کوئی بات نہیں، پنیر ٹھیک ہے"
+      ],
+      "pl": [
+        "nieważne, ser jest w porządku"
+      ]
+    }
+  },
+  "more": {
+    "canonical": "show me more",
+    "forms": {
+      "es": [
+        "muéstrame más"
+      ],
+      "zh-TW": [
+        "顯示更多"
+      ],
+      "zh-CN": [
+        "显示更多"
+      ],
+      "ru": [
+        "покажи мне больше"
+      ],
+      "bn": [
+        "আমাকে আরো দেখান"
+      ],
+      "ht": [
+        "montre m plis"
+      ],
+      "ko": [
+        "더 보여줘"
+      ],
+      "ar": [
+        "أرني المزيد"
+      ],
+      "fr": [
+        "montre-moi plus"
+      ],
+      "ur": [
+        "مجھے مزید دکھائیں"
+      ],
+      "pl": [
+        "pokaż mi więcej"
+      ]
+    }
+  },
+  "vegetarianFollowup": {
+    "canonical": "what about vegetarian?",
+    "forms": {
+      "es": [
+        "¿Qué pasa con los vegetarianos?"
+      ],
+      "zh-TW": [
+        "素食怎麼樣？"
+      ],
+      "zh-CN": [
+        "素食怎么样？"
+      ],
+      "ru": [
+        "а как насчет вегетарианца?"
+      ],
+      "bn": [
+        "নিরামিষ সম্পর্কে কি?"
+      ],
+      "ht": [
+        "e vejetaryen?"
+      ],
+      "ko": [
+        "채식주의자는 어때?"
+      ],
+      "ar": [
+        "ماذا عن نباتي؟"
+      ],
+      "fr": [
+        "et le végétarien ?"
+      ],
+      "ur": [
+        "سبزی خور کے بارے میں کیا ہے؟"
+      ],
+      "pl": [
+        "co z wegetarianinem?"
+      ]
+    }
+  },
+  "replaceContext": {
+    "canonical": "same thing but with chicken",
+    "forms": {
+      "es": [
+        "lo mismo pero con pollo"
+      ],
+      "zh-TW": [
+        "同樣的事情，但是用雞肉"
+      ],
+      "zh-CN": [
+        "同样的事情，但是用鸡肉"
+      ],
+      "ru": [
+        "то же самое, но с курицей"
+      ],
+      "bn": [
+        "একই জিনিস কিন্তু মুরগির সাথে"
+      ],
+      "ht": [
+        "menm bagay men ak poul"
+      ],
+      "ko": [
+        "똑같지만 치킨이랑"
+      ],
+      "ar": [
+        "نفس الشيء ولكن مع الدجاج"
+      ],
+      "fr": [
+        "pareil mais avec du poulet"
+      ],
+      "ur": [
+        "ایک ہی چیز لیکن چکن کے ساتھ"
+      ],
+      "pl": [
+        "to samo, ale z kurczakiem"
+      ]
+    }
+  }
+}

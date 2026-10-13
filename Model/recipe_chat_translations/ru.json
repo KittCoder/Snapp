@@ -1,0 +1,36 @@
+{
+  "10002": {
+    "name": {
+      "Heavenly White Cake": "Небесно-белый торт"
+    },
+    "ingredients": {
+      "2 3/4 cup sifted cake flour": "2 3/4 стакана просеянной муки для кексов",
+      "4 teaspoon baking powder": "4 чайные ложки разрыхлителя",
+      "3/4 teaspoon salt": "3/4 чайной ложки соли",
+      "4 egg whites": "4 яичных белка",
+      "1 1/2 cup white sugar": "1 1/2 стакана белого сахара",
+      "3/4 cup butter": "3/4 стакана сливочного масла",
+      "1 cup milk": "1 стакан молока",
+      "1 teaspoon vanilla extract": "1 чайная ложка ванильного экстракта",
+      "1 teaspoon almond extract": "1 чайная ложка миндального экстракта"
+    },
+    "equipment": {
+      "bowl": "чаша",
+      "15 x 10 x 1 inch pan": "Сковорода 15 х 10 х 1 дюйм",
+      "parchment paper": "пергаментная бумага"
+    },
+    "instructions": {
+      "Sift together the cake flour, baking powder, and salt three times": "Трижды просеять муку, разрыхлитель и соль.",
+      "Beat the egg whites in a bowl until foamy": "Взбейте яичные белки в миске до пены",
+      "Add 1/2 cup of the sugar and beat until the meringue will hold up in soft peaks": "Добавьте 1/2 стакана сахара и взбивайте, пока безе не станет мягкими пиками.",
+      "Beat the butter until smooth": "Взбейте сливочное масло до однородности",
+      "Add the remaining 1 cup sugar and beat until light and fluffy": "Добавьте оставшийся 1 стакан сахара и взбивайте до легкой и пышной массы.",
+      "Add the milk and beat until smooth": "Добавляем молоко и взбиваем до однородности",
+      "Mix in the vanilla extract and almond extract": "Смешайте экстракт ванили и экстракт миндаля.",
+      "Mix in the flour mixture to make a batter": "Вмешайте мучную смесь, чтобы получилось тесто",
+      "Spread the batter in a 15 x 10 x 1 inch pan lined with parchment paper": "Выложите тесто в форму размером 15 х 10 х 1 дюйм, застеленную пергаментной бумагой.",
+      "Bake at 350 degrees F for 30 to 35 minutes": "Выпекать при температуре 350 градусов по Фаренгейту от 30 до 35 минут.",
+      "Transfer and let stand for 10 minutes": "Переложите и дайте постоять 10 минут."
+    }
+  }
+}

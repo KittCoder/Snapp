@@ -47,12 +47,20 @@ logger = configure_logging()
 
 
 def log_event(event: str, level: int = logging.INFO, **fields: Any) -> None:
-    safe_fields = {
-        key: value
-        for key, value in fields.items()
-        if key not in {"token", "password", "authorization", "api_key"}
-    }
-    logger.log(level, event, extra={"structured": {"event": event, **safe_fields}})
+    import re
+    def sanitize(value):
+        if isinstance(value, dict):
+            return {key: sanitize(item) for key, item in value.items()
+                    if not re.search(r"password|token|authorization|api.?key|secret|cookie", str(key), re.I)}
+        if isinstance(value, (list, tuple)):
+            return [sanitize(item) for item in value[:50]]
+        if isinstance(value, str):
+            value = re.sub(r"Bearer\s+\S+", "[redacted]", value, flags=re.I)
+            value = re.sub(r"sk-(?:proj-)?[A-Za-z0-9_-]{20,}", "[redacted]", value)
+            return value.replace("\n", " ").replace("\r", " ")[:500]
+        return value
+    safe_fields = sanitize(fields)
+    logger.log(level, sanitize(event), extra={"structured": {"event": sanitize(event), **safe_fields}})
 
 
 def request_id() -> str:

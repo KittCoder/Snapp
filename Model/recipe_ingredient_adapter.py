@@ -4,7 +4,7 @@ import re
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
-from ingredient_normalization import normalize_text, normalize_unit, parse_ingredient, parse_number
+from ingredient_normalization import extract_quantity_and_unit, normalize_text, normalize_unit, parse_ingredient, parse_number
 
 
 SMALL_NUMBERS = {
@@ -70,10 +70,31 @@ class CanonicalRecipeIngredient:
             parts.append(f"{self.quantity:g}")
         if self.unit:
             parts.append(self.unit)
-        if self.ingredient_name:
-            parts.append(self.ingredient_name)
-        if self.note:
-            parts.append(self.note)
+        name = self.ingredient_name
+        # Source labels may be broad (e.g. nameClean="oil"). Preserve the
+        # structural identity in the original line before appending preparation.
+        from product_ontology import describe
+        original = self.raw_text
+        source_note = str(self.source_fields.get("note") or "")
+        if source_note:
+            original = original.replace(source_note, "")
+        original, _, _ = split_package_descriptor(original)
+        original_name = extract_quantity_and_unit(original)[-1]
+        raw_identity = describe(original_name)
+        label_identity = describe(" ".join((name, self.note)))
+        if raw_identity.family and any(
+            getattr(raw_identity, key) and getattr(raw_identity, key) != getattr(label_identity, key)
+            for key in ("family", "subfamily", "species", "cut", "grade", "state", "form",
+                        "fat_level", "salt_level", "dietary_identity", "flavor", "purchase_variants")
+        ):
+            name = original_name
+        if name:
+            parts.append(name)
+        # Notes remain separate; preparation already in the identity is not
+        # appended a second time ("minced garlic minced").
+        for note in re.split(r",\s*", self.note):
+            if note and not re.search(rf"\b{re.escape(note)}\b", name, re.I):
+                parts.append(note)
         return re.sub(r"\s+", " ", " ".join(parts)).strip() or self.raw_text
 
 
@@ -272,25 +293,66 @@ def canonical_ingredient_from_text(value: Any, *, source_recipe_id: str = "") ->
     )
 
 
-def canonical_recipe_ingredients(recipe: Any) -> list[CanonicalRecipeIngredient]:
-    recipe_id = str((recipe or {}).get("id") or (recipe or {}).get("name") or (recipe or {}).get("title") or "")
-    if not isinstance(recipe, dict):
-        values = recipe if isinstance(recipe, list) else [recipe]
-        return [canonical_ingredient_from_text(value, source_recipe_id=recipe_id) for value in values if str(value or "").strip()]
+def is_recipe_section_heading(value: Any) -> bool:
+    """Recognize recipe structure before punctuation/quantity normalization."""
+    if isinstance(value, dict):
+        kind = str(value.get("type") or value.get("kind") or value.get("role") or "").lower()
+        if kind in {"heading", "section", "section_heading", "header"} or value.get("is_heading") is True:
+            return True
+        texts = [value.get(key) for key in ("raw", "original", "display", "name", "nameClean")]
+        if (parse_small_number(value.get("quantity", value.get("amount"))) or 0) > 0 or value.get("unit"):
+            return False
+    else:
+        texts = [value]
+    for text in texts:
+        text = str(text or "").strip()
+        if not text or extract_quantity_and_unit(text)[0] is not None:
+            continue
+        if text.endswith(":") or re.match(r"^for\s+(?:the\s+)?[^:]+:?$", text, re.I):
+            return True
+    return False
 
-    if recipe.get("extendedIngredients"):
-        return [
-            canonical_ingredient_from_spoonacular(item, source_recipe_id=recipe_id)
-            for item in recipe.get("extendedIngredients") or []
-            if isinstance(item, dict)
-        ]
-    if recipe.get("ingredients"):
-        items = recipe.get("ingredients") or []
-        canonical = []
-        for item in items:
-            if isinstance(item, dict):
-                canonical.append(canonical_ingredient_from_structured(item, source_recipe_id=recipe_id))
-            elif str(item or "").strip():
-                canonical.append(canonical_ingredient_from_text(item, source_recipe_id=recipe_id))
-        return canonical
-    return []
+
+def canonical_recipe_ingredients(recipe: Any) -> list[CanonicalRecipeIngredient]:
+    recipe_id = ""
+    if isinstance(recipe, dict):
+        recipe_id = str(recipe.get("id") or recipe.get("name") or recipe.get("title") or "")
+        extended = bool(recipe.get("extendedIngredients"))
+        values = recipe.get("extendedIngredients") or recipe.get("ingredients") or recipe.get("ingredient_lines") or []
+    else:
+        extended = False
+        values = recipe if isinstance(recipe, list) else [recipe]
+    if isinstance(values, str):
+        values = re.split(r"[\n;]+", values)
+    result = []
+    for value in values:
+        if not str(value or "").strip() or is_recipe_section_heading(value):
+            continue
+        if isinstance(value, dict):
+            adapter = canonical_ingredient_from_spoonacular if extended else canonical_ingredient_from_structured
+            result.append(adapter(value, source_recipe_id=recipe_id))
+        else:
+            result.append(canonical_ingredient_from_text(value, source_recipe_id=recipe_id))
+    return result
+
+
+def ingredient_with_quantity(text: str, quantity: float, unit: str | None) -> str:
+    """Change only the amount; never rebuild identity from a broad parser name."""
+    remainder = extract_quantity_and_unit(text)[-1]
+    remainder = re.sub(r"\bper person\b", "", remainder, flags=re.I).strip()
+    from product_ontology import describe
+    parsed = parse_ingredient(text)
+    def identity(value):
+        result = describe(value).to_dict()
+        for key in ("normalized_text", "evidence"):
+            result.pop(key, None)
+        return result
+    # A canonical spelling is safe only if it retains the complete ontology
+    # identity and no preparation is removed. Otherwise keep the source head.
+    preparation = [term for term in parsed.preparation if term != "per person"]
+    if not preparation and identity(remainder) == identity(parsed.canonical_name):
+        remainder = parsed.canonical_name
+    remainder = re.sub(r"\s*,\s*", " ", remainder).strip()
+    if unit and re.search(rf"\b{re.escape(unit)}s?\b", normalize_text(remainder)):
+        unit = None
+    return " ".join(part for part in (f"{quantity:g}", unit or "", remainder) if part)

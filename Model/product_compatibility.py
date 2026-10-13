@@ -25,7 +25,7 @@ from product_retrieval import (
 )
 
 
-MATCHER_VERSION = "ingredient-product-matcher-v3.7"
+MATCHER_VERSION = "ingredient-product-matcher-v3.9"
 DEFAULT_OVERRIDES_PATH = Path(__file__).resolve().parent / "product_match_overrides.json"
 DEFAULT_EVALUATION_FIXTURE = Path(__file__).resolve().parent / "evaluation" / "product_match_cases.jsonl"
 

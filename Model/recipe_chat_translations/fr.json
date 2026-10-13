@@ -1,0 +1,452 @@
+{
+  "10002": {
+    "name": {
+      "Heavenly White Cake": "Gâteau blanc céleste"
+    },
+    "ingredients": {
+      "2 3/4 cup sifted cake flour": "2 3/4 tasse de farine à gâteau tamisée",
+      "4 teaspoon baking powder": "4 cuillères à café de levure chimique",
+      "3/4 teaspoon salt": "3/4 cuillère à café de sel",
+      "4 egg whites": "4 blancs d'œufs",
+      "1 1/2 cup white sugar": "1 1/2 tasse de sucre blanc",
+      "3/4 cup butter": "3/4 tasse de beurre",
+      "1 cup milk": "1 tasse de lait",
+      "1 teaspoon vanilla extract": "1 cuillère à café d'extrait de vanille",
+      "1 teaspoon almond extract": "1 cuillère à café d'extrait d'amande"
+    },
+    "equipment": {
+      "bowl": "bol",
+      "15 x 10 x 1 inch pan": "Poêle de 15 x 10 x 1 pouce",
+      "parchment paper": "papier sulfurisé"
+    },
+    "instructions": {
+      "Sift together the cake flour, baking powder, and salt three times": "Tamisez ensemble la farine à gâteau, la levure chimique et le sel trois fois",
+      "Beat the egg whites in a bowl until foamy": "Battre les blancs d'œufs dans un bol jusqu'à ce qu'ils soient mousseux",
+      "Add 1/2 cup of the sugar and beat until the meringue will hold up in soft peaks": "Ajouter 1/2 tasse de sucre et battre jusqu'à ce que la meringue tienne en pics mous.",
+      "Beat the butter until smooth": "Battre le beurre jusqu'à consistance lisse",
+      "Add the remaining 1 cup sugar and beat until light and fluffy": "Ajouter 1 tasse de sucre restant et battre jusqu'à ce que le mélange soit léger et mousseux.",
+      "Add the milk and beat until smooth": "Ajouter le lait et battre jusqu'à consistance lisse",
+      "Mix in the vanilla extract and almond extract": "Incorporer l'extrait de vanille et l'extrait d'amande",
+      "Mix in the flour mixture to make a batter": "Incorporer le mélange de farine pour faire une pâte",
+      "Spread the batter in a 15 x 10 x 1 inch pan lined with parchment paper": "Étaler la pâte dans un moule de 15 x 10 x 1 pouce recouvert de papier parchemin",
+      "Bake at 350 degrees F for 30 to 35 minutes": "Cuire au four à 350 degrés F pendant 30 à 35 minutes",
+      "Transfer and let stand for 10 minutes": "Transférer et laisser reposer 10 minutes"
+    }
+  },
+  "9661": {
+    "name": {
+      "Curried Butternut Squash Soup": "Soupe de courge musquée au curry"
+    },
+    "ingredients": {
+      "2 tablespoon butter": "2 cuillères à soupe de beurre",
+      "1 cup onion finely chopped": "1 tasse d'oignon finement haché",
+      "4 clove garlic minced": "4 gousses d'ail émincées",
+      "4 cup chicken broth": "4 tasses de bouillon de poulet",
+      "2 pound butternut squash cubed": "2 livres de courge musquée en cubes",
+      "2 teaspoon curry powder": "2 cuillères à café de curry en poudre",
+      "1 teaspoon salt": "1 cuillère à café de sel",
+      "1/2 teaspoon cumin ground": "1/2 cuillère à café de cumin moulu",
+      "1/4 teaspoon cayenne pepper": "1/4 cuillère à café de poivre de Cayenne",
+      "1/2 cup half-and-half": "1/2 tasse moitié-moitié",
+      "2 tablespoon honey": "2 cuillères à soupe de miel",
+      "1/4 cup sour cream": "1/4 tasse de crème sure"
+    },
+    "equipment": {
+      "pot": "pot",
+      "blender": "mixer"
+    },
+    "instructions": {
+      "Gather all ingredients": "Rassemblez tous les ingrédients",
+      "Melt the butter in a pot. Add the onion and garlic and cook for 7 to 10 minutes, until softened and browned": "Faire fondre le beurre dans une casserole. Ajouter l'oignon et l'ail et cuire 7 à 10 minutes, jusqu'à ce qu'ils soient ramollis et dorés.",
+      "Stir in the butter, chicken broth, butternut squash, curry powder, salt, cumin, and cayenne pepper. Bring to a boil, then simmer with the squash for 15 minutes, until tender": "Incorporer le beurre, le bouillon de poulet, la courge musquée, la poudre de curry, le sel, le cumin et le poivre de Cayenne. Porter à ébullition, puis laisser mijoter avec la courge pendant 15 minutes, jusqu'à ce qu'elle soit tendre.",
+      "Remove from the heat": "Retirer du feu",
+      "Stir in the half-and-half and honey": "Incorporer la moitié-moitié et le miel",
+      "Blend in a blender until smooth": "Passer au mixeur jusqu'à consistance lisse",
+      "Stir in the sour cream": "Incorporer la crème sure"
+    }
+  },
+  "97": {
+    "name": {
+      "Air-Fried Chicken Legs": "Cuisses de poulet frites à l'air"
+    },
+    "ingredients": {
+      "1/2 teaspoon garlic powder": "1/2 cuillère à café de poudre d'ail",
+      "1/2 teaspoon paprika": "1/2 cuillère à café de paprika",
+      "1/2 teaspoon salt": "1/2 cuillère à café de sel",
+      "1/2 teaspoon black pepper ground": "1/2 cuillère à café de poivre noir moulu",
+      "4 skin-on chicken drumsticks": "4 pilons de poulet avec la peau"
+    },
+    "equipment": {
+      "air fryer": "friteuse à air",
+      "bowl": "bol"
+    },
+    "instructions": {
+      "Preheat the air fryer to 400 degrees F": "Préchauffer la friteuse à air à 400 degrés F",
+      "In a bowl, combine the garlic powder, paprika, salt, and ground black pepper": "Dans un bol, mélanger la poudre d'ail, le paprika, le sel et le poivre noir moulu.",
+      "Place the skin-on chicken drumsticks in the air fryer and sprinkle them with the seasoning mixture": "Placez les pilons de poulet avec la peau dans la friteuse et saupoudrez-les du mélange d'assaisonnements.",
+      "Cook for 10 minutes, then cook for 10 minutes more, until the internal temperature reaches 165 degrees F": "Cuire pendant 10 minutes, puis cuire encore 10 minutes, jusqu'à ce que la température interne atteigne 165 degrés F.",
+      "Rest for 5 minutes before serving": "Reposer 5 minutes avant de servir"
+    }
+  },
+  "9437": {
+    "name": {
+      "Buffalo Chicken Wing Sliders": "Sliders d'ailes de poulet Buffalo"
+    },
+    "ingredients": {
+      "1 pound chicken ground": "1 livre de poulet haché",
+      "1 cup bread crumbs dry": "1 tasse de chapelure sèche",
+      "1 egg": "1 oeuf",
+      "1/4 cup hot wing sauce": "1/4 tasse de sauce piquante pour ailes",
+      "1/2 cup warm water": "1/2 tasse d'eau tiède",
+      "12 slider-size burger buns": "12 pains à hamburger de la taille d'un slider"
+    },
+    "equipment": {
+      "bowl": "bol",
+      "skillet": "poêlon"
+    },
+    "instructions": {
+      "In a bowl, mix the chicken, bread crumbs, egg, and hot wing sauce to make a sauce": "Dans un bol, mélanger le poulet, la chapelure, l'œuf et la sauce piquante pour ailes pour obtenir une sauce.",
+      "Add the warm water to the mixture and stir until combined": "Ajouter l'eau tiède au mélange et remuer jusqu'à ce que le tout soit bien mélangé.",
+      "Shape the mixture into patties about 3 inches in diameter": "Façonner le mélange en galettes d'environ 3 pouces de diamètre",
+      "Place the patties in a skillet and cook for 4 minutes, until the burgers are hot and no longer pink in the middle": "Placer les galettes dans une poêle et cuire 4 minutes, jusqu'à ce que les burgers soient chauds et ne soient plus roses au milieu",
+      "Serve on the slider-size burger buns": "Servir sur des pains à hamburger de la taille d'un slider"
+    }
+  },
+  "9614": {
+    "name": {
+      "Fiesta Chicken Burritos": "Burritos au poulet Fiesta"
+    },
+    "ingredients": {
+      "2 teaspoon gay lea butter": "2 cuillères à café de beurre de gaieté",
+      "1 pound chicken breasts, cut into 1-inch cubes boneless, skinless": "1 livre de poitrines de poulet, coupées en cubes de 1 pouce, désossées et sans peau",
+      "to taste salt and black pepper ground": "au goût sel et poivre noir moulu",
+      "2 cup ivanhoe old cheddar divided, shredded": "2 tasses de cheddar fort Ivanhoe divisé, râpé",
+      "1 cup green pepper diced": "1 tasse de poivron vert coupé en dés",
+      "2/3 cup gay lea sour cream": "2/3 tasse de crème sure gay lea",
+      "1/2 cup black olives sliced": "1/2 tasse d'olives noires tranchées",
+      "1/3 cup salsa": "1/3 tasse de salsa",
+      "1 jalapeno pepper minced, seeded": "1 piment jalapeno émincé, épépiné",
+      "2 tablespoon cilantro fresh chopped": "2 cuillères à soupe de coriandre fraîche hachée",
+      "4 large flour tortillas": "4 grosses tortillas à la farine"
+    },
+    "equipment": {
+      "oven": "four",
+      "skillet": "poêlon",
+      "bowl": "bol",
+      "baking dish": "plat allant au four"
+    },
+    "instructions": {
+      "Preheat the oven to 350 degrees F": "Préchauffer le four à 350 degrés F",
+      "Melt the butter in a skillet and cook the chicken until no longer pink inside, about 8 minutes": "Faire fondre le beurre dans une poêle et cuire le poulet jusqu'à ce qu'il ne soit plus rose à l'intérieur, environ 8 minutes",
+      "Transfer the salt, green pepper, and jalapeno pepper to a bowl": "Transférer le sel, le poivre vert et le piment jalapeno dans un bol",
+      "Add the chicken, salt and black pepper, green pepper, sour cream, black olives, salsa, jalapeno pepper, cilantro, and cheddar, then stir to combine": "Ajouter le poulet, le sel et le poivre noir, le poivre vert, la crème sure, les olives noires, la salsa, le piment jalapeno, la coriandre et le cheddar, puis remuer pour combiner.",
+      "Place 1/4 of the chicken on each tortilla": "Placer 1/4 du poulet sur chaque tortilla",
+      "Place the filling in a baking dish and wrap with the remaining tortillas": "Placer la garniture dans un plat allant au four et envelopper avec les tortillas restantes.",
+      "Sprinkle the remaining cheese over top": "Saupoudrer le reste du fromage dessus",
+      "Bake until the cheese is melted and the tortillas are crispy, about 20 minutes": "Cuire au four jusqu'à ce que le fromage soit fondu et que les tortillas soient croustillantes, environ 20 minutes"
+    }
+  },
+  "95": {
+    "name": {
+      "Air-Fried Pretzel-Crusted Chicken Tenders": "Filets de poulet frits en croûte de bretzel"
+    },
+    "ingredients": {
+      "3 tablespoon all-purpose flour": "3 cuillères à soupe de farine tout usage",
+      "1/4 teaspoon turmeric ground": "1/4 cuillère à café de curcuma moulu",
+      "1/4 teaspoon black pepper ground": "1/4 cuillère à café de poivre noir moulu",
+      "1/4 teaspoon mustard powder": "1/4 cuillère à café de moutarde en poudre",
+      "3 1/2 ounce pretzels salted crushed": "3 1/2 onces de bretzels salés écrasés",
+      "1 large egg beaten": "1 gros oeuf battu",
+      "1 1/2 pound chicken tenderloins": "1 1/2 livre de filets de poulet",
+      "olive oil cooking spray": "Spray de cuisson à l'huile d'olive"
+    },
+    "equipment": {
+      "air fryer": "friteuse à air",
+      "resealable plastic bag": "sac en plastique refermable",
+      "parchment paper": "papier sulfurisé"
+    },
+    "instructions": {
+      "Preheat the air fryer to 400 degrees F": "Préchauffer la friteuse à air à 400 degrés F",
+      "Combine the flour, turmeric, black pepper, and mustard powder in a resealable plastic bag and shake until the dry ingredients are well mixed": "Mélangez la farine, le curcuma, le poivre noir et la poudre de moutarde dans un sac en plastique refermable et agitez jusqu'à ce que les ingrédients secs soient bien mélangés.",
+      "Line a tray with parchment paper": "Tapisser un plateau de papier sulfurisé",
+      "Add the flour mixture and the chicken tenderloins and toss until lightly coated": "Ajouter le mélange de farine et les filets de poulet et mélanger jusqu'à ce qu'ils soient légèrement enrobés.",
+      "Shake the pretzels and beaten egg together to make the dip": "Secouez les bretzels et l'œuf battu ensemble pour faire la trempette.",
+      "Dip the chicken tenderloins in the pretzel mixture, then place them on the prepared tray": "Trempez les filets de poulet dans le mélange de bretzel, puis placez-les sur le plateau préparé.",
+      "Spray the chicken with olive oil cooking spray": "Vaporiser le poulet avec un enduit à cuisson à l'huile d'olive",
+      "Add the chicken tenderloins to the air fryer and air fry for 5 to 6 minutes, until the chicken is no longer pink at the bone, the juices run clear, and the internal temperature reaches 165 degrees F": "Ajoutez les filets de poulet dans la friteuse à air et faites frire à l'air libre pendant 5 à 6 minutes, jusqu'à ce que le poulet ne soit plus rose au niveau des os, que le jus soit clair et que la température interne atteigne 165 degrés F.",
+      "Serve immediately": "Servir immédiatement"
+    }
+  },
+  "23474": {
+    "name": {
+      "Reuben Sandwich": "Sandwich Ruben"
+    },
+    "ingredients": {
+      "8 slice rye bread": "8 tranches de pain de seigle",
+      "1/2 cup thousand island dressing": "1/2 tasse de vinaigrette mille îles",
+      "8 slice swiss cheese": "8 tranches de fromage suisse",
+      "8 slice deli corned beef sliced": "8 tranches de corned-beef de charcuterie tranchées",
+      "1 cup sauerkraut drained": "1 tasse de choucroute égouttée",
+      "2 tablespoon butter softened": "2 cuillères à soupe de beurre ramolli"
+    },
+    "equipment": {
+      "skillet": "poêlon",
+      "grill": "gril"
+    },
+    "instructions": {
+      "Preheat a skillet": "Préchauffer une poêle",
+      "Spread dressing on one side of the rye bread": "Étaler la vinaigrette sur un côté du pain de seigle",
+      "Layer the rye bread with Swiss cheese, 2 slices of deli corned beef, and 1/4 cup sauerkraut": "Superposez le pain de seigle avec du fromage suisse, 2 tranches de corned-beef de charcuterie et 1/4 tasse de choucroute",
+      "Spread the remaining dressing on the remaining rye bread slices": "Étalez le reste de la vinaigrette sur les tranches de pain de seigle restantes",
+      "Butter one side of the bread": "Beurrer un côté du pain",
+      "Place the buttered bread in the skillet": "Placer le pain beurré dans la poêle",
+      "Butter the remaining bread slices": "Beurrer les tranches de pain restantes",
+      "Grill the sandwiches in the grill for 5 minutes until both sides are golden brown": "Griller les sandwichs au grill pendant 5 minutes jusqu'à ce que les deux côtés soient dorés.",
+      "Serve hot": "Servir chaud",
+      "Enjoy": "Apprécier"
+    }
+  },
+  "44906": {
+    "name": {
+      "Wiener Winks": "Clins d'œil à la saucisse"
+    },
+    "ingredients": {
+      "1 package beef frankfurters 16 ounce": "1 paquet de saucisses de Francfort au bœuf 16 onces",
+      "8 slice processed american cheese": "8 tranches de fromage américain fondu",
+      "8 slice bread": "8 tranches de pain",
+      "8 teaspoon butter": "8 cuillères à café de beurre"
+    },
+    "equipment": {
+      "oven": "four"
+    },
+    "instructions": {
+      "Gather all ingredients. Preheat the oven to 350 degrees F": "Rassemblez tous les ingrédients. Préchauffer le four à 350 degrés F",
+      "Slice the bread and butter one side of each slice with 1 teaspoon of butter": "Trancher le pain et beurrer un côté de chaque tranche avec 1 cuillère à café de beurre",
+      "Place the cheese on the bread, then place a frankfurter on top and fold the bread around it": "Placez le fromage sur le pain, puis placez une saucisse de Francfort dessus et repliez le pain autour.",
+      "Insert a toothpick to hold together": "Insérez un cure-dent pour maintenir ensemble",
+      "Repeat with the remaining frankfurters, bread, cheese, and butter": "Répétez avec le reste des saucisses de Francfort, du pain, du fromage et du beurre.",
+      "Bake until golden brown, 20 to 30 minutes": "Cuire au four jusqu'à ce qu'il soit doré, 20 à 30 minutes"
+    }
+  },
+  "4062": {
+    "name": {
+      "Oh So Tender Brisket": "Poitrine si tendre"
+    },
+    "ingredients": {
+      "roasting bag": "sac à rôtir",
+      "1/4 cup all-purpose flour": "1/4 tasse de farine tout usage",
+      "3 pound beef brisket": "3 livres de poitrine de bœuf",
+      "1 3/4 fluid ounce liquid smoke flavoring": "1 3/4 once liquide d'arôme de fumée liquide",
+      "1/2 teaspoon garlic powder": "1/2 cuillère à café de poudre d'ail",
+      "1 package onion soup mix dry 1 ounce": "1 paquet de mélange de soupe à l'oignon sec 1 once",
+      "1 teaspoon black pepper ground": "1 cuillère à café de poivre noir moulu"
+    },
+    "equipment": {
+      "oven": "four"
+    },
+    "instructions": {
+      "Preheat the oven to 275 degrees F": "Préchauffer le four à 275 degrés F",
+      "Coat a roasting bag with the flour": "Enduire un sac à rôtir avec la farine",
+      "Place the beef brisket in the roasting bag": "Placer la poitrine de bœuf dans le sac à rôtir",
+      "Sprinkle the brisket with the liquid smoke flavoring, garlic powder, onion soup mix, and ground black pepper": "Saupoudrer la poitrine d'arôme de fumée liquide, de poudre d'ail, de mélange de soupe à l'oignon et de poivre noir moulu.",
+      "Follow the roasting bag instructions to close it": "Suivez les instructions du sac à rôtir pour le fermer",
+      "Follow the roasting bag instructions to prepare it for baking": "Suivez les instructions du sac à rôtir pour le préparer à la cuisson.",
+      "Follow the roasting bag instructions to bake the brisket": "Suivez les instructions du sac à rôtir pour cuire la poitrine",
+      "Bake the brisket in the oven until tender, 360 to 480 minutes": "Cuire la poitrine au four jusqu'à ce qu'elle soit tendre, 360 à 480 minutes"
+    }
+  },
+  "44878": {
+    "name": {
+      "Taco Bell Seasoning Copycat": "Copieur d'assaisonnement Taco Bell"
+    },
+    "ingredients": {
+      "1 tablespoon onion flakes dried": "1 cuillère à soupe de flocons d'oignon séchés",
+      "1 teaspoon all-purpose flour": "1 cuillère à café de farine tout usage",
+      "1 teaspoon beef bouillon granules": "1 cuillère à café de granulés de bouillon de bœuf",
+      "1 teaspoon garlic salt": "1 cuillère à café de sel d'ail",
+      "1 teaspoon cumin ground": "1 cuillère à café de cumin moulu",
+      "1 teaspoon paprika": "1 cuillère à café de paprika",
+      "1 teaspoon chili powder": "1 cuillère à café de poudre de chili",
+      "1/4 teaspoon cayenne pepper": "1/4 cuillère à café de poivre de Cayenne",
+      "1/4 teaspoon white sugar": "1/4 cuillère à café de sucre blanc"
+    },
+    "equipment": {
+      "bowl": "bol"
+    },
+    "instructions": {
+      "Gather all ingredients": "Rassemblez tous les ingrédients",
+      "In a bowl, whisk together onion flakes, all-purpose flour, beef bouillon granules, garlic salt, ground cumin, paprika, chili powder, cayenne pepper, and white sugar until evenly combined": "Dans un bol, fouetter ensemble les flocons d'oignon, la farine tout usage, les granules de bouillon de bœuf, le sel d'ail, le cumin moulu, le paprika, la poudre de chili, le poivre de Cayenne et le sucre blanc jusqu'à ce que le tout soit homogène."
+    }
+  },
+  "4083": {
+    "name": {
+      "Reuben Soup": "Soupe Ruben"
+    },
+    "ingredients": {
+      "3 tablespoon butter": "3 cuillères à soupe de beurre",
+      "1/2 cup onion chopped": "1/2 tasse d'oignon haché",
+      "1/4 cup celery chopped": "1/4 tasse de céleri haché",
+      "1/4 cup all-purpose flour": "1/4 tasse de farine tout usage",
+      "3 cup water": "3 tasses d'eau",
+      "4 cubes beef bouillon": "4 cubes de bouillon de boeuf",
+      "3 cup half-and-half cream": "3 tasses de crème moitié-moitié",
+      "3 cup swiss cheese divided, shredded": "3 tasses de fromage suisse divisé, râpé",
+      "8 ounce corned beef shredded": "8 onces de corned-beef râpé",
+      "1 cup sauerkraut drained": "1 tasse de choucroute égouttée",
+      "8 slice rye bread, toasted and cut into triangles": "8 tranches de pain de seigle, grillées et coupées en triangles"
+    },
+    "equipment": {
+      "saucepan": "casserole",
+      "oven": "four",
+      "broiler": "gril"
+    },
+    "instructions": {
+      "Melt the butter in a saucepan. Add the onion and celery and cook until tender": "Faire fondre le beurre dans une casserole. Ajouter l'oignon et le céleri et cuire jusqu'à tendreté",
+      "Stir in the flour until smooth. Add the water and beef bouillon cubes and stir to combine": "Incorporer la farine jusqu'à consistance lisse. Ajouter l'eau et les cubes de bouillon de bœuf et mélanger.",
+      "Bring to a boil, then simmer for 5 minutes": "Portez à ébullition, puis laissez mijoter 5 minutes",
+      "Stir in the beef bouillon cubes, half-and-half cream, 1 cup of the Swiss cheese, corned beef, sauerkraut, and the rye bread triangles": "Incorporer les cubes de bouillon de bœuf, la crème moitié-moitié, 1 tasse de fromage suisse, le corned-beef, la choucroute et les triangles de pain de seigle.",
+      "Cook for 30 minutes, until the soup is slightly thickened": "Cuire 30 minutes, jusqu'à ce que la soupe épaississe légèrement",
+      "Preheat the oven and broiler": "Préchauffer le four et le gril",
+      "Ladle the soup into 8 ovenproof bowls and top each serving with a bread slice": "Versez la soupe dans 8 bols allant au four et garnissez chaque portion d'une tranche de pain.",
+      "Sprinkle with the remaining 1/4 cup of the Swiss cheese and place under the broiler until the cheese is melted and lightly browned": "Saupoudrer du 1/4 tasse de fromage suisse restant et placer sous le gril jusqu'à ce que le fromage soit fondu et légèrement doré."
+    }
+  },
+  "45245": {
+    "name": {
+      "Nova Scotia Style Donair": "Donair à la Nouvelle-Écosse"
+    },
+    "ingredients": {
+      "4 pound ground beef ground": "4 livres de bœuf haché",
+      "1 pound lamb ground": "1 livre d'agneau haché",
+      "5 teaspoon all-purpose flour": "5 cuillères à café de farine tout usage",
+      "5 teaspoon oregano dried": "5 cuillères à café d'origan séché",
+      "4 teaspoon salt": "4 cuillères à café de sel",
+      "2 1/2 teaspoon mustard dry": "2 1/2 cuillères à café de moutarde sèche",
+      "2 1/2 teaspoon garlic powder": "2 1/2 cuillères à café de poudre d'ail",
+      "2 1/2 teaspoon cracked black pepper": "2 1/2 cuillères à café de poivre noir concassé",
+      "2 1/2 teaspoon cayenne pepper": "2 1/2 cuillères à café de poivre de Cayenne",
+      "2 teaspoon chile pepper dried crushed": "2 cuillères à café de piment séché broyé",
+      "1 1/2 teaspoon paprika": "1 1/2 cuillère à café de paprika",
+      "1 teaspoon italian seasoning": "1 cuillère à café d'assaisonnement italien"
+    },
+    "equipment": {
+      "oven": "four",
+      "bowl": "bol",
+      "skillet": "poêlon"
+    },
+    "instructions": {
+      "Preheat the oven to 300 degrees F and grease a large baking pan with sides": "Préchauffer le four à 300 degrés F et graisser un grand plat allant au four avec les côtés",
+      "In a bowl, combine the ground beef, ground lamb, all-purpose flour, oregano, salt, dry mustard, 2 1/2 teaspoons garlic powder, cracked black pepper, cayenne pepper, crushed dried chile pepper, paprika, and italian seasoning": "Dans un bol, mélanger le bœuf haché, l'agneau haché, la farine tout usage, l'origan, le sel, la moutarde sèche, 2 1/2 cuillères à café de poudre d'ail, le poivre noir concassé, le poivre de Cayenne, le piment séché broyé, le paprika et l'assaisonnement italien.",
+      "Work the mixture for 10 minutes until it is paste-like, then roll it into a large loaf shape and place it in the prepared baking pan": "Travaillez le mélange pendant 10 minutes jusqu'à ce qu'il soit pâteux, puis roulez-le en forme de gros pain et placez-le dans le plat de cuisson préparé.",
+      "Bake until no longer pink in the center and the internal temperature reaches 160 degrees F": "Cuire au four jusqu'à ce que le centre ne soit plus rose et que la température interne atteigne 160 degrés F.",
+      "Remove from the oven and let it cool completely, then refrigerate for 360 minutes": "Retirer du four et laisser refroidir complètement, puis réfrigérer pendant 360 minutes",
+      "In a bowl, combine the remaining 2 teaspoons garlic powder with the sauce ingredients and stir until the mixture thickens": "Dans un bol, mélanger les 2 cuillères à café de poudre d'ail restantes avec les ingrédients de la sauce et remuer jusqu'à ce que le mélange épaississe.",
+      "Slice the donair loaf into strips about 1/8-inch to 1/4-inch thick": "Couper le pain donair en lanières d'environ 1/8 de pouce à 1/4 de pouce d'épaisseur",
+      "Fry the meat in a skillet until it begins to crisp at the edges, then remove it from the skillet": "Faites frire la viande dans une poêle jusqu'à ce qu'elle commence à devenir croustillante sur les bords, puis retirez-la de la poêle.",
+      "Quickly rub 1 pita round lightly with water and fry it in the skillet for 1 minute until warm": "Frottez rapidement 1 rond de pita légèrement avec de l'eau et faites-le frire dans la poêle pendant 1 minute jusqu'à ce qu'il soit chaud.",
+      "Top with pan-fried donair meat, garnish with sauce, and repeat with the remaining donair and pita": "Garnir de viande de donair poêlée, garnir de sauce et répéter avec le reste du donair et du pita."
+    }
+  },
+  "52710": {
+    "name": {
+      "Gunnar and Raven's Burgundy Sauce": "Sauce Bourgogne de Gunnar et Raven"
+    },
+    "ingredients": {
+      "1 tablespoon butter": "1 cuillère à soupe de beurre",
+      "1 tablespoon olive oil": "1 cuillère à soupe d'huile d'olive",
+      "2/3 cup onion chopped": "2/3 tasse d'oignon haché",
+      "2 clove garlic chopped": "2 gousses d'ail hachées",
+      "2 tablespoon all-purpose flour": "2 cuillères à soupe de farine tout usage",
+      "2/3 cup beef broth": "2/3 tasse de bouillon de bœuf",
+      "1 cup burgundy wine": "1 tasse de vin de Bourgogne",
+      "1 pinch basil dried": "1 pincée de basilic séché",
+      "1 pinch oregano dried": "1 pincée d'origan séché",
+      "1 1/2 cup baby portobello mushrooms sliced": "1 1/2 tasse de petits champignons portobello tranchés"
+    },
+    "equipment": {
+      "skillet": "poêlon"
+    },
+    "instructions": {
+      "Melt the butter with the olive oil in a skillet. Add the onion and garlic and cook for 5 to 10 minutes, until the onion is transparent": "Faire fondre le beurre avec l'huile d'olive dans une poêle. Ajouter l'oignon et l'ail et cuire 5 à 10 minutes, jusqu'à ce que l'oignon soit transparent",
+      "Pour in the flour and beef broth and stir until the flour is smoothly mixed into the broth and vegetables": "Versez la farine et le bouillon de bœuf et remuez jusqu'à ce que la farine soit bien mélangée au bouillon et aux légumes.",
+      "Stir in the burgundy wine, basil, and oregano": "Incorporer le vin de Bourgogne, le basilic et l'origan",
+      "Simmer the seasoned onion mixture, then add the sliced baby portobello mushrooms": "Laisser mijoter le mélange d'oignons assaisonnés, puis ajouter les petits champignons portobello tranchés.",
+      "Cook for 10 minutes, until the sauce is thickened": "Cuire 10 minutes, jusqu'à ce que la sauce épaississe"
+    }
+  },
+  "38266": {
+    "name": {
+      "Hearty Italian Meatball Soup": "Soupe italienne copieuse aux boulettes de viande"
+    },
+    "ingredients": {
+      "2 can tomatoes with onion and garlic, undrained diced 14 ounce": "2 boîtes de tomates avec oignon et ail, non égouttées, coupées en dés 14 onces",
+      "2 can beef broth 14 ounce": "2 boîtes de bouillon de bœuf 14 onces",
+      "3 cup water": "3 tasses d'eau",
+      "1 teaspoon italian seasoning": "1 cuillère à café d'assaisonnement italien",
+      "1 package small italian-style meatballs cooked, frozen 16 ounce": "1 paquet de petites boulettes de viande à l'italienne cuites et congelées 16 onces",
+      "2 cup italian-blend vegetables frozen": "2 tasses de légumes mélangés à l'italienne surgelés",
+      "1 cup small star-shaped pasta dried": "1 tasse de petites pâtes en forme d'étoile séchées",
+      "1/4 cup parmesan cheese grated": "1/4 tasse de parmesan râpé"
+    },
+    "equipment": {
+      "pot": "pot"
+    },
+    "instructions": {
+      "In a pot, combine the tomatoes with onion and garlic, undrained, beef broth, water, and Italian seasoning": "Dans une casserole, mélanger les tomates avec l'oignon et l'ail non égouttés, le bouillon de bœuf, l'eau et l'assaisonnement italien.",
+      "Bring the mixture to a boil": "Porter le mélange à ébullition",
+      "Add the cooked frozen meatballs, frozen Italian-blend vegetables, and dried star-shaped pasta": "Ajouter les boulettes de viande cuites surgelées, les légumes italiens surgelés et les pâtes séchées en forme d'étoile.",
+      "Return to a boil, then cook until the meatballs are heated through and the pasta is tender": "Remettre à ébullition, puis cuire jusqu'à ce que les boulettes de viande soient bien chaudes et que les pâtes soient tendres.",
+      "Divide the soup among bowls and garnish with grated Parmesan cheese": "Répartir la soupe dans des bols et garnir de parmesan râpé"
+    }
+  },
+  "23492": {
+    "name": {
+      "The Real Reuben": "Le vrai Ruben"
+    },
+    "ingredients": {
+      "2 slice dark rye bread": "2 tranches de pain de seigle noir",
+      "1/4 pound thinly corned beef sliced": "1/4 livre de corned-beef tranché finement",
+      "3 ounce sauerkraut drained": "3 onces de choucroute égouttée",
+      "2 slice swiss cheese": "2 tranches de fromage suisse",
+      "1/4 cup thousand island dressing": "1/4 tasse de vinaigrette mille îles"
+    },
+    "equipment": {
+      "baking sheet": "plaque à pâtisserie"
+    },
+    "instructions": {
+      "Place the dark rye bread on a baking sheet": "Placer le pain de seigle noir sur une plaque à pâtisserie",
+      "Top the bread with the thinly corned beef, drained sauerkraut, and Swiss cheese": "Garnir le pain avec le corned-beef fin, la choucroute égouttée et le fromage suisse.",
+      "Broil until the cheese has melted, 3 to 4 minutes": "Griller jusqu'à ce que le fromage soit fondu, 3 à 4 minutes",
+      "Serve with thousand island dressing": "Servir avec une vinaigrette mille îles"
+    }
+  },
+  "5092": {
+    "name": {
+      "Hawaiian-Style Chili": "Chili à la hawaïenne"
+    },
+    "ingredients": {
+      "2 pound ground beef ground": "2 livres de bœuf haché",
+      "6 onions chopped": "6 oignons hachés",
+      "2 red bell peppers chopped, seeded": "2 poivrons rouges hachés et épépinés",
+      "2 can stewed tomatoes, with juice 16 ounce": "2 boîtes de tomates cuites, avec jus 16 onces",
+      "2 can kidney beans, with liquid 15.5 ounce": "2 boîte de haricots rouges, avec du liquide 15.5 once",
+      "1 can tomato sauce 16 ounce": "1 boîte de sauce tomate 16 onces",
+      "1 can pineapple chunks drained 16 ounce": "1 boîte de morceaux d'ananas égouttés 16 onces",
+      "2 tablespoon chili powder": "2 cuillères à soupe de poudre de chili",
+      "2 teaspoon salt": "2 cuillères à café de sel"
+    },
+    "equipment": {
+      "dutch oven": "four hollandais"
+    },
+    "instructions": {
+      "Heat the oven and a Dutch oven until hot": "Chauffer le four et un faitout jusqu'à ce qu'ils soient chauds",
+      "Add the ground beef and cook until barely pink, stirring constantly to break it into small pieces": "Ajouter le bœuf haché et cuire jusqu'à ce qu'il soit à peine rosé, en remuant constamment pour le briser en petits morceaux.",
+      "Stir in the onions and red bell peppers and cook for 5 minutes, until the meat has browned and the onions have softened and turned translucent": "Incorporer les oignons et les poivrons rouges et cuire 5 minutes, jusqu'à ce que la viande soit dorée et que les oignons ramollissent et deviennent translucides.",
+      "Pour off the mixture and press to release excess grease": "Versez le mélange et appuyez pour évacuer l'excès de graisse.",
+      "Return the mixture to the Dutch oven": "Remettre le mélange dans la cocotte",
+      "Stir in the stewed tomatoes with juice, kidney beans with liquid, tomato sauce, and drained pineapple chunks": "Incorporer la compote de tomates avec le jus, les haricots rouges avec le liquide, la sauce tomate et les morceaux d'ananas égouttés.",
+      "Season with chili powder and salt": "Assaisonner avec de la poudre de chili et du sel",
+      "Bring the seasoned mixture to a boil, then simmer for 10 minutes, until it reaches the desired consistency": "Portez à ébullition le mélange assaisonné, puis laissez mijoter 10 minutes, jusqu'à obtenir la consistance désirée."
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "10002": {
+    "name": {
+      "Heavenly White Cake": "آسمانی سفید کیک"
+    },
+    "ingredients": {
+      "2 3/4 cup sifted cake flour": "2 3/4 کپ چھان کر کیک کا آٹا",
+      "4 teaspoon baking powder": "4 چائے کا چمچ بیکنگ پاؤڈر",
+      "3/4 teaspoon salt": "3/4 چائے کا چمچ نمک",
+      "4 egg whites": "4 انڈے کی سفیدی۔",
+      "1 1/2 cup white sugar": "1 1/2 کپ سفید چینی",
+      "3/4 cup butter": "3/4 کپ مکھن",
+      "1 cup milk": "1 کپ دودھ",
+      "1 teaspoon vanilla extract": "1 چائے کا چمچ ونیلا ایکسٹریکٹ",
+      "1 teaspoon almond extract": "1 چائے کا چمچ بادام کا عرق"
+    },
+    "equipment": {
+      "bowl": "کٹورا",
+      "15 x 10 x 1 inch pan": "15 x 10 x 1 انچ پین",
+      "parchment paper": "پارچمنٹ کاغذ"
+    },
+    "instructions": {
+      "Sift together the cake flour, baking powder, and salt three times": "کیک کا آٹا، بیکنگ پاؤڈر، اور نمک تین بار ایک ساتھ چھان لیں۔",
+      "Beat the egg whites in a bowl until foamy": "ایک پیالے میں انڈے کی سفیدی کو جھاگ آنے تک پھینٹیں۔",
+      "Add 1/2 cup of the sugar and beat until the meringue will hold up in soft peaks": "1/2 کپ چینی شامل کریں اور اس وقت تک پیٹیں جب تک کہ مرنگو نرم چوٹیوں پر نہ آجائے",
+      "Beat the butter until smooth": "مکھن کو ہموار ہونے تک پیٹیں۔",
+      "Add the remaining 1 cup sugar and beat until light and fluffy": "بقیہ 1 کپ چینی شامل کریں اور ہلکی اور تیز ہونے تک پیٹیں۔",
+      "Add the milk and beat until smooth": "دودھ شامل کریں اور ہموار ہونے تک پیٹیں۔",
+      "Mix in the vanilla extract and almond extract": "ونیلا ایکسٹریکٹ اور بادام کے عرق میں مکس کریں۔",
+      "Mix in the flour mixture to make a batter": "آٹے کے آمیزے میں مکس کریں تاکہ بیٹر بن جائے۔",
+      "Spread the batter in a 15 x 10 x 1 inch pan lined with parchment paper": "پارچمنٹ پیپر کے ساتھ 15 x 10 x 1 انچ پین میں آٹے کو پھیلائیں۔",
+      "Bake at 350 degrees F for 30 to 35 minutes": "350 ڈگری ایف پر 30 سے ​​35 منٹ تک بیک کریں۔",
+      "Transfer and let stand for 10 minutes": "منتقل کریں اور 10 منٹ تک کھڑے ہونے دیں۔"
+    }
+  }
+}

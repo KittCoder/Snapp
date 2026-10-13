@@ -264,8 +264,8 @@ class FakeMatchService:
             if key == "oil":
                 alternatives = [
                     ranked("oil_large", self.feature_by_id["oil_large"]["original_product_name"], score=0.88),
-                    ranked("oil_tiny", self.feature_by_id["oil_tiny"]["original_product_name"], score=0.87),
-                    ranked("oil_bad", self.feature_by_id["oil_bad"]["original_product_name"], score=0.86),
+                    ranked("oil_tiny", self.feature_by_id["oil_tiny"]["original_product_name"], score=0.89),
+                    ranked("oil_bad", self.feature_by_id["oil_bad"]["original_product_name"], score=0.89),
                 ]
                 rejected = [ranked("dressing", self.feature_by_id["dressing"]["original_product_name"], conflicts=[{"rule": "oil_identity", "classification": "hard_reject", "message": "dressing is not oil"}])]
             if key == "milk":
@@ -476,8 +476,8 @@ class QuantityEngineTests(unittest.TestCase):
         )
         item = basket.shopping_basket[0]
         self.assertNotEqual(item.product_id, "oil_bad")
-        rejected_ids = {candidate.product_id for candidate in item.optimized_purchase.rejected}
-        self.assertIn("oil_bad", rejected_ids)
+        uncertain = next(candidate for candidate in item.optimized_purchase.alternatives if candidate.product_id == "oil_bad")
+        self.assertEqual(uncertain.deal_confidence, "low")
 
     def test_corrected_dry_milk_metadata_usable(self):
         basket = BasketBuilder(FakeMatchService()).build_recipe_basket({"ingredients": ["1 oz dry milk"]})
@@ -510,7 +510,7 @@ class QuantityEngineTests(unittest.TestCase):
         self.assertEqual(item.product_id, "baking_powder_good")
         self.assertEqual(item.package.confidence, "high")
         self.assertEqual(item.packages_required, 1)
-        self.assertIn("baking_powder_bad", {candidate.product_id for candidate in item.optimized_purchase.rejected})
+        self.assertEqual(next(candidate for candidate in item.optimized_purchase.alternatives if candidate.product_id == "baking_powder_bad").deal_confidence, "low")
 
     def test_materially_different_ingredients_are_not_aggregated(self):
         basket = BasketBuilder(FakeMatchService()).build_multi_recipe_basket(

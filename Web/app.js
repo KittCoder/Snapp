@@ -128,6 +128,9 @@ let currentUser = null;
 let currentUserInfo = null;
 let settingsSaveTimer = null;
 let onboardingStepIndex = 0;
+let onboardingForNewAccount = false;
+let pendingNewAccountUsername = "";
+let authLandingPending = false;
 let selectedDietaryPreferences = [];
 let myStoreMap = null;
 let myStoreMarkers = [];
@@ -143,7 +146,6 @@ const selectedShoppingIngredientIds = new Set();
 const pantryHandledShoppingIngredientIds = new Set();
 const LANGUAGE_STORAGE_KEY = "snapp-language";
 const ONBOARDING_COMPLETED_STORAGE_PREFIX = "snapp:onboarding-completed:";
-const originalTextNodes = new WeakMap();
 const SHOPPING_CATEGORY_ORDER = [
   "Produce",
   "Bakery & Bread",
@@ -169,143 +171,10 @@ const SHOPPING_CATEGORY_ORDER = [
   "Other",
 ];
 
-const SPANISH_TEXT = {
-  "Home": "Inicio",
-  "Account": "Cuenta",
-  "Dishes": "Platillos",
-  "Stores": "Tiendas",
-  "Pantry": "Despensa",
-  "Schedule": "Horario",
-  "Shopping": "Compras",
-  "Budget": "Presupuesto",
-  "Profile": "Perfil",
-  "Signed out": "Sesion cerrada",
-  "Sign out": "Cerrar sesion",
-  "SNAPP Account": "Cuenta de SNAPP",
-  "Save your planning session with Supabase.": "Guarda tu sesion de planificacion con Supabase.",
-  "Create an account or sign in to use SNAPP. This prototype uses a username and password while Supabase keeps you signed in on this browser.": "Crea una cuenta o inicia sesion para usar SNAPP. Este prototipo usa un nombre de usuario y una contrasena mientras Supabase mantiene tu sesion abierta en este navegador.",
-  "Account actions": "Acciones de cuenta",
-  "Sign in": "Iniciar sesion",
-  "Create account": "Crear cuenta",
-  "Username": "Nombre de usuario",
-  "Password": "Contrasena",
-  "Nourishment Made Practical": "Nutricion practica",
-  "Welcome to SNAPP": "Bienvenido a SNAPP",
-  "Build balanced meals with clarity. SNAPP helps you plan your week, understand nutrition foundations, and turn food choices into habits that are realistic for your schedule.": "Crea comidas balanceadas con claridad. SNAPP te ayuda a planificar la semana, entender bases de nutricion y convertir tus decisiones de comida en habitos realistas para tu horario.",
-  "Today's Store Plan": "Plan de tiendas de hoy",
-  "Hello": "Hola",
-  "Start with sale ingredients that already have recipe matches and Morton Williams price estimates.": "Empieza con ingredientes en oferta que ya tienen recetas compatibles y estimados de precio de Morton Williams.",
-  "Best sale ingredients today": "Mejores ingredientes en oferta hoy",
-  "Ranked from current Morton Williams sale data and matched to recipes SNAPP can price.": "Clasificados con datos actuales de ofertas de Morton Williams y recetas que SNAPP puede estimar.",
-  "Saved local store support is coming soon. These placeholders show where selected stores will appear.": "La compatibilidad con tiendas locales guardadas llegara pronto. Estos espacios muestran donde apareceran tus tiendas seleccionadas.",
-  "Placeholder active source": "Fuente activa temporal",
-  "Local grocery placeholder": "Tienda local temporal",
-  "Coming soon": "Proximamente",
-  "Core Food Groups": "Grupos principales de alimentos",
-  "Simple Plate Method": "Metodo simple del plato",
-  "Weekly Nutrition Focus": "Enfoque semanal de nutricion",
-  "Use SNAPP Throughout Your Day": "Usa SNAPP durante el dia",
-  "Ask for a meal idea. SNAPP uses your saved profile, pantry, budget, diet, and store settings automatically.": "Pide una idea de comida. SNAPP usa automaticamente tu perfil, despensa, presupuesto, dieta y tiendas guardadas.",
-  "Ask for a meal idea to get started.": "Pide una idea de comida para empezar.",
-  "What meal do you want?": "Que comida quieres?",
-  "Send": "Enviar",
-  "Weekly Meal Schedule": "Horario semanal de comidas",
-  "Meals you select from Dishes appear here. Click a meal to view its recipe and ingredients.": "Las comidas que selecciones en Platillos aparecen aqui. Haz clic en una comida para ver su receta e ingredientes.",
-  "Recipes": "Recetas",
-  "Drag recipes into a breakfast, lunch, or dinner slot.": "Arrastra recetas a desayuno, almuerzo o cena.",
-  "Ingredients from dishes you added to your schedule appear here.": "Los ingredientes de los platillos agregados a tu horario aparecen aqui.",
-  "Add all to pantry": "Agregar todo a la despensa",
-  "Enter a 5-digit US ZIP code to find nearby grocery stores, then select the stores you want to use.": "Ingresa un codigo postal de EE. UU. de 5 digitos para encontrar tiendas cercanas y seleccionar las que quieres usar.",
-  "ZIP code": "Codigo postal",
-  "Find nearby stores": "Buscar tiendas cercanas",
-  "Nearby grocery store map": "Mapa de tiendas cercanas",
-  "Selected stores": "Tiendas seleccionadas",
-  "Store data and map tiles ©": "Datos de tiendas y mosaicos de mapa ©",
-  "OpenStreetMap contributors": "Colaboradores de OpenStreetMap",
-  "Add foods you already have so SNAPP can consider them when suggesting dishes.": "Agrega alimentos que ya tienes para que SNAPP los considere al sugerir platillos.",
-  "Food": "Alimento",
-  "Quantity": "Cantidad",
-  "Add item": "Agregar articulo",
-  "Set your meal budget in Settings, and SNAPP will subtract the estimated price of each scheduled meal.": "Define tu presupuesto de comidas en Configuracion y SNAPP restara el precio estimado de cada comida programada.",
-  "Remaining budget": "Presupuesto restante",
-  "Meal budget:": "Presupuesto de comidas:",
-  "Scheduled meals:": "Comidas programadas:",
-  "Scheduled cost:": "Costo programado:",
-  "Grocery Store Information": "Informacion de tiendas",
-  "Enter a 5-digit US ZIP code to find grocery stores in that area.": "Ingresa un codigo postal de EE. UU. de 5 digitos para encontrar tiendas en esa area.",
-  "Find stores": "Buscar tiendas",
-  "Store data ©": "Datos de tiendas ©",
-  "Account and Nutritional Information": "Cuenta e informacion nutricional",
-  "How many people are you cooking for?": "Para cuantas personas cocinas?",
-  "Dietary Restrictions": "Restricciones alimentarias",
-  "Restrictions for dish recommendations": "Restricciones para recomendaciones de platillos",
-  "Preferences": "Preferencias",
-  "Theme": "Tema",
-  "Light": "Claro",
-  "Dark": "Oscuro",
-  "Language": "Idioma",
-  "English": "Ingles",
-  "Español": "Espanol",
-  "Dietary Preference": "Preferencia alimentaria",
-  "Balanced": "Balanceada",
-  "Vegetarian": "Vegetariana",
-  "Vegan": "Vegana",
-  "Keto": "Keto",
-  "Enable daily reminders": "Activar recordatorios diarios",
-  "Close recipe": "Cerrar receta",
-  "Remove": "Quitar",
-  "No stores selected.": "No hay tiendas seleccionadas.",
-  "SNAP accepted": "Acepta SNAP",
-  "SNAP acceptance not verified": "Aceptacion de SNAP no verificada",
-  "View on map": "Ver en el mapa",
-  "Visit website": "Visitar sitio web",
-  "No stores found for this search.": "No se encontraron tiendas para esta busqueda.",
-  "Map library could not load. Store list is still available.": "No se pudo cargar el mapa. La lista de tiendas sigue disponible.",
-  "Enter a valid 5-digit US ZIP code.": "Ingresa un codigo postal valido de EE. UU. de 5 digitos.",
-  "Searching for grocery stores...": "Buscando tiendas...",
-  "Searching nearby stores...": "Buscando tiendas cercanas...",
-  "Store search error:": "Error al buscar tiendas:",
-};
-
-function getLanguage() {
-  return languageSelect?.value || localStorage.getItem(LANGUAGE_STORAGE_KEY) || "en";
-}
-
-function translateText(text) {
-  if (getLanguage() !== "es") return text;
-  return SPANISH_TEXT[text] || text;
-}
-
-function translateNodeValue(value) {
-  const match = String(value).match(/^(\s*)(.*?)(\s*)$/s);
-  if (!match || !match[2]) return value;
-  return `${match[1]}${translateText(match[2])}${match[3]}`;
-}
-
-function applyLanguage() {
-  const language = getLanguage();
-  document.documentElement.lang = language === "es" ? "es" : "en";
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-  while (walker.nextNode()) {
-    const node = walker.currentNode;
-    if (!originalTextNodes.has(node)) {
-      originalTextNodes.set(node, node.nodeValue);
-    }
-    node.nodeValue = translateNodeValue(originalTextNodes.get(node));
-  }
-  document.querySelectorAll("[placeholder]").forEach((element) => {
-    if (!element.dataset.i18nPlaceholder) {
-      element.dataset.i18nPlaceholder = element.getAttribute("placeholder") || "";
-    }
-    element.setAttribute("placeholder", translateText(element.dataset.i18nPlaceholder));
-  });
-  document.querySelectorAll("[aria-label]").forEach((element) => {
-    if (!element.dataset.i18nAriaLabel) {
-      element.dataset.i18nAriaLabel = element.getAttribute("aria-label") || "";
-    }
-    element.setAttribute("aria-label", translateText(element.dataset.i18nAriaLabel));
-  });
-}
+function getLanguage() { return window.SNAPP_I18N.locale; }
+function t(key, values = {}) { return window.SNAPP_I18N.t(key, values); }
+function translateText(text) { return window.SNAPP_I18N.translate(text); }
+function applyLanguage() { window.SNAPP_I18N.refresh(); }
 
 const DISH_PROGRESS_MESSAGES = [
   "Finding meals...",
@@ -441,7 +310,7 @@ const ONBOARDING_PANEL_ID = "onboarding";
 const SIGNED_IN_DEFAULT_PANEL_ID = "home";
 const SIGNED_OUT_DEFAULT_PANEL_ID = "home";
 const ONBOARDING_TOTAL_STEPS = 4;
-const SNAP101_PANEL_IDS = new Set(["snap101-snap", "snap101-nutrition", "snap101-signup", "snap101-signup-options"]);
+const SNAP101_PANEL_IDS = new Set(["snap101-snap", "snap101-nutrition", "snap101-signup", "snap101-signup-options", "snap101-centers"]);
 const SNAP101_DEFAULT_PANEL_ID = "snap101-snap";
 const SNAPP_PANEL_IDS = new Set([
   "account",
@@ -461,17 +330,20 @@ const WEEKLY_MACRO_GOALS = {
   carbs: 1925,
   fat: 546,
 };
+// USDA FY2027, effective 2026-10-01 through 2027-09-30 (48 states/DC).
+// https://fns-prod.azureedge.us/snap/allotment/cola
 const SNAP_MAX_ALLOTMENTS = {
-  1: 298,
-  2: 546,
-  3: 785,
-  4: 994,
-  5: 1183,
-  6: 1421,
-  7: 1571,
-  8: 1789,
+  1: 306,
+  2: 562,
+  3: 808,
+  4: 1023,
+  5: 1217,
+  6: 1463,
+  7: 1616,
+  8: 1841,
 };
-const SNAP_ADDITIONAL_MEMBER_ALLOTMENT = 218;
+const SNAP_ADDITIONAL_MEMBER_ALLOTMENT = 225;
+const SNAP_LARGE_HOUSEHOLD_ALLOTMENT = 3887;
 const HOUSEHOLD_MIN = 1;
 const HOUSEHOLD_MAX = 20;
 const POPULAR_DIETARY_PREFERENCES = [
@@ -514,6 +386,7 @@ function formatServings(dish) {
 function getServingCount(dish) {
   const recipe = dish?.recipe || {};
   const candidates = [
+    dish?.nutrition_servings,
     dish?.servings,
     recipe.servings,
     dish?.servings_display,
@@ -600,10 +473,12 @@ function showPanel(id) {
   panels.forEach((panel) =>
     panel.classList.toggle("visible", panel.id === targetId)
   );
-  const navTargetId = targetId === "snap101-signup-options" ? "snap101-signup" : targetId;
+  const navTargetId = ["snap101-signup-options", "snap101-centers"].includes(targetId) ? "snap101-signup" : targetId;
   navButtons.forEach((button) =>
     button.classList.toggle("active", button.dataset.target === navTargetId)
   );
+
+  if (targetId === "snap101-centers") renderSnapSignupCenters();
 
   if (targetId === "my" && myStoreMap) {
     window.setTimeout(() => myStoreMap.invalidateSize(), 0);
@@ -619,7 +494,7 @@ function showPanel(id) {
 }
 
 function isOnboardingRequired() {
-  return Boolean(currentUser && currentUserInfo && !hasCompletedOnboarding(currentUserInfo, currentUser));
+  return Boolean(onboardingForNewAccount && currentUser && currentUserInfo && !hasCompletedOnboarding(currentUserInfo, currentUser));
 }
 
 function onboardingCompletedStorageKey(user = currentUser) {
@@ -921,7 +796,7 @@ function renderSelectedPreferenceTags(container) {
       const removeButton = document.createElement("button");
       removeButton.type = "button";
       removeButton.textContent = "×";
-      removeButton.setAttribute("aria-label", `Remove ${preference}`);
+      removeButton.setAttribute("aria-label", t("copy.remove.arg0", {arg0: (preference)}));
       removeButton.addEventListener("click", () => {
         removeDietaryPreference(preference);
         queueSettingsSave();
@@ -1025,17 +900,17 @@ function getSettingsError() {
 }
 
 async function saveSettingsToUser() {
-  if (!supabaseClient || !currentUser) return;
+  if (!supabaseClient || !currentUser) return false;
 
   const settingsError = getSettingsError();
   if (settingsError) {
     setSettingsStatus(settingsError, "error");
-    return;
+    return false;
   }
 
   const householdSize = Number.parseInt(householdSizeInput.value, 10);
   const zipCode = profileZipCodeInput.value.trim();
-  setSettingsStatus("Saving settings...");
+  setSettingsStatus(t("copy.saving.settings", {}));
 
   const { data, error } = await supabaseClient
     .from("user_info")
@@ -1056,14 +931,15 @@ async function saveSettingsToUser() {
 
   if (error) {
     setSettingsStatus(error.message, "error");
-    return;
+    return false;
   }
 
   currentUserInfo = data;
   if (currentUserInfo?.onboarding_completed) {
     rememberOnboardingCompleted(currentUser);
   }
-  setSettingsStatus("Settings saved.", "success");
+  setSettingsStatus(t("copy.settings.saved", {}), "success");
+  return true;
 }
 
 function queueSettingsSave() {
@@ -1089,6 +965,7 @@ function getSnapMaximumAllotment(householdSize) {
   if (size <= 8) {
     return SNAP_MAX_ALLOTMENTS[size];
   }
+  if (size >= 18) return SNAP_LARGE_HOUSEHOLD_ALLOTMENT;
   return SNAP_MAX_ALLOTMENTS[8] + (size - 8) * SNAP_ADDITIONAL_MEMBER_ALLOTMENT;
 }
 
@@ -1111,10 +988,12 @@ function updateSnapEstimate() {
   const expectedContribution = monthlyIncome * 0.3;
   const estimate = Math.max(0, Math.round(maximumAllotment - expectedContribution));
   snapHouseholdSizeInput.value = String(householdSize);
-  snapEstimateOutput.textContent = `${currencyFormatter.format(estimate)} estimated monthly food budget`;
+  snapEstimateOutput.textContent = estimate === 0
+    ? t("snap.calculator.not_eligible")
+    : t("copy.arg0.estimated.monthly.food.budget", {arg0: (currencyFormatter.format(estimate))});
   snapEstimateOutput.setAttribute(
     "aria-label",
-    `${currencyFormatter.format(maximumAllotment)} maximum allotment minus ${currencyFormatter.format(expectedContribution)} estimated contribution`
+    estimate === 0 ? t("snap.calculator.not_eligible") : t("copy.arg0.maximum.allotment.minus.arg1.estimated.contribution", {arg0: (currencyFormatter.format(maximumAllotment)), arg1: (currencyFormatter.format(expectedContribution))})
   );
   if (snapIncomeInput.value !== "") {
     budgetInput.value = String(estimate);
@@ -1128,16 +1007,16 @@ function updatePlateBalanceGame() {
 
   const producePercent = Number(plateBalanceSlider.value);
   const grainPercent = Math.max(24, 100 - producePercent - 25);
-  plateBalanceScore.textContent = `${producePercent}%`;
+  plateBalanceScore.textContent = t("copy.arg0", {arg0: (producePercent)});
   plateProduceFill.style.width = `${producePercent}%`;
   plateGrainFill.style.width = `${grainPercent}%`;
 
   if (producePercent < 42) {
-    plateBalanceMessage.textContent = "Add color first: produce makes the plate feel bigger.";
+    plateBalanceMessage.textContent = t("copy.add.color.first.produce.makes.the.plate.feel.bigger", {});
   } else if (producePercent > 58) {
-    plateBalanceMessage.textContent = "Great color. Keep space for protein and grains too.";
+    plateBalanceMessage.textContent = t("copy.great.color.keep.space.for.protein.and.grains.too", {});
   } else {
-    plateBalanceMessage.textContent = "Balanced: about half produce, plus protein and grains.";
+    plateBalanceMessage.textContent = t("copy.balanced.about.half.produce.plus.protein.and.grains", {});
   }
 }
 
@@ -1150,15 +1029,15 @@ function updateSnackGame() {
       : total;
   }, 0);
   const cappedPoints = Math.min(4, points);
-  snackScore.textContent = `${cappedPoints}/4`;
+  snackScore.textContent = t("copy.arg0.4", {arg0: (cappedPoints)});
   snackMeterFill.style.width = `${Math.max(18, cappedPoints * 25)}%`;
 
   if (points <= 1) {
-    snackMessage.textContent = "Quick energy, but it may not last long.";
+    snackMessage.textContent = t("copy.quick.energy.but.it.may.not.last.long", {});
   } else if (points <= 3) {
-    snackMessage.textContent = "Better: pair carbs or fruit with protein or fat.";
+    snackMessage.textContent = t("copy.better.pair.carbs.or.fruit.with.protein.or.fat", {});
   } else {
-    snackMessage.textContent = "Strong snack: fiber plus protein supports fullness.";
+    snackMessage.textContent = t("copy.strong.snack.fiber.plus.protein.supports.fullness", {});
   }
 }
 
@@ -1166,15 +1045,15 @@ function updateWaterGame() {
   if (!waterCount || !waterFill || !waterMessage) return;
 
   const cappedTaps = Math.min(6, Math.max(0, hydrationTaps));
-  waterCount.textContent = `${cappedTaps}/6`;
+  waterCount.textContent = t("copy.arg0.6", {arg0: (cappedTaps)});
   waterFill.style.height = `${Math.max(8, cappedTaps * 15)}%`;
 
   if (cappedTaps < 3) {
-    waterMessage.textContent = "Start small: a few sips still count.";
+    waterMessage.textContent = t("copy.start.small.a.few.sips.still.count", {});
   } else if (cappedTaps < 6) {
-    waterMessage.textContent = "Steady pace. Add water between meals.";
+    waterMessage.textContent = t("copy.steady.pace.add.water.between.meals", {});
   } else {
-    waterMessage.textContent = "Full set: spread drinks across the day.";
+    waterMessage.textContent = t("copy.full.set.spread.drinks.across.the.day", {});
   }
 }
 
@@ -1209,11 +1088,21 @@ function renderOnboardingStep() {
   });
 
   const progressValue = ((onboardingStepIndex + 1) / ONBOARDING_TOTAL_STEPS) * 100;
-  onboardingProgressLabel.textContent = `${onboardingStepIndex + 1} of ${ONBOARDING_TOTAL_STEPS}`;
+  onboardingProgressLabel.textContent = t("copy.arg0.of.arg1", {arg0: (onboardingStepIndex + 1), arg1: (ONBOARDING_TOTAL_STEPS)});
   onboardingProgressBar.style.width = `${progressValue}%`;
+  document.querySelectorAll(".onboarding-step-label").forEach((label, index) => {
+    label.classList.toggle("is-current", index === onboardingStepIndex);
+    label.classList.toggle("is-complete", index < onboardingStepIndex);
+    if (index === onboardingStepIndex) label.setAttribute("aria-current", "step");
+    else label.removeAttribute("aria-current");
+  });
+  document.getElementById("onboarding-summary-zip").textContent = onboardingZipCodeInput.value.trim() || t("copy.not.set", {});
+  const people = getClampedHouseholdSize(onboardingHouseholdInput.value);
+  document.getElementById("onboarding-summary-household").textContent = t("copy.arg0.arg1", {arg0: (people), arg1: (people === 1 ? "person" : "people")});
+  document.getElementById("onboarding-summary-preferences").textContent = selectedDietaryPreferences.length ? selectedDietaryPreferences.join(", ") : t("copy.open.to.everything", {});
   onboardingBackButton.hidden = onboardingStepIndex === 0;
   onboardingContinueButton.textContent =
-    onboardingStepIndex === ONBOARDING_TOTAL_STEPS - 1 ? "Start finding meals" : "Continue";
+    onboardingStepIndex === ONBOARDING_TOTAL_STEPS - 1 ? t("copy.start.finding.meals", {}) : t("copy.continue", {});
   setOnboardingHouseholdSize(onboardingHouseholdInput.value);
 
   const focusTarget = steps[onboardingStepIndex]?.querySelector(
@@ -1244,13 +1133,13 @@ async function saveOnboardingToUser() {
   const householdSize = getClampedHouseholdSize(onboardingHouseholdInput.value);
 
   if (!/^\d{5}$/.test(zipCode)) {
-    setOnboardingStatus("Enter a valid 5-digit US ZIP code.", "error");
+    setOnboardingStatus(t("copy.enter.a.valid.5.digit.us.zip.code", {}), "error");
     onboardingStepIndex = 0;
     renderOnboardingStep();
     return false;
   }
 
-  setOnboardingStatus("Saving your setup...");
+  setOnboardingStatus(t("copy.saving.your.setup", {}));
   onboardingContinueButton.disabled = true;
   onboardingBackButton.disabled = true;
 
@@ -1282,8 +1171,9 @@ async function saveOnboardingToUser() {
 
   currentUserInfo = data;
   rememberOnboardingCompleted(currentUser);
+  onboardingForNewAccount = false;
   syncSettingsFromUserInfo(currentUser, currentUserInfo);
-  setOnboardingStatus("Setup saved.", "success");
+  setOnboardingStatus(t("copy.setup.saved", {}), "success");
   return true;
 }
 
@@ -1326,6 +1216,13 @@ function getPantryErrorMessage(error) {
   }
 
   return message || "Pantry request failed.";
+}
+
+function safeExternalUrl(value) {
+  try {
+    const url = new URL(String(value));
+    return ["https:", "http:"].includes(url.protocol) && !url.username && !url.password ? url.href : "";
+  } catch { return ""; }
 }
 
 function getStoreErrorMessage(error) {
@@ -1454,7 +1351,7 @@ async function saveMyStore(store) {
 
   upsertSavedStoreState(data);
   renderSelectedMyStores();
-  myStoreStatus.textContent = `${data.name} saved to My stores.`;
+  myStoreStatus.textContent = t("copy.arg0.saved.to.my.stores", {arg0: (data.name)});
   return true;
 }
 
@@ -1476,7 +1373,7 @@ async function deleteMyStore(storeKey) {
   selectedMyStoreIds.delete(storeKey);
   syncVisibleStoreSelection(storeKey, false);
   renderSelectedMyStores();
-  myStoreStatus.textContent = "Store removed from My stores.";
+  myStoreStatus.textContent = t("copy.store.removed.from.my.stores", {});
   return true;
 }
 
@@ -1491,7 +1388,7 @@ function renderPantryItems() {
   if (!pantryItems.length) {
     const emptyItem = document.createElement("li");
     emptyItem.className = "pantry-empty";
-    emptyItem.textContent = "No pantry items added yet.";
+    emptyItem.textContent = t("copy.your.pantry.starts.here.add.your.first.staple.above", {});
     pantryList.appendChild(emptyItem);
     return;
   }
@@ -1501,11 +1398,14 @@ function renderPantryItems() {
     const itemText = document.createElement("span");
     const removeButton = document.createElement("button");
 
-    itemText.textContent = isTraditionalSpice(item.name)
-      ? `${canonicalSpiceName(item.name)} - pantry spice`
-      : `${item.name} - ${item.quantity}`;
+    itemText.className = "pantry-item-details";
+    const name = document.createElement("strong");
+    name.textContent = isTraditionalSpice(item.name) ? canonicalSpiceName(item.name) : item.name;
+    const quantity = document.createElement("small");
+    quantity.textContent = isTraditionalSpice(item.name) ? t("copy.pantry.spice", {}) : item.quantity;
+    itemText.append(name, quantity);
     removeButton.type = "button";
-    removeButton.textContent = "Remove";
+    removeButton.textContent = t("copy.remove", {});
     removeButton.addEventListener("click", () => deletePantryItem(item.id));
 
     listItem.append(itemText, removeButton);
@@ -1541,7 +1441,7 @@ async function loadPantryItems() {
 async function addPantryItem(name, quantity) {
   if (!supabaseClient || !currentUser) return false;
 
-  setPantryStatus("Adding pantry item...");
+  setPantryStatus(t("copy.adding.pantry.item", {}));
   const { data, error } = await supabaseClient
     .from("user_pantry_items")
     .insert({
@@ -1559,14 +1459,14 @@ async function addPantryItem(name, quantity) {
 
   pantryItems = [data, ...pantryItems];
   renderPantryItems();
-  setPantryStatus("Pantry item added.", "success");
+  setPantryStatus(t("copy.pantry.item.added", {}), "success");
   return true;
 }
 
 async function addPantryItems(items) {
   if (!supabaseClient || !currentUser || !items.length) return false;
 
-  setPantryStatus(`Adding ${items.length} pantry item${items.length === 1 ? "" : "s"}...`);
+  setPantryStatus(t("copy.adding.arg0.pantry.item.arg1", {arg0: (items.length), arg1: (items.length === 1 ? "" : "s")}));
   const rows = items.map((item) => ({
     user_id: currentUser.id,
     name: item.name,
@@ -1584,7 +1484,7 @@ async function addPantryItems(items) {
 
   pantryItems = [...(data || []), ...pantryItems];
   renderPantryItems();
-  setPantryStatus(`${items.length} pantry item${items.length === 1 ? "" : "s"} added.`, "success");
+  setPantryStatus(t("copy.arg0.pantry.item.arg1.added", {arg0: (items.length), arg1: (items.length === 1 ? "" : "s")}), "success");
   return true;
 }
 
@@ -1604,7 +1504,7 @@ async function deletePantryItem(itemId) {
 
   pantryItems = pantryItems.filter((item) => item.id !== itemId);
   renderPantryItems();
-  setPantryStatus("Pantry item removed.", "success");
+  setPantryStatus(t("copy.pantry.item.removed", {}), "success");
 }
 
 function showAuthMode(mode) {
@@ -1651,7 +1551,7 @@ async function renderAuthState(user) {
   renderAccountForAuthState();
   syncSettingsFromUserInfo(user, currentUserInfo);
   syncSnapCalculatorHouseholdSize();
-  if (user && currentUserInfo && !hasCompletedOnboarding(currentUserInfo, user)) {
+  if (user && currentUserInfo && isOnboardingRequired() && (authLandingPending || !wasSignedIn)) {
     syncOnboardingFromUserInfo(currentUserInfo);
   }
   renderHomeForAuthState();
@@ -1665,8 +1565,11 @@ async function renderAuthState(user) {
 
   if (user) {
     renderAccountForAuthState();
-    setAuthStatus(`Signed in as ${getDisplayUsername(user)}.`, "success");
-    if (activeAppMode === "snapp" && isOnboardingRequired()) {
+    setAuthStatus(t("copy.signed.in.as.arg0", {arg0: (getDisplayUsername(user))}), "success");
+    if (authLandingPending || !wasSignedIn) {
+      authLandingPending = false;
+      showPanel(isOnboardingRequired() ? ONBOARDING_PANEL_ID : SIGNED_IN_DEFAULT_PANEL_ID);
+    } else if (activeAppMode === "snapp" && isOnboardingRequired()) {
       showPanel(ONBOARDING_PANEL_ID);
     } else if (activeAppMode === "snapp" && document.querySelector(".panel.visible")?.id === ONBOARDING_PANEL_ID) {
       showPanel(SIGNED_IN_DEFAULT_PANEL_ID);
@@ -1675,8 +1578,11 @@ async function renderAuthState(user) {
   }
 
   if (wasSignedIn) {
+    onboardingForNewAccount = false;
+    authLandingPending = false;
+    pendingNewAccountUsername = "";
     showAuthMode("sign-in");
-    setAuthStatus("Signed out.", "success");
+    setAuthStatus(t("copy.signed.out.05d2a7", {}), "success");
   }
   if (activeAppMode === "snapp") {
     showPanel(SIGNED_OUT_DEFAULT_PANEL_ID);
@@ -1699,9 +1605,14 @@ async function handleSignOut() {
   });
 }
 
+// Display source prices at their full value.
+function demoPrice(value) {
+  return Number(value || 0);
+}
+
 function getScheduledMealTotal() {
   return scheduledMeals.reduce(
-    (total, meal) => total + Number(meal.estimated_price_total || 0),
+    (total, meal) => total + demoPrice(meal.estimated_price_total),
     0
   );
 }
@@ -1712,6 +1623,8 @@ function getHouseholdSize() {
 }
 
 function renderBudget() {
+  const editor = document.getElementById("budget-monthly-input");
+  if (editor && document.activeElement !== editor) editor.value = budgetInput.value;
   const hasBudget = budgetInput.value !== "";
   const budget = hasBudget ? Number(budgetInput.value || 0) : 0;
   const scheduledTotal = getScheduledMealTotal();
@@ -1730,7 +1643,7 @@ function renderBudget() {
 function getPortionMacroValue(meal, macroKey) {
   const perPersonNutrition = meal?.nutrition_per_person || {};
   const perPersonValue = Number(perPersonNutrition[macroKey]);
-  if (Number.isFinite(perPersonValue) && perPersonValue > 0) {
+  if (perPersonNutrition[macroKey] !== null && perPersonNutrition[macroKey] !== undefined && Number.isFinite(perPersonValue) && perPersonValue >= 0) {
     return perPersonValue;
   }
 
@@ -1758,16 +1671,27 @@ function getScheduledMacroTotals() {
 function setMacroBar(totalElement, goalElement, fillElement, total, goal) {
   if (!totalElement || !goalElement || !fillElement) return;
   const percent = goal > 0 ? Math.min(100, (total / goal) * 100) : 0;
-  totalElement.textContent = `${gramFormatter.format(total)}g`;
-  goalElement.textContent = `${gramFormatter.format(goal)}g`;
+  totalElement.textContent = t("copy.arg0.g", {arg0: (gramFormatter.format(total))});
+  goalElement.textContent = t("copy.arg0.g", {arg0: (gramFormatter.format(goal))});
   fillElement.style.width = `${percent}%`;
 }
 
 function renderMacroTracker() {
   const totals = getScheduledMacroTotals();
+  const coverage = document.getElementById("weekly-nutrition-status");
+  if (coverage) {
+    const missing = scheduledMeals.filter((meal) => ["protein_g", "carbohydrates_g", "fat_g"].every((key) => !getPortionMacroValue(meal, key))).length;
+    const partial = scheduledMeals.filter((meal) => meal.nutrition_status === "partial").length;
+    coverage.textContent = missing ? t("copy.arg0.meal.arg1.no.nutrition.data.yet.totals.include", {arg0: (missing), arg1: (missing === 1 ? " has" : "s have")})
+      : partial ? t("nutrition.weekly.partial", { count: partial })
+      : scheduledMeals.length ? t("nutrition.weekly.ready") : t("copy.add.meals.to.build.your.weekly.totals.these.sample", {});
+    if (scheduledMeals.some((meal) => meal.nutrition_servings_source === "household")) {
+      coverage.textContent += " " + t("nutrition.weekly.household");
+    }
+  }
   if (macroTrackerMealCount) {
     const mealCount = scheduledMeals.length;
-    macroTrackerMealCount.textContent = `${mealCount} meal${mealCount === 1 ? "" : "s"}`;
+    macroTrackerMealCount.textContent = t("copy.arg0.meal.arg1", {arg0: (mealCount), arg1: (mealCount === 1 ? "" : "s")});
   }
   setMacroBar(macroProteinTotal, macroProteinGoal, macroProteinFill, totals.protein, WEEKLY_MACRO_GOALS.protein);
   setMacroBar(macroCarbsTotal, macroCarbsGoal, macroCarbsFill, totals.carbs, WEEKLY_MACRO_GOALS.carbs);
@@ -1944,7 +1868,7 @@ async function toggleFavoriteRecipe(dish, button) {
   const recipeKey = getFavoriteRecipeKey(dish);
   if (!recipeKey) return;
   if (!currentUser || !supabaseClient) {
-    setFavoriteRecipesStatus("Sign in and configure Supabase to save favorite recipes.", "error");
+    setFavoriteRecipesStatus(t("copy.sign.in.and.configure.supabase.to.save.favorite.recipes", {}), "error");
     return;
   }
   const wasFavorite = isFavoriteRecipe(dish);
@@ -2033,11 +1957,11 @@ function renderFavoriteRecipesPanel() {
   }
 
   if (!favoriteRecipes.length) {
-    setFavoriteRecipesStatus("No favorite recipes yet.");
+    setFavoriteRecipesStatus(t("copy.no.favorite.recipes.yet", {}));
     return;
   }
 
-  setFavoriteRecipesStatus(`${favoriteRecipes.length} favorite recipe${favoriteRecipes.length === 1 ? "" : "s"}`);
+  setFavoriteRecipesStatus(t("copy.arg0.favorite.recipe.arg1", {arg0: (favoriteRecipes.length), arg1: (favoriteRecipes.length === 1 ? "" : "s")}));
   favoriteRecipes.forEach((favorite) => {
     const dish = favorite.recipe_data;
     const item = document.createElement("article");
@@ -2051,22 +1975,22 @@ function renderFavoriteRecipesPanel() {
     );
 
     item.className = "favorite-recipe-item";
-    title.textContent = favorite.recipe_name || dish.name || "Favorite recipe";
+    title.textContent = favorite.recipe_name || dish.name || t("copy.favorite.recipe", {});
     meta.textContent = [
       formatServings(dish),
       dish.estimated_price_total
-        ? `${currencyFormatter.format(dish.estimated_price_total)} estimated groceries`
+        ? t("copy.arg0.estimated.groceries", {arg0: (currencyFormatter.format(demoPrice(dish.estimated_price_total)))})
         : "",
     ].filter(Boolean).join(" | ");
     actions.className = "favorite-recipe-actions";
 
     queueButton.type = "button";
-    queueButton.textContent = isQueued ? "In queue" : "Add to queue";
+    queueButton.textContent = isQueued ? t("copy.in.queue", {}) : t("copy.add.to.queue", {});
     queueButton.disabled = isQueued;
     queueButton.addEventListener("click", () => addMealToSchedule(dish));
 
     removeButton.type = "button";
-    removeButton.textContent = "Remove";
+    removeButton.textContent = t("copy.remove", {});
     removeButton.addEventListener("click", () => removeFavoriteRecipe(dish));
 
     actions.append(queueButton, removeButton);
@@ -2236,6 +2160,10 @@ function getShoppingIngredients() {
       dishName: meal.name || "Scheduled dish",
       name: getIngredientName(ingredient),
       quantity: getIngredientQuantity(ingredient),
+      productName: ingredient?.product_name,
+      requestedIngredient: ingredient?.recipe_ingredient,
+      requestedMeasure: ingredient?.recipe_measure,
+      deal: ingredient?.deal,
       category: getShoppingCategory(ingredient),
       unavailable:
         Boolean(
@@ -2251,9 +2179,65 @@ function getShoppingIngredients() {
 function updateShoppingAddButton(items = getShoppingIngredients()) {
   const selectedCount = selectedShoppingIngredientIds.size;
   shoppingAddPantryButton.textContent = selectedCount
-    ? "Add selected to pantry"
-    : "Add all to pantry";
+    ? t("copy.add.selected.to.pantry", {})
+    : t("copy.add.all.to.pantry", {});
   shoppingAddPantryButton.disabled = !items.length;
+}
+
+function appendShoppingDeal(container, item) {
+  if (!item.productName) return;
+  const selected = document.createElement("small");
+  selected.textContent = t("shopping.selectedProduct", { product: item.productName });
+  container.append(selected);
+  if (item.requestedMeasure) {
+    const requested = document.createElement("small");
+    requested.textContent = t("shopping.requestedQuantity", { quantity: item.requestedMeasure });
+    container.append(requested);
+  }
+  const deal = item.deal;
+  if (!deal || typeof deal !== "object") return;
+  const labelKey = deal.match_type === "SUBSTITUTE" ? "shopping.substitute"
+    : deal.quality_tier === "A" ? "shopping.excellentMatch"
+    : deal.quality_tier === "B" ? "shopping.strongMatch"
+    : deal.quality_tier === "C" ? "shopping.goodMatch" : null;
+  if (labelKey) {
+    const label = document.createElement("small");
+    label.textContent = t(labelKey, {});
+    container.append(label);
+  }
+  const reliable = deal.deal_confidence === "high" && Number.isFinite(deal.effective_cost) && deal.effective_cost >= 0;
+  if (reliable) {
+    const cost = document.createElement("small");
+    const amount = new Intl.NumberFormat(getLanguage(), { style: "currency", currency: "USD" }).format(deal.effective_cost);
+    cost.textContent = t("shopping.totalForRecipe", { amount });
+    container.append(cost);
+  }
+  if (Number.isInteger(deal.packages_needed) && deal.packages_needed > 1) {
+    const packages = document.createElement("small");
+    packages.textContent = t("shopping.packagesNeeded", { count: deal.packages_needed });
+    container.append(packages);
+  }
+  const compared = reliable && deal.comparable_candidate_count >= 2;
+  if (deal.best_deal === true && compared) {
+    const badge = document.createElement("small");
+    badge.className = "shopping-deal-badge";
+    badge.textContent = t("shopping.bestDeal", {});
+    container.append(badge);
+  }
+  if (compared && Number.isFinite(deal.savings_vs_closest_match) && deal.savings_vs_closest_match >= .50) {
+    const savings = document.createElement("small");
+    savings.className = "shopping-deal-savings";
+    savings.textContent = t("shopping.saveAmount", { amount: new Intl.NumberFormat(getLanguage(), { style: "currency", currency: "USD" }).format(deal.savings_vs_closest_match) });
+    container.append(savings);
+  }
+  const explanation = document.createElement("details");
+  const summary = document.createElement("summary");
+  summary.textContent = t("shopping.whyThisOne", {});
+  const reason = document.createElement("small");
+  reason.textContent = t(deal.best_deal === true && compared ? "shopping.closestQualityLowestCost" : "shopping.bestAvailableSafeMatch", {});
+  explanation.className = "shopping-deal-explanation";
+  explanation.append(summary, reason);
+  container.append(explanation);
 }
 
 function renderShoppingList() {
@@ -2274,7 +2258,7 @@ function renderShoppingList() {
   if (!items.length) {
     const emptyItem = document.createElement("li");
     emptyItem.className = "shopping-empty";
-    emptyItem.textContent = "Add dishes to your schedule to build a shopping list.";
+    emptyItem.textContent = t("copy.your.next.shop.starts.with.a.meal.add.recipes", {});
     shoppingList.appendChild(emptyItem);
     shoppingStatus.textContent = "";
     updateShoppingAddButton(items);
@@ -2301,7 +2285,7 @@ function renderShoppingList() {
 
       checkbox.type = "checkbox";
       checkbox.checked = selectedShoppingIngredientIds.has(item.id);
-      checkbox.setAttribute("aria-label", `Select ${item.name}`);
+      checkbox.setAttribute("aria-label", t("copy.select.arg0", {arg0: (item.name)}));
       checkbox.addEventListener("change", () => {
         if (checkbox.checked) {
           selectedShoppingIngredientIds.add(item.id);
@@ -2312,25 +2296,28 @@ function renderShoppingList() {
         updateShoppingAddButton(items);
       });
 
-      details.textContent = `${item.name} - get ${item.quantity} (${item.dishName})`;
-      if (item.unavailable) {
-        details.textContent += " - unavailable";
-      }
+      details.className = "shopping-item-details";
+      const name = document.createElement("strong");
+      name.textContent = item.requestedIngredient || item.name;
+      const note = document.createElement("small");
+      note.textContent = t("copy.get.arg0.arg1.arg2", {arg0: (item.quantity), arg1: (item.dishName), arg2: (item.unavailable ? " · Unavailable" : "")});
+      details.append(name, note);
+      appendShoppingDeal(details, item);
 
       addButton.type = "button";
-      addButton.textContent = "Add to pantry";
+      addButton.textContent = t("copy.add.to.pantry", {});
       addButton.addEventListener("click", async () => {
         addButton.disabled = true;
-        shoppingStatus.textContent = `Adding ${item.name} to pantry...`;
+        shoppingStatus.textContent = t("copy.adding.arg0.to.pantry", {arg0: (item.name)});
         const wasAdded = await addPantryItem(item.name, item.quantity);
         if (wasAdded) {
           pantryHandledShoppingIngredientIds.add(item.id);
           selectedShoppingIngredientIds.delete(item.id);
-          shoppingStatus.textContent = `${item.name} added to pantry.`;
+          shoppingStatus.textContent = t("copy.arg0.added.to.pantry", {arg0: (item.name)});
           renderShoppingList();
           return;
         }
-        shoppingStatus.textContent = "Could not add ingredient to pantry.";
+        shoppingStatus.textContent = t("copy.could.not.add.ingredient.to.pantry", {});
         addButton.disabled = false;
       });
 
@@ -2345,6 +2332,20 @@ function renderShoppingList() {
   updateShoppingAddButton(items);
 }
 
+async function refreshScheduledNutrition() {
+  const userId = currentUser?.id;
+  for (const meal of [...scheduledMeals]) {
+    if (meal.nutrition_source === "USDA FoodData Central" || !meal.recipe?.ingredients?.length) continue;
+    try {
+      const nutrition = await recipeChat.nutritionFor(meal);
+      if (currentUser?.id !== userId || !scheduledMeals.includes(meal)) continue;
+      Object.assign(meal, nutrition);
+      saveScheduledMealsToStorage();
+      renderMacroTracker();
+    } catch { meal.nutrition_status = "unavailable"; renderMacroTracker(); }
+  }
+}
+
 async function loadScheduledMeals() {
   scheduledMeals.splice(0, scheduledMeals.length);
 
@@ -2356,6 +2357,7 @@ async function loadScheduledMeals() {
   if (!supabaseClient) {
     loadScheduledMealsFromStorage();
     renderSchedule();
+    void refreshScheduledNutrition();
     return;
   }
 
@@ -2368,6 +2370,7 @@ async function loadScheduledMeals() {
   if (error) {
     loadScheduledMealsFromStorage();
     renderSchedule();
+    void refreshScheduledNutrition();
     return;
   }
 
@@ -2378,6 +2381,7 @@ async function loadScheduledMeals() {
   );
   saveScheduledMealsToStorage();
   renderSchedule();
+  void refreshScheduledNutrition();
 }
 
 function renderSchedule() {
@@ -2418,7 +2422,7 @@ function renderScheduleRecipeTray() {
   if (!unplacedMeals.length) {
     const empty = document.createElement("p");
     empty.className = "schedule-empty";
-    empty.textContent = "Added recipes will appear here.";
+    empty.textContent = t("copy.added.recipes.will.appear.here", {});
     scheduleRecipeList.appendChild(empty);
     return;
   }
@@ -2447,7 +2451,7 @@ function createScheduleSlot(day, slot) {
   } else {
     const empty = document.createElement("p");
     empty.className = "schedule-empty";
-    empty.textContent = "Drop recipe";
+    empty.textContent = t("copy.drop.recipe", {});
     slotElement.appendChild(empty);
   }
 
@@ -2472,13 +2476,13 @@ function createScheduleMealCard(meal) {
   openButton.type = "button";
   openButton.className = "schedule-meal-open";
   openButton.textContent = meal.name;
-  price.textContent = currencyFormatter.format(meal.estimated_price_total || 0);
+  price.textContent = currencyFormatter.format(demoPrice(meal.estimated_price_total || 0));
   openButton.appendChild(price);
   openButton.addEventListener("click", () => openDishModal(meal));
 
   removeButton.type = "button";
   removeButton.className = "schedule-meal-remove";
-  removeButton.textContent = "Remove";
+  removeButton.textContent = t("copy.remove", {});
   removeButton.addEventListener("click", (event) => {
     event.stopPropagation();
     removeScheduledMeal(meal.schedule_id);
@@ -2593,7 +2597,8 @@ async function updateScheduledMealPlacement(scheduleId, day, slot) {
         scheduled_day: day || "Unscheduled",
         meal_data: payload,
       })
-      .eq("id", scheduleId);
+      .eq("id", scheduleId)
+      .eq("user_id", currentUser.id);
     if (error) {
       console.warn("Schedule placement sync failed:", error.message);
     }
@@ -2605,7 +2610,8 @@ async function updateScheduledMealPlacement(scheduleId, day, slot) {
           scheduled_day: "Unscheduled",
           meal_data: { ...replacedMeal },
         })
-        .eq("id", replacedMeal.schedule_id);
+        .eq("id", replacedMeal.schedule_id)
+        .eq("user_id", currentUser.id);
     }
   }
 }
@@ -2755,6 +2761,10 @@ async function addMealToSchedule(dish) {
     showPanel("schedule");
     return;
   }
+  if (dish.nutrition_source !== "USDA FoodData Central" && dish.recipe?.ingredients?.length) {
+    try { dish = { ...dish, ...await recipeChat.nutritionFor(dish) }; }
+    catch { dish = { ...dish, nutrition_status: "unavailable" }; }
+  }
 
   const scheduledMeal = {
     ...dish,
@@ -2793,8 +2803,8 @@ async function addMealToSchedule(dish) {
 }
 
 function openDishModal(dish) {
-  const recipe = dish.recipe || {};
-  dishModalTitle.textContent = dish.name || "Recipe";
+  const recipe = dish.localized_recipe || dish.recipe || {};
+  dishModalTitle.textContent = recipe.name || recipe.title || dish.name || t("copy.recipe", {});
   dishModalContent.replaceChildren();
 
   const summary = document.createElement("p");
@@ -2802,7 +2812,7 @@ function openDishModal(dish) {
   summary.textContent = [
     formatServings(dish),
     dish.estimated_price_total
-      ? `${currencyFormatter.format(dish.estimated_price_total)} estimated groceries`
+      ? t("copy.arg0.estimated.groceries", {arg0: (currencyFormatter.format(demoPrice(dish.estimated_price_total)))})
       : "",
   ].filter(Boolean).join(" | ");
   dishModalContent.appendChild(summary);
@@ -2815,7 +2825,7 @@ function openDishModal(dish) {
   ), (ingredient) => {
     const storeText = ingredient.store_name ? ` at ${ingredient.store_name}` : "";
     const priceText = ingredient.estimated_price_total
-      ? ` - ${currencyFormatter.format(ingredient.estimated_price_total)}`
+      ? ` - ${currencyFormatter.format(demoPrice(ingredient.estimated_price_total))}`
       : "";
     const sourceText = cleanIngredientRequirementText(ingredient.recipe_measure || ingredient.required_quantity_display);
     const requirementText = sourceText ? `${sourceText} -> ` : "";
@@ -2826,9 +2836,9 @@ function openDishModal(dish) {
 
   const instructionsHeading = document.createElement("h4");
   const instructions = document.createElement("p");
-  instructionsHeading.textContent = "Instructions";
+  instructionsHeading.textContent = t("copy.instructions", {});
   instructions.textContent =
-    recipe.instructions || dish.method || "Open the source recipe for cooking instructions.";
+    recipe.instructions || dish.method || t("copy.open.the.source.recipe.for.cooking.instructions", {});
   dishModalContent.append(instructionsHeading, instructions);
 
   if (recipe.source || recipe.youtube) {
@@ -2836,19 +2846,19 @@ function openDishModal(dish) {
     links.className = "dish-recipe-links";
     if (recipe.source) {
       const sourceLink = document.createElement("a");
-      sourceLink.href = recipe.source;
+      sourceLink.href = safeExternalUrl(recipe.source);
       sourceLink.target = "_blank";
       sourceLink.rel = "noopener noreferrer";
-      sourceLink.textContent = "Recipe source";
+      sourceLink.textContent = t("copy.recipe.source", {});
       links.appendChild(sourceLink);
     }
     if (recipe.youtube) {
       if (links.childNodes.length) links.append(" | ");
       const youtubeLink = document.createElement("a");
-      youtubeLink.href = recipe.youtube;
+      youtubeLink.href = safeExternalUrl(recipe.youtube);
       youtubeLink.target = "_blank";
       youtubeLink.rel = "noopener noreferrer";
-      youtubeLink.textContent = "Video";
+      youtubeLink.textContent = t("copy.video", {});
       links.appendChild(youtubeLink);
     }
     dishModalContent.appendChild(links);
@@ -2873,6 +2883,12 @@ function recipeItemList(items, formatter, ordered = false) {
   items.forEach((value) => {
     const item = document.createElement("li");
     item.textContent = formatter(value);
+    if (!ordered && value?.is_on_sale === true) {
+      const badge = document.createElement("span");
+      badge.className = "recipe-sale-badge";
+      badge.textContent = t("copy.on.sale", {});
+      item.appendChild(badge);
+    }
     list.appendChild(item);
   });
   return list;
@@ -3030,24 +3046,58 @@ function ensureMyStoreMap(center) {
   return myStoreMap;
 }
 
+function createStoreIdentity(store) {
+  const identity = document.createElement("span");
+  identity.className = "store-identity";
+  const tile = document.createElement("span");
+  tile.className = "store-brand-tile";
+  tile.setAttribute("aria-hidden", "true");
+  const chains = [
+    [/whole foods/i, "WF", "whole-foods"],
+    [/trader joe/i, "TJ", "trader-joes"],
+    [/morton williams/i, "MW", "morton-williams"],
+    [/\baldi\b/i, "A", "aldi"],
+    [/key food/i, "KF", "key-food"],
+    [/c[ -]?town/i, "CT", "ctown"],
+    [/stop\s*(?:&|and)\s*shop/i, "S&S", "stop-shop"],
+  ];
+  const chain = chains.find(([pattern]) => pattern.test(store.name || ""));
+  tile.textContent = chain ? chain[1] : (store.name || t("copy.store", {})).split(/\s+/).slice(0, 2).map((word) => word[0]).join("").toUpperCase();
+  if (chain) tile.dataset.chain = chain[2];
+  const details = document.createElement("span");
+  details.className = "store-identity-details";
+  const name = document.createElement("strong");
+  name.className = "store-identity-name";
+  name.textContent = store.name || t("copy.grocery.store", {});
+  const distance = document.createElement("span");
+  distance.className = "store-distance";
+  const miles = store.distance_miles == null || store.distance_miles === "" ? NaN : Number(store.distance_miles);
+  distance.textContent = Number.isFinite(miles) && miles >= 0
+    ? t("copy.arg0.mi.away", {arg0: (new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 }).format(miles))})
+    : t("copy.distance.unavailable", {});
+  details.append(name, distance);
+  identity.append(tile, details);
+  return identity;
+}
+
 function renderSelectedMyStores() {
   selectedStoreList.replaceChildren();
 
   if (!savedMyStores.length) {
     const emptyItem = document.createElement("li");
-    emptyItem.textContent = translateText("No stores selected.");
+    emptyItem.textContent = translateText(t("copy.no.stores.selected", {}));
     selectedStoreList.appendChild(emptyItem);
     return;
   }
 
   savedMyStores.forEach((store) => {
     const item = document.createElement("li");
-    const itemText = document.createElement("span");
+    const itemText = createStoreIdentity(store);
     const removeButton = document.createElement("button");
 
-    itemText.textContent = store.name;
     removeButton.type = "button";
-    removeButton.textContent = translateText("Remove");
+    removeButton.textContent = "×";
+    removeButton.setAttribute("aria-label", t("copy.remove.arg0", {arg0: (store.name)}));
     removeButton.addEventListener("click", () => deleteMyStore(store.store_key));
 
     item.append(itemText, removeButton);
@@ -3063,14 +3113,16 @@ function renderMyStores(data) {
   myStoreResults.replaceChildren();
   clearMyStoreMap();
 
+  document.getElementById("my-store-start").hidden = true;
+  myStoreMapElement.hidden = false;
   const map = ensureMyStoreMap(data.center);
   if (!window.L || !map) {
-    myStoreStatus.textContent = translateText("Map library could not load. Store list is still available.");
+    myStoreStatus.textContent = translateText(t("copy.map.library.could.not.load.store.list.is.still", {}));
   }
 
   if (!stores.length) {
     const emptyItem = document.createElement("li");
-    emptyItem.textContent = translateText("No stores found for this search.");
+    emptyItem.textContent = translateText(t("copy.no.stores.found.for.this.search", {}));
     myStoreResults.appendChild(emptyItem);
   }
 
@@ -3078,14 +3130,12 @@ function renderMyStores(data) {
     const item = document.createElement("li");
     const label = document.createElement("label");
     const checkbox = document.createElement("input");
-    const text = document.createElement("span");
-    const distanceText =
-      store.distance_miles != null ? ` (${store.distance_miles} mi)` : "";
+    const text = createStoreIdentity(store);
 
     checkbox.type = "checkbox";
     checkbox.value = store.id;
-    text.textContent = `${store.name}${distanceText} - ${store.address}`;
-    label.append(checkbox, text);
+    checkbox.setAttribute("aria-label", t("copy.select.arg0", {arg0: (store.name)}));
+    label.append(text, checkbox);
     item.appendChild(label);
     myStoreResults.appendChild(item);
 
@@ -3123,7 +3173,7 @@ function renderMyStores(data) {
       const popupName = document.createElement("strong");
       const popupAddress = document.createElement("div");
       popupName.textContent = store.name;
-      popupAddress.textContent = store.address;
+      popupAddress.textContent = text.querySelector(t("copy.store.distance", {})).textContent;
       popup.append(popupName, popupAddress);
       marker
         .bindPopup(popup)
@@ -3170,6 +3220,7 @@ async function fetchDishes(mealPrompt, options = {}) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           meal_prompt: mealPrompt,
+          locale: getLanguage(),
           sale_ingredient_id: options.saleIngredientId || null,
           household_size: householdSize,
           dietary_restrictions: dietaryRestrictions,
@@ -3247,17 +3298,17 @@ function formatSaleMoney(value) {
 function renderSaleIngredients(items) {
   saleIngredientsGrid.replaceChildren();
   if (!items.length) {
-    saleIngredientsStatus.textContent = "No recipe-ready sale ingredients found.";
+    saleIngredientsStatus.textContent = t("copy.no.recipe.ready.sale.ingredients.found", {});
     return;
   }
-  saleIngredientsStatus.textContent = `${items.length} shown from today's ranked pool`;
+  saleIngredientsStatus.textContent = t("copy.arg0.shown.from.today.s.ranked.pool", {arg0: (items.length)});
   items.forEach((item) => {
     const card = document.createElement("article");
     card.className = "sale-ingredient-card";
 
     const category = document.createElement("span");
     category.className = "sale-category";
-    category.textContent = item.category || "grocery";
+    category.textContent = item.category || t("copy.grocery", {});
 
     const title = document.createElement("h3");
     title.textContent = item.ingredient_name || item.product_name;
@@ -3276,7 +3327,7 @@ function renderSaleIngredients(items) {
     }
     const sale = document.createElement("strong");
     sale.className = "sale-price";
-    sale.textContent = formatSaleMoney(item.sale_price) || item.price_display || "Sale price available";
+    sale.textContent = formatSaleMoney(item.sale_price) || item.price_display || t("copy.sale.price.available", {});
     priceRow.appendChild(sale);
 
     const meta = document.createElement("p");
@@ -3290,7 +3341,7 @@ function renderSaleIngredients(items) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "sale-recipe-button";
-    button.textContent = "Generate recipes with this ingredient";
+    button.textContent = t("copy.generate.recipes.with.this.ingredient", {});
     button.addEventListener("click", () => generateRecipesForSaleIngredient(item));
 
     card.append(category, title, product, priceRow, meta, button);
@@ -3300,7 +3351,7 @@ function renderSaleIngredients(items) {
 
 async function loadSaleIngredients() {
   if (!saleIngredientsGrid || !saleIngredientsStatus) return;
-  saleIngredientsStatus.textContent = "Loading sales...";
+  saleIngredientsStatus.textContent = t("copy.loading.sales", {});
   try {
     const data = await fetchSaleIngredients();
     renderSaleIngredients(data.sale_ingredients || []);
@@ -3313,24 +3364,13 @@ async function loadSaleIngredients() {
 async function generateRecipesForSaleIngredient(item) {
   const ingredientId = item.ingredient_id;
   if (!ingredientId) return;
-  const prompt = item.ingredient_name || item.product_name || ingredientId;
+  const prompt = item.ingredient_name || ingredientId;
   const params = new URLSearchParams(window.location.search);
-  params.set("panel", "dishes");
+  params.set("panel", "recipe-chat");
   params.set("sale_ingredient", ingredientId);
   window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
-  showPanel("dishes");
-  appendDishMessage("user", `Recipes with ${prompt}`);
-  startDishProgress();
-  dishSource.hidden = true;
-  try {
-    const data = await fetchDishes(prompt, { saleIngredientId: ingredientId });
-    renderDishes(data);
-    setDishStatus(`Found ${Math.min(data.dishes.length, 3)} recipe ${data.dishes.length === 1 ? "match" : "matches"} using ${prompt}.`);
-    dishSource.hidden = false;
-  } catch (error) {
-    appendDishMessage("bot", `Dish search error: ${error.message}`);
-    setDishStatus(`Dish search error: ${error.message}`);
-  }
+  showPanel("recipe-chat");
+  recipeChat.searchIngredient(prompt);
 }
 
 async function handleInitialUrlState() {
@@ -3358,7 +3398,7 @@ function renderStores(stores) {
   storeResults.replaceChildren();
   if (!stores.length) {
     const emptyItem = document.createElement("li");
-    emptyItem.textContent = translateText("No stores found for this search.");
+    emptyItem.textContent = translateText(t("copy.no.stores.found.for.this.search", {}));
     storeResults.appendChild(emptyItem);
     return;
   }
@@ -3372,11 +3412,11 @@ function renderStores(stores) {
     item.append(name, address);
     if (store.accepts_snap) {
       const snapNote = document.createElement("p");
-      snapNote.textContent = `${translateText("SNAP accepted")}${store.snap_source ? ` (${store.snap_source})` : ""}`;
+      snapNote.textContent = t("copy.arg0.arg1.c2a27c", {arg0: (translateText("SNAP accepted")), arg1: (store.snap_source ? ` (${store.snap_source})` : "")});
       item.appendChild(snapNote);
     } else {
       const snapNote = document.createElement("p");
-      snapNote.textContent = translateText("SNAP acceptance not verified");
+      snapNote.textContent = translateText(t("copy.snap.acceptance.not.verified", {}));
       item.appendChild(snapNote);
     }
 
@@ -3387,16 +3427,16 @@ function renderStores(stores) {
       mapLink.href = `https://www.openstreetmap.org/?mlat=${encodeURIComponent(store.latitude)}&mlon=${encodeURIComponent(store.longitude)}#map=17/${encodeURIComponent(store.latitude)}/${encodeURIComponent(store.longitude)}`;
       mapLink.target = "_blank";
       mapLink.rel = "noopener noreferrer";
-      mapLink.textContent = translateText("View on map");
+      mapLink.textContent = translateText(t("copy.view.on.map", {}));
       links.appendChild(mapLink);
     }
 
     if (store.website) {
       const websiteLink = document.createElement("a");
-      websiteLink.href = store.website;
+      websiteLink.href = safeExternalUrl(store.website);
       websiteLink.target = "_blank";
       websiteLink.rel = "noopener noreferrer";
-      websiteLink.textContent = translateText("Visit website");
+      websiteLink.textContent = translateText(t("copy.visit.website", {}));
       links.appendChild(websiteLink);
     }
 
@@ -3413,9 +3453,9 @@ function renderDishes(data) {
   botMessage.className = "dish-message bot";
   intro.textContent = data.dishes.length
     ? data.sale_ingredient_id
-      ? `Here are three recipe matches using ${data.meal_prompt}.`
-      : "Here are three recipe matches I found."
-    : "I could not find recipe matches for that request.";
+      ? t("copy.here.are.three.recipe.matches.using.arg0", {arg0: (data.meal_prompt)})
+      : t("copy.here.are.three.recipe.matches.i.found", {})
+    : t("copy.i.could.not.find.recipe.matches.for.that.request", {});
   cards.className = "dish-card-grid";
   botMessage.append(intro, cards);
 
@@ -3426,14 +3466,14 @@ function renderDishes(data) {
   if (data.used_relaxed_matches) {
     const relaxed = document.createElement("p");
     relaxed.className = "dish-missing";
-    relaxed.textContent = "No exact match was found, so SNAPP is showing the closest affordable real recipes.";
+    relaxed.textContent = t("copy.no.exact.match.was.found.so.snapp.is.showing", {});
     botMessage.appendChild(relaxed);
   }
 
   if (data.missing_ingredients?.length) {
     const missing = document.createElement("p");
     missing.className = "dish-missing";
-    missing.textContent = `No USDA match found for: ${data.missing_ingredients.join(", ")}.`;
+    missing.textContent = t("copy.no.usda.match.found.for.arg0", {arg0: (data.missing_ingredients.join(", "))});
     botMessage.appendChild(missing);
   }
 
@@ -3476,28 +3516,28 @@ function createDishCard(dish) {
       }
     });
     header.className = "dish-card-header";
-    title.textContent = dish.name;
+    title.textContent = dish.localized_recipe?.name || dish.name;
     header.append(title, favoriteButton);
     price.className = "dish-price";
     price.textContent = dish.estimated_price_total
-      ? `${currencyFormatter.format(dish.estimated_price_total)} estimated grocery total | ${currencyFormatter.format(dish.estimated_price_per_serving)} per serving`
-      : "No grocery price match";
+      ? t("copy.arg0.estimated.grocery.total.arg1.per.serving", {arg0: (currencyFormatter.format(demoPrice(dish.estimated_price_total))), arg1: (currencyFormatter.format(demoPrice(dish.estimated_price_per_serving)))})
+      : t("copy.no.grocery.price.match", {});
     metadata.className = "dish-metadata";
     metadata.textContent = [
       formatServings(dish),
-      dish.cook_time_minutes ? `${dish.cook_time_minutes} min` : "",
+      dish.cook_time_minutes ? t("copy.arg0.min", {arg0: (dish.cook_time_minutes)}) : "",
       ...(dish.dietary_tags || []),
     ].filter(Boolean).join(" | ");
     totalNutrition.className = "dish-nutrition";
     totalNutrition.textContent = [
-      `${nutritionTotal.protein_g || "x g"} protein`,
-      `${nutritionTotal.carbohydrates_g || "x g"} carbs`,
-      `${nutritionTotal.fat_g || "x g"} fat`,
-      `${nutritionTotal.fiber_g || "x g"} fiber`,
+      t("copy.arg0.protein", {arg0: (nutritionTotal.protein_g || "x g")}),
+      t("copy.arg0.carbs", {arg0: (nutritionTotal.carbohydrates_g || "x g")}),
+      t("copy.arg0.fat", {arg0: (nutritionTotal.fat_g || "x g")}),
+      t("copy.arg0.fiber", {arg0: (nutritionTotal.fiber_g || "x g")}),
     ].join(" | ");
     scheduleButton.type = "button";
     scheduleButton.className = "add-to-schedule-button";
-    scheduleButton.textContent = "Add to schedule";
+    scheduleButton.textContent = t("copy.add.to.schedule", {});
     scheduleButton.addEventListener("click", (event) => {
       event.stopPropagation();
       addMealToSchedule(dish);
@@ -3515,7 +3555,7 @@ function createDishCard(dish) {
     if (dish.exact_match === false) {
       const relaxedMessage = document.createElement("p");
       relaxedMessage.className = "dish-warning";
-      relaxedMessage.textContent = "Closest affordable match; some filters were relaxed.";
+      relaxedMessage.textContent = t("copy.closest.affordable.match.some.filters.were.relaxed", {});
       card.appendChild(relaxedMessage);
     }
 
@@ -3531,7 +3571,7 @@ function createDishCard(dish) {
 
 async function initializeAuth() {
   if (!supabaseClient) {
-    setAuthStatus("Supabase is not configured. Check the project URL and publishable key.", "error");
+    setAuthStatus(t("copy.supabase.is.not.configured.check.the.project.url.and", {}), "error");
     await renderAuthState(null);
     return;
   }
@@ -3550,6 +3590,81 @@ async function initializeAuth() {
 navButtons.forEach((button) =>
   button.addEventListener("click", () => showPanel(button.dataset.target))
 );
+
+// SNAP center locations from the official HRA directory (checked October 2026).
+const SNAP_HRA_CENTERS = [
+  ["Manhattan", "East End", "2322 Third Avenue, 3rd floor, NY 10035"],
+  ["Manhattan", "Washington Heights", "4055 10th Avenue, lower level, NY 10034"],
+  ["Manhattan", "Lower Manhattan Benefits Access Center", "109 East 16th Street, NY 10003"],
+  ["Manhattan", "St. Nicholas Benefits Access Center", "132 West 125th Street, NY 10027"],
+  ["Bronx", "Crotona", "1910 Monterey Avenue, 5th floor, Bronx, NY 10457"],
+  ["Bronx", "Hunts Point", "845 Barretto Street, B-level, Bronx, NY 10474"],
+  ["Brooklyn", "Coney Island", "1912 Mermaid Avenue, 1st & 2nd floors, Brooklyn, NY 11224"],
+  ["Brooklyn", "East New York", "2400 Fulton Street, 3rd & 4th floors, Brooklyn, NY 11233"],
+  ["Brooklyn", "Williamsburg", "2 George Street, 1st floor, Brooklyn, NY 11206"],
+  ["Queens", "Jamaica", "165-08 88th Avenue, 3rd floor, Jamaica, NY 11432"],
+  ["Queens", "Queens", "32-20 Northern Boulevard, 2nd floor, LIC, NY 11101 (entrance: One Honeywell Street)"],
+  ["Queens", "Rockaway", "219 Beach 59th Street, 1st floor, Rockaway, NY 11692"],
+  ["Staten Island", "Richmond", "201 Bay Street, 2nd floor, Staten Island, NY 10301"],
+];
+let snapCentersZip = "";
+let snapCentersReturnButton = "snap101-signup-centers";
+
+function snapCenterBorough(zip) {
+  if (/^10[0-2]\d{2}$/.test(zip)) return "Manhattan";
+  if (/^103\d{2}$/.test(zip)) return "Staten Island";
+  if (/^104\d{2}$/.test(zip)) return "Bronx";
+  if (/^112\d{2}$/.test(zip)) return "Brooklyn";
+  if (/^(111|113|114|116)\d{2}$/.test(zip)) return "Queens";
+  return "";
+}
+
+function renderSnapSignupCenters() {
+  const input = document.getElementById("snap101-centers-zip");
+  const zip = snapCentersZip || [currentUserInfo?.zip_code || "", profileZipCodeInput?.value || "", myZipCodeInput?.value || "", zipCodeInput?.value || ""].find(value => /^\d{5}$/.test(value.trim()))?.trim() || "";
+  input.value = zip;
+  const borough = snapCenterBorough(zip);
+  document.getElementById("snap101-centers-location").textContent = zip
+    ? t("copy.your.zip.code.arg0.arg1", {arg0: (zip), arg1: (borough ? `Showing ${borough} HRA centers first, followed by other NYC centers.` : "These centers serve New York City. Use the organizations’ directories to confirm assistance for your area.")})
+    : t("copy.enter.your.zip.code.to.see.local.support.options.c68452", {});
+  document.getElementById("snap101-hra-location-note").textContent = borough
+    ? t("copy.arg0.centers.are.listed.first.check.the.official.directory", {arg0: (borough)})
+    : t("copy.explore.centers.across.all.five.boroughs.below", {});
+  const centers = [...SNAP_HRA_CENTERS].sort((a, b) => Number(b[0] === borough) - Number(a[0] === borough));
+  document.getElementById("snap101-hra-centers").replaceChildren(...centers.map(([area, name, address]) => {
+    const item = document.createElement("li");
+    const title = document.createElement("strong");
+    title.textContent = t("copy.arg0.arg1.9c2551", {arg0: (name), arg1: (area)});
+    const location = document.createElement("span");
+    location.textContent = address;
+    item.append(title, location);
+    if (name === "Hunts Point") {
+      const note = document.createElement("small");
+      note.textContent = t("copy.work.requirements.services.8.30.9.a.m.only", {});
+      item.append(note);
+    }
+    return item;
+  }));
+}
+
+["snap101-signup-centers", "snap101-signup-help"].forEach(id => {
+  document.getElementById(id).addEventListener("click", () => {
+    snapCentersReturnButton = id;
+    showPanel("snap101-centers");
+    document.getElementById("snap101-centers-heading").focus();
+  });
+});
+document.getElementById("snap101-centers-back").addEventListener("click", () => {
+  showPanel(snapCentersReturnButton === "snap101-signup-help" ? "snap101-signup-options" : "snap101-signup");
+  document.getElementById(snapCentersReturnButton).focus();
+});
+document.getElementById("snap101-centers-zip-form").addEventListener("submit", event => {
+  event.preventDefault();
+  const input = document.getElementById("snap101-centers-zip");
+  if (!input.reportValidity()) return;
+  snapCentersZip = input.value.trim();
+  renderSnapSignupCenters();
+});
 
 document.getElementById("snap101-signup-how").addEventListener("click", () => {
   showPanel("snap101-signup-options");
@@ -3655,7 +3770,7 @@ signInForm.addEventListener("submit", async (event) => {
 
   const submitButton = signInForm.querySelector('button[type="submit"]');
   submitButton.disabled = true;
-  setAuthStatus("Signing in...");
+  setAuthStatus(t("copy.signing.in", {}));
   const username = normalizeUsername(signInUsernameInput.value);
   const usernameError = getUsernameError(username);
 
@@ -3665,16 +3780,21 @@ signInForm.addEventListener("submit", async (event) => {
     return;
   }
 
+  onboardingForNewAccount = pendingNewAccountUsername === username;
+  authLandingPending = true;
   const { error } = await supabaseClient.auth.signInWithPassword({
     email: usernameToEmail(username),
     password: signInPasswordInput.value,
   });
 
   if (error) {
-    setAuthStatus(error.message, "error");
+    authLandingPending = false;
+    onboardingForNewAccount = false;
+    setAuthStatus(t("security.signInFailed", {}), "error");
   } else {
+    pendingNewAccountUsername = "";
     signInForm.reset();
-    setAuthStatus("Signed in.", "success");
+    setAuthStatus(t("copy.signed.in.aeca5e", {}), "success");
   }
 
   submitButton.disabled = false;
@@ -3686,7 +3806,7 @@ signUpForm.addEventListener("submit", async (event) => {
 
   const submitButton = signUpForm.querySelector('button[type="submit"]');
   submitButton.disabled = true;
-  setAuthStatus("Creating account...");
+  setAuthStatus(t("copy.creating.account", {}));
   const username = normalizeUsername(signUpUsernameInput.value);
   const usernameError = getUsernameError(username);
 
@@ -3696,6 +3816,8 @@ signUpForm.addEventListener("submit", async (event) => {
     return;
   }
 
+  onboardingForNewAccount = true;
+  authLandingPending = true;
   const { data, error } = await supabaseClient.auth.signUp({
     email: usernameToEmail(username),
     password: signUpPasswordInput.value,
@@ -3707,14 +3829,18 @@ signUpForm.addEventListener("submit", async (event) => {
   });
 
   if (error) {
-    setAuthStatus(error.message, "error");
+    onboardingForNewAccount = false;
+    authLandingPending = false;
+    setAuthStatus(t("security.signUpFailed", {}), "error");
   } else if (data.session) {
     signUpForm.reset();
-    setAuthStatus("Account created. You are signed in.", "success");
+    setAuthStatus(t("copy.account.created.you.are.signed.in", {}), "success");
   } else {
+    pendingNewAccountUsername = username;
+    authLandingPending = false;
     signUpForm.reset();
     showAuthMode("sign-in");
-    setAuthStatus("Account created. Sign in with your username and password.", "success");
+    setAuthStatus(t("copy.account.created.sign.in.with.your.username.and.password", {}), "success");
   }
 
   submitButton.disabled = false;
@@ -3727,7 +3853,7 @@ storeSearchForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
   const zipCode = zipCodeInput.value.trim();
   if (!/^\d{5}$/.test(zipCode)) {
-    storeSearchStatus.textContent = translateText("Enter a valid 5-digit US ZIP code.");
+    storeSearchStatus.textContent = translateText(t("copy.enter.a.valid.5.digit.us.zip.code", {}));
     storeResults.replaceChildren();
     storeSource.hidden = true;
     return;
@@ -3735,7 +3861,7 @@ storeSearchForm?.addEventListener("submit", async (event) => {
 
   const submitButton = storeSearchForm.querySelector("button");
   submitButton.disabled = true;
-  storeSearchStatus.textContent = translateText("Searching for grocery stores...");
+  storeSearchStatus.textContent = translateText(t("copy.searching.for.grocery.stores", {}));
   storeResults.replaceChildren();
   storeSource.hidden = true;
 
@@ -3744,16 +3870,12 @@ storeSearchForm?.addEventListener("submit", async (event) => {
     const stores = data.stores || [];
     renderStores(stores);
     storeSearchStatus.textContent =
-      getLanguage() === "es"
-        ? stores.length
-          ? `Se encontraron ${stores.length} tienda${stores.length === 1 ? "" : "s"} cerca de ${data.location}.`
-          : `No se encontraron tiendas en ${data.location}.`
-        : stores.length
-          ? `${stores.length} grocery store${stores.length === 1 ? "" : "s"} found near ${data.location}.`
-          : `No grocery stores were found in ${data.location}.`;
+      stores.length
+          ? t("copy.arg0.grocery.store.arg1.found.near.arg2", {arg0: (stores.length), arg1: (stores.length === 1 ? "" : "s"), arg2: (data.location)})
+          : t("copy.no.grocery.stores.were.found.in.arg0", {arg0: (data.location)});
     storeSource.hidden = false;
   } catch (error) {
-    storeSearchStatus.textContent = `${translateText("Store search error:")} ${error.message}`;
+    storeSearchStatus.textContent = t("copy.arg0.arg1", {arg0: (translateText("Store search error:")), arg1: (error.message)});
   } finally {
     submitButton.disabled = false;
   }
@@ -3763,7 +3885,7 @@ myStoreForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const zipCode = myZipCodeInput.value.trim();
   if (!/^\d{5}$/.test(zipCode)) {
-    myStoreStatus.textContent = translateText("Enter a valid 5-digit US ZIP code.");
+    myStoreStatus.textContent = translateText(t("copy.enter.a.valid.5.digit.us.zip.code", {}));
     myStoreResults.replaceChildren();
     myStoreSource.hidden = true;
     clearMyStoreMap();
@@ -3773,7 +3895,7 @@ myStoreForm.addEventListener("submit", async (event) => {
 
   const submitButton = myStoreForm.querySelector("button");
   submitButton.disabled = true;
-  myStoreStatus.textContent = translateText("Searching nearby stores...");
+  myStoreStatus.textContent = translateText(t("copy.searching.nearby.stores", {}));
   myStoreResults.replaceChildren();
   myStoreSource.hidden = true;
   clearMyStoreMap();
@@ -3784,11 +3906,7 @@ myStoreForm.addEventListener("submit", async (event) => {
     renderMyStores(data);
     const stores = data.stores || [];
     let statusMessage =
-      getLanguage() === "es"
-        ? stores.length
-          ? `Se encontraron ${stores.length} tienda${stores.length === 1 ? "" : "s"} cerca de ${data.location}.`
-          : `No se encontraron tiendas cerca de ${data.location}.`
-        : stores.length
+      stores.length
           ? `${stores.length} grocery store${stores.length === 1 ? "" : "s"} found near ${data.location}.`
           : `No grocery stores were found near ${data.location}.`;
     try {
@@ -3797,19 +3915,15 @@ myStoreForm.addEventListener("submit", async (event) => {
       const didSaveStoreNumber = await saveTraderJoesStoreNumber(traderJoesData);
       if (store && didSaveStoreNumber) {
         statusMessage +=
-          getLanguage() === "es"
-            ? ` Numero de tienda Trader Joe's ${store.store_number} guardado para ${store.name}.`
-            : ` Trader Joe's store number ${store.store_number} saved for ${store.name}.`;
+          ` Trader Joe's store number ${store.store_number} saved for ${store.name}.`;
       }
     } catch (error) {
       statusMessage +=
-        getLanguage() === "es"
-          ? ` No se pudo resolver el numero de tienda Trader Joe's: ${error.message}`
-          : ` Trader Joe's store number could not be resolved: ${error.message}`;
+        ` Trader Joe's store number could not be resolved: ${error.message}`;
     }
     myStoreStatus.textContent = statusMessage;
   } catch (error) {
-    myStoreStatus.textContent = `${translateText("Store search error:")} ${error.message}`;
+    myStoreStatus.textContent = t("copy.arg0.arg1", {arg0: (translateText("Store search error:")), arg1: (error.message)});
   } finally {
     submitButton.disabled = false;
   }
@@ -3822,7 +3936,7 @@ pantryForm.addEventListener("submit", async (event) => {
   const quantity = spiceName ? "pantry staple" : pantryQuantityInput.value.trim();
 
   if (!name || (!spiceName && !quantity)) {
-    setPantryStatus("Enter both a food name and quantity.", "error");
+    setPantryStatus(t("copy.enter.both.a.food.name.and.quantity", {}), "error");
     return;
   }
 
@@ -3852,16 +3966,16 @@ shoppingAddPantryButton.addEventListener("click", async () => {
   if (!itemsToAdd.length) return;
 
   shoppingAddPantryButton.disabled = true;
-  shoppingStatus.textContent = `Adding ${itemsToAdd.length} ingredient${itemsToAdd.length === 1 ? "" : "s"} to pantry...`;
+  shoppingStatus.textContent = t("copy.adding.arg0.ingredient.arg1.to.pantry", {arg0: (itemsToAdd.length), arg1: (itemsToAdd.length === 1 ? "" : "s")});
 
   const wasAdded = await addPantryItems(itemsToAdd);
   if (wasAdded) {
     itemsToAdd.forEach((item) => pantryHandledShoppingIngredientIds.add(item.id));
     selectedShoppingIngredientIds.clear();
-    shoppingStatus.textContent = `${itemsToAdd.length} ingredient${itemsToAdd.length === 1 ? "" : "s"} added to pantry.`;
+    shoppingStatus.textContent = t("copy.arg0.ingredient.arg1.added.to.pantry", {arg0: (itemsToAdd.length), arg1: (itemsToAdd.length === 1 ? "" : "s")});
     renderShoppingList();
   } else {
-    shoppingStatus.textContent = "Could not add ingredients to pantry.";
+    shoppingStatus.textContent = t("copy.could.not.add.ingredients.to.pantry", {});
     updateShoppingAddButton(items);
   }
 });
@@ -3881,11 +3995,11 @@ dishForm.addEventListener("submit", async (event) => {
   try {
     const data = await fetchDishes(mealPrompt);
     renderDishes(data);
-    setDishStatus(`Found ${Math.min(data.dishes.length, 3)} recipe ${data.dishes.length === 1 ? "match" : "matches"} with grocery price estimates.`);
+    setDishStatus(t("copy.found.arg0.recipe.arg1.with.grocery.price.estimates", {arg0: (Math.min(data.dishes.length, 3)), arg1: (data.dishes.length === 1 ? "match" : "matches")}));
     dishSource.hidden = false;
   } catch (error) {
     appendDishMessage("bot", `Dish search error: ${error.message}`);
-    setDishStatus(`Dish search error: ${error.message}`);
+    setDishStatus(t("copy.dish.search.error.arg0", {arg0: (error.message)}));
   } finally {
     submitButton.disabled = false;
     dishInput.focus();
@@ -3921,6 +4035,29 @@ budgetInput.addEventListener("input", () => {
   queueSettingsSave();
 });
 
+document.getElementById("budget-editor-form")?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const input = document.getElementById("budget-monthly-input");
+  const status = document.getElementById("budget-editor-status");
+  const amount = Number(input.value);
+  if (!form.reportValidity() || !input.value.trim() || !Number.isFinite(amount) || amount < 0) return;
+  const button = form.querySelector("button");
+  button.disabled = true;
+  window.clearTimeout(settingsSaveTimer);
+  budgetInput.value = amount.toFixed(2);
+  renderBudget();
+  status.textContent = t("copy.saving.budget", {});
+  try {
+    const saved = await saveSettingsToUser();
+    status.textContent = saved ? t("copy.monthly.budget.saved", {}) : t("copy.couldn.t.save.your.budget.please.try.again", {});
+  } catch {
+    status.textContent = t("copy.couldn.t.save.your.budget.please.try.again", {});
+  } finally {
+    button.disabled = false;
+  }
+});
+
 budgetOpenSnap101Button?.addEventListener("click", () => showPanel(SNAP101_DEFAULT_PANEL_ID));
 
 plateBalanceSlider?.addEventListener("input", updatePlateBalanceGame);
@@ -3947,21 +4084,18 @@ themeSelect.addEventListener("change", () => {
 });
 
 if (languageSelect) {
-  languageSelect.value = localStorage.getItem(LANGUAGE_STORAGE_KEY) || "en";
-  languageSelect.addEventListener("change", () => {
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, languageSelect.value);
-    applyLanguage();
-  });
+  languageSelect.value = getLanguage();
+  languageSelect.addEventListener("change", () => window.SNAPP_I18N.setLocale(languageSelect.value));
 }
 
 notificationsToggle.addEventListener("change", () => {
   const status = notificationsToggle.checked ? "enabled" : "disabled";
-  setSettingsStatus(`Daily reminders ${status}.`);
+  setSettingsStatus(t("copy.daily.reminders.arg0", {arg0: (status)}));
   queueSettingsSave();
 });
 
 dietSelect.addEventListener("change", () => {
-  setSettingsStatus(`Dietary preference set to ${dietSelect.value}.`);
+  setSettingsStatus(t("copy.dietary.preference.set.to.arg0", {arg0: (dietSelect.value)}));
   queueSettingsSave();
 });
 
@@ -3980,12 +4114,14 @@ const recipeChat = (() => {
   let activeRequest = null;
   let detailRequest = null;
   let detailVersion = 0;
+  let detailRecipe = null;
   const detailView = document.createElement("section");
   detailView.className = "recipe-chat-card recipe-chat-detail";
   detailView.hidden = true;
   history.after(detailView);
 
   function backToResults() {
+    detailRecipe = null;
     detailVersion += 1;
     detailRequest?.abort();
     detailRequest = null;
@@ -4004,7 +4140,8 @@ const recipeChat = (() => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          recipe_id: recipeId, for_schedule: forSchedule,
+          recipe_id: recipeId, for_schedule: forSchedule, include_sale_matches: !forSchedule,
+          include_price_estimate: true, locale: getLanguage(),
           household_size: householdSizeInput.value,
           pantry_items: pantryItems.map(({ name, quantity }) => ({ name, quantity })),
         }),
@@ -4022,52 +4159,60 @@ const recipeChat = (() => {
 
   async function openRecipeDetail(recipe) {
     backToResults();
+    detailRecipe = recipe;
     const version = detailVersion;
     history.hidden = true;
     empty.hidden = true;
     detailView.hidden = false;
     detailView.replaceChildren();
-    const back = textElement("button", "", "← Back to results");
+    const back = textElement("button", "", t("copy.back.to.results", {}));
     back.type = "button";
     back.addEventListener("click", backToResults);
-    const feedback = textElement("p", "recipe-chat-text", "Loading recipe…");
+    const feedback = textElement("p", "recipe-chat-text", t("copy.loading.recipe", {}));
     feedback.setAttribute("role", "status");
     detailView.append(back, feedback);
     try {
       const dish = await fetchDetail(recipe.id);
       if (version !== detailVersion) return;
-      const full = dish.recipe;
+      const canonical = dish.recipe;
+      const full = dish.localized_recipe || canonical;
       const card = recipeCard({
-        ...full, title: dish.name,
+        ...full, title: full.name || full.title || dish.name, sale_ingredients: dish.sale_ingredients,
+        grocery_estimate: dish.grocery_estimate,
+        canonical_ingredients_text: (canonical.ingredients || []).map((item) => item.display || item.measure || item.name),
         ingredients_text: (full.ingredients || []).map((item) => item.display || item.measure || item.name),
       }, 0, true);
       detailView.append(card);
+      if (full._translation_status && full._translation_status !== "translated") {
+        card.append(textElement("p", "recipe-chat-hint", t("copy.recipe.translation.unavailable.showing.original.english")));
+      }
+      if (dish.sale_metadata_unavailable) card.append(textElement("p", "recipe-chat-hint", t("copy.sale.information.is.temporarily.unavailable", {})));
       const servings = formatServings(dish);
       if (servings) card.append(textElement("p", "", servings));
       const equipment = stringList(full.equipment);
-      if (equipment.length) card.append(textElement("p", "", `Equipment: ${equipment.join(", ")}`));
-      if (!full.instructions) card.append(textElement("p", "", "Cooking instructions are unavailable for this recipe."));
+      if (equipment.length) card.append(textElement("p", "", t("copy.equipment.arg0", {arg0: (equipment.join(", "))})));
+      if (!full.instructions) card.append(textElement("p", "", t("copy.cooking.instructions.are.unavailable.for.this.recipe", {})));
       feedback.textContent = "";
-      const schedule = textElement("button", "", "Add to Schedule");
+      const schedule = textElement("button", "", t("copy.add.to.schedule.d2fc00", {}));
       schedule.type = "button";
       schedule.addEventListener("click", async () => {
         schedule.disabled = true;
-        feedback.textContent = "Preparing recipe for your schedule…";
+        feedback.textContent = t("copy.preparing.recipe.for.your.schedule", {});
         try {
           const scheduledDish = scheduledMeals.find((meal) => meal.recipe_id === recipe.id)
             || await fetchDetail(recipe.id, true);
           if (version !== detailVersion) return;
           await addMealToSchedule(scheduledDish);
-          feedback.textContent = "Recipe is in your schedule.";
+          feedback.textContent = t("copy.recipe.is.in.your.schedule", {});
         } catch {
-          if (version === detailVersion) feedback.textContent = "Couldn't add this recipe to your schedule. Try again.";
+          if (version === detailVersion) feedback.textContent = t("copy.couldn.t.add.this.recipe.to.your.schedule.try", {});
         } finally {
           schedule.disabled = false;
         }
       });
       detailView.append(schedule);
     } catch {
-      if (version === detailVersion) feedback.textContent = "Couldn't load this recipe. Return to results and try again.";
+      if (version === detailVersion) feedback.textContent = t("copy.couldn.t.load.this.recipe.return.to.results.and", {});
     }
   }
 
@@ -4075,8 +4220,8 @@ const recipeChat = (() => {
     input.disabled = pending;
     sendButton.disabled = pending;
     prompts.forEach((button) => { button.disabled = pending; });
-    sendButton.textContent = pending ? "Searching…" : "Send";
-    status.textContent = pending ? "SNAPP is checking recipes…" : "";
+    sendButton.textContent = pending ? t("copy.searching", {}) : t("chat.send", {});
+    status.textContent = pending ? t("copy.snapp.is.checking.recipes", {}) : "";
     history.setAttribute("aria-busy", String(pending));
   }
 
@@ -4084,6 +4229,7 @@ const recipeChat = (() => {
     activeRequest?.abort();
     activeRequest = null;
     currentState = null;
+    estimateRequests.clear();
     backToResults();
     history.replaceChildren();
     history.hidden = true;
@@ -4106,29 +4252,82 @@ const recipeChat = (() => {
     return Array.isArray(value) ? value.filter((item) => typeof item === "string" && item.trim()) : [];
   }
 
+  const cardRecipes = new WeakMap();
+  const estimateRequests = new Map();
+
+  function priceLabel(estimate) {
+    if (!estimate || estimate.status === "unavailable" || !Number.isFinite(estimate.total)) {
+      return t("recipe.price.unavailable");
+    }
+    const amount = new Intl.NumberFormat(getLanguage(), { style: "currency", currency: "USD" }).format(demoPrice(estimate.total));
+    return t("copy.arg0.estimated.groceries", { arg0: estimate.status === "partial" ? `${amount}+` : amount });
+  }
+
+  function appendPrice(card, recipe) {
+    const price = textElement("div", "recipe-chat-price", "");
+    const amount = textElement("p", "recipe-chat-price-amount", t("recipe.price.loading"));
+    const note = textElement("small", "recipe-chat-price-note", "");
+    price.append(amount, note);
+    card.append(price);
+    function render(estimate) {
+      amount.textContent = priceLabel(estimate);
+      note.textContent = estimate?.status === "partial" ? t("recipe.price.partial")
+        : estimate?.status === "complete" ? t("recipe.price.basis") : "";
+    }
+    if (recipe.grocery_estimate) { render(recipe.grocery_estimate); return; }
+    if (!recipe.id) { render(null); return; }
+    const pantry = pantryItems.map(({ name, quantity }) => ({ name, quantity }));
+    const key = JSON.stringify([recipe.id, pantry, getHouseholdSize()]);
+    if (!estimateRequests.has(key)) {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 60000);
+      const request = fetch(endpoint().replace(/chat$/, "detail"), {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipe_id: recipe.id, include_price_estimate: true,
+          locale: "en", household_size: getHouseholdSize(), pantry_items: pantry }),
+        signal: controller.signal,
+      }).then(async (response) => {
+        if (!response.ok) throw new Error("Price unavailable");
+        return (await response.json()).dish?.grocery_estimate;
+      }).catch(() => null).finally(() => window.clearTimeout(timeout));
+      estimateRequests.set(key, request);
+    }
+    estimateRequests.get(key).then((estimate) => { recipe.grocery_estimate = estimate; render(estimate); });
+  }
+
   function recipeCard(recipe, index, selected = false) {
     const card = document.createElement("article");
+    cardRecipes.set(card, { recipe, index, selected });
     card.className = `recipe-chat-card${selected ? " recipe-chat-card-selected" : ""}`;
-    card.append(textElement("p", "recipe-chat-card-label", selected ? "Selected recipe" : `Result ${index + 1}`));
+    card.append(textElement("p", "recipe-chat-card-label", selected ? t("copy.selected.recipe", {}) : t("copy.result.arg0", {arg0: (index + 1)})));
     if (typeof recipe.title === "string") card.append(textElement("h3", "", recipe.title));
+    appendPrice(card, recipe);
     const total = recipe.total_time_minutes;
     const cook = recipe.cook_time_minutes;
     if (typeof total === "number" && Number.isFinite(total)) {
-      card.append(textElement("p", "recipe-chat-card-time", `${total} minutes total`));
+      card.append(textElement("p", "recipe-chat-card-time", t("copy.arg0.minutes.total", {arg0: (total)})));
     } else if (typeof cook === "number" && Number.isFinite(cook)) {
-      card.append(textElement("p", "recipe-chat-card-time", `${cook} minutes cooking`));
+      card.append(textElement("p", "recipe-chat-card-time", t("copy.arg0.minutes.cooking", {arg0: (cook)})));
     }
     const categories = stringList(recipe.categories);
     if (categories.length) {
-      card.append(textElement("p", "recipe-chat-card-categories", categories.map((value) => value.replace(/_/g, " ")).join(" · ")));
+      card.append(textElement("p", "recipe-chat-card-categories", categories.map((value) => t(`recipe.category.${value}`) || value.replace(/_/g, " ")).join(" · ")));
     }
     const ingredients = selected
       ? stringList(recipe.ingredients_text).length ? stringList(recipe.ingredients_text) : stringList(recipe.ingredient_names)
       : stringList(recipe.key_ingredients).length ? stringList(recipe.key_ingredients) : stringList(recipe.ingredient_names);
     if (ingredients.length) {
-      card.append(textElement("p", "recipe-chat-card-label", selected ? "Stored ingredients" : "Ingredients include"));
+      card.append(textElement("p", "recipe-chat-card-label", selected ? t("copy.stored.ingredients", {}) : t("copy.ingredients.include", {})));
       if (selected) {
-        card.append(recipeItemList(ingredients, (ingredient) => ingredient));
+        const list = recipeItemList(ingredients, (ingredient) => ingredient);
+        ingredients.forEach((ingredient, index) => {
+          const offer = (recipe.sale_ingredients || []).find((item) => (item.recipe_display === (recipe.canonical_ingredients_text?.[index] || ingredient) || item.recipe_measure === ingredient) && item.is_on_sale === true);
+          if (!offer) return;
+          const badge = textElement("span", "recipe-sale-badge", t("copy.on.sale", {}));
+          list.children[index].append(badge);
+          list.children[index].append(textElement("small", "recipe-sale-offer", t("copy.arg0.arg1.c2a27c", {arg0: (offer.product_name || "Matched product"), arg1: (offer.sale_offer ? ` · ${offer.sale_offer}` : "")})));
+        });
+        card.append(list);
       } else {
         card.append(textElement("p", "", ingredients.slice(0, 8).join(", ")));
       }
@@ -4136,7 +4335,7 @@ const recipeChat = (() => {
     if (selected) {
       const steps = stringList(recipe.instructions);
       if (steps.length || typeof recipe.instructions === "string" && recipe.instructions.trim()) {
-        card.append(textElement("p", "recipe-chat-card-label", "Stored instructions"));
+        card.append(textElement("p", "recipe-chat-card-label", t("copy.stored.instructions", {})));
         if (steps.length) {
           card.append(recipeItemList(steps, (step) => step, true));
         } else {
@@ -4147,7 +4346,7 @@ const recipeChat = (() => {
     if (!selected) {
       card.tabIndex = 0;
       card.setAttribute("role", "button");
-      card.setAttribute("aria-label", `View recipe: ${recipe.title || "Recipe"}`);
+      card.setAttribute("aria-label", t("copy.view.recipe.arg0", {arg0: (recipe.title || "Recipe")}));
       card.addEventListener("click", () => openRecipeDetail(recipe));
       card.addEventListener("keydown", (event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -4161,7 +4360,7 @@ const recipeChat = (() => {
 
   function messageElement(speaker, message) {
     const article = document.createElement("article");
-    article.className = `recipe-chat-message recipe-chat-message-${speaker === "You" ? "user" : "snapp"}`;
+    article.className = `recipe-chat-message recipe-chat-message-${speaker === t("chat.you") ? "user" : "snapp"}`;
     article.append(textElement("p", "recipe-chat-speaker", speaker), textElement("p", "recipe-chat-text", message));
     return article;
   }
@@ -4171,7 +4370,7 @@ const recipeChat = (() => {
     const override = document.querySelector('meta[name="snapp-recipe-chat-api-base-url"]')?.content?.trim().replace(/\/+$/, "");
     if (override) return `${override}/api/recipes/chat`;
     if (["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname)) {
-      return "http://127.0.0.1:5001/api/recipes/chat";
+      return "http://127.0.0.1:5002/api/recipes/chat";
     }
     return getApiEndpoints("/api/recipes/chat")[0];
   }
@@ -4189,7 +4388,7 @@ const recipeChat = (() => {
     empty.hidden = true;
     history.hidden = false;
     setPending(true);
-    const userMessage = messageElement("You", message);
+    const userMessage = messageElement(t("chat.you"), message);
     history.append(userMessage);
     history.scrollTop = history.scrollHeight;
     try {
@@ -4198,7 +4397,7 @@ const recipeChat = (() => {
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, state: currentState }),
+        body: JSON.stringify({ message, state: currentState, locale: getLanguage(), household_size: getHouseholdSize(), pantry_items: pantryItems.map(({name, quantity}) => ({name, quantity})) }),
         signal: controller.signal,
       });
       if (!response.ok) throw new Error("Recipe Chat request failed");
@@ -4211,22 +4410,28 @@ const recipeChat = (() => {
       if (data.results.length) {
         const results = document.createElement("div");
         results.className = "recipe-chat-results";
-        results.setAttribute("aria-label", "Recipes in result order");
-        data.results.forEach((recipe, index) => results.append(recipeCard(recipe, index)));
+        results.setAttribute("aria-label", t("copy.recipes.in.result.order", {}));
+        (data.localized_results || data.results).forEach((recipe, index) => results.append(recipeCard(recipe, index)));
         reply.append(results);
       }
-      if (data.selected_recipe) reply.append(recipeCard(data.selected_recipe, 0));
+      if (data.selected_recipe) reply.append(recipeCard(data.localized_selected_recipe || data.selected_recipe, 0));
       history.append(reply);
       currentState = data.state;
       input.value = "";
       // Bring the start of this response into view, without scrolling the entire page.
       history.scrollTop = reply.offsetTop;
+      if (panel.classList.contains("visible")) {
+        requestAnimationFrame(() => {
+          const recipes = reply.querySelector(".recipe-chat-results") || reply;
+          recipes.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" });
+        });
+      }
     } catch {
       if (activeRequest !== controller) return;
       userMessage.remove();
       empty.hidden = history.childElementCount > 0;
       history.hidden = !empty.hidden;
-      error.textContent = "SNAPP couldn't search recipes right now. Try again in a moment.";
+      error.textContent = t("copy.snapp.couldn.t.search.recipes.right.now.try.again", {});
       error.hidden = false;
     } finally {
       window.clearTimeout(timeout);
@@ -4236,6 +4441,35 @@ const recipeChat = (() => {
         if (panel.classList.contains("visible")) input.focus({ preventScroll: true });
       }
     }
+  });
+
+  document.addEventListener("snapp:localechange", (event) => {
+    if (currentState) currentState.conversation_language = event.detail.locale;
+    if (!detailView.hidden && detailRecipe) openRecipeDetail(detailRecipe);
+    const locale = event.detail.locale;
+    history.querySelectorAll(".recipe-chat-card").forEach(async (card) => {
+      const binding = cardRecipes.get(card);
+      if (!binding?.recipe.id) return;
+      try {
+        const response = await fetch(endpoint().replace(/chat$/, "detail"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ recipe_id: binding.recipe.id, locale }),
+        });
+        if (!response.ok || getLanguage() !== locale || !card.isConnected) return;
+        const { dish } = await response.json();
+        const full = dish.localized_recipe || dish.recipe;
+        const recipe = {
+          ...binding.recipe, ...full, id: binding.recipe.id,
+          title: full.name || full.title || dish.name,
+          key_ingredients: (full.ingredients || []).map((item) => item.display || item.measure || item.name),
+        };
+        card.replaceWith(recipeCard(recipe, binding.index, binding.selected));
+      } catch {
+        error.textContent = t("copy.recipe.translation.unavailable.showing.original.english");
+        error.hidden = false;
+      }
+    });
   });
 
   input.addEventListener("keydown", (event) => {
@@ -4249,7 +4483,22 @@ const recipeChat = (() => {
     form.requestSubmit();
   }));
   document.getElementById("recipe-chat-new").addEventListener("click", () => reset());
-  return { reset };
+  function searchIngredient(ingredient) {
+    reset(false);
+    input.value = `Recipes with ${ingredient}`;
+    form.requestSubmit();
+  }
+  async function nutritionFor(dish) {
+    const response = await fetch(endpoint().replace(/chat$/, "nutrition"), {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ recipe: dish.recipe, household_size: getHouseholdSize() }),
+    });
+    if (!response.ok) throw new Error("Nutrition unavailable");
+    const data = await response.json();
+    if (data.nutrition_source !== "USDA FoodData Central") throw new Error("Invalid nutrition");
+    return data;
+  }
+  return { reset, searchIngredient, nutritionFor };
 })();
 // End experimental Recipe Chat.
 

@@ -1050,7 +1050,9 @@ class OverrideCacheBatchEndpointTests(unittest.TestCase):
             ]
         }
         adjusted, _originals = model.pantry_adjusted_recipe_ingredients(recipe, [], servings=4)
-        self.assertEqual(adjusted, ["8 chicken thighs", "2 peppers"])
+        # Quantity changes retain the source head; pluralizing "pepper" loses
+        # the existing quantity-dependent bell-pepper identity.
+        self.assertEqual(adjusted, ["8 chicken thighs", "2 pepper"])
 
     def test_prep_only_recipe_fragments_are_not_purchased(self):
         import model

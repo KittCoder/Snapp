@@ -75,7 +75,7 @@ class StructuralMatcherClassTests(unittest.TestCase):
 
     def test_all_reviewed_wrong_pairs_are_rejected_with_unseen_brands(self):
         import io
-        rows=csv.DictReader(io.StringIO((ROOT/'data/matcher_validation/review_assistant_issues.csv').read_text()))
+        rows=csv.DictReader(io.StringIO((ROOT/'Model/tests/fixtures/release/review_assistant_issues.csv').read_text()))
         fs=json.loads((ROOT/'Model/morton_williams_product_features.json').read_text())['features']
         byname={f['original_product_name']:f for f in fs}
         for row in rows:

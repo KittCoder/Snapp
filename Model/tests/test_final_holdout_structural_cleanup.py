@@ -38,8 +38,9 @@ class FinalHoldoutStructuralCleanupTests(unittest.TestCase):
         self.assertFalse(compatibility(query,describe('Roasted Chicken Breast Dinner',product=True)).allowed)
 
     def test_cheese_holdout_accepted_pairs_remain_compatible(self):
-        features=json.loads((ROOT/'Model/morton_williams_product_features.json').read_text())['features'];byname={f['original_product_name']:f for f in features}
-        rows=list(csv.DictReader((ROOT/'data/matcher_structural_holdout/structural_holdout_assistant_labeled.csv').open()))
+        # Preserve exact historical pair evidence independently of the active catalog.
+        features=json.loads((Path(__file__).parent/'fixtures/recipe_catalog_regression.json').read_text())['historical_cheese_features'];byname={f['original_product_name']:f for f in features}
+        rows=list(csv.DictReader((ROOT/'Model/tests/fixtures/release/structural_holdout_assistant_labeled.csv').open()))
         for row in rows:
             if row['sample_group']=='hard: cheese' and row['current_matcher_decision']=='accepted':
                 with self.subTest(case=row['case_id']):

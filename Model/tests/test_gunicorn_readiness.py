@@ -35,6 +35,7 @@ class GunicornReadinessIntegrationTests(unittest.TestCase):
         env = {
             **os.environ,
             "SNAPP_ENV": "production",
+            "SNAPP_DEPENDENCY_READINESS": "0",  # Isolated matcher-worker test; cloud dependencies tested separately.
             "SNAPP_LOG_FORMAT": "json",
             "SNAPP_ADMIN_TOKEN": "test-token",
             "PYTHONUNBUFFERED": "1",

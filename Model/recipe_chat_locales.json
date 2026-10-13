@@ -1,0 +1,2263 @@
+{
+  "es": {
+    "want": [
+      "quiero",
+      "quisiera"
+    ],
+    "with": [
+      "con"
+    ],
+    "without": [
+      "sin",
+      "sin nada de"
+    ],
+    "and": [
+      "y"
+    ],
+    "chicken": [
+      "pollo"
+    ],
+    "beef": [
+      "carne de res",
+      "res"
+    ],
+    "turkey": [
+      "pavo"
+    ],
+    "eggs": [
+      "huevos",
+      "huevo"
+    ],
+    "rice": [
+      "arroz"
+    ],
+    "cheese": [
+      "queso"
+    ],
+    "tomatoes": [
+      "tomates",
+      "tomate"
+    ],
+    "onions": [
+      "cebollas",
+      "cebolla"
+    ],
+    "broccoli": [
+      "brócoli",
+      "brocoli"
+    ],
+    "garlic": [
+      "ajo"
+    ],
+    "mushrooms": [
+      "champiñones",
+      "hongos"
+    ],
+    "milk": [
+      "leche"
+    ],
+    "pasta": [
+      "pasta"
+    ],
+    "dinner": [
+      "cena"
+    ],
+    "breakfast": [
+      "desayuno"
+    ],
+    "lunch": [
+      "almuerzo"
+    ],
+    "dessert": [
+      "postre"
+    ],
+    "under": [
+      "en menos de",
+      "menos de",
+      "en menos",
+      "por debajo de"
+    ],
+    "minutes": [
+      "minutos",
+      "minuto"
+    ],
+    "vegetarian": [
+      "vegetariano",
+      "vegetariana"
+    ],
+    "vegan": [
+      "vegano",
+      "vegana"
+    ],
+    "dairy-free": [
+      "sin lácteos"
+    ],
+    "gluten-free": [
+      "sin gluten"
+    ],
+    "actually": [
+      "en realidad",
+      "mejor",
+      "en vez de eso"
+    ],
+    "quick": [
+      "rápido",
+      "rápida"
+    ],
+    "healthy": [
+      "saludable",
+      "saludables"
+    ],
+    "cheap": [
+      "barato",
+      "barata",
+      "económico",
+      "económica"
+    ],
+    "warm": [
+      "caliente",
+      "calentito"
+    ],
+    "filling": [
+      "llenador",
+      "que llene"
+    ],
+    "high protein": [
+      "alto en proteína",
+      "alta en proteína",
+      "más proteína"
+    ],
+    "kid friendly": [
+      "para niños",
+      "para mis hijos"
+    ],
+    "mild": [
+      "menos picante",
+      "no tan picante"
+    ],
+    "quicker": [
+      "más rápido",
+      "más rápida"
+    ],
+    "first": [
+      "primero",
+      "primera"
+    ],
+    "second": [
+      "segundo",
+      "segunda"
+    ],
+    "third": [
+      "tercero",
+      "tercera"
+    ],
+    "last": [
+      "último",
+      "última"
+    ],
+    "show me": [
+      "muéstrame",
+      "muestrame",
+      "enséñame"
+    ],
+    "another one": [
+      "otro",
+      "otra",
+      "otra opción"
+    ],
+    "show me more": [
+      "muéstrame más",
+      "muestrame más"
+    ],
+    "start over": [
+      "empezar de nuevo",
+      "empecemos de nuevo",
+      "empieza de nuevo"
+    ],
+    "clear time limit": [
+      "quita el límite de tiempo",
+      "borra el límite de tiempo"
+    ],
+    "what ingredients do I need": [
+      "qué ingredientes necesito",
+      "que ingredientes necesito"
+    ],
+    "how long does that take": [
+      "cuánto tarda",
+      "cuanto tarda"
+    ],
+    "how do I make that": [
+      "cómo lo preparo",
+      "como lo preparo"
+    ],
+    "which one is fastest": [
+      "cuál es más rápido",
+      "cual es mas rapido"
+    ],
+    "which is cheapest": [
+      "cuál es más barato",
+      "cual es mas barato"
+    ],
+    "compare": [
+      "compara",
+      "comparar"
+    ],
+    "I have": [
+      "tengo"
+    ],
+    "something": [
+      "algo"
+    ],
+    "a": [
+      "una",
+      "un"
+    ],
+    "is fine": [
+      "está bien",
+      "esta bien"
+    ],
+    "oven": [
+      "horno"
+    ],
+    "skillet": [
+      "sartén",
+      "sarten"
+    ],
+    "family": [
+      "familia"
+    ],
+    "simple": [
+      "sencillo",
+      "fácil",
+      "facil"
+    ]
+  },
+  "zh-CN": {
+    "want": [
+      "我想要",
+      "我要",
+      "想要"
+    ],
+    "with": [
+      "用",
+      "有",
+      "加"
+    ],
+    "without": [
+      "不要",
+      "不含",
+      "不加"
+    ],
+    "and": [
+      "和",
+      "以及"
+    ],
+    "chicken": [
+      "鸡肉",
+      "雞肉"
+    ],
+    "beef": [
+      "牛肉"
+    ],
+    "turkey": [
+      "火鸡肉"
+    ],
+    "eggs": [
+      "鸡蛋",
+      "蛋"
+    ],
+    "rice": [
+      "米饭",
+      "大米",
+      "米"
+    ],
+    "cheese": [
+      "奶酪",
+      "芝士"
+    ],
+    "tomatoes": [
+      "西红柿",
+      "番茄"
+    ],
+    "onions": [
+      "洋葱"
+    ],
+    "broccoli": [
+      "西兰花"
+    ],
+    "garlic": [
+      "大蒜"
+    ],
+    "mushrooms": [
+      "蘑菇"
+    ],
+    "milk": [
+      "牛奶"
+    ],
+    "pasta": [
+      "意面",
+      "意大利面"
+    ],
+    "dinner": [
+      "晚餐"
+    ],
+    "breakfast": [
+      "早餐"
+    ],
+    "lunch": [
+      "午餐"
+    ],
+    "dessert": [
+      "甜点"
+    ],
+    "under": [
+      "以内",
+      "不到"
+    ],
+    "minutes": [
+      "分钟"
+    ],
+    "vegetarian": [
+      "素食"
+    ],
+    "vegan": [
+      "纯素"
+    ],
+    "dairy-free": [
+      "不含乳制品"
+    ],
+    "gluten-free": [
+      "无麸质"
+    ],
+    "actually": [
+      "其实",
+      "改成",
+      "改用"
+    ],
+    "quick": [
+      "快速",
+      "快点"
+    ],
+    "healthy": [
+      "健康"
+    ],
+    "cheap": [
+      "便宜",
+      "省钱"
+    ],
+    "warm": [
+      "热的",
+      "热乎"
+    ],
+    "filling": [
+      "饱腹"
+    ],
+    "high protein": [
+      "高蛋白"
+    ],
+    "kid friendly": [
+      "孩子喜欢"
+    ],
+    "mild": [
+      "不太辣",
+      "少辣"
+    ],
+    "quicker": [
+      "更快"
+    ],
+    "first": [
+      "第一个",
+      "第一道"
+    ],
+    "second": [
+      "第二个",
+      "第二道"
+    ],
+    "third": [
+      "第三个",
+      "第三道"
+    ],
+    "last": [
+      "最后一个"
+    ],
+    "show me": [
+      "给我看看",
+      "看看"
+    ],
+    "another one": [
+      "换一个",
+      "再来一个"
+    ],
+    "show me more": [
+      "更多"
+    ],
+    "start over": [
+      "重新开始"
+    ],
+    "clear time limit": [
+      "取消时间限制"
+    ],
+    "what ingredients do I need": [
+      "需要什么食材"
+    ],
+    "how long does that take": [
+      "需要多久"
+    ],
+    "how do I make that": [
+      "怎么做"
+    ],
+    "which one is fastest": [
+      "哪个最快"
+    ],
+    "which is cheapest": [
+      "哪个最便宜"
+    ],
+    "compare": [
+      "比较"
+    ],
+    "I have": [
+      "我有"
+    ],
+    "something": [
+      "一道",
+      "一种",
+      "的"
+    ],
+    "a": [
+      "个"
+    ],
+    "is fine": [
+      "可以",
+      "没关系"
+    ],
+    "oven": [
+      "烤箱"
+    ],
+    "skillet": [
+      "平底锅"
+    ],
+    "family": [
+      "家人"
+    ],
+    "simple": [
+      "简单"
+    ]
+  },
+  "zh-TW": {
+    "want": [
+      "我想要",
+      "我要",
+      "想要"
+    ],
+    "with": [
+      "用",
+      "有",
+      "加"
+    ],
+    "without": [
+      "不要",
+      "不含",
+      "不加"
+    ],
+    "and": [
+      "和",
+      "以及"
+    ],
+    "chicken": [
+      "雞肉",
+      "鸡肉"
+    ],
+    "beef": [
+      "牛肉"
+    ],
+    "turkey": [
+      "火雞肉"
+    ],
+    "eggs": [
+      "雞蛋",
+      "蛋"
+    ],
+    "rice": [
+      "米飯",
+      "大米",
+      "米"
+    ],
+    "cheese": [
+      "起司",
+      "乳酪",
+      "芝士"
+    ],
+    "tomatoes": [
+      "番茄"
+    ],
+    "onions": [
+      "洋蔥"
+    ],
+    "broccoli": [
+      "花椰菜"
+    ],
+    "garlic": [
+      "大蒜"
+    ],
+    "mushrooms": [
+      "蘑菇"
+    ],
+    "milk": [
+      "牛奶"
+    ],
+    "pasta": [
+      "義大利麵",
+      "義大利面"
+    ],
+    "dinner": [
+      "晚餐"
+    ],
+    "breakfast": [
+      "早餐"
+    ],
+    "lunch": [
+      "午餐"
+    ],
+    "dessert": [
+      "甜點"
+    ],
+    "under": [
+      "以內",
+      "不到"
+    ],
+    "minutes": [
+      "分鐘"
+    ],
+    "vegetarian": [
+      "素食"
+    ],
+    "vegan": [
+      "純素"
+    ],
+    "dairy-free": [
+      "不含乳製品"
+    ],
+    "gluten-free": [
+      "無麩質"
+    ],
+    "actually": [
+      "其實",
+      "改成",
+      "改用"
+    ],
+    "quick": [
+      "快速",
+      "快點"
+    ],
+    "healthy": [
+      "健康"
+    ],
+    "cheap": [
+      "便宜",
+      "省錢"
+    ],
+    "warm": [
+      "熱的",
+      "熱乎"
+    ],
+    "filling": [
+      "飽腹"
+    ],
+    "high protein": [
+      "高蛋白"
+    ],
+    "kid friendly": [
+      "孩子喜歡"
+    ],
+    "mild": [
+      "不太辣",
+      "少辣"
+    ],
+    "quicker": [
+      "更快"
+    ],
+    "first": [
+      "第一個",
+      "第一道"
+    ],
+    "second": [
+      "第二個",
+      "第二道"
+    ],
+    "third": [
+      "第三個",
+      "第三道"
+    ],
+    "last": [
+      "最後一個"
+    ],
+    "show me": [
+      "給我看看",
+      "看看"
+    ],
+    "another one": [
+      "換一個",
+      "再來一個"
+    ],
+    "show me more": [
+      "更多"
+    ],
+    "start over": [
+      "重新開始"
+    ],
+    "clear time limit": [
+      "取消時間限制"
+    ],
+    "what ingredients do I need": [
+      "需要什麼食材"
+    ],
+    "how long does that take": [
+      "需要多久"
+    ],
+    "how do I make that": [
+      "怎麼做"
+    ],
+    "which one is fastest": [
+      "哪個最快"
+    ],
+    "which is cheapest": [
+      "哪個最便宜"
+    ],
+    "compare": [
+      "比較"
+    ],
+    "I have": [
+      "我有"
+    ],
+    "something": [
+      "一道",
+      "一種",
+      "的"
+    ],
+    "a": [
+      "個"
+    ],
+    "is fine": [
+      "可以",
+      "沒關係"
+    ],
+    "oven": [
+      "烤箱"
+    ],
+    "skillet": [
+      "平底鍋"
+    ],
+    "family": [
+      "家人"
+    ],
+    "simple": [
+      "簡單"
+    ]
+  },
+  "ru": {
+    "want": [
+      "хочу"
+    ],
+    "with": [
+      "с",
+      "со"
+    ],
+    "without": [
+      "без"
+    ],
+    "and": [
+      "и"
+    ],
+    "chicken": [
+      "курицей",
+      "курица",
+      "курицу",
+      "курицы"
+    ],
+    "beef": [
+      "говядиной",
+      "говядина",
+      "говядину"
+    ],
+    "turkey": [
+      "индейка",
+      "индейкой"
+    ],
+    "eggs": [
+      "яйца",
+      "яйцами"
+    ],
+    "rice": [
+      "рис",
+      "рисом"
+    ],
+    "cheese": [
+      "сыр",
+      "сыра",
+      "сыром"
+    ],
+    "tomatoes": [
+      "помидоры",
+      "помидорами"
+    ],
+    "onions": [
+      "лук",
+      "луком"
+    ],
+    "broccoli": [
+      "брокколи"
+    ],
+    "garlic": [
+      "чеснок",
+      "чеснока"
+    ],
+    "mushrooms": [
+      "грибы",
+      "грибов"
+    ],
+    "milk": [
+      "молоко",
+      "молока"
+    ],
+    "pasta": [
+      "паста",
+      "макароны"
+    ],
+    "dinner": [
+      "ужин",
+      "ужина"
+    ],
+    "breakfast": [
+      "завтрак"
+    ],
+    "lunch": [
+      "обед"
+    ],
+    "dessert": [
+      "десерт"
+    ],
+    "under": [
+      "меньше чем за",
+      "менее",
+      "меньше"
+    ],
+    "minutes": [
+      "минут",
+      "минуты"
+    ],
+    "vegetarian": [
+      "вегетарианское",
+      "вегетарианский"
+    ],
+    "vegan": [
+      "веганское",
+      "веганский"
+    ],
+    "dairy-free": [
+      "без молочных продуктов"
+    ],
+    "gluten-free": [
+      "без глютена"
+    ],
+    "actually": [
+      "на самом деле",
+      "лучше"
+    ],
+    "quick": [
+      "быстро",
+      "быстрый"
+    ],
+    "healthy": [
+      "здоровое",
+      "полезное"
+    ],
+    "cheap": [
+      "дешево",
+      "дешёвое",
+      "недорого"
+    ],
+    "warm": [
+      "тёплое",
+      "теплое"
+    ],
+    "filling": [
+      "сытное"
+    ],
+    "high protein": [
+      "больше белка",
+      "высокобелковое"
+    ],
+    "kid friendly": [
+      "для детей"
+    ],
+    "mild": [
+      "менее острое",
+      "не острое"
+    ],
+    "quicker": [
+      "быстрее"
+    ],
+    "first": [
+      "первый",
+      "первое"
+    ],
+    "second": [
+      "второй",
+      "второе"
+    ],
+    "third": [
+      "третий",
+      "третье"
+    ],
+    "last": [
+      "последний",
+      "последнее"
+    ],
+    "show me": [
+      "покажи мне",
+      "покажи"
+    ],
+    "another one": [
+      "ещё один",
+      "другой"
+    ],
+    "show me more": [
+      "покажи ещё"
+    ],
+    "start over": [
+      "начать заново",
+      "начни заново"
+    ],
+    "clear time limit": [
+      "убери ограничение времени"
+    ],
+    "what ingredients do I need": [
+      "какие ингредиенты нужны"
+    ],
+    "how long does that take": [
+      "сколько времени это занимает"
+    ],
+    "how do I make that": [
+      "как это приготовить"
+    ],
+    "which one is fastest": [
+      "какой самый быстрый"
+    ],
+    "which is cheapest": [
+      "какой самый дешёвый"
+    ],
+    "compare": [
+      "сравни"
+    ],
+    "I have": [
+      "у меня есть"
+    ],
+    "something": [
+      "что-нибудь",
+      "что-то"
+    ],
+    "a": [
+      "один"
+    ],
+    "is fine": [
+      "можно",
+      "подходит"
+    ],
+    "oven": [
+      "духовка",
+      "духовку"
+    ],
+    "skillet": [
+      "сковорода",
+      "сковороду"
+    ],
+    "family": [
+      "семья",
+      "семьи"
+    ],
+    "simple": [
+      "просто",
+      "простой"
+    ]
+  },
+  "bn": {
+    "want": [
+      "চাই"
+    ],
+    "with": [
+      "দিয়ে",
+      "সঙ্গে"
+    ],
+    "without": [
+      "ছাড়া"
+    ],
+    "and": [
+      "এবং",
+      "আর"
+    ],
+    "chicken": [
+      "মুরগির",
+      "মুরগি"
+    ],
+    "beef": [
+      "গরুর মাংস"
+    ],
+    "turkey": [
+      "টার্কি"
+    ],
+    "eggs": [
+      "ডিম"
+    ],
+    "rice": [
+      "ভাত",
+      "চাল"
+    ],
+    "cheese": [
+      "চিজ",
+      "পনির"
+    ],
+    "tomatoes": [
+      "টমেটো"
+    ],
+    "onions": [
+      "পেঁয়াজ"
+    ],
+    "broccoli": [
+      "ব্রোকলি"
+    ],
+    "garlic": [
+      "রসুন"
+    ],
+    "mushrooms": [
+      "মাশরুম"
+    ],
+    "milk": [
+      "দুধ"
+    ],
+    "pasta": [
+      "পাস্তা"
+    ],
+    "dinner": [
+      "রাতের খাবার"
+    ],
+    "breakfast": [
+      "সকালের খাবার"
+    ],
+    "lunch": [
+      "দুপুরের খাবার"
+    ],
+    "dessert": [
+      "মিষ্টি"
+    ],
+    "under": [
+      "এর মধ্যে"
+    ],
+    "minutes": [
+      "মিনিট"
+    ],
+    "vegetarian": [
+      "নিরামিষ"
+    ],
+    "vegan": [
+      "ভেগান"
+    ],
+    "dairy-free": [
+      "দুগ্ধজাত খাবার ছাড়া"
+    ],
+    "gluten-free": [
+      "গ্লুটেন ছাড়া"
+    ],
+    "actually": [
+      "আসলে",
+      "বরং"
+    ],
+    "quick": [
+      "দ্রুত"
+    ],
+    "healthy": [
+      "স্বাস্থ্যকর"
+    ],
+    "cheap": [
+      "সস্তা"
+    ],
+    "warm": [
+      "গরম"
+    ],
+    "filling": [
+      "পেট ভরানো"
+    ],
+    "high protein": [
+      "বেশি প্রোটিন"
+    ],
+    "kid friendly": [
+      "বাচ্চাদের জন্য"
+    ],
+    "mild": [
+      "কম ঝাল"
+    ],
+    "quicker": [
+      "আরও দ্রুত"
+    ],
+    "first": [
+      "প্রথমটি",
+      "প্রথম"
+    ],
+    "second": [
+      "দ্বিতীয়টি",
+      "দ্বিতীয়"
+    ],
+    "third": [
+      "তৃতীয়টি",
+      "তৃতীয়"
+    ],
+    "last": [
+      "শেষটি",
+      "শেষ"
+    ],
+    "show me": [
+      "দেখাও",
+      "দেখান"
+    ],
+    "another one": [
+      "আরেকটি"
+    ],
+    "show me more": [
+      "আরও দেখাও"
+    ],
+    "start over": [
+      "নতুন করে শুরু"
+    ],
+    "clear time limit": [
+      "সময়সীমা সরাও"
+    ],
+    "what ingredients do I need": [
+      "কী উপকরণ লাগবে"
+    ],
+    "how long does that take": [
+      "কত সময় লাগবে"
+    ],
+    "how do I make that": [
+      "কীভাবে রান্না করব"
+    ],
+    "which one is fastest": [
+      "কোনটি সবচেয়ে দ্রুত"
+    ],
+    "which is cheapest": [
+      "কোনটি সবচেয়ে সস্তা"
+    ],
+    "compare": [
+      "তুলনা করো"
+    ],
+    "I have": [
+      "আমার কাছে আছে"
+    ],
+    "something": [
+      "কিছু"
+    ],
+    "a": [
+      "একটি"
+    ],
+    "is fine": [
+      "ঠিক আছে"
+    ],
+    "oven": [
+      "ওভেন"
+    ],
+    "skillet": [
+      "স্কিলেট",
+      "কড়াই"
+    ],
+    "family": [
+      "পরিবার"
+    ],
+    "simple": [
+      "সহজ"
+    ]
+  },
+  "ht": {
+    "want": [
+      "mwen vle"
+    ],
+    "with": [
+      "ak"
+    ],
+    "without": [
+      "san"
+    ],
+    "and": [
+      "epi",
+      "ak"
+    ],
+    "chicken": [
+      "poul"
+    ],
+    "beef": [
+      "vyann bèf"
+    ],
+    "turkey": [
+      "kodenn"
+    ],
+    "eggs": [
+      "ze"
+    ],
+    "rice": [
+      "diri"
+    ],
+    "cheese": [
+      "fwomaj"
+    ],
+    "tomatoes": [
+      "tomat"
+    ],
+    "onions": [
+      "zonyon"
+    ],
+    "broccoli": [
+      "bwokoli"
+    ],
+    "garlic": [
+      "lay"
+    ],
+    "mushrooms": [
+      "dyondyon"
+    ],
+    "milk": [
+      "lèt"
+    ],
+    "pasta": [
+      "pat"
+    ],
+    "dinner": [
+      "dine"
+    ],
+    "breakfast": [
+      "manje maten"
+    ],
+    "lunch": [
+      "manje midi"
+    ],
+    "dessert": [
+      "desè"
+    ],
+    "under": [
+      "mwens pase"
+    ],
+    "minutes": [
+      "minit"
+    ],
+    "vegetarian": [
+      "vejetaryen"
+    ],
+    "vegan": [
+      "vegan"
+    ],
+    "dairy-free": [
+      "san pwodui letye"
+    ],
+    "gluten-free": [
+      "san gluten"
+    ],
+    "actually": [
+      "an reyalite",
+      " pito"
+    ],
+    "quick": [
+      "rapid"
+    ],
+    "healthy": [
+      "an sante"
+    ],
+    "cheap": [
+      "bon mache"
+    ],
+    "warm": [
+      "cho"
+    ],
+    "filling": [
+      "ki plen vant"
+    ],
+    "high protein": [
+      "plis pwoteyin"
+    ],
+    "kid friendly": [
+      "pou timoun"
+    ],
+    "mild": [
+      "mwens pike"
+    ],
+    "quicker": [
+      "pi rapid"
+    ],
+    "first": [
+      "premye"
+    ],
+    "second": [
+      "dezyèm"
+    ],
+    "third": [
+      "twazyèm"
+    ],
+    "last": [
+      "dènye"
+    ],
+    "show me": [
+      "montre m",
+      "montre mwen"
+    ],
+    "another one": [
+      "yon lòt"
+    ],
+    "show me more": [
+      "montre m plis"
+    ],
+    "start over": [
+      "rekòmanse"
+    ],
+    "clear time limit": [
+      "retire limit tan an"
+    ],
+    "what ingredients do I need": [
+      "ki engredyan mwen bezwen"
+    ],
+    "how long does that take": [
+      "konbyen tan sa pran"
+    ],
+    "how do I make that": [
+      "kijan pou m fè sa"
+    ],
+    "which one is fastest": [
+      "kilès ki pi rapid"
+    ],
+    "which is cheapest": [
+      "kilès ki pi bon mache"
+    ],
+    "compare": [
+      "konpare"
+    ],
+    "I have": [
+      "mwen gen"
+    ],
+    "something": [
+      "yon bagay"
+    ],
+    "a": [
+      "yon"
+    ],
+    "is fine": [
+      "oke"
+    ],
+    "oven": [
+      "fou"
+    ],
+    "skillet": [
+      "chodyè"
+    ],
+    "family": [
+      "fanmi"
+    ],
+    "simple": [
+      "senp"
+    ]
+  },
+  "ko": {
+    "want": [
+      "원해요",
+      "원하는"
+    ],
+    "with": [
+      "넣은",
+      "있는",
+      "하고"
+    ],
+    "without": [
+      "없이",
+      "빼고"
+    ],
+    "and": [
+      "그리고"
+    ],
+    "chicken": [
+      "닭고기"
+    ],
+    "beef": [
+      "소고기"
+    ],
+    "turkey": [
+      "칠면조"
+    ],
+    "eggs": [
+      "달걀",
+      "계란"
+    ],
+    "rice": [
+      "쌀",
+      "밥"
+    ],
+    "cheese": [
+      "치즈"
+    ],
+    "tomatoes": [
+      "토마토"
+    ],
+    "onions": [
+      "양파"
+    ],
+    "broccoli": [
+      "브로콜리"
+    ],
+    "garlic": [
+      "마늘"
+    ],
+    "mushrooms": [
+      "버섯"
+    ],
+    "milk": [
+      "우유"
+    ],
+    "pasta": [
+      "파스타"
+    ],
+    "dinner": [
+      "저녁",
+      "저녁식사"
+    ],
+    "breakfast": [
+      "아침"
+    ],
+    "lunch": [
+      "점심"
+    ],
+    "dessert": [
+      "디저트"
+    ],
+    "under": [
+      "이내",
+      "미만"
+    ],
+    "minutes": [
+      "분"
+    ],
+    "vegetarian": [
+      "채식"
+    ],
+    "vegan": [
+      "비건"
+    ],
+    "dairy-free": [
+      "유제품 없이"
+    ],
+    "gluten-free": [
+      "글루텐 프리"
+    ],
+    "actually": [
+      "대신",
+      "사실"
+    ],
+    "quick": [
+      "빠른",
+      "빨리"
+    ],
+    "healthy": [
+      "건강한"
+    ],
+    "cheap": [
+      "저렴한"
+    ],
+    "warm": [
+      "따뜻한"
+    ],
+    "filling": [
+      "든든한"
+    ],
+    "high protein": [
+      "고단백"
+    ],
+    "kid friendly": [
+      "아이들이 좋아하는"
+    ],
+    "mild": [
+      "덜 매운"
+    ],
+    "quicker": [
+      "더 빠른",
+      "더 빨리"
+    ],
+    "first": [
+      "첫 번째",
+      "첫번째"
+    ],
+    "second": [
+      "두 번째",
+      "두번째"
+    ],
+    "third": [
+      "세 번째",
+      "세번째"
+    ],
+    "last": [
+      "마지막"
+    ],
+    "show me": [
+      "보여줘",
+      "보여주세요"
+    ],
+    "another one": [
+      "다른 것",
+      "다른 걸"
+    ],
+    "show me more": [
+      "더 보여줘"
+    ],
+    "start over": [
+      "다시 시작"
+    ],
+    "clear time limit": [
+      "시간 제한 없애줘"
+    ],
+    "what ingredients do I need": [
+      "어떤 재료가 필요해"
+    ],
+    "how long does that take": [
+      "얼마나 걸려"
+    ],
+    "how do I make that": [
+      "어떻게 만들어"
+    ],
+    "which one is fastest": [
+      "어떤 게 가장 빨라"
+    ],
+    "which is cheapest": [
+      "어떤 게 가장 저렴해"
+    ],
+    "compare": [
+      "비교해"
+    ],
+    "I have": [
+      "있어요",
+      "가지고 있어요"
+    ],
+    "something": [
+      "뭔가"
+    ],
+    "a": [
+      "하나"
+    ],
+    "is fine": [
+      "괜찮아"
+    ],
+    "oven": [
+      "오븐"
+    ],
+    "skillet": [
+      "프라이팬"
+    ],
+    "family": [
+      "가족"
+    ],
+    "simple": [
+      "간단한"
+    ]
+  },
+  "ar": {
+    "want": [
+      "أريد"
+    ],
+    "with": [
+      "مع"
+    ],
+    "without": [
+      "بدون",
+      "بلا"
+    ],
+    "and": [
+      "و"
+    ],
+    "chicken": [
+      "دجاج",
+      "الدجاج"
+    ],
+    "beef": [
+      "لحم البقر"
+    ],
+    "turkey": [
+      "ديك رومي"
+    ],
+    "eggs": [
+      "بيض"
+    ],
+    "rice": [
+      "أرز",
+      "الأرز"
+    ],
+    "cheese": [
+      "جبن",
+      "الجبن"
+    ],
+    "tomatoes": [
+      "طماطم"
+    ],
+    "onions": [
+      "بصل"
+    ],
+    "broccoli": [
+      "بروكلي"
+    ],
+    "garlic": [
+      "ثوم"
+    ],
+    "mushrooms": [
+      "فطر"
+    ],
+    "milk": [
+      "حليب"
+    ],
+    "pasta": [
+      "معكرونة"
+    ],
+    "dinner": [
+      "عشاء",
+      "العشاء"
+    ],
+    "breakfast": [
+      "فطور"
+    ],
+    "lunch": [
+      "غداء"
+    ],
+    "dessert": [
+      "حلوى"
+    ],
+    "under": [
+      "أقل من"
+    ],
+    "minutes": [
+      "دقيقة",
+      "دقائق"
+    ],
+    "vegetarian": [
+      "نباتي"
+    ],
+    "vegan": [
+      "نباتي صرف"
+    ],
+    "dairy-free": [
+      "بدون منتجات الألبان"
+    ],
+    "gluten-free": [
+      "بدون غلوتين"
+    ],
+    "actually": [
+      "في الواقع",
+      "بدلاً من ذلك"
+    ],
+    "quick": [
+      "سريع"
+    ],
+    "healthy": [
+      "صحي"
+    ],
+    "cheap": [
+      "رخيص"
+    ],
+    "warm": [
+      "دافئ"
+    ],
+    "filling": [
+      "مشبع"
+    ],
+    "high protein": [
+      "عالي البروتين"
+    ],
+    "kid friendly": [
+      "للأطفال"
+    ],
+    "mild": [
+      "أقل حارة"
+    ],
+    "quicker": [
+      "أسرع"
+    ],
+    "first": [
+      "الأول"
+    ],
+    "second": [
+      "الثاني"
+    ],
+    "third": [
+      "الثالث"
+    ],
+    "last": [
+      "الأخير"
+    ],
+    "show me": [
+      "أرني"
+    ],
+    "another one": [
+      "واحد آخر"
+    ],
+    "show me more": [
+      "أرني المزيد"
+    ],
+    "start over": [
+      "ابدأ من جديد"
+    ],
+    "clear time limit": [
+      "أزل حد الوقت"
+    ],
+    "what ingredients do I need": [
+      "ما المكونات التي أحتاجها"
+    ],
+    "how long does that take": [
+      "كم يستغرق"
+    ],
+    "how do I make that": [
+      "كيف أعده"
+    ],
+    "which one is fastest": [
+      "أيها الأسرع"
+    ],
+    "which is cheapest": [
+      "أيها الأرخص"
+    ],
+    "compare": [
+      "قارن"
+    ],
+    "I have": [
+      "لدي"
+    ],
+    "something": [
+      "شيء"
+    ],
+    "a": [
+      "وجبة"
+    ],
+    "is fine": [
+      "لا بأس"
+    ],
+    "oven": [
+      "فرن"
+    ],
+    "skillet": [
+      "مقلاة"
+    ],
+    "family": [
+      "عائلة"
+    ],
+    "simple": [
+      "بسيط"
+    ]
+  },
+  "fr": {
+    "want": [
+      "je veux",
+      "je voudrais"
+    ],
+    "with": [
+      "avec"
+    ],
+    "without": [
+      "sans"
+    ],
+    "and": [
+      "et"
+    ],
+    "chicken": [
+      "poulet"
+    ],
+    "beef": [
+      "bœuf",
+      "boeuf"
+    ],
+    "turkey": [
+      "dinde"
+    ],
+    "eggs": [
+      "œufs",
+      "oeufs"
+    ],
+    "rice": [
+      "riz"
+    ],
+    "cheese": [
+      "fromage"
+    ],
+    "tomatoes": [
+      "tomates",
+      "tomate"
+    ],
+    "onions": [
+      "oignons",
+      "oignon"
+    ],
+    "broccoli": [
+      "brocoli"
+    ],
+    "garlic": [
+      "ail"
+    ],
+    "mushrooms": [
+      "champignons"
+    ],
+    "milk": [
+      "lait"
+    ],
+    "pasta": [
+      "pâtes"
+    ],
+    "dinner": [
+      "dîner",
+      "diner"
+    ],
+    "breakfast": [
+      "petit-déjeuner",
+      "petit déjeuner"
+    ],
+    "lunch": [
+      "déjeuner"
+    ],
+    "dessert": [
+      "dessert"
+    ],
+    "under": [
+      "en moins de",
+      "moins de"
+    ],
+    "minutes": [
+      "minutes",
+      "minute"
+    ],
+    "vegetarian": [
+      "végétarien",
+      "végétarienne"
+    ],
+    "vegan": [
+      "végétalien",
+      "végan"
+    ],
+    "dairy-free": [
+      "sans produits laitiers"
+    ],
+    "gluten-free": [
+      "sans gluten"
+    ],
+    "actually": [
+      "en fait",
+      "plutôt"
+    ],
+    "quick": [
+      "rapide"
+    ],
+    "healthy": [
+      "sain",
+      "saine"
+    ],
+    "cheap": [
+      "pas cher",
+      "économique"
+    ],
+    "warm": [
+      "chaud",
+      "chaude"
+    ],
+    "filling": [
+      "rassasiant"
+    ],
+    "high protein": [
+      "riche en protéines"
+    ],
+    "kid friendly": [
+      "pour les enfants"
+    ],
+    "mild": [
+      "moins épicé"
+    ],
+    "quicker": [
+      "plus rapide"
+    ],
+    "first": [
+      "premier",
+      "première"
+    ],
+    "second": [
+      "deuxième",
+      "second"
+    ],
+    "third": [
+      "troisième"
+    ],
+    "last": [
+      "dernier",
+      "dernière"
+    ],
+    "show me": [
+      "montre-moi",
+      "montrez-moi"
+    ],
+    "another one": [
+      "un autre",
+      "une autre"
+    ],
+    "show me more": [
+      "montre-moi plus"
+    ],
+    "start over": [
+      "recommençons",
+      "recommencer"
+    ],
+    "clear time limit": [
+      "supprime la limite de temps"
+    ],
+    "what ingredients do I need": [
+      "quels ingrédients me faut-il"
+    ],
+    "how long does that take": [
+      "combien de temps ça prend"
+    ],
+    "how do I make that": [
+      "comment le préparer"
+    ],
+    "which one is fastest": [
+      "lequel est le plus rapide"
+    ],
+    "which is cheapest": [
+      "lequel est le moins cher"
+    ],
+    "compare": [
+      "compare",
+      "comparer"
+    ],
+    "I have": [
+      "j’ai",
+      "j'ai"
+    ],
+    "something": [
+      "quelque chose"
+    ],
+    "a": [
+      "un",
+      "une"
+    ],
+    "is fine": [
+      "convient",
+      "c’est bon"
+    ],
+    "oven": [
+      "four"
+    ],
+    "skillet": [
+      "poêle"
+    ],
+    "family": [
+      "famille"
+    ],
+    "simple": [
+      "simple",
+      "facile"
+    ]
+  },
+  "ur": {
+    "want": [
+      "چاہیے",
+      "چاہتا ہوں"
+    ],
+    "with": [
+      "کے ساتھ"
+    ],
+    "without": [
+      "بغیر"
+    ],
+    "and": [
+      "اور"
+    ],
+    "chicken": [
+      "مرغی",
+      "چکن"
+    ],
+    "beef": [
+      "گائے کا گوشت"
+    ],
+    "turkey": [
+      "ٹرکی"
+    ],
+    "eggs": [
+      "انڈے"
+    ],
+    "rice": [
+      "چاول"
+    ],
+    "cheese": [
+      "پنیر"
+    ],
+    "tomatoes": [
+      "ٹماٹر"
+    ],
+    "onions": [
+      "پیاز"
+    ],
+    "broccoli": [
+      "بروکلی"
+    ],
+    "garlic": [
+      "لہسن"
+    ],
+    "mushrooms": [
+      "مشروم"
+    ],
+    "milk": [
+      "دودھ"
+    ],
+    "pasta": [
+      "پاستا"
+    ],
+    "dinner": [
+      "رات کا کھانا"
+    ],
+    "breakfast": [
+      "ناشتہ"
+    ],
+    "lunch": [
+      "دوپہر کا کھانا"
+    ],
+    "dessert": [
+      "میٹھا"
+    ],
+    "under": [
+      "سے کم",
+      "کے اندر"
+    ],
+    "minutes": [
+      "منٹ"
+    ],
+    "vegetarian": [
+      "سبزی خور"
+    ],
+    "vegan": [
+      "ویگن"
+    ],
+    "dairy-free": [
+      "دودھ کی مصنوعات کے بغیر"
+    ],
+    "gluten-free": [
+      "گلوٹن کے بغیر"
+    ],
+    "actually": [
+      "اصل میں",
+      "بلکہ"
+    ],
+    "quick": [
+      "جلدی"
+    ],
+    "healthy": [
+      "صحت مند"
+    ],
+    "cheap": [
+      "سستا"
+    ],
+    "warm": [
+      "گرم"
+    ],
+    "filling": [
+      "پیٹ بھرنے والا"
+    ],
+    "high protein": [
+      "زیادہ پروٹین"
+    ],
+    "kid friendly": [
+      "بچوں کے لیے"
+    ],
+    "mild": [
+      "کم مرچ"
+    ],
+    "quicker": [
+      "اور جلدی"
+    ],
+    "first": [
+      "پہلا",
+      "پہلی"
+    ],
+    "second": [
+      "دوسرا",
+      "دوسری"
+    ],
+    "third": [
+      "تیسرا",
+      "تیسری"
+    ],
+    "last": [
+      "آخری"
+    ],
+    "show me": [
+      "دکھائیں",
+      "دکھاؤ"
+    ],
+    "another one": [
+      "کوئی اور"
+    ],
+    "show me more": [
+      "مزید دکھائیں"
+    ],
+    "start over": [
+      "دوبارہ شروع"
+    ],
+    "clear time limit": [
+      "وقت کی حد ہٹا دیں"
+    ],
+    "what ingredients do I need": [
+      "کون سے اجزاء چاہیے"
+    ],
+    "how long does that take": [
+      "کتنا وقت لگے گا"
+    ],
+    "how do I make that": [
+      "کیسے بناؤں"
+    ],
+    "which one is fastest": [
+      "کون سا سب سے جلدی بنتا ہے"
+    ],
+    "which is cheapest": [
+      "کون سا سب سے سستا ہے"
+    ],
+    "compare": [
+      "موازنہ کریں"
+    ],
+    "I have": [
+      "میرے پاس"
+    ],
+    "something": [
+      "کچھ"
+    ],
+    "a": [
+      "ایک"
+    ],
+    "is fine": [
+      "ٹھیک ہے"
+    ],
+    "oven": [
+      "اوون"
+    ],
+    "skillet": [
+      "کڑاہی"
+    ],
+    "family": [
+      "خاندان"
+    ],
+    "simple": [
+      "آسان"
+    ]
+  },
+  "pl": {
+    "want": [
+      "chcę"
+    ],
+    "with": [
+      "z",
+      "ze"
+    ],
+    "without": [
+      "bez"
+    ],
+    "and": [
+      "i"
+    ],
+    "chicken": [
+      "kurczakiem",
+      "kurczak",
+      "kurczaka"
+    ],
+    "beef": [
+      "wołowina",
+      "wołowiną",
+      "wołowiny"
+    ],
+    "turkey": [
+      "indykiem",
+      "indyk"
+    ],
+    "eggs": [
+      "jajka",
+      "jajkami"
+    ],
+    "rice": [
+      "ryż",
+      "ryżu",
+      "ryżem"
+    ],
+    "cheese": [
+      "ser",
+      "sera",
+      "serem"
+    ],
+    "tomatoes": [
+      "pomidory",
+      "pomidorami"
+    ],
+    "onions": [
+      "cebula",
+      "cebulą"
+    ],
+    "broccoli": [
+      "brokuły"
+    ],
+    "garlic": [
+      "czosnek",
+      "czosnku"
+    ],
+    "mushrooms": [
+      "grzyby",
+      "grzybów"
+    ],
+    "milk": [
+      "mleko",
+      "mleka"
+    ],
+    "pasta": [
+      "makaron",
+      "makaronem"
+    ],
+    "dinner": [
+      "kolacja",
+      "kolację",
+      "obiad"
+    ],
+    "breakfast": [
+      "śniadanie"
+    ],
+    "lunch": [
+      "lunch"
+    ],
+    "dessert": [
+      "deser"
+    ],
+    "under": [
+      "poniżej",
+      "w mniej niż"
+    ],
+    "minutes": [
+      "minut",
+      "minuty"
+    ],
+    "vegetarian": [
+      "wegetariańskie",
+      "wegetariański"
+    ],
+    "vegan": [
+      "wegańskie",
+      "wegański"
+    ],
+    "dairy-free": [
+      "bez nabiału"
+    ],
+    "gluten-free": [
+      "bez glutenu"
+    ],
+    "actually": [
+      "właściwie",
+      "jednak"
+    ],
+    "quick": [
+      "szybko",
+      "szybkie"
+    ],
+    "healthy": [
+      "zdrowe",
+      "zdrowy"
+    ],
+    "cheap": [
+      "tanie",
+      "tani"
+    ],
+    "warm": [
+      "ciepłe"
+    ],
+    "filling": [
+      "sycące"
+    ],
+    "high protein": [
+      "wysokobiałkowe"
+    ],
+    "kid friendly": [
+      "dla dzieci"
+    ],
+    "mild": [
+      "mniej ostre"
+    ],
+    "quicker": [
+      "szybciej"
+    ],
+    "first": [
+      "pierwszy",
+      "pierwsze"
+    ],
+    "second": [
+      "drugi",
+      "drugie"
+    ],
+    "third": [
+      "trzeci",
+      "trzecie"
+    ],
+    "last": [
+      "ostatni",
+      "ostatnie"
+    ],
+    "show me": [
+      "pokaż mi",
+      "pokaż"
+    ],
+    "another one": [
+      "inny",
+      "inne"
+    ],
+    "show me more": [
+      "pokaż więcej"
+    ],
+    "start over": [
+      "zacznij od nowa"
+    ],
+    "clear time limit": [
+      "usuń limit czasu"
+    ],
+    "what ingredients do I need": [
+      "jakich składników potrzebuję"
+    ],
+    "how long does that take": [
+      "ile to trwa"
+    ],
+    "how do I make that": [
+      "jak to zrobić"
+    ],
+    "which one is fastest": [
+      "który jest najszybszy"
+    ],
+    "which is cheapest": [
+      "który jest najtańszy"
+    ],
+    "compare": [
+      "porównaj"
+    ],
+    "I have": [
+      "mam"
+    ],
+    "something": [
+      "coś"
+    ],
+    "a": [
+      "jakieś"
+    ],
+    "is fine": [
+      "jest w porządku"
+    ],
+    "oven": [
+      "piekarnik"
+    ],
+    "skillet": [
+      "patelnia"
+    ],
+    "family": [
+      "rodzina"
+    ],
+    "simple": [
+      "proste"
+    ]
+  }
+}

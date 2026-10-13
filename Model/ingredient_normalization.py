@@ -645,6 +645,26 @@ def extract_quantity_and_unit(text: str) -> tuple[float | None, float | None, fl
     return first, None, None, unit, rest
 
 
+def contextual_ingredient_text(text: str) -> str:
+    """Keep food evidence while removing a leading recipe quantity/unit.
+
+    Unlike canonical-name normalization, this retains dietary/state/cut words.
+    A bare clove-spice request remains intact; clove + garlic is a count phrase.
+    """
+    quantity, _, _, unit, remainder = extract_quantity_and_unit(text)
+    if quantity is not None and unit in ('clove', 'stalk', 'bunch') and remainder.strip():
+        return remainder.strip()
+    if unit:
+        return str(text).strip()
+    result = re.sub(r'^\s*cloves?\s+(?=garlic\b)', '', str(text), flags=re.I)
+    if quantity is not None:
+        cleaned = re.sub(r'^\s*(?:heads?\s+(?=garlic|lettuce|cabbage)|sprigs?\s+|stalks?\s+|bunch(?:es)?\s+|slices?\s+|(?:leaf|leaves)\s+)(?:of\s+)?', '', remainder, flags=re.I)
+        if cleaned != remainder:
+            result = cleaned
+    return result.strip()
+
+
+
 def split_alternatives(text: str) -> tuple[str, list[str]]:
     alternatives = []
     cleaned = text
@@ -896,7 +916,8 @@ def classify_product_record(
     if score < 35:
         exclusion_reasons.append("no usable price or product evidence")
 
-    fingerprint = (normalized_name, str(price or "").strip(), normalize_text(str(unit or "")))
+    fingerprint = (("source_id", str(product["source_id"]), source) if product.get("source_id") else
+                   (normalized_name, str(price or "").strip(), normalize_text(str(unit or ""))))
     if seen_fingerprints is not None:
         if fingerprint in seen_fingerprints:
             exclusion_reasons.append("duplicate scraper artifact")
@@ -957,18 +978,37 @@ def parse_package_size(value: str | None) -> tuple[float | None, str | None, flo
     text = normalize_package_text(value or "")
     if not text:
         return None, None, None, None
-    match = re.search(r"(?P<count>\d+(?:\.\d+)?)\s*x\s*(?P<amount>\d+(?:\.\d+)?)\s*(?P<unit>fl oz|fluid ounce|oz|lb|pound|g|gram|kg|ct|count|each|ml|l|liter)", text)
-    if match:
-        quantity = float(match.group("count")) * float(match.group("amount"))
-        unit = normalize_unit(match.group("unit"))
-    else:
-        match = re.search(r"(?P<amount>\d+(?:\.\d+)?)\s*(?P<unit>fl oz|fluid ounce|oz|lb|pound|g|gram|kg|ct|count|each|ml|l|liter|pack)\b", text)
-        if not match:
+    if text in {'each', 'ea', 'ct', 'count'}:
+        unit = 'each' if text in {'each', 'ea'} else 'count'
+        return 1.0, unit, 1.0, unit
+    # A range is not a fixed checkout package. Never parse its upper endpoint.
+    if re.search(r"\d\s*-\s*\d", text):
+        return None, None, None, None
+    number = r"(?:\d+\s+\d+/\d+|\d+/\d+|\d+(?:\.\d+)?)"
+    units = r"fl oz|fluid ounces?|oz|ounces?|lbs?|pounds?|kg|kilograms?|g|grams?|ct|count|each|ml|l|liters?|pints?|quarts?|gallons?|gal|pack"
+    tokens = list(re.finditer(rf"(?<![\d./])(?P<amount>{number})\s*(?P<unit>{units})\b", text))
+    if re.search(r"\d\s*x\s*\d", text):
+        multi = re.search(rf"(?P<count>\d+)\s*x\s*(?P<amount>{number})\s*(?P<unit>{units})\b", text)
+        if not multi:
             return None, None, None, None
-        quantity = float(match.group("amount"))
-        unit = normalize_unit(match.group("unit"))
-    base_quantity, base_unit = to_base_unit(quantity, unit)
-    return quantity, unit, base_quantity, base_unit
+        quantity = float(multi.group('count')) * parse_number(multi.group('amount'))
+        unit = normalize_unit(multi.group('unit'))
+        base_quantity, base_unit = to_base_unit(quantity, unit)
+        return quantity, unit, base_quantity, base_unit
+    if len(tokens) > 1:
+        parsed = [(parse_number(m.group('amount')), normalize_unit(m.group('unit'))) for m in tokens]
+        # Mixed lb/oz is one mass; multiple unrelated package numbers abstain.
+        if [u for _, u in parsed] == ['pound', 'ounce']:
+            quantity = parsed[0][0] * 16 + parsed[1][0]
+            base_quantity, base_unit = to_base_unit(quantity, 'ounce')
+            return quantity, 'ounce', base_quantity, base_unit
+        return None, None, None, None
+    if tokens:
+        quantity = parse_number(tokens[0].group('amount'))
+        unit = normalize_unit(tokens[0].group('unit'))
+        base_quantity, base_unit = to_base_unit(quantity, unit)
+        return quantity, unit, base_quantity, base_unit
+    return None, None, None, None
 
 
 def validate_package_parse(
@@ -1017,6 +1057,9 @@ def to_base_unit(quantity: float, unit: str | None) -> tuple[float | None, str |
         "fluid ounce": (29.5735, "milliliter"),
         "liter": (1000, "milliliter"),
         "milliliter": (1, "milliliter"),
+        "pint": (473.176, "milliliter"),
+        "quart": (946.353, "milliliter"),
+        "gallon": (3785.41, "milliliter"),
     }
     factor, base = conversions.get(unit, (1, unit))
     return round(quantity * factor, 3), base
@@ -1105,7 +1148,7 @@ def extract_product_features(
     category = product.get("category")
     subcategory = product.get("subcategory")
     inferred_category, inferred_subcategory = infer_category(normalized_name)
-    package_source_text = product.get("package_size") or product.get("unit") or ""
+    package_source_text = product.get("raw_size_text") or product.get("package_size") or product.get("unit") or ""
     package_quantity, package_unit, package_quantity_base, base_unit = parse_package_size(package_source_text)
     package_confidence, package_source, package_warnings = validate_package_parse(
         package_quantity,
@@ -1113,6 +1156,28 @@ def extract_product_features(
         package_source_text,
         source_name,
     )
+    if product.get("size_evidence_source") == "pdf_layout_unverified":
+        package_confidence = "low"
+        package_warnings.append("PDF neighboring size is unverified; excluded from cost optimization")
+    if re.search(r"\d\s*-\s*\d", normalize_package_text(package_source_text)):
+        package_confidence = "low"
+        package_warnings.append("package size range is not a fixed package")
+    if package_quantity is None and re.search(r"\d", package_source_text):
+        package_confidence = "low"
+        package_warnings.append("unrecognized or ambiguous source package size; not optimized")
+    if re.search(r"\b(?:average weight|lb avg|variable weight)\b", normalize_package_text(source_name)):
+        package_confidence = "low"
+        package_warnings.append("estimated package weight is not an exact checkout weight")
+    raw_price = product.get("price")
+    rate_text = product.get("raw_pricing_unit_text") or ""
+    weight_rate = re.fullmatch(r"\s*\$\d+(?:\.\d{1,2})?\s*/\s*(?:lb|pound|oz|ounce|kg|g|gram)\s*", rate_text, re.I)
+    if weight_rate and parse_price_value(rate_text) == parse_price_value(raw_price):
+        # Preserve an explicit source price basis, not a comparison unit price
+        # with a different amount. The existing cost engine handles this rate.
+        raw_price = rate_text
+        if package_unit not in {'pound', 'ounce', 'gram', 'kilogram'}:
+            package_confidence = 'low'
+            package_warnings.append('weight price without an exact package weight')
     feature = {
         "product_id": product.get("id") or stable_product_id(product, index),
         "original_product_name": source_name,
@@ -1122,11 +1187,20 @@ def extract_product_features(
         "source_quality_score": classification["source_quality_score"],
         "quality_notes": classification.get("quality_notes", []),
         "eligible_for_retrieval": classification["eligible_for_retrieval"],
-        "raw_price": product.get("price"),
+        "raw_price": raw_price,
+        "source_current_price_text": product.get("price"),
+        "raw_pricing_unit_text": rate_text,
         "raw_original_price": product.get("original_price"),
         "raw_sale_price": product.get("sale_price"),
         "is_on_sale": product.get("is_on_sale") is True,
         "raw_unit_text": package_source_text,
+        "raw_size_text": package_source_text,
+        "source_id": product.get("source_id"),
+        "source_url": product.get("source_url") or product.get("notes"),
+        "store_id": product.get("store_id"),
+        "availability": product.get("availability"),
+        "item_ebt": product.get("item_ebt"),
+        "source_categories": product.get("source_categories", []),
         "price": parse_price_value(product.get("price")),
         "canonical_name": canonical_for_product(normalized_name),
         "brand": product.get("brand") or infer_brand(source_name),

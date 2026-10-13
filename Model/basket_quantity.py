@@ -28,7 +28,7 @@ from product_compatibility import (
     profile_from_query,
 )
 
-OPTIMIZER_VERSION = "basket-optimizer-v2"
+OPTIMIZER_VERSION = "basket-optimizer-v4-quality-constrained"
 
 
 UNKNOWN = "UNKNOWN"
@@ -263,6 +263,21 @@ class PurchaseEvaluation:
     exclusion_reasons: list[str] = field(default_factory=list)
     reason_codes: list[str] = field(default_factory=list)
     source_quality_score: float | None = None
+
+    ingredient_query: str = ""
+    match_type: str = "NONE"
+    match_score: float = 0.0
+    quality_tier: str | None = None
+    package_price: float | None = None
+    effective_cost: float | None = None
+    packages_needed: float | None = None
+    waste_ratio: float | None = None
+    deal_confidence: str = "low"
+    deal_score: tuple[Any, ...] = ()
+    selection_reason: str = ""
+    regular_price: float | None = None
+    sale_price: float | None = None
+    effective_current_price: float | None = None
 
     def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)
@@ -525,6 +540,10 @@ def parse_package_info(feature: dict[str, Any] | None) -> PackageInfo:
 
 
 def parse_price_info(value: Any, feature: dict[str, Any] | None = None) -> PriceInfo:
+    if feature and feature.get("sale_price") is not None:
+        sale = parse_price_info(feature["sale_price"])
+        if sale.checkout_price is not None and math.isfinite(sale.checkout_price) and sale.checkout_price > 0 and not sale.price_unit and sale.deal_quantity == 1:
+            return sale
     raw = str(value if value not in (None, "") else (feature or {}).get("price") or "")
     text = raw.replace(",", "")
     if isinstance(value, (int, float)):
@@ -671,6 +690,11 @@ def ingredient_aggregation_signature(ingredient_text: str) -> tuple[str, dict[st
         profile.flavor or "",
         ",".join(sorted(profile.dietary_requirements)),
     ]
+    # Legacy profiles omit some ontology dimensions (vinegar subtype/oil grade).
+    identity = profile.ontology.to_dict()
+    for key in ("normalized_text", "evidence"):
+        identity.pop(key, None)
+    parts.append(json.dumps(identity, sort_keys=True))
     return "|".join(parts), parsed
 
 
@@ -681,6 +705,7 @@ def candidate_purchase_evaluation(
     ingredient_key: str,
     optimization_mode: str,
     top1_product_id: str | None = None,
+    allow_substitutions: bool = False,
 ) -> PurchaseEvaluation:
     package = parse_package_info(feature)
     coverage = calculate_coverage(required, package, ingredient_key)
@@ -689,44 +714,30 @@ def candidate_purchase_evaluation(
     exclusion_reasons = []
     if ranked.conflicts and any(conflict.get("classification") == "hard_reject" for conflict in ranked.conflicts):
         exclusion_reasons.append("hard compatibility conflict")
-    if ranked.confidence in {LOW, NO_SAFE_MATCH, SUBSTITUTION_ONLY}:
+    if ranked.confidence in {LOW, NO_SAFE_MATCH} or (ranked.confidence == SUBSTITUTION_ONLY and not allow_substitutions):
         exclusion_reasons.append("below minimum compatibility confidence")
     if feature.get("eligible_for_retrieval") is False:
         exclusion_reasons.append("not eligible for retrieval")
     if feature.get("source_quality_score") is not None and feature.get("source_quality_score") < 35:
         exclusion_reasons.append("insufficient source quality")
-    if not package.eligible_for_optimization and not package.sold_by_weight:
-        exclusion_reasons.append("package metadata is not trustworthy for optimization")
-    if cost.checkout_cost is None:
-        exclusion_reasons.append("checkout cost unavailable")
-    if coverage.coverage is None or coverage.coverage < 1.0:
-        exclusion_reasons.append("insufficient quantity coverage")
+    from deal_optimizer import quality_tier
+    match_score = ranked.final_score
+    match_type = ranked.match_type.upper()
+    # Legacy adapters lack a typed identity; only their explicitly safe confidence
+    # may enter the equivalent pool. Real matcher NONE decisions remain excluded.
+    if match_type == "NONE" and not ranked.ontology and ranked.confidence not in {LOW, NO_SAFE_MATCH, SUBSTITUTION_ONLY}:
+        match_type = "EQUIVALENT"
+    tier = quality_tier(match_score)
+    if match_type == "SUBSTITUTE" and allow_substitutions and math.isfinite(match_score) and match_score >= .65:
+        tier = "S"
+    if match_type == "NONE" or tier is None:
+        exclusion_reasons.append("below match quality floor or no identity match")
+    if match_type == "SUBSTITUTE" and not allow_substitutions:
+        exclusion_reasons.append("substitution mode disabled")
     waste = coverage.leftover_percentage if coverage.leftover_percentage is not None else 1.0
     checkout = cost.checkout_cost if cost.checkout_cost is not None else float("inf")
-    effective = cost.effective_ingredient_cost if cost.effective_ingredient_cost is not None else float("inf")
-    trusted_package = 0 if package.eligible_for_optimization or package.sold_by_weight else 1
-    changed_penalty = 0 if ranked.product_id == top1_product_id else 1
-    if optimization_mode == "lowest_checkout_cost":
-        score = (checkout, trusted_package, waste, effective, -confidence_rank(ranked.confidence), -ranked.final_score)
-    elif optimization_mode == "lowest_effective_cost":
-        score = (effective, trusted_package, checkout, waste, -confidence_rank(ranked.confidence), -ranked.final_score)
-    elif optimization_mode == "least_waste":
-        score = (waste, checkout, effective, trusted_package, -confidence_rank(ranked.confidence), -ranked.final_score)
-    else:
-        score = (
-            bool(exclusion_reasons),
-            trusted_package,
-            checkout,
-            waste,
-            effective,
-            changed_penalty,
-            -confidence_rank(ranked.confidence),
-            -ranked.final_score,
-            -(feature.get("source_quality_score") if feature.get("source_quality_score") is not None else 100),
-        )
-    if package.variable_weight or package.sold_by_weight:
-        exclusion_reasons = [reason for reason in exclusion_reasons if reason != "package metadata is not trustworthy for optimization"]
-    return PurchaseEvaluation(
+    score = ()  # Assigned by the constrained deal layer below.
+    evaluation = PurchaseEvaluation(
         ranked.product_id,
         ranked.product_name,
         required,
@@ -744,38 +755,32 @@ def candidate_purchase_evaluation(
         feature.get("source_quality_score"),
     )
 
-
-def material_improvement(selected: PurchaseEvaluation, top1: PurchaseEvaluation | None, mode: str) -> tuple[bool, str]:
-    if top1 is None or selected.product_id == top1.product_id:
-        return False, "matcher top-1 retained"
-    if selected.exclusion_reasons:
-        return False, "selected alternative has exclusions"
-    if top1.cost.checkout_cost is None:
-        return True, "selected product has trustworthy checkout cost while top-1 does not"
-    if selected.cost.checkout_cost is None:
-        return False, "selected product lacks checkout cost"
-    checkout_savings = top1.cost.checkout_cost - selected.cost.checkout_cost
-    waste_delta = (top1.coverage.leftover_percentage or 1.0) - (selected.coverage.leftover_percentage or 1.0)
-    if mode == "least_waste" and waste_delta > 0.05:
-        return True, "selected product materially reduces waste"
-    if checkout_savings >= 0.50:
-        return True, "selected product materially lowers checkout cost"
-    if mode == "lowest_effective_cost" and top1.cost.effective_ingredient_cost and selected.cost.effective_ingredient_cost:
-        if top1.cost.effective_ingredient_cost - selected.cost.effective_ingredient_cost >= 0.25:
-            return True, "selected product materially lowers effective ingredient cost"
-    return False, "matcher top-1 retained because alternative improvement was not material"
+    evaluation.ingredient_query = ingredient_key
+    evaluation.match_type = match_type
+    evaluation.match_score = match_score
+    evaluation.quality_tier = tier
+    evaluation.package_price = price.checkout_price
+    evaluation.effective_current_price = price.checkout_price
+    evaluation.regular_price = parse_price_info(feature.get("regular_price") or feature.get("price")).checkout_price
+    evaluation.sale_price = parse_price_info(feature.get("sale_price")).checkout_price
+    evaluation.effective_cost = cost.checkout_cost
+    evaluation.packages_needed = coverage.packages_required
+    evaluation.waste_ratio = coverage.leftover_percentage
+    evaluation.deal_confidence = "high" if cost.checkout_cost is not None and coverage.coverage == 1 and (package.eligible_for_optimization or package.sold_by_weight) else "low"
+    evaluation.deal_score = ({"A": 0, "B": 1, "C": 2, "S": 3}.get(tier, 4),
+                             {"EXACT": 0, "EQUIVALENT": 1, "SUBSTITUTE": 2}.get(match_type, 3), checkout, waste, -match_score)
+    evaluation.optimization_score = evaluation.deal_score
+    return evaluation
 
 
 def recipe_ingredients(recipe: Any, recipe_index: int = 0) -> tuple[str, list[str]]:
-    if isinstance(recipe, dict):
-        recipe_id = str(recipe.get("id") or recipe.get("name") or f"recipe-{recipe_index + 1}")
-        ingredients = recipe.get("ingredients") or recipe.get("ingredient_lines") or []
-    else:
-        recipe_id = f"recipe-{recipe_index + 1}"
-        ingredients = recipe
-    if isinstance(ingredients, str):
-        ingredients = [line.strip() for line in re.split(r"[\n;]+", ingredients) if line.strip()]
-    return recipe_id, [str(item) for item in ingredients if str(item).strip()]
+    from recipe_ingredient_adapter import canonical_recipe_ingredients
+
+    recipe_id = str(recipe.get("id") or recipe.get("name") or f"recipe-{recipe_index + 1}") if isinstance(recipe, dict) else f"recipe-{recipe_index + 1}"
+    canonical = canonical_recipe_ingredients(recipe)
+    # Keep raw text rows stable for plain-text recipes; structured labels use the
+    # adapter's identity-preserving matcher text instead of dict repr strings.
+    return recipe_id, [item.raw_text if item.source_schema == "raw_text_line" else item.matcher_text for item in canonical]
 
 
 class BasketBuilder:
@@ -979,7 +984,7 @@ class BasketBuilder:
             feature = self.match_service.feature_by_id.get(ranked.product_id, {})
             if not feature:
                 continue
-            evaluation = candidate_purchase_evaluation(ranked, feature, required, ingredient_key, optimization_mode, top1_product_id)
+            evaluation = candidate_purchase_evaluation(ranked, feature, required, ingredient_key, optimization_mode, top1_product_id, getattr(self.match_service, "match_mode", "exact") == "substitute")
             if evaluation.exclusion_reasons:
                 rejected.append(evaluation)
             else:
@@ -991,19 +996,16 @@ class BasketBuilder:
             feature = self.match_service.feature_by_id.get(ranked.product_id, {})
             if not feature:
                 continue
-            evaluation = candidate_purchase_evaluation(ranked, feature, required, ingredient_key, optimization_mode, top1_product_id)
+            evaluation = candidate_purchase_evaluation(ranked, feature, required, ingredient_key, optimization_mode, top1_product_id, getattr(self.match_service, "match_mode", "exact") == "substitute")
             if not evaluation.exclusion_reasons:
                 evaluation.exclusion_reasons.append("not compatible with ingredient requirements")
             rejected.append(evaluation)
-        top1_eval = next((item for item in evaluations + rejected if item.product_id == top1_product_id), None)
+        from deal_optimizer import DealOptimizer
         viable = sorted(evaluations, key=lambda item: item.optimization_score)
-        provisional = viable[0] if viable else top1_eval
-        changed, explanation = material_improvement(provisional, top1_eval, optimization_mode) if provisional else (False, "no viable optimized purchase")
-        selected = provisional if changed or top1_eval is None else top1_eval
-        if selected and selected.exclusion_reasons and viable:
-            selected = viable[0]
-            changed = selected.product_id != top1_product_id
-            explanation = "matcher top-1 unavailable for package optimization; selected best trusted compatible package"
+        selected, explanation = DealOptimizer().select(viable, top1_product_id, optimization_mode)
+        changed = bool(selected and selected.product_id != top1_product_id)
+        if selected:
+            selected.selection_reason = explanation
         alternatives = [item for item in viable if not selected or item.product_id != selected.product_id]
         warnings = sorted(set(w for item in evaluations + rejected for w in item.coverage.warnings + item.cost.warnings))
         return OptimizedPurchase(selected, alternatives, rejected, optimization_mode, changed, explanation, warnings)

@@ -2,19 +2,21 @@ services:
   - type: web
     name: snapp-api
     runtime: python
-    plan: free
+    plan: 1c-2g
     rootDir: Model
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 120 model:app
-    healthCheckPath: /health
+    buildCommand: python -m pip install --upgrade pip==26.2 && python -m pip install -r requirements.txt
+    startCommand: python security_config.py && gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 120 model:app
+    healthCheckPath: /ready
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.15"
       - key: OPENAI_API_KEY
         sync: false
       - key: APIFY_API_TOKEN
         sync: false
       - key: APIFY_TRADER_JOES_ACTOR_ID
         value: merry_arctic~trader-joes-scraper
-      - key: CORS_ORIGINS
+      - key: ALLOWED_ORIGINS
         value: https://snapp-1d5j.vercel.app
       - key: SNAPP_ENV
         value: production
@@ -22,3 +24,25 @@ services:
         value: json
       - key: SNAPP_ADMIN_TOKEN
         sync: false
+      - key: SNAPP_RATE_LIMIT_STORAGE_URI
+        sync: false
+      - key: SNAPP_RATE_LIMIT_ENABLED
+        value: "1"
+      - key: SUPABASE_URL
+        value: https://wmagmsatawlwvcobtkxh.supabase.co
+      - key: TYPESENSE_HOST
+        sync: false
+      - key: TYPESENSE_PROTOCOL
+        value: https
+      - key: TYPESENSE_API_KEY
+        sync: false
+      - key: TYPESENSE_PORT
+        value: "443"
+      - key: TYPESENSE_COLLECTION
+        value: snapp_recipes
+      - key: REDIS_URL
+        sync: false
+      - key: FLASK_DEBUG
+        value: "0"
+      - key: SNAPP_DEPENDENCY_READINESS
+        value: "1"

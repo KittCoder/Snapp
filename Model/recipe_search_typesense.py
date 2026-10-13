@@ -608,7 +608,7 @@ def merge_terms(existing: list[str], incoming: Any) -> list[str]:
 
 
 def quote_filter_value(value: str) -> str:
-    return "`" + value.replace("`", "") + "`"
+    return "`" + value.replace("\\", "").replace("`", "") + "`"
 
 
 def ingredient_filter_tokens(names: list[str]) -> list[str]:
@@ -672,10 +672,16 @@ def search_recipes(
     mode: str = "hybrid",
     alpha: float = DEFAULT_ALPHA,
     allow_fallback: bool = True,
+    parse_constraints: bool = True,
 ) -> dict[str, Any]:
     request_started = time.perf_counter()
     config = config or TypesenseConfig()
-    cleaned_query, parsed = parse_natural_language_query(query)
+    if parse_constraints:
+        cleaned_query, parsed = parse_natural_language_query(query)
+    else:
+        # Opt-in for already parsed canonical state plus soft pantry terms.
+        # Default English search behavior is unchanged.
+        cleaned_query, parsed = normalize_text(query), {}
     merged_state = merge_search_state(
         state,
         parsed,

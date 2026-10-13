@@ -1,0 +1,36 @@
+{
+  "10002": {
+    "name": {
+      "Heavenly White Cake": "كعكة السماء البيضاء"
+    },
+    "ingredients": {
+      "2 3/4 cup sifted cake flour": "2 3/4 كوب دقيق الكيك المنخول",
+      "4 teaspoon baking powder": "4 ملعقة صغيرة بيكنج باودر",
+      "3/4 teaspoon salt": "3/4 ملعقة صغيرة ملح",
+      "4 egg whites": "4 بياض بيض",
+      "1 1/2 cup white sugar": "1 1/2 كوب سكر أبيض",
+      "3/4 cup butter": "3/4 كوب زبدة",
+      "1 cup milk": "1 كوب حليب",
+      "1 teaspoon vanilla extract": "1 ملعقة صغيرة خلاصة الفانيليا",
+      "1 teaspoon almond extract": "1 ملعقة صغيرة خلاصة اللوز"
+    },
+    "equipment": {
+      "bowl": "صَحن",
+      "15 x 10 x 1 inch pan": "مقلاة 15 × 10 × 1 بوصة",
+      "parchment paper": "ورق البرشمان"
+    },
+    "instructions": {
+      "Sift together the cake flour, baking powder, and salt three times": "ننخل الدقيق، والبيكنج باودر، والملح ثلاث مرات",
+      "Beat the egg whites in a bowl until foamy": "يخفق بياض البيض في وعاء حتى يصبح رغوياً",
+      "Add 1/2 cup of the sugar and beat until the meringue will hold up in soft peaks": "يضيف 1/2 كوب من السكر واخفقيه حتى يتماسك المرنغ في قمم ناعمة",
+      "Beat the butter until smooth": "فاز الزبدة حتى تصبح ناعمة",
+      "Add the remaining 1 cup sugar and beat until light and fluffy": "أضف الباقي 1 كوب سكر ويخفق حتى يصبح خفيفًا ورقيقًا",
+      "Add the milk and beat until smooth": "أضف الحليب واخفقه حتى يصبح ناعمًا",
+      "Mix in the vanilla extract and almond extract": "اخلطي خلاصة الفانيليا ومستخلص اللوز",
+      "Mix in the flour mixture to make a batter": "امزجي خليط الدقيق للحصول على عجينة",
+      "Spread the batter in a 15 x 10 x 1 inch pan lined with parchment paper": "افردي العجينة في صينية مقاس 15 × 10 × 1 بوصة مبطنة بورق الزبدة",
+      "Bake at 350 degrees F for 30 to 35 minutes": "تُخبز على حرارة 350 درجة فهرنهايت لمدة 30 إلى 35 دقيقة",
+      "Transfer and let stand for 10 minutes": "نقل واترك لمدة 10 دقائق"
+    }
+  }
+}

@@ -35,3 +35,21 @@ Model/product_match_overrides.json.*.bak
 /recipe_chat_language_review.json
 /typesense*benchmark*.json
 /typesense*benchmark*.md
+
+# Secrets and local operational artifacts
+*.pem
+*.key
+credentials*.json
+*.log
+*.sqlite-wal
+*.sqlite-shm
+*.dump
+/debug_dumps/
+/local*.db
+/Model/*.local.sqlite
+
+# Retain promotion rollback copies locally; never ship these duplicate indexes.
+/Model/morton_williams_vector_index.prepromotion-*/
+/Model/morton_williams_vector_index.failed-promotion-*/
+/Model/morton_williams_vector_index.failed-second-promotion-*/
+/Model/recipe_chat_translations/.*.lock

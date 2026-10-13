@@ -1,0 +1,36 @@
+{
+  "10002": {
+    "name": {
+      "Heavenly White Cake": "헤븐리 화이트 케이크"
+    },
+    "ingredients": {
+      "2 3/4 cup sifted cake flour": "체로 쳐진 케이크 가루 2 3/4컵",
+      "4 teaspoon baking powder": "베이킹파우더 4티스푼",
+      "3/4 teaspoon salt": "소금 3/4티스푼",
+      "4 egg whites": "달걀 흰자 4개",
+      "1 1/2 cup white sugar": "백설탕 1 1/2컵",
+      "3/4 cup butter": "버터 3/4컵",
+      "1 cup milk": "우유 1컵",
+      "1 teaspoon vanilla extract": "바닐라 추출물 1티스푼",
+      "1 teaspoon almond extract": "아몬드 추출물 1티스푼"
+    },
+    "equipment": {
+      "bowl": "그릇",
+      "15 x 10 x 1 inch pan": "15 x 10 x 1인치 팬",
+      "parchment paper": "양피지"
+    },
+    "instructions": {
+      "Sift together the cake flour, baking powder, and salt three times": "박력분, 베이킹파우더, 소금을 함께 세번 체쳐주세요",
+      "Beat the egg whites in a bowl until foamy": "거품이 날 때까지 그릇에 달걀 흰자를 휘젓는다",
+      "Add 1/2 cup of the sugar and beat until the meringue will hold up in soft peaks": "설탕 1/2컵을 넣고 머랭이 부드러운 봉우리가 될 때까지 휘핑하세요.",
+      "Beat the butter until smooth": "부드러워질 때까지 버터를 휘저으세요.",
+      "Add the remaining 1 cup sugar and beat until light and fluffy": "남은 설탕 1컵을 넣고 가볍고 푹신해질 때까지 휘핑하세요.",
+      "Add the milk and beat until smooth": "우유를 넣고 부드러워질 때까지 치십시오.",
+      "Mix in the vanilla extract and almond extract": "바닐라 추출액과 아몬드 추출액을 섞어주세요",
+      "Mix in the flour mixture to make a batter": "밀가루 혼합물을 섞어 반죽을 만듭니다.",
+      "Spread the batter in a 15 x 10 x 1 inch pan lined with parchment paper": "양피지를 깐 15 x 10 x 1인치 팬에 반죽을 펴 바릅니다.",
+      "Bake at 350 degrees F for 30 to 35 minutes": "화씨 350도에서 30~35분 동안 굽습니다.",
+      "Transfer and let stand for 10 minutes": "옮기고 10분간 방치"
+    }
+  }
+}

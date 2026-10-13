@@ -1,0 +1,36 @@
+{
+  "10002": {
+    "name": {
+      "Heavenly White Cake": "স্বর্গীয় সাদা কেক"
+    },
+    "ingredients": {
+      "2 3/4 cup sifted cake flour": "2 3/4 কাপ চালিত কেকের ময়দা",
+      "4 teaspoon baking powder": "4 চা চামচ বেকিং পাউডার",
+      "3/4 teaspoon salt": "3/4 চা চামচ লবণ",
+      "4 egg whites": "4টি ডিমের সাদা অংশ",
+      "1 1/2 cup white sugar": "1 1/2 কাপ সাদা চিনি",
+      "3/4 cup butter": "3/4 কাপ মাখন",
+      "1 cup milk": "1 কাপ দুধ",
+      "1 teaspoon vanilla extract": "1 চা চামচ ভ্যানিলা নির্যাস",
+      "1 teaspoon almond extract": "1 চা চামচ বাদামের নির্যাস"
+    },
+    "equipment": {
+      "bowl": "বাটি",
+      "15 x 10 x 1 inch pan": "15 x 10 x 1 ইঞ্চি প্যান",
+      "parchment paper": "পার্চমেন্ট কাগজ"
+    },
+    "instructions": {
+      "Sift together the cake flour, baking powder, and salt three times": "কেকের ময়দা, বেকিং পাউডার এবং লবণ একসাথে তিনবার চেপে নিন",
+      "Beat the egg whites in a bowl until foamy": "একটি পাত্রে ডিমের সাদা অংশ ফেনা হওয়া পর্যন্ত বিট করুন",
+      "Add 1/2 cup of the sugar and beat until the meringue will hold up in soft peaks": "1/2 কাপ চিনি যোগ করুন এবং মেরিঙ্গু নরম শিখরে ধরে না হওয়া পর্যন্ত বিট করুন",
+      "Beat the butter until smooth": "মসৃণ হওয়া পর্যন্ত মাখন বিট করুন",
+      "Add the remaining 1 cup sugar and beat until light and fluffy": "বাকি 1 কাপ চিনি যোগ করুন এবং হালকা এবং তুলতুলে না হওয়া পর্যন্ত বিট করুন",
+      "Add the milk and beat until smooth": "দুধ যোগ করুন এবং মসৃণ হওয়া পর্যন্ত বিট করুন",
+      "Mix in the vanilla extract and almond extract": "ভ্যানিলা নির্যাস এবং বাদামের নির্যাস মেশান",
+      "Mix in the flour mixture to make a batter": "ময়দার মিশ্রণে মিশিয়ে ব্যাটার তৈরি করুন",
+      "Spread the batter in a 15 x 10 x 1 inch pan lined with parchment paper": "পার্চমেন্ট পেপার দিয়ে রেখাযুক্ত একটি 15 x 10 x 1 ইঞ্চি প্যানে ব্যাটারটি ছড়িয়ে দিন",
+      "Bake at 350 degrees F for 30 to 35 minutes": "350 ডিগ্রি ফারেনহাইটে 30 থেকে 35 মিনিটের জন্য বেক করুন",
+      "Transfer and let stand for 10 minutes": "স্থানান্তর এবং 10 মিনিটের জন্য দাঁড়ানো যাক"
+    }
+  }
+}

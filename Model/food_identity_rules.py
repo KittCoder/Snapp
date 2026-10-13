@@ -5,6 +5,90 @@ composite a basic ingredient; kitchen cutting does not change purchased state.
 """
 import re
 
+
+HERB_TOKEN = r'\b(?:mint|parsley|cilantro|basil|oregano|rosemary|thyme|sage|dill|coriander leaves)\b'
+
+
+def herb_product_head(text, family=None):
+    """Identify purchased derivatives before their herb/flavor component.
+
+    Applied symmetrically to query and product, so explicit mint-gum requests
+    keep their own head. Freshness remains a separate required attribute.
+    """
+    if family not in (None, 'produce', 'seasoning', 'prepared') or not re.search(HERB_TOKEN, text):
+        return None
+    for family, head, pattern in (
+        ('nonfood', 'oral_care', r'\btoothpaste|mouthwash|(?:dental )?floss\b'),
+        ('confection', 'gum', r'\b(?:chewing )?gum\b'),
+        ('confection', 'mint_candy', r'\bbreath mints?|mint cand(?:y|ies)|mints\b'),
+        ('confection', 'candy', r'\bcand(?:y|ies)|chocolates?\b'),
+        ('tea', 'herbal', r'\btea\b'),
+        ('beverage', 'drink', r'\bbeverages?|drinks?|lemonade|soda|cola\b'),
+        ('dessert', 'generic', r'\bice cream|desserts?|cakes?|puddings?\b'),
+        ('cookie', 'generic', r'\bcookies?|biscuits?\b'),
+        ('dressing', 'generic', r'\bdressings?|vinaigrette\b'),
+        ('sauce', 'generic', r'\bsauces?|pesto|marinade\b'),
+        ('bread', 'generic', r'\bbreads?|rolls?|focaccia\b'),
+        ('cracker', 'generic', r'\bcrackers?\b'),
+        ('chips', 'generic', r'\bchips?|crisps?|snacks?|popcorn\b'),
+        ('extract', 'herb', r'\bextracts?|flavoring|flavouring|essential oils?\b'),
+        ('prepared', 'herb_component', r'\bflavored|flavoured|dips?|hummus|soup|pasta|pizza|chicken|salmon|butter\b'),
+    ):
+        if re.search(pattern, text):
+            return family, head
+    return None
+
+
+def commodity_product_head(text, family, feature=None):
+    """Outer purchased heads outrank contained sugar/rice component words.
+
+    Applies to queries too, so an explicit rice-cake/sprinkle request retains
+    that identity. Reliable source aisle metadata can corroborate an unclear
+    head, but cannot turn an explicit derivative into the basic commodity.
+    """
+    if family not in ('sugar', 'rice'):
+        return None
+    patterns = (
+        ('confection', 'sprinkles', r'\bsprinkles?|nonpareils?|jimmies\b'),
+        ('chips', 'rice_cake', r'\brice\b.*\bcakes?\b|\bcakes?\b.*\brice\b'),
+        ('cracker', 'rice', r'\brice\b.*\bcrackers?\b|\bcrackers?\b.*\brice\b'),
+        ('cereal', 'rice' if family == 'rice' else 'generic', r'\bcereals?\b'),
+        ('dessert', 'pudding', r'\bpuddings?\b'),
+        ('confection', 'candy', r'\bcand(?:y|ies)\b'),
+        ('cookie', 'generic', r'\bcookies?\b'),
+        ('bread', 'english_muffin', r'\benglish muffins?\b'),
+        ('pastry', 'muffin', r'\bmuffins?\b'),
+        ('pastry', 'breakfast', r'\bpancakes?|waffles?\b'),
+        ('dessert', 'cake', r'\bcakes?|desserts?\b'),
+        ('produce_mix', 'dried_fruit', r'\bdried (?:fruits?|cranberries|berries|cherries|apricots|mango(?:es)?)\b'),
+        ('beverage', 'drink', r'\bbeverages?|drinks?|soda|cola|lemonade\b'),
+        ('dressing', 'generic', r'\bdressings?|vinaigrette\b'),
+        ('sauce', 'generic', r'\bsauces?\b'),
+    )
+    for outer_family, head, pattern in patterns:
+        if re.search(pattern, text):
+            return outer_family, head
+    component_claim = re.search(r'\b(?:made with|containing|contains|with) (?:real |cane |pure cane )?sugar\b', text)
+    if not component_claim and (family == 'sugar' and re.search(r'\b(?:granulated|powdered|confectioners|brown|cane) sugar\b', text)
+            or family == 'rice' and re.search(r'\b(?:long grain|short grain|brown|white|basmati|jasmine) rice\b', text)):
+        # Explicit basic commodity names outrank a contradictory broad aisle.
+        return None
+    categories = re.sub(r'[-_]', ' ', ' '.join(str(x) for x in (feature or {}).get('source_categories', []))).lower()
+    if re.search(r'\b(?:soft drinks|sodas|beverages)\b', categories):
+        return 'beverage', 'drink'
+    if re.search(r'\b(?:baking decorations|sprinkles)\b', categories):
+        return 'confection', 'sprinkles'
+    if family == 'rice' and re.search(r'\brice cakes\b', categories):
+        return 'chips', 'rice_cake'
+    if family == 'rice' and re.search(r'\b(?:rice mixes|rice side dishes|prepared rice)\b', categories):
+        return 'prepared_side', 'rice_mix'
+    if component_claim:
+        # A component claim cannot establish sugar as the purchased head.
+        return 'prepared', 'component_claim'
+    if family == 'sugar' and re.search(r'\b(?:less|reduced) sugar\b', text):
+        return 'prepared', 'nutrition_claim'
+    return None
+
 # Ordered compounds before their component tokens. Each entry is a real food
 # identity/alias; these rules also apply to unseen brands and quantity contexts.
 FOUNDATION_HEADS = (
@@ -18,6 +102,7 @@ FOUNDATION_HEADS = (
  ('legume','pigeon_peas',r'pigeon peas'),
  ('beans','chickpeas',r'chick peas?|chickpeas?|garbanzo'),
  ('legume','garden_peas',r'(?:green|garden|english) peas|\bpeas\b'),
+ ('acid','sherry_vinegar',r'sherry vinegar'),
  ('acid','rice_vinegar',r'rice vinegar'),
  ('acid','white_wine_vinegar',r'white wine vinegar'),
  ('acid','red_wine_vinegar',r'red wine vinegar'),
@@ -31,6 +116,7 @@ FOUNDATION_HEADS = (
  ('seasoning','red_pepper_flakes',r'(?:crushed (?:hot )?red pepper|red pepper flakes)'),
  ('seasoning','bay_leaf',r'bay (?:leaf|leaves|leafs)'),
  ('seasoning','dill',r'dill(?: weed)?'),
+ ('seasoning','sage',r'sage'),
  ('seasoning','turmeric',r'turmeric'),
  ('seasoning','clove',r'cloves?'),
  ('seed','sesame',r'sesame seeds?'),
@@ -327,6 +413,7 @@ def strip_precision_head(text,family,subfamily):
 # A single reusable source of purchased specificity. The compatibility loop
 # requires all requested variants, independently of ranking/embedding scores.
 PRECISION_VARIANTS = (
+ ('bread',None,'rye_grain',r'\brye\b'),
  ('seasoning','salt','kosher_crystal',r'\bkosher salt\b'),
  ('pasta',None,'white_wheat',r'\bwhite wheat\b'),
  ('pasta',None,'wheat_grain',r'\b(?:white wheat|whole wheat|wheat)\b'),

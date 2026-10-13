@@ -1,0 +1,36 @@
+{
+  "10002": {
+    "name": {
+      "Heavenly White Cake": "天堂般的白蛋糕"
+    },
+    "ingredients": {
+      "2 3/4 cup sifted cake flour": "2 3/4 杯 過篩的蛋糕粉",
+      "4 teaspoon baking powder": "4 茶匙發酵粉",
+      "3/4 teaspoon salt": "3/4 茶匙鹽",
+      "4 egg whites": "4 個蛋清",
+      "1 1/2 cup white sugar": "1 1/2 杯 白糖",
+      "3/4 cup butter": "3/4 杯奶油",
+      "1 cup milk": "1 杯牛奶",
+      "1 teaspoon vanilla extract": "1茶匙香草精",
+      "1 teaspoon almond extract": "1茶匙杏仁萃取物"
+    },
+    "equipment": {
+      "bowl": "碗",
+      "15 x 10 x 1 inch pan": "15 x 10 x 1 英吋平底鍋",
+      "parchment paper": "羊皮紙"
+    },
+    "instructions": {
+      "Sift together the cake flour, baking powder, and salt three times": "將低筋麵粉、泡打粉和鹽一起過篩三次",
+      "Beat the egg whites in a bowl until foamy": "將蛋白放入碗中，攪打至起泡",
+      "Add 1/2 cup of the sugar and beat until the meringue will hold up in soft peaks": "加入 1/2 杯糖，攪拌至蛋白霜呈軟峰狀",
+      "Beat the butter until smooth": "將奶油攪打至光滑",
+      "Add the remaining 1 cup sugar and beat until light and fluffy": "加入剩餘的 1 杯糖，攪拌至鬆軟",
+      "Add the milk and beat until smooth": "加入牛奶，攪拌至光滑",
+      "Mix in the vanilla extract and almond extract": "加入香草精和杏仁精混合",
+      "Mix in the flour mixture to make a batter": "加入麵粉混合物，攪拌成麵糊",
+      "Spread the batter in a 15 x 10 x 1 inch pan lined with parchment paper": "將麵糊鋪在鋪有烘焙紙的 15 x 10 x 1 英吋平底鍋中",
+      "Bake at 350 degrees F for 30 to 35 minutes": "在 350 華氏度下烘烤 30 至 35 分鐘",
+      "Transfer and let stand for 10 minutes": "轉移並靜置 10 分鐘"
+    }
+  }
+}
