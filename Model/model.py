@@ -491,6 +491,8 @@ CORS_ORIGINS = {
     if origin.strip()
 }
 MATCHER_WARMUP_EXEMPT_ENDPOINTS = {
+    "store_comparison.stores",
+    "store_comparison.compare",
     "health",
     "static",
     "recipe_search",
@@ -6096,6 +6098,9 @@ def dishes():
 def dishes_options():
     return ("", 204)
 
+
+from store_comparison_api import register_store_comparison
+register_store_comparison(app, validated_json_payload, json_error, should_use_semantic_recipe_matching)
 
 apply_route_limits(app, security_limiter)
 
