@@ -7,5 +7,6 @@ openai==2.48.0
 sentence-transformers==5.6.0
 Flask-Limiter==3.11.0
 redis==7.0.1
+requests==2.33.0
 # Override the ML dependency with the official CPU-only Render wheel.
 torch @ https://download-r2.pytorch.org/whl/cpu/torch-2.13.0%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl#sha256=4ca4a9394b0c771238a4f73590fdbbc4debad85ed0fa63d026ae1b085da7d6e2 ; sys_platform == "linux" and platform_machine == "x86_64"
