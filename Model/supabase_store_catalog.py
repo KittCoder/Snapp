@@ -8,6 +8,7 @@ import threading
 from dataclasses import asdict
 from urllib.parse import urlparse
 import requests
+from catalog_diagnostics import catalog_operation, safe_message
 from basket_quantity import BasketBuilder, recipe_ingredients
 from product_compatibility import MATCHER_VERSION, ProductMatchService, profile_from_query
 from product_retrieval import ProductCandidateRetriever
@@ -46,11 +47,28 @@ class SupabaseGateway:
             response = requests.request(method, self.base + table, params=params, json=payload,
                                         headers=headers, timeout=(5, 45), allow_redirects=False)
             if response.status_code not in (200, 201, 204):
-                raise CatalogUnavailable('Inventory database request failed (HTTP %d)' % response.status_code)
+                error = CatalogUnavailable('Inventory database request failed (HTTP %d)' % response.status_code)
+                error.catalog_http = {'http_status': response.status_code}
+                try:
+                    body = response.json()
+                except ValueError:
+                    body = None
+                if isinstance(body, dict):
+                    for field in ('code', 'message'):
+                        if isinstance(body.get(field), (str, int)):
+                            # Also redact explicit constructor credentials, not just environment values.
+                            value = str(body[field])
+                            for secret in self.headers.values():
+                                value = value.replace(secret, '[REDACTED]')
+                            value = value.replace(self.headers['apikey'], '[REDACTED]')
+                            error.catalog_http['postgrest_' + field] = safe_message(value)
+                raise error
             return response.json() if response.content else None
         except (requests.RequestException, ValueError):
             raise CatalogUnavailable('Inventory database unavailable') from None
-    def select(self, table, params): return self.request('GET', table, params=params)
+    def select(self, table, params):
+        with catalog_operation('supabase_rest_select', table):
+            return self.request('GET', table, params=params)
     def upsert(self, table, rows):
         return self.request('POST', table, payload=rows, prefer='resolution=merge-duplicates,return=minimal')
     def candidates(self, store, version, field, values, limit):
@@ -204,8 +222,10 @@ class RequestCatalog:
 
 class DatabaseStoreRegistry:
     def __init__(self, gateway=None, cache=None):
-        self.gateway = gateway or SupabaseGateway()
-        self.cache = cache or CandidateCache()
+        with catalog_operation("supabase_gateway_initialization"):
+            self.gateway = gateway or SupabaseGateway()
+        with catalog_operation("redis_cache_initialization"):
+            self.cache = cache or CandidateCache()
         self.stores = {}
         self.errors = []
         self.manifest_path = ROOT/'Model/store_catalog_manifest.json'
