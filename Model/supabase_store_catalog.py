@@ -240,7 +240,7 @@ class DatabaseStoreRegistry:
             raise CatalogUnavailable('Database inventory set differs from verified whitelist')
         for entry in entries:
             version = by_store.get(entry['id'])
-            if not version or version['feature_version'] != FEATURE_VERSION:
+            if not version or version.get('feature_version') != FEATURE_VERSION:
                 raise CatalogUnavailable('Inventory feature version is unavailable or stale')
             metadata = StoreMetadata(**entry['metadata'])
             if (metadata.id!=entry['id'] or metadata.inventory_version!=version['source_version']

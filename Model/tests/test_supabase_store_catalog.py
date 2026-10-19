@@ -32,6 +32,70 @@ def metadata(sid='ctown:a'):
     return StoreMetadata(sid,'ctown',sid,'Test','A','Bronx','10462',2000,'source',None)
 
 class DatabaseCatalogTests(unittest.TestCase):
+    def registry_fixture(self):
+        from store_catalogs import ROOT
+        manifest = json.loads((ROOT / 'Model/store_catalog_manifest.json').read_text())
+        entries = [{'id': m['id'], 'metadata': m} for m in manifest]
+        versions = [{'id': 'version-' + m['id'], 'store_id': m['id'],
+                     'source_version': m['inventory_version'], 'product_count': m['product_count'],
+                     'feature_version': FEATURE_VERSION} for m in manifest]
+        gateway = Mock()
+        def select(table, params):
+            if table == 'stores':
+                return copy.deepcopy(entries)
+            rows = versions
+            if 'store_id' in params:
+                rows = [v for v in versions if 'eq.' + v['store_id'] == params['store_id']]
+            return copy.deepcopy(rows)
+        gateway.select.side_effect = select
+        return gateway, versions
+
+    def test_matching_feature_version_initializes_registry_for_all_13_stores(self):
+        gateway, versions = self.registry_fixture()
+        registry = DatabaseStoreRegistry(gateway, CandidateCache(Cache()))
+        self.assertEqual(len(versions), 13)
+        self.assertEqual(len(registry.stores), 13)
+        self.assertEqual(len(registry.public()), 13)
+
+    def test_missing_or_null_feature_version_fails_closed(self):
+        for value in ('absent', None):
+            with self.subTest(value=value):
+                gateway, versions = self.registry_fixture()
+                if value == 'absent':
+                    del versions[0]['feature_version']
+                else:
+                    versions[0]['feature_version'] = None
+                with self.assertRaisesRegex(CatalogUnavailable, 'feature version is unavailable or stale'):
+                    DatabaseStoreRegistry(gateway, CandidateCache(Cache()))
+
+    def test_stale_or_wrong_version_type_fails_closed(self):
+        for value in ('stale-fingerprint', 'ingredient-foundation-v1', 'ingredient-product-matcher-v3.9'):
+            with self.subTest(value=value):
+                gateway, versions = self.registry_fixture()
+                versions[0]['feature_version'] = value
+                with self.assertRaisesRegex(CatalogUnavailable, 'feature version is unavailable or stale'):
+                    DatabaseStoreRegistry(gateway, CandidateCache(Cache()))
+
+    def test_missing_active_inventory_version_fails_closed(self):
+        gateway, versions = self.registry_fixture()
+        versions.pop()
+        with self.assertRaisesRegex(CatalogUnavailable, 'feature version is unavailable or stale'):
+            DatabaseStoreRegistry(gateway, CandidateCache(Cache()))
+
+    def test_probe_reports_expected_per_store_versions_and_mismatch_count(self):
+        from scripts.diagnose_store_catalog import feature_version_diagnostics
+        _, versions = self.registry_fixture()
+        self.assertEqual(feature_version_diagnostics(versions)['feature_version_mismatch_count'], 0)
+        versions[0]['feature_version'] = 'stale'
+        del versions[1]['feature_version']
+        versions[2]['feature_version'] = None
+        report = feature_version_diagnostics(versions)
+        self.assertEqual(report['expected_feature_version'], FEATURE_VERSION)
+        self.assertEqual(len(report['active_feature_versions']), 13)
+        self.assertEqual(report['feature_version_mismatch_count'], 3)
+        self.assertEqual([v['state'] for v in report['active_feature_versions'][:3]],
+                         ['mismatched', 'absent', 'null'])
+
     def test_cache_keys_isolate_store_inventory_identity_matcher_and_overrides(self):
         c=CandidateCache(Cache());base=c.key('a','v',{'head':'cheese'},'override')
         for args in [('b','v',{'head':'cheese'},'override'),('a','v2',{'head':'cheese'},'override'),
