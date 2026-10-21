@@ -13,7 +13,7 @@ from food_identity_rules import (FOUNDATION_HEADS, BASIC_COMPOUNDS, COMPOSITE_MA
 
 from structural_identity_policy import (Evidence, REQUIRED_ATTRIBUTES, identity_form, semantic_head, required_evidence, generic_child, attribute_exception, derived_parts, purchased_compound_head, verified_whole_produce_base)
 
-ONTOLOGY_VERSION = 'food-identity-v3.12'
+ONTOLOGY_VERSION = 'food-identity-v3.13'
 
 @dataclass(frozen=True)
 class FoodIdentity:
@@ -719,6 +719,56 @@ def describe(text, *, feature=None, product=False):
         set_identity(*commodity_head)
         values['prepared'] = 'prepared'
         evidence.append('outer_commodity_product_head')
+    if values.get('family')=='sugar' and has(detection,r'\b(?:coconut|palm|date) sugar\b'):
+        subtype=next(word for word in ('coconut','palm','date') if has(detection,rf'\b{word} sugar\b'))
+        set_identity('sugar',subtype);evidence.append('named_sugar_material')
+    # Outer purchase heads take precedence over constituent ingredient tokens.
+    # These are compositional rules, independent of retailer, brand and SKU.
+    if product:
+        family=values.get('family')
+        outer=None
+        if family=='acid' and has(detection,r'\bglaze\b'):outer='glaze'
+        if family=='fat' and has(detection,r'\bin (?:olive |extra virgin olive )?oil\b') and has(detection,r'\b(?:garlic|tuna|sardines?|anchovies|peppers?)\b'):outer='oil_packed_food'
+        if family=='cheese' and has(detection,r'\b(?:salame|salami|prosciutto|pepperoni|snack kit|sandwich)\b'):outer='meat_cheese_composite'
+        if family=='beans' and has(detection,r'\b(?:pasta|penne|rotini|casarecce|fusilli|spaghetti|curry|kofta)\b'):outer='legume_prepared_food'
+        if family=='seasoning' and has(detection,r'\bpaste\b'):outer='seasoning_paste'
+        if family=='pasta' and has(detection,r'\b(?:beefaroni|pasta bowls?|ready to eat|fully cooked)\b'):outer='prepared_pasta_meal'
+        if family=='produce' and has(detection,r'\btandoori\b'):outer='unverified_prepared_aromatic'
+        if family in ('produce','seasoning') and has(detection,r'\b(?:naan|bread|crackers?|chips?|dressing|marinade|tea|candy|gum)\b'):outer='flavored_composite'
+        if family=='beans' and has(detection,r'\b(?:potato|warm spices|chickpeas (?:and )?tomato (?:and )?onion)\b'):outer='legume_prepared_food'
+        if family=='dairy' and values.get('subfamily')=='milk' and has(detection,r'\b(?:cheese|cookies?|biscuits?|fudge|chocolate|milk substitute|(?:orange|strawberry|banana|guava|coconut) with milk)\b'):outer='milk_composite_or_analogue'
+        if family=='eggs' and has(detection,r'\bwhite eggs\b') and feature.get('base_unit') in ('gram','milliliter'):
+            values['subfamily']='whites';evidence.append('liquid_or_mass_egg_white_product')
+        if family=='eggs' and has(detection,r'\b(?:replacer|coloring|dyes?)\b'):outer='egg_analogue_or_decoration'
+        if family in ('fat','dairy') and values.get('subfamily')=='butter' and has(detection,r'\b(?:popcorn|puffcorn|beans|spray|potatoes|croissants?|crossiants?|croutons?|cakes?|caramel|sauced|broccoli)\b'):outer='butter_named_composite'
+        if family=='bread' and has(detection,r'\bbread fruit\b'):outer='breadfruit'
+        if family=='produce' and values.get('subfamily')=='potato' and has(detection,r'\b(?:mashed|scalloped)\b'):outer='prepared_potato'
+        if family=='meat' and values.get('species')=='chicken' and has(detection,r'\bpatt(?:y|ies)\b'):outer='formed_chicken_product'
+        departments=norm(' '.join(str(x) for x in feature.get('source_categories',[])))
+        if family=='rice' and has(norm(feature.get('verified_label_text')),r'\bready in (?:1|one) minute\b'):outer='unverified_ready_rice_state'
+        if family=='dairy' and values.get('subfamily')=='milk' and has(departments,r'\b(?:sweets|breads and bakery|deli)\b'):outer='unverified_milk_purchase_head'
+        if family=='rice' and has(departments,r'\bfrozen foods\b'):
+            values['ambiguous']=True;evidence.append('unverified_frozen_rice_state')
+        if family=='produce' and values.get('subfamily')=='onion' and has(departments,r'\bpantry\b'):
+            values['ambiguous']=True;evidence.append('pantry_allium_processing_unverified')
+        if outer:
+            set_identity('prepared',outer);values['head']=outer;values['prepared']='prepared'
+            evidence.append('outer_purchase_head')
+        if family=='meat':
+            departments=norm(' '.join(str(x) for x in feature.get('source_categories',[])))
+            if values.get('prepared')=='raw' and has(departments,r'\b(?:pantry|frozen foods)\b') and not has(detection,r'\b(?:raw|fresh|uncooked)\b'):
+                values['ambiguous']=True;evidence.append('unverified_raw_meat_department')
+            if has(departments,r'\b(?:deli|prepared foods)\b'):
+                values['ambiguous']=True;evidence.append('prepared_meat_department_state_unverified')
+            if has(detection,r'\b(?:chunk(?:s)? in water|baked|breaded|whole grain|vegetable tenders|skewers)\b'):
+                values['prepared']='prepared';evidence.append('processed_meat_purchase_form')
+            if has(detection,r'\bpatt(?:y|ies)\b'):
+                values['form']='patties'
+            if has(detection,r'\b(?:tenders?|tenderloins?)\b') and values.get('cut')=='breast' and values.get('prepared')!='cooked':
+                evidence.append('unverified_breast_tender_purchase_form')
+            label=norm(feature.get('verified_label_text'))
+            if has(label,r'plant based|meat from plants|vegan|vegetarian'):
+                values['dietary_identity']='plant';evidence.append('explicit_plant_label')
     values['evidence']=tuple(evidence)
     return FoodIdentity(**values)
 
@@ -758,6 +808,7 @@ def compatibility(query, product, mode='exact'):
         if query.family=='meat' and query.cut=='ground' and query.form=='ground' and product.form=='ground':equivalent=True
         elif mode=='substitute' and query.family=='meat' and query.species=='chicken' and {query.cut,product.cut} <= {'breast','thigh'}:substitute=True
         else:failures.append('cut_conflict' if product.cut else 'unverified_cut')
+    if query.family=='meat' and query.prepared=='raw' and 'unverified_breast_tender_purchase_form' in product.evidence:failures.append('unverified_raw_breast_tender_form')
     if query.family=='meat' and query.form!='ground' and product.form=='ground':failures.append('ground_vs_whole_conflict')
     if query.family=='meat' and not query.cut and query.prepared=='raw' and not (query.species=='chicken' and query.form=='whole' and product.form=='whole'):uncertain.append('unspecified_meat_cut')
     for key in REQUIRED_ATTRIBUTES:

@@ -779,7 +779,7 @@ def parse_ingredient(raw_text: str) -> ParsedIngredient:
             canonical_source = COUNT_INGREDIENT_UNITS[canonical_words[0]]
     canonical = apply_alias(canonical_source)
     canonical = re.sub(r"\s+", " ", canonical).strip(" ,-")
-    if re.search(r"\begg\s+(?:yolks?|whites?)\b|\b(?:yolks?|whites?)\b", normalized_raw):
+    if re.search(r"\begg\s+(?:yolks?|whites?)\b|\b(?:yolks?|whites)\b", normalized_raw):
         canonical = "eggs"
     if quantity is not None and unit is None and re.search(r"\bpita breads?\b|\bpitas?\b", normalize_text(raw)):
         unit = "count"
