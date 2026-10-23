@@ -4,6 +4,7 @@ from flask import Blueprint,jsonify,request
 from store_catalogs import CatalogError
 from store_comparison import BasketComparison
 from catalog_diagnostics import catalog_operation, log_catalog_error
+from catalog_timing import profile_catalog_request, timing
 
 _engine=None
 _lock=threading.Lock()
@@ -20,6 +21,7 @@ def engine():
 def register_store_comparison(app,validated_json_payload,json_error,semantic_ready):
     bp=Blueprint('store_comparison',__name__)
     @bp.route('/api/stores',methods=['GET','OPTIONS'])
+    @profile_catalog_request
     def stores():
         if request.method=='OPTIONS':return ('',204)
         try:return jsonify({'stores':engine().registry.public()})
@@ -27,12 +29,16 @@ def register_store_comparison(app,validated_json_payload,json_error,semantic_rea
             log_catalog_error(exc, 'store_registry_public')
             return json_error('Store catalog unavailable.',503)
     @bp.route('/api/shopping/compare',methods=['POST','OPTIONS'])
+    @profile_catalog_request
     def compare():
         if request.method=='OPTIONS':return ('',204)
         data,error=validated_json_payload()
         if error:return error
         if set(data)-{'recipes','store_ids'}:return json_error('Unsupported comparison field.',400)
-        try:return jsonify(engine().compare(data.get('recipes'),data.get('store_ids'),mw_semantic=semantic_ready()))
+        try:
+            result = engine().compare(data.get('recipes'),data.get('store_ids'),mw_semantic=semantic_ready())
+            with timing('response_serialization'):
+                return jsonify(result)
         except CatalogError as exc:return json_error(str(exc),400)
         except Exception as exc:
             log_catalog_error(exc, 'store_comparison')

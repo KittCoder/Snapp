@@ -2,6 +2,8 @@
 from __future__ import annotations
 import copy,hashlib,json,threading,time
 from collections import OrderedDict,defaultdict
+from contextvars import copy_context
+from catalog_timing import store_timing, timing
 from concurrent.futures import ThreadPoolExecutor
 from decimal import Decimal
 from basket_quantity import ingredient_aggregation_signature,recipe_ingredients,OPTIMIZER_VERSION
@@ -34,12 +36,14 @@ class BasketComparison:
         return hashlib.sha256(json.dumps({'recipes':recipes,'stores':sorted((c.metadata.id,c.metadata.inventory_version) for c in catalogs),'overrides':sorted({c.override_hash or 'default' for c in catalogs}),'matcher':MATCHER_VERSION,'ontology':ONTOLOGY_VERSION,'optimizer':DEAL_OPTIMIZER_VERSION,'basket':OPTIMIZER_VERSION,'adapter':ADAPTER_VERSION,'mw_semantic':semantic},sort_keys=True,allow_nan=False).encode()).hexdigest()
     def compare(self,recipes,store_ids,mw_semantic=False):
         validate_recipes(recipes);catalogs=self.registry.select(store_ids)
-        if any(not c.current() for c in catalogs):raise CatalogError('Store inventory changed or unavailable; reload registry')
+        current = self.registry.all_current(catalogs) if hasattr(self.registry, 'all_current') else all(c.current() for c in catalogs)
+        if not current:raise CatalogError('Store inventory changed or unavailable; reload registry')
         key=self.key(recipes,catalogs,mw_semantic)
+        cache_key = (key, tuple(sorted((c.metadata.id, getattr(c, 'cache_version', None)) for c in catalogs)))
         with self.cache_lock:
-            if key in self.cache:
-                result=copy.deepcopy(self.cache[key]);result['cache_hit']=True;return result
-        started=time.perf_counter();futures=[self.pool.submit(self.store_basket,c,recipes,mw_semantic) for c in catalogs];results=[f.result() for f in futures]
+            if cache_key in self.cache:
+                result=copy.deepcopy(self.cache[cache_key]);result['cache_hit']=True;return result
+        started=time.perf_counter();futures=[self.pool.submit(copy_context().run,self.store_basket,c,recipes,mw_semantic) for c in catalogs];results=[f.result() for f in futures]
         # Equal coverage alone is insufficient. Only complete, reliably costed baskets compare.
         complete=[r for r in results if r['complete']];best=min((r['basket_total'] for r in complete),default=None)
         for r in results:
@@ -48,12 +52,12 @@ class BasketComparison:
         results.sort(key=lambda r:(not r['complete'],-r['coverage_count'],r['basket_total'] if r['basket_total'] is not None else float('inf'),r['id']))
         result={'basket_id':key,'stores':results,'comparable_store_count':len(complete),'cache_hit':False,'elapsed_ms':round((time.perf_counter()-started)*1000,2),'fees_taxes_excluded':True,'versions':{'matcher':MATCHER_VERSION,'ontology':ONTOLOGY_VERSION,'deal_optimizer':DEAL_OPTIMIZER_VERSION,'basket':OPTIMIZER_VERSION,'adapter':ADAPTER_VERSION}}
         with self.cache_lock:
-            self.cache[key]=copy.deepcopy(result)
+            self.cache[cache_key]=copy.deepcopy(result)
             while len(self.cache)>64:self.cache.popitem(last=False)
         return result
     @staticmethod
     def store_basket(catalog,recipes,mw_semantic=False):
-        with catalog.lock:
+        with catalog.lock, store_timing(catalog.metadata.id), timing('store_basket'):
             catalog=catalog.request_catalog(recipes) if hasattr(catalog,'request_catalog') else catalog
             builder=catalog.builder();basket=builder.build_multi_recipe_basket(recipes,use_semantic=mw_semantic if catalog.metadata.retailer=='morton_williams' else False)
             # Every candidate and selected product must belong to this catalog.

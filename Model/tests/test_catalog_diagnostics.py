@@ -18,7 +18,7 @@ class CatalogDiagnosticsTests(unittest.TestCase):
         response = Mock(status_code=400, content=b'error')
         response.json.return_value = {'code': '42703', 'message': 'missing column constructor-secret',
                                       'details': 'untrusted details'}
-        with patch('requests.request', return_value=response), patch('catalog_diagnostics.log_event') as log:
+        with patch('requests.sessions.Session.request', return_value=response), patch('catalog_diagnostics.log_event') as log:
             with self.assertRaises(CatalogUnavailable) as caught:
                 gateway.select('stores', {})
         self.assertEqual(caught.exception.catalog_http['postgrest_code'], '42703')

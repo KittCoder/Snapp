@@ -26,7 +26,7 @@ class Cache:
 class Gateway:
     def __init__(self, rows):self.rows=rows;self.calls=[]
     def candidates(self,*args):self.calls.append(args);return copy.deepcopy(self.rows)
-    def select(self,table,params):return [{'id':'version','source_version':'source'}]
+    def select(self,table,params):return [{'id':'version','source_version':'source','product_count':2000,'feature_version':FEATURE_VERSION}]
 
 def metadata(sid='ctown:a'):
     return StoreMetadata(sid,'ctown',sid,'Test','A','Bronx','10462',2000,'source',None)
@@ -135,7 +135,7 @@ class DatabaseCatalogTests(unittest.TestCase):
     def test_database_errors_do_not_leak_credentials_or_response_body(self):
         response=Mock(status_code=401,content=b'secret',text='secret')
         gateway=SupabaseGateway('https://example.test','private-key')
-        with patch('requests.request',return_value=response) as request:
+        with patch('requests.sessions.Session.request',return_value=response) as request:
             with self.assertRaises(CatalogUnavailable) as error:gateway.select('stores',{})
             self.assertNotIn('private-key',str(error.exception));self.assertNotIn('secret',str(error.exception))
             self.assertFalse(request.call_args.kwargs['allow_redirects'])
