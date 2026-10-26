@@ -36,7 +36,10 @@ class StoreMetadata:
     price_coverage:float|None=None
     package_coverage:float|None=None
     catalog_source:str|None=None
-    def public(self):return asdict(self)
+    def public(self):
+        from store_locations import STORE_COORDINATES
+        latitude, longitude = STORE_COORDINATES.get(self.id, (None, None))
+        return {**asdict(self), 'latitude': latitude, 'longitude': longitude}
 
 class StoreCatalog:
     def __init__(self,metadata,path=None,rows=None):

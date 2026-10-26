@@ -342,7 +342,7 @@ class DatabaseStoreRegistry:
             if (metadata.id!=entry['id'] or metadata.inventory_version!=version['source_version']
                     or metadata.product_count!=version['product_count']):
                 raise CatalogUnavailable('Inventory metadata/version mismatch')
-            if metadata.public()!=allowed[metadata.id]:
+            if asdict(metadata)!=allowed[metadata.id]:
                 raise CatalogUnavailable('Verified store identity/source version mismatch')
             self.stores[metadata.id] = DatabaseStoreCatalog(metadata,version['id'],self.gateway,self.cache,self.prepared_cache)
         if not self.stores: raise CatalogUnavailable('No verified database inventories available')

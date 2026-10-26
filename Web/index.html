@@ -783,6 +783,16 @@
           </div>
           <button id="shopping-add-pantry-button" type="button"><span data-i18n="copy.add.all.to.pantry">Add all to pantry</span></button>
         </div>
+        <section id="store-comparison" class="store-comparison" aria-labelledby="store-comparison-title">
+          <h3 id="store-comparison-title" data-i18n="stores.compare">Compare stores</h3>
+          <details><summary data-i18n="stores.choose">Choose stores</summary>
+            <fieldset><legend data-i18n="stores.choose">Choose stores</legend><div data-store-options class="comparison-store-options"></div></fieldset>
+          </details>
+          <button type="button" data-compare-stores data-i18n="stores.compare">Compare stores</button>
+          <p data-i18n="stores.scope">Compare full recipe quantities for your scheduled meals. Pantry deductions are not included.</p>
+          <p data-comparison-status role="status" aria-live="polite"></p>
+          <div data-comparison-results></div>
+        </section>
         <div id="shopping-status" class="store-search-status" role="status" aria-live="polite"></div>
         <ul id="shopping-list" class="shopping-list"></ul>
       </section>
@@ -989,5 +999,9 @@
     <script src="i18n/catalog.js"></script>
     <script src="i18n.js"></script>
     <script src="app.js"></script>
+    <script src="nyc_zip_centroids.js"></script>
+    <script src="store_registry.js"></script>
+    <script src="store_locator.js"></script>
+    <script src="store_comparison.js"></script>
   </body>
 </html>

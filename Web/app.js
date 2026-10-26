@@ -2241,6 +2241,7 @@ function appendShoppingDeal(container, item) {
 }
 
 function renderShoppingList() {
+  if (document.dispatchEvent && typeof CustomEvent === "function") document.dispatchEvent(new CustomEvent("snapp:shopping-changed"));
   const items = getShoppingIngredients();
   const validIds = new Set(items.map((item) => item.id));
   selectedShoppingIngredientIds.forEach((id) => {
@@ -3016,7 +3017,7 @@ async function saveTraderJoesStoreNumber(storeLookup) {
 }
 
 function getStoreId(store) {
-  return getStoreKey(store);
+  return store.id || getStoreKey(store);
 }
 
 function clearMyStoreMap() {
@@ -3081,6 +3082,7 @@ function createStoreIdentity(store) {
 }
 
 function renderSelectedMyStores() {
+  if (window.SNAPP_RENDER_SELECTED_STORES) { window.SNAPP_RENDER_SELECTED_STORES(); return; }
   selectedStoreList.replaceChildren();
 
   if (!savedMyStores.length) {
@@ -3881,53 +3883,6 @@ storeSearchForm?.addEventListener("submit", async (event) => {
   }
 });
 
-myStoreForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const zipCode = myZipCodeInput.value.trim();
-  if (!/^\d{5}$/.test(zipCode)) {
-    myStoreStatus.textContent = translateText(t("copy.enter.a.valid.5.digit.us.zip.code", {}));
-    myStoreResults.replaceChildren();
-    myStoreSource.hidden = true;
-    clearMyStoreMap();
-    renderSelectedMyStores();
-    return;
-  }
-
-  const submitButton = myStoreForm.querySelector("button");
-  submitButton.disabled = true;
-  myStoreStatus.textContent = translateText(t("copy.searching.nearby.stores", {}));
-  myStoreResults.replaceChildren();
-  myStoreSource.hidden = true;
-  clearMyStoreMap();
-  renderSelectedMyStores();
-
-  try {
-    const data = await fetchStores(zipCode, { snapOnly: false });
-    renderMyStores(data);
-    const stores = data.stores || [];
-    let statusMessage =
-      stores.length
-          ? `${stores.length} grocery store${stores.length === 1 ? "" : "s"} found near ${data.location}.`
-          : `No grocery stores were found near ${data.location}.`;
-    try {
-      const traderJoesData = await fetchTraderJoesStore(zipCode);
-      const store = traderJoesData.store;
-      const didSaveStoreNumber = await saveTraderJoesStoreNumber(traderJoesData);
-      if (store && didSaveStoreNumber) {
-        statusMessage +=
-          ` Trader Joe's store number ${store.store_number} saved for ${store.name}.`;
-      }
-    } catch (error) {
-      statusMessage +=
-        ` Trader Joe's store number could not be resolved: ${error.message}`;
-    }
-    myStoreStatus.textContent = statusMessage;
-  } catch (error) {
-    myStoreStatus.textContent = t("copy.arg0.arg1", {arg0: (translateText("Store search error:")), arg1: (error.message)});
-  } finally {
-    submitButton.disabled = false;
-  }
-});
 
 pantryForm.addEventListener("submit", async (event) => {
   event.preventDefault();

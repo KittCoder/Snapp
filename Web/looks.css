@@ -3237,3 +3237,18 @@ html[dir="rtl"] .recipe-chat-error { border-left: 0; border-right: 3px solid var
 #shopping .shopping-deal-savings { color: var(--color-primary-strong); }
 .shopping-deal-explanation summary { cursor: pointer; font-size: .8rem; }
 .shopping-deal-explanation summary:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
+
+.store-comparison { margin: 1.25rem 0; padding: 1rem; border: 1px solid currentColor; border-radius: .75rem; }
+.comparison-store-options { display: grid; gap: .6rem; max-height: 15rem; overflow-y: auto; padding: .5rem; }
+.comparison-store-option { display: flex; align-items: flex-start; gap: .6rem; }
+.comparison-store-option input { flex: 0 0 auto; margin-top: .3rem; }
+.comparison-result { padding: .8rem 0; border-top: 1px solid currentColor; }
+.comparison-best { display: inline-block; padding: .2rem .5rem; border-radius: .3rem; background: #def3d9; color: #183819; }
+.comparison-result li { margin-block: .75rem; }
+
+/* Registry locator cards */
+#my-store-results { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr)); gap:1rem; }
+#my-store-results li { min-width:0; overflow-wrap:anywhere; padding:1rem; border:1px solid var(--border-color,#ced8cb); border-radius:16px; }
+#my-store-results li.selected { border:2px solid #477447; }
+#my-store-results label { display:flex; gap:.6rem; align-items:center; cursor:pointer; }
+#my-store-form input:focus-visible, #my-store-results input:focus-visible, #my-store-form button:focus-visible { outline:3px solid #477447; outline-offset:3px; }
