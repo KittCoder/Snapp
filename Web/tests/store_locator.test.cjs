@@ -36,7 +36,7 @@ test('deterministic nearest ordering changes immediately, unlocated catalog rema
  const start=performance.now();for(let i=0;i<10000;i++)s.rank(stores,'11211');const ms=(performance.now()-start)/10000;console.log(`13-store ZIP ranking: ${ms.toFixed(4)} ms average`);assert.ok(ms<5);
 });
 test('selection uses backend ID; ZIP input performs no fetch, comparison or geocoding',()=>{
- const source=read('store_locator.js');assert.match(source,/check.value=store.id/);assert.match(source,/selected.add\(store.id\)/);assert.doesNotMatch(source,/fetch\(|\/api\/shopping\/compare|geolocation|geocod/i);
+ const source=read('store_locator.js');assert.match(source,/button.value=store.id/);assert.match(source,/select\(store.id\)/);assert.doesNotMatch(source,/type='checkbox'/);assert.doesNotMatch(source,/fetch\(|\/api\/shopping\/compare|geolocation|geocod/i);
 });
 class Element {
  constructor(tag){this.tag=tag;this.children=[];this.listeners={};this.value='';this.classList={toggle(){}};}
@@ -48,16 +48,17 @@ test('Stores UI renders every catalog, immediate ZIP changes and canonical selec
  const nodes=Object.fromEntries(ids.map(id=>[id,new Element('div')])),events={};
  s.context.document={getElementById:id=>nodes[id],createElement:tag=>new Element(tag),addEventListener:(name,fn)=>events[name]=fn,dispatchEvent:event=>events[event.type]?.(event)};
  s.context.Event=class{constructor(type){this.type=type;}};
+ s.context.window.SNAPP_ACTIVE_STORE={id:null,select(id){this.id=id;s.values.set('snapp:active-store:v1',id);events['snapp:active-store']();}};
  vm.runInContext(read('store_locator.js'),s.context);await s.api.load();
  const list=nodes['my-store-results'];assert.equal(list.children.length,13);
- assert.equal(list.children.filter(n=>n.children[0].textContent==='CTown Supermarkets').length,12);
- assert.equal(list.children.filter(n=>n.children[0].textContent==='Morton Williams').length,1);
+ assert.equal(list.children.filter(n=>n.children[0].children[1].children[0].textContent==='C-Town').length,12);
+ assert.equal(list.children.filter(n=>n.children[0].children[1].children[0].textContent==='Morton Williams').length,1);
  const input=nodes['my-zip-code'];input.value='11211';input.listeners.input();
  assert.match(nodes['my-store-status'].textContent,/Stores near 11211/);
- const first=list.children[0],check=first.children.at(-1).children[0];check.checked=true;check.listeners.change();
- assert.ok(s.context.window.SNAPP_SELECTED_STORES.has(check.value));assert.ok(JSON.parse(s.values.get('snapp:selected-stores:v1')).includes(check.value));
+ const first=list.children[0],check=first.children.at(-1);check.listeners.click();
+ assert.equal(s.context.window.SNAPP_ACTIVE_STORE.id,check.value);assert.equal(s.values.get('snapp:active-store:v1'),check.value);
  input.value='10458';input.listeners.input();assert.match(nodes['my-store-status'].textContent,/10458/);
- assert.notEqual(list.children[0].children.at(-1).children[0].value,check.value);
+ assert.notEqual(list.children[0].children.at(-1).value,check.value);
  input.value='90210';input.listeners.input();assert.match(nodes['my-store-status'].textContent,/outside/);assert.equal(list.children.length,13);
  assert.deepEqual(s.requests,['/api/stores']);
 });

@@ -1611,10 +1611,8 @@ function demoPrice(value) {
 }
 
 function getScheduledMealTotal() {
-  return scheduledMeals.reduce(
-    (total, meal) => total + demoPrice(meal.estimated_price_total),
-    0
-  );
+  const basket = window.SNAPP_ACTIVE_STORE?.result;
+  return basket?.complete ? basket.basket_total : null;
 }
 
 function getHouseholdSize() {
@@ -1634,10 +1632,10 @@ function renderBudget() {
     budgetEmptyMessage.hidden = hasBudget;
   }
   currentBudget.textContent = currencyFormatter.format(budget);
-  remainingBudget.textContent = currencyFormatter.format(remaining);
+  remainingBudget.textContent = scheduledTotal == null ? "Awaiting store pricing" : currencyFormatter.format(remaining);
   remainingBudget.classList.toggle("over-budget", remaining < 0);
   budgetMealCount.textContent = scheduledMeals.length;
-  scheduledMealCost.textContent = currencyFormatter.format(scheduledTotal);
+  scheduledMealCost.textContent = scheduledTotal == null ? "See Shopping for partial or pending prices" : currencyFormatter.format(scheduledTotal);
 }
 
 function getPortionMacroValue(meal, macroKey) {
@@ -1978,9 +1976,7 @@ function renderFavoriteRecipesPanel() {
     title.textContent = favorite.recipe_name || dish.name || t("copy.favorite.recipe", {});
     meta.textContent = [
       formatServings(dish),
-      dish.estimated_price_total
-        ? t("copy.arg0.estimated.groceries", {arg0: (currencyFormatter.format(demoPrice(dish.estimated_price_total)))})
-        : "",
+      "See active store prices in Shopping",
     ].filter(Boolean).join(" | ");
     actions.className = "favorite-recipe-actions";
 
@@ -2143,6 +2139,7 @@ function getSortedShoppingCategories(items) {
 }
 
 function getShoppingIngredients() {
+  if (typeof window !== "undefined" && window.SNAPP_ACTIVE_STORE) return window.SNAPP_ACTIVE_STORE.items();
   return scheduledMeals.flatMap((meal) => {
     const ingredients =
       meal.ingredients_to_buy?.length
@@ -2240,8 +2237,8 @@ function appendShoppingDeal(container, item) {
   container.append(explanation);
 }
 
-function renderShoppingList() {
-  if (document.dispatchEvent && typeof CustomEvent === "function") document.dispatchEvent(new CustomEvent("snapp:shopping-changed"));
+function renderShoppingList(priceRefresh = false) {
+  if (!priceRefresh && document.dispatchEvent && typeof CustomEvent === "function") document.dispatchEvent(new CustomEvent("snapp:shopping-changed"));
   const items = getShoppingIngredients();
   const validIds = new Set(items.map((item) => item.id));
   selectedShoppingIngredientIds.forEach((id) => {
@@ -2477,7 +2474,7 @@ function createScheduleMealCard(meal) {
   openButton.type = "button";
   openButton.className = "schedule-meal-open";
   openButton.textContent = meal.name;
-  price.textContent = currencyFormatter.format(demoPrice(meal.estimated_price_total || 0));
+  price.textContent = t("stores.viewBasket");
   openButton.appendChild(price);
   openButton.addEventListener("click", () => openDishModal(meal));
 
@@ -2812,9 +2809,7 @@ function openDishModal(dish) {
   summary.className = "dish-modal-summary";
   summary.textContent = [
     formatServings(dish),
-    dish.estimated_price_total
-      ? t("copy.arg0.estimated.groceries", {arg0: (currencyFormatter.format(demoPrice(dish.estimated_price_total)))})
-      : "",
+    "See active store prices in Shopping",
   ].filter(Boolean).join(" | ");
   dishModalContent.appendChild(summary);
 
@@ -2824,15 +2819,8 @@ function openDishModal(dish) {
   appendModalSection("Ingredients to buy", (dish.ingredients_to_buy || dish.ingredients || []).filter(
     (ingredient) => !(ingredient.unavailable || ingredient.availability_status === "unavailable")
   ), (ingredient) => {
-    const storeText = ingredient.store_name ? ` at ${ingredient.store_name}` : "";
-    const priceText = ingredient.estimated_price_total
-      ? ` - ${currencyFormatter.format(demoPrice(ingredient.estimated_price_total))}`
-      : "";
-    const sourceText = cleanIngredientRequirementText(ingredient.recipe_measure || ingredient.required_quantity_display);
-    const requirementText = sourceText ? `${sourceText} -> ` : "";
-    const purchaseText = ingredient.purchase_quantity_display || formatPurchaseQuantity(ingredient);
-    const packageText = purchaseText ? `, get ${purchaseText}` : ingredient.package_size ? ` (${ingredient.package_size})` : "";
-    return `${requirementText}${ingredient.product_name || ingredient.name}${packageText}${storeText}${priceText}`;
+    return cleanIngredientRequirementText(ingredient.recipe_measure || ingredient.required_quantity_display) || ingredient.name || ingredient.recipe_ingredient;
+
   });
 
   const instructionsHeading = document.createElement("h4");
@@ -3521,9 +3509,7 @@ function createDishCard(dish) {
     title.textContent = dish.localized_recipe?.name || dish.name;
     header.append(title, favoriteButton);
     price.className = "dish-price";
-    price.textContent = dish.estimated_price_total
-      ? t("copy.arg0.estimated.grocery.total.arg1.per.serving", {arg0: (currencyFormatter.format(demoPrice(dish.estimated_price_total))), arg1: (currencyFormatter.format(demoPrice(dish.estimated_price_per_serving)))})
-      : t("copy.no.grocery.price.match", {});
+    price.textContent = t("stores.viewBasket");
     metadata.className = "dish-metadata";
     metadata.textContent = [
       formatServings(dish),
@@ -4184,7 +4170,6 @@ const recipeChat = (() => {
     activeRequest?.abort();
     activeRequest = null;
     currentState = null;
-    estimateRequests.clear();
     backToResults();
     history.replaceChildren();
     history.hidden = true;
@@ -4208,46 +4193,8 @@ const recipeChat = (() => {
   }
 
   const cardRecipes = new WeakMap();
-  const estimateRequests = new Map();
-
-  function priceLabel(estimate) {
-    if (!estimate || estimate.status === "unavailable" || !Number.isFinite(estimate.total)) {
-      return t("recipe.price.unavailable");
-    }
-    const amount = new Intl.NumberFormat(getLanguage(), { style: "currency", currency: "USD" }).format(demoPrice(estimate.total));
-    return t("copy.arg0.estimated.groceries", { arg0: estimate.status === "partial" ? `${amount}+` : amount });
-  }
-
   function appendPrice(card, recipe) {
-    const price = textElement("div", "recipe-chat-price", "");
-    const amount = textElement("p", "recipe-chat-price-amount", t("recipe.price.loading"));
-    const note = textElement("small", "recipe-chat-price-note", "");
-    price.append(amount, note);
-    card.append(price);
-    function render(estimate) {
-      amount.textContent = priceLabel(estimate);
-      note.textContent = estimate?.status === "partial" ? t("recipe.price.partial")
-        : estimate?.status === "complete" ? t("recipe.price.basis") : "";
-    }
-    if (recipe.grocery_estimate) { render(recipe.grocery_estimate); return; }
-    if (!recipe.id) { render(null); return; }
-    const pantry = pantryItems.map(({ name, quantity }) => ({ name, quantity }));
-    const key = JSON.stringify([recipe.id, pantry, getHouseholdSize()]);
-    if (!estimateRequests.has(key)) {
-      const controller = new AbortController();
-      const timeout = window.setTimeout(() => controller.abort(), 60000);
-      const request = fetch(endpoint().replace(/chat$/, "detail"), {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipe_id: recipe.id, include_price_estimate: true,
-          locale: "en", household_size: getHouseholdSize(), pantry_items: pantry }),
-        signal: controller.signal,
-      }).then(async (response) => {
-        if (!response.ok) throw new Error("Price unavailable");
-        return (await response.json()).dish?.grocery_estimate;
-      }).catch(() => null).finally(() => window.clearTimeout(timeout));
-      estimateRequests.set(key, request);
-    }
-    estimateRequests.get(key).then((estimate) => { recipe.grocery_estimate = estimate; render(estimate); });
+    card.append(textElement("p", "recipe-chat-price-note", "Add to your schedule to see active store prices in Shopping."));
   }
 
   function recipeCard(recipe, index, selected = false) {

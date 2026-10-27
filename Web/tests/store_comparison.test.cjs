@@ -22,3 +22,13 @@ test('all comparison strings exist in English and Spanish with matching placehol
  const source=fs.readFileSync(path.join(__dirname,'../store_comparison.js'),'utf8');const en=JSON.parse(fs.readFileSync(path.join(__dirname,'../i18n/en.json')));const es=JSON.parse(fs.readFileSync(path.join(__dirname,'../i18n/es.json')));
  for(const [,key] of source.matchAll(/tx\('([^']+)'/g)){assert.ok(en[key],key);assert.ok(es[key],key);assert.deepEqual((en[key].match(/\{\w+\}/g)||[]).sort(),(es[key].match(/\{\w+\}/g)||[]).sort());}
 });
+test('three canonical comparison IDs render independent complete and partial store results in one request',async()=>{
+ const s=setup();await s.controls.details.listeners.toggle({target:{open:true}});
+ const ids=['ctown:PS41_311','ctown:U41_186','morton-williams'];
+ s.controls.options.children=ids.map(id=>{const label=new E('label'),check=new E('input');check.checked=true;check.value=id;label.append(check);return label;});
+ let payload;
+ s.context.fetch=async(url,options)=>{payload=JSON.parse(options.body);return {ok:true,json:async()=>({stores:ids.map((id,i)=>({id,store_name:id,complete:i!==2,best_basket:i===0,coverage_count:1,ingredients_requested:[{}],basket_total:i===2?null:[8,12][i],checkout_total_known:[8,12,3][i],unknown_cost_items:i===2?[{}]:[],ingredients_unmatched:[],product_selections:[{product_id:id+'-rice',ingredients:['8 oz rice'],product_name:id+' Rice',checkout_cost:[8,12,3][i]}]}))})};};
+ await s.controls.button.listeners.click();assert.deepEqual(payload.store_ids,ids);assert.equal(s.controls.results.children.length,3);
+ for(const [i,card] of s.controls.results.children.entries()){assert.match(text(card),new RegExp(ids[i]));for(const other of ids.filter(id=>id!==ids[i]))assert.ok(!text(card).includes(other));}
+ assert.match(text(s.controls.results.children[2]),/Known subtotal/);assert.doesNotMatch(text(s.controls.results.children[2]),/Lowest complete basket/);
+});

@@ -221,7 +221,7 @@ test('switching language reloads existing recipe cards in the chosen language', 
   assert.match(text(resultList.children[0]), /2 œufs/);
   assert.doesNotMatch(text(resultList.children[0]), /First/);
 });
-test('grocery estimates appear on chat results and detail before scheduling', async () => {
+test('legacy default-store estimates are hidden until active-store basket pricing', async () => {
   const { context, elements, calls, scheduledMeals } = setup();
   const originalFetch = context.fetch;
   context.fetch = async (url, options) => {
@@ -234,12 +234,13 @@ test('grocery estimates appear on chat results and detail before scheduling', as
   await elements.get('recipe-chat-form').listeners.submit({ preventDefault() {} });
   await new Promise(resolve => setImmediate(resolve));
   const history = elements.get('recipe-chat-history');
-  assert.match(text(history), /\$12\.50 estimated groceries/);
-  assert.match(text(history), /Full recipe · pantry items excluded/);
+  assert.doesNotMatch(text(history), /\$12\.50/);
+  assert.match(text(history), /active store prices in Shopping/);
+
   assert.equal(scheduledMeals.length, 0);
-  assert.ok(calls.some(call => call.body.include_price_estimate));
+  assert.ok(!calls.some(call => call.body.include_price_estimate));
   await history.children[1].children[2].children[0].listeners.click();
-  assert.match(text(history.afterNode), /\$12\.50 estimated groceries/);
+  assert.doesNotMatch(text(history.afterNode), /\$12\.50/);
   assert.equal(scheduledMeals.length, 0);
 });
 test('partial estimates are labeled as subtotals and never look like a complete price', async () => {
@@ -254,8 +255,8 @@ test('partial estimates are labeled as subtotals and never look like a complete 
   await elements.get('recipe-chat-form').listeners.submit({ preventDefault() {} });
   await new Promise(resolve => setImmediate(resolve));
   const history = elements.get('recipe-chat-history');
-  assert.match(text(history), /\$8\.25\+ estimated groceries/);
-  assert.match(text(history), /Some ingredients are not priced/);
+  assert.doesNotMatch(text(history), /\$8\.25/);
+  assert.match(text(history), /active store prices in Shopping/);
 });
 test('sale ingredient action routes to Recipe Chat and starts an ingredient search', async () => {
   const { context, elements } = setup();

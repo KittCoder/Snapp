@@ -30,16 +30,21 @@
     status.textContent=(zip?(zip.length!==5?'Enter a valid 5-digit ZIP code.':supported?`Stores near ${zip}. Approximate straight-line distances.`:'That ZIP is outside our current NYC locator area.'):'All catalog stores. Enter a NYC ZIP to sort by distance.')+(failure?' Store refresh unavailable. Showing cached stores when available.':'');
     if(!stores.length){status.textContent=failure?'Stores unavailable. Please retry.':'Loading store metadata…';const retry=el('button','Retry');retry.type='button';retry.addEventListener('click',()=>registry.load());if(failure)results.append(retry);return;}
     for(const store of rank(stores,zip)){
-      const item=el('li'),title=el('h3',store.store_name),check=el('input');check.type='checkbox';check.value=store.id;check.checked=selected.has(store.id);check.setAttribute('aria-label',`Select ${store.store_name}, ${store.address||'catalog'}`);
-      const label=el('label');label.append(check,el('span','Select store'));item.classList.toggle('selected',check.checked);
-      item.append(title,el('p',store.retailer==='ctown'?'C-Town':store.retailer.replaceAll('_',' ')),el('p',store.address||'Physical location unavailable'),el('p',[store.borough,store.zip_code].filter(Boolean).join(' · ')),el('p',store.product_count>0?'Catalog available':'Catalog status unavailable'));
-      if(supported)item.append(el('p',store.distance_miles==null?'Distance unavailable':`Approx. ${store.distance_miles.toFixed(1)} mi away`));
-      check.addEventListener('change',()=>{if(check.checked)selected.add(store.id);else selected.delete(store.id);try{localStorage.setItem(selectionKey,JSON.stringify([...selected]));}catch(_){}item.classList.toggle('selected',check.checked);renderSelected();document.dispatchEvent(new Event('snapp:store-selection'));});
-      item.append(label);results.append(item);
+      const item=el('li');item.className='catalog-store-card';
+      const name=store.retailer==='ctown'?'C-Town':'Morton Williams';
+      const identity=el('div');identity.className='store-card-identity';
+      const badge=el('span',store.retailer==='ctown'?'C':'MW');badge.className='retailer-badge';badge.setAttribute('aria-hidden','true');
+      const details=el('div');details.append(el('h3',name),el('p',store.address||'Location unavailable'),el('p',[store.borough,store.zip_code].filter(Boolean).join(' · ')));identity.append(badge,details);
+      const active=window.SNAPP_ACTIVE_STORE?.id===store.id;item.classList.toggle('selected',active);
+      const meta=el('div');meta.className='store-card-meta';meta.append(el('span',store.product_count>0?'Catalog ready ✓':'Catalog unavailable'));
+      if(supported)meta.append(el('span',store.distance_miles==null?'Distance unavailable':`${store.distance_miles.toFixed(1)} mi away`));
+      const button=el('button',active?'✓ Shopping here':'Select store');button.type='button';button.value=store.id;button.setAttribute('aria-pressed',String(active));button.addEventListener('click',()=>window.SNAPP_ACTIVE_STORE.select(store.id));
+      item.append(identity,meta,button);results.append(item);
     }
     renderSelected();
   }
-  function renderSelected(){const list=document.getElementById('selected-store-list');list.replaceChildren();for(const s of stores.filter(s=>selected.has(s.id)))list.append(el('li',[s.store_name,s.address].filter(Boolean).join(' — ')));}
+  function renderSelected(){const list=document.getElementById('selected-store-list');list.replaceChildren();const s=stores.find(s=>s.id===window.SNAPP_ACTIVE_STORE?.id);if(s){const row=el('li');row.className='active-store-summary';const badge=el('span',s.retailer==='ctown'?'C':'MW');badge.className='retailer-badge';row.append(badge,el('strong',s.retailer==='ctown'?'C-Town':'Morton Williams'),el('p',s.address),el('small','✓ Used for recipe pricing'));list.append(row);}}
+  document.addEventListener('snapp:active-store',render);
   window.SNAPP_RENDER_SELECTED_STORES=renderSelected;
   try{input.value=localStorage.getItem('snapp:locator-zip')||'';}catch(_){}
   function lookup(){input.value=input.value.trim().replace(/\D/g,'').slice(0,5);try{localStorage.setItem('snapp:locator-zip',input.value);}catch(_){}render();}

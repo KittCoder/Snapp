@@ -124,3 +124,24 @@ class RuntimeCacheTests(unittest.TestCase):
         for feature_row in list(service.retriever.eligible_features)[:30]:
             expected=describe(feature_row.get('original_product_name') or feature_row.get('normalized_name'),feature=feature_row,product=True)
             self.assertEqual(service.identity_catalog.identities[feature_row['product_id']],expected)
+
+class CanonicalThreeStoreRegression(unittest.TestCase):
+    def test_canonical_three_store_prices_and_partial_isolation(self):
+        from dataclasses import replace
+        ids=['ctown:PS41_311','ctown:U41_186','morton-williams']
+        registry=FixtureRegistry()
+        registry.stores={sid:catalog(sid,price,('Rice','Butter')) for sid,price in zip(ids,[4,6,9])}
+        mw=registry.stores[ids[2]]
+        mw.metadata=replace(mw.metadata,retailer='morton_williams')
+        engine=BasketComparison(registry);self.addCleanup(engine.pool.shutdown)
+        recipe=[{'ingredients':['8 oz rice','2 oz butter']}]
+        with patch('store_catalogs.get_basket_builder',return_value=mw._builder):
+            data=engine.compare(recipe,ids)
+            by_id={s['id']:s for s in data['stores']}
+            self.assertEqual([by_id[s]['basket_total'] for s in ids],[8,12,18])
+            for sid in ids:
+                self.assertTrue(all(p['product_id'].startswith(sid) for p in by_id[sid]['product_selections']))
+            self.assertEqual([s['id'] for s in data['stores'] if s['best_basket']],[ids[0]])
+            partial=engine.compare([{'ingredients':['8 oz rice','butter']}],ids)
+            for store in partial['stores']:
+                self.assertFalse(store['complete']);self.assertIsNone(store['basket_total']);self.assertFalse(store['best_basket'])

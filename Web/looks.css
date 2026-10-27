@@ -3252,3 +3252,21 @@ html[dir="rtl"] .recipe-chat-error { border-left: 0; border-right: 3px solid var
 #my-store-results li.selected { border:2px solid #477447; }
 #my-store-results label { display:flex; gap:.6rem; align-items:center; cursor:pointer; }
 #my-store-form input:focus-visible, #my-store-results input:focus-visible, #my-store-form button:focus-visible { outline:3px solid #477447; outline-offset:3px; }
+
+/* Content-sized catalog controls and active price provenance. */
+#my #my-store-results { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; align-items:start; }
+#my #my-store-results .catalog-store-card { min-height:0; height:auto; display:flex; flex-direction:column; gap:16px; padding:20px; border:1px solid #c9ddd5; border-radius:18px; background:#fffdf7; box-shadow:0 3px 12px #173e3210; }
+#my #my-store-results .catalog-store-card.selected { border:2px solid #147d70; padding:19px; background:#edf8f2; }
+.store-card-identity { display:flex; align-items:center; gap:12px; }
+.retailer-badge { display:inline-grid; place-items:center; flex-shrink:0; width:46px; height:46px; border-radius:15px; background:#17685d; color:#fff9e8; font-weight:800; letter-spacing:-1px; }
+.catalog-store-card h3,.catalog-store-card p { margin:0; }
+.catalog-store-card p { font-size:.9rem; line-height:1.5; }
+.store-card-meta { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; font-size:.78rem; color:#42665a; }
+.catalog-store-card button,.active-shopping-store button { border:1px solid #147d70; border-radius:10px; background:#147d70; color:white; padding:10px 16px; cursor:pointer; font-weight:650; }
+.catalog-store-card button:focus-visible,.active-shopping-store button:focus-visible { outline:3px solid #dd9a36; outline-offset:3px; }
+.active-store-summary { display:block; padding:16px; background:#edf8f2; border-radius:14px; }
+.active-store-summary .retailer-badge { margin-right:10px; }
+.active-shopping-store { margin:18px 0; padding:20px; border:1px solid #c9ddd5; border-radius:16px; background:#edf8f2; }
+.active-shopping-store strong { margin:0 12px; }
+@media(max-width:1100px) { #my #my-store-results { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:640px) { #my #my-store-results { grid-template-columns:1fr; } .active-shopping-store button { display:block; margin-top:12px; } }
