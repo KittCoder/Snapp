@@ -40,12 +40,7 @@
     }catch(_){status.textContent=tx('stores.unavailable');}
   }
   function recipes(){
-    return scheduledMeals.map((meal,index)=>{
-      const original=meal.recipe||meal;
-      // Use original recipe quantities, never Morton Williams purchase packages.
-      const clean=item=>typeof item==='string'?item:Object.fromEntries(Object.entries(item||{}).filter(([key])=>['name','nameClean','original','originalName','amount','quantity','unit','raw','text','note','recipe_ingredient','recipe_measure','display','measure','type'].includes(key)));
-      return {id:String(meal.schedule_id||index),name:meal.name,...(original.extendedIngredients?{extendedIngredients:original.extendedIngredients.map(clean)}:{ingredients:(original.ingredients||meal.ingredients||[]).map(clean)})};
-    });
+    return scheduledMeals.map(window.SNAPP_RECIPE_REQUIREMENTS);
   }
   function render(data){
     output.replaceChildren();
@@ -59,7 +54,7 @@
       if(!store.complete)card.append(node('p',tx('stores.unknown',{count:store.unknown_cost_items.length})));
       const details=node('details');details.append(node('summary',tx('stores.viewBasket')));const items=node('ul');
       for(const product of store.product_selections){
-        const li=node('li');li.append(node('strong',product.ingredients.join(' + ')),node('p',product.product_name));
+        const li=node('li');li.append(node('strong',product.display_name||product.ingredients[0]),node('p',product.product_name));
         const quality={a:'shopping.excellentMatch',b:'shopping.strongMatch',c:'shopping.goodMatch'}[String(product.deal?.quality_tier||'').toLowerCase()];
         if(quality)li.append(node('span',tx(quality)));
         if(product.effective_cost!=null)li.append(node('p',tx('stores.effectiveCost',{amount:currency(product.effective_cost)})));
@@ -69,7 +64,7 @@
         if(product.deal?.savings_vs_closest_match!=null)li.append(node('p',tx('shopping.saveAmount',{amount:currency(product.deal.savings_vs_closest_match)})));
         items.append(li);
       }
-      for(const missing of store.ingredients_unmatched)items.append(node('li',tx('stores.missing',{ingredient:missing.ingredients.join(' + ')})));
+      for(const missing of store.ingredients_unmatched)items.append(node('li',tx('stores.missing',{ingredient:missing.ingredients[0]})));
       details.append(items);card.append(details);output.append(card);
     }
   }
@@ -79,7 +74,7 @@
     if(!ids.length||!basket.length){status.textContent=tx('stores.chooseBasket');return;}
     button.disabled=true;status.textContent=tx('stores.comparing');output.replaceChildren();
     try{
-      const result=await api('/api/shopping/compare',{store_ids:ids,recipes:basket});
+      const result=await api('/api/shopping/compare',{store_ids:ids,recipes:basket,...(typeof pantryItems!=='undefined'?{pantry_items:pantryItems.map(({name,quantity})=>({name,quantity}))}:{})});
       if(version!==requestVersion)return;lastPayload=result;render(result);status.textContent=tx('stores.disclaimer');
     }catch(_){if(version===requestVersion)status.textContent=tx('stores.unavailable');}
     finally{if(version===requestVersion)button.disabled=false;}

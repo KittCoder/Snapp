@@ -15,7 +15,7 @@ DEAL_OPTIMIZER_VERSION=hashlib.sha256(Path(deal_optimizer.__file__).read_bytes()
 from deal_presentation import shopping_deal_fields
 from store_catalogs import StoreRegistry,CatalogError
 
-ADAPTER_VERSION='whole-store-comparison-v1'
+ADAPTER_VERSION='whole-store-comparison-v2-quantities'
 def money(values):return float(sum((Decimal(str(v)).quantize(Decimal('.01')) for v in values),Decimal(0)))
 
 def validate_recipes(recipes):
@@ -34,16 +34,24 @@ class BasketComparison:
         self.registry=registry or StoreRegistry();self.cache=OrderedDict();self.cache_lock=threading.Lock();self.pool=ThreadPoolExecutor(max_workers=4,thread_name_prefix='store-basket')
     def key(self,recipes,catalogs,semantic):
         return hashlib.sha256(json.dumps({'recipes':recipes,'stores':sorted((c.metadata.id,c.metadata.inventory_version) for c in catalogs),'overrides':sorted({c.override_hash or 'default' for c in catalogs}),'matcher':MATCHER_VERSION,'ontology':ONTOLOGY_VERSION,'optimizer':DEAL_OPTIMIZER_VERSION,'basket':OPTIMIZER_VERSION,'adapter':ADAPTER_VERSION,'mw_semantic':semantic},sort_keys=True,allow_nan=False).encode()).hexdigest()
-    def compare(self,recipes,store_ids,mw_semantic=False):
-        validate_recipes(recipes);catalogs=self.registry.select(store_ids)
+    def compare(self,recipes,store_ids,mw_semantic=False,pantry_items=None):
+        validate_recipes(recipes)
+        from store_requirements import prepare_recipes
+        quantity_context = [(r.get("source_servings") or r.get("servings"), r.get("target_servings")) for r in recipes]
+        recipes, pantry = prepare_recipes(recipes, pantry_items)
+        catalogs=self.registry.select(store_ids)
         current = self.registry.all_current(catalogs) if hasattr(self.registry, 'all_current') else all(c.current() for c in catalogs)
         if not current:raise CatalogError('Store inventory changed or unavailable; reload registry')
-        key=self.key(recipes,catalogs,mw_semantic)
+        key=self.key({"recipes":recipes,"pantry":pantry,"servings":quantity_context},catalogs,mw_semantic)
         cache_key = (key, tuple(sorted((c.metadata.id, getattr(c, 'cache_version', None)) for c in catalogs)))
         with self.cache_lock:
             if cache_key in self.cache:
                 result=copy.deepcopy(self.cache[cache_key]);result['cache_hit']=True;return result
         started=time.perf_counter();futures=[self.pool.submit(copy_context().run,self.store_basket,c,recipes,mw_semantic) for c in catalogs];results=[f.result() for f in futures]
+        for result in results:
+            result['pantry_items'] = pantry
+            if not result['ingredients_requested']:
+                result.update(complete=True,basket_total=0.0)
         # Equal coverage alone is insufficient. Only complete, reliably costed baskets compare.
         complete=[r for r in results if r['complete']];best=min((r['basket_total'] for r in complete),default=None)
         for r in results:
@@ -85,7 +93,9 @@ class BasketComparison:
                     reliable=bool(has_match and quantities_safe and selected and selected.deal_confidence=='high' and not selected.exclusion_reasons and selected.cost.checkout_cost is not None)
                     cost=purchase.checkout_cost if reliable else None
                     if not reliable:deal=dict(deal,best_deal=False,savings_vs_closest_match=None,effective_cost=None,packages_needed=None,deal_confidence='unknown')
-                    row={'product_id':purchase.product_id,'product_name':purchase.product_name,'ingredients':lines,'total_required':purchase.total_required.to_dict(),'packages_needed':deal.get('packages_needed'),'checkout_cost':cost,'effective_cost':deal.get('effective_cost') if reliable else None,'deal':deal,'snap_eligible':None,'warnings':purchase.warnings,**{k:v for k,v in catalog.metadata.public().items() if k in ('retailer','store_id','store_name','address','borough')}}
+                    from ingredient_normalization import parse_ingredient
+                    label = parse_ingredient(lines[0]).canonical_name
+                    row={'display_name':label,'product_id':purchase.product_id,'product_name':purchase.product_name,'ingredients':lines,'total_required':purchase.total_required.to_dict(),'package_size':f'{selected.package.package_quantity:g} {selected.package.package_unit}' if selected and selected.package.package_quantity and selected.package.package_unit else None,'packages_needed':deal.get('packages_needed'),'checkout_cost':cost,'effective_cost':deal.get('effective_cost') if reliable else None,'deal':deal,'snap_eligible':None,'warnings':purchase.warnings,**{k:v for k,v in catalog.metadata.public().items() if k in ('retailer','store_id','store_name','address','borough')}}
                     source=catalog.source_row(purchase.product_id)
                     if source:row.update(source_url=source['source_url'],availability=source.get('availability'))
                     selections.append(row)

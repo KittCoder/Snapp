@@ -2300,7 +2300,14 @@ function renderShoppingList(priceRefresh = false) {
       const note = document.createElement("small");
       note.textContent = t("copy.get.arg0.arg1.arg2", {arg0: (item.quantity), arg1: (item.dishName), arg2: (item.unavailable ? " · Unavailable" : "")});
       details.append(name, note);
-      appendShoppingDeal(details, item);
+      if (item.store_id) {
+        const packageText = [item.productName, item.package_size].filter(Boolean).join(" · ");
+        details.append(document.createTextNode(packageText));
+        const cost = document.createElement("small");
+        cost.className = "shopping-package-cost";
+        cost.textContent = item.checkout_cost == null ? "Package cost unverified" : `${item.packages_needed == null ? "" : item.packages_needed + " package(s) × "}${item.package_price == null ? "" : currencyFormatter.format(item.package_price)} · ${currencyFormatter.format(item.checkout_cost)} checkout`;
+        details.append(cost);
+      } else appendShoppingDeal(details, item);
 
       addButton.type = "button";
       addButton.textContent = t("copy.add.to.pantry", {});
@@ -2766,6 +2773,7 @@ async function addMealToSchedule(dish) {
 
   const scheduledMeal = {
     ...dish,
+    ...(dish.recipe?.servings ? {target_servings: dish.target_servings || getHouseholdSize()} : {}),
     schedule_id: String(dish.recipe_id || dish.name),
     scheduled_day: null,
     scheduled_slot: null,
@@ -2786,7 +2794,8 @@ async function addMealToSchedule(dish) {
     if (!error && data) {
       scheduledMeals.push(normalizeScheduledMeal(data));
       saveScheduledMealsToStorage();
-      await consumePantryForScheduledDish(dish);
+      // Active-store baskets allocate pantry quantities together on the server.
+      if (!window.SNAPP_ACTIVE_STORE) await consumePantryForScheduledDish(dish);
       renderSchedule();
       showPanel("schedule");
       return;
@@ -2795,7 +2804,8 @@ async function addMealToSchedule(dish) {
 
   scheduledMeals.push(scheduledMeal);
   saveScheduledMealsToStorage();
-  await consumePantryForScheduledDish(dish);
+  // Active-store baskets allocate pantry quantities together on the server.
+  if (!window.SNAPP_ACTIVE_STORE) await consumePantryForScheduledDish(dish);
   renderSchedule();
   showPanel("schedule");
 }
@@ -4118,7 +4128,7 @@ const recipeChat = (() => {
       const canonical = dish.recipe;
       const full = dish.localized_recipe || canonical;
       const card = recipeCard({
-        ...full, title: full.name || full.title || dish.name, sale_ingredients: dish.sale_ingredients,
+        ...full, pricing_recipe: canonical, title: full.name || full.title || dish.name, sale_ingredients: dish.sale_ingredients,
         grocery_estimate: dish.grocery_estimate,
         canonical_ingredients_text: (canonical.ingredients || []).map((item) => item.display || item.measure || item.name),
         ingredients_text: (full.ingredients || []).map((item) => item.display || item.measure || item.name),
@@ -4194,7 +4204,7 @@ const recipeChat = (() => {
 
   const cardRecipes = new WeakMap();
   function appendPrice(card, recipe) {
-    card.append(textElement("p", "recipe-chat-price-note", "Add to your schedule to see active store prices in Shopping."));
+    if (window.SNAPP_RECIPE_PRICES) window.SNAPP_RECIPE_PRICES.register(card, recipe.pricing_recipe || recipe);
   }
 
   function recipeCard(recipe, index, selected = false) {
@@ -4313,10 +4323,10 @@ const recipeChat = (() => {
         const results = document.createElement("div");
         results.className = "recipe-chat-results";
         results.setAttribute("aria-label", t("copy.recipes.in.result.order", {}));
-        (data.localized_results || data.results).forEach((recipe, index) => results.append(recipeCard(recipe, index)));
+        (data.localized_results || data.results).forEach((recipe, index) => results.append(recipeCard({...recipe, pricing_recipe: data.results[index]}, index)));
         reply.append(results);
       }
-      if (data.selected_recipe) reply.append(recipeCard(data.localized_selected_recipe || data.selected_recipe, 0));
+      if (data.selected_recipe) reply.append(recipeCard({...data.localized_selected_recipe || data.selected_recipe, pricing_recipe:data.selected_recipe}, 0));
       history.append(reply);
       currentState = data.state;
       input.value = "";

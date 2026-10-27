@@ -3270,3 +3270,14 @@ html[dir="rtl"] .recipe-chat-error { border-left: 0; border-right: 3px solid var
 .active-shopping-store strong { margin:0 12px; }
 @media(max-width:1100px) { #my #my-store-results { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:640px) { #my #my-store-results { grid-template-columns:1fr; } .active-shopping-store button { display:block; margin-top:12px; } }
+
+.recipe-store-price { display:flex; flex-direction:column; gap:5px; margin:12px 0; padding:12px 14px; border:1px solid #cadfd5; border-radius:12px; background:#edf6ee; color:#20594c; }
+.recipe-store-price strong { font-size:1.15rem; }
+.recipe-store-price small { line-height:1.4; }
+.checkout-summary-total { font-size:1.45rem; font-weight:750; color:#17685d; }
+.shopping-support-group { padding-top:10px; border-top:1px solid #cadfd5; margin-top:12px; }
+.shopping-support-group h4 { margin:0 0 8px; }
+.shopping-support-group ul { display:flex; flex-wrap:wrap; gap:7px; list-style:none; padding:0; }
+.shopping-support-group li { padding:5px 10px; border-radius:8px; background:#fffdf7; font-size:.85rem; }
+.shopping-package-cost { display:block; font-variant-numeric:tabular-nums; font-weight:650; margin-top:6px; }
+@media(max-width:640px) { .shopping-list-item { flex-wrap:wrap; } .shopping-item-details { min-width:0; overflow-wrap:anywhere; } }

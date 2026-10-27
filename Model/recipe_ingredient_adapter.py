@@ -144,11 +144,11 @@ def canonical_ingredient_from_structured(
     *,
     source_recipe_id: str = "",
 ) -> CanonicalRecipeIngredient:
-    raw_text = re.sub(r"\s+", " ", str(ingredient.get("raw") or "").strip())
+    raw_text = re.sub(r"\s+", " ", str(ingredient.get("raw") or ingredient.get("display") or ingredient.get("measure") or ingredient.get("original") or "").strip())
     name = re.sub(r"\s+", " ", str(ingredient.get("name") or "").strip())
     source_note = re.sub(r"\s+", " ", str(ingredient.get("note") or "").strip())
     note = clean_structured_note_for_identity(source_note)
-    quantity = parse_small_number(ingredient.get("quantity"))
+    quantity = parse_small_number(ingredient.get("quantity") if ingredient.get("quantity") is not None else ingredient.get("amount") or ingredient.get("quantity_text"))
     unit = normalize_unit(ingredient.get("unit"))
     warnings = []
     provenance = {

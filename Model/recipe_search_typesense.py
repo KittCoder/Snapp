@@ -708,7 +708,7 @@ def search_recipes(
         "per_page": candidate_limit,
         "page": 1,
         "exhaustive_search": "false",
-        "include_fields": "id,source_id,title,ingredient_names,categories,meal_categories,dish_categories,equipment,total_time_minutes,cook_time_minutes,servings",
+        "include_fields": "id,source_id,title,ingredients_text,ingredient_names,categories,meal_categories,dish_categories,equipment,total_time_minutes,cook_time_minutes,servings",
     }
     filter_by = build_typesense_filter(merged_state)
     if filter_by:
@@ -796,6 +796,7 @@ def format_search_hit(rank: int, hit: dict[str, Any]) -> dict[str, Any]:
         "title": document.get("title"),
         "key_ingredients": ingredients[:8],
         "ingredient_names": ingredients,
+        "ingredients_text": document.get("ingredients_text") or [],
         "time": document.get("total_time_minutes") or document.get("cook_time_minutes"),
         "total_time_minutes": document.get("total_time_minutes"),
         "cook_time_minutes": document.get("cook_time_minutes"),

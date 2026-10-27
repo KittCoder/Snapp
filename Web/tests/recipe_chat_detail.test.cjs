@@ -235,7 +235,7 @@ test('legacy default-store estimates are hidden until active-store basket pricin
   await new Promise(resolve => setImmediate(resolve));
   const history = elements.get('recipe-chat-history');
   assert.doesNotMatch(text(history), /\$12\.50/);
-  assert.match(text(history), /active store prices in Shopping/);
+  assert.doesNotMatch(text(history), /estimated groceries/);
 
   assert.equal(scheduledMeals.length, 0);
   assert.ok(!calls.some(call => call.body.include_price_estimate));
@@ -256,7 +256,7 @@ test('partial estimates are labeled as subtotals and never look like a complete 
   await new Promise(resolve => setImmediate(resolve));
   const history = elements.get('recipe-chat-history');
   assert.doesNotMatch(text(history), /\$8\.25/);
-  assert.match(text(history), /active store prices in Shopping/);
+  assert.doesNotMatch(text(history), /estimated groceries/);
 });
 test('sale ingredient action routes to Recipe Chat and starts an ingredient search', async () => {
   const { context, elements } = setup();
@@ -289,4 +289,37 @@ test('adding a saved dish calculates USDA nutrition before persisting it', async
   assert.equal(scheduledMeals.length, 1);
   assert.equal(scheduledMeals[0].nutrition_source, 'USDA FoodData Central');
   assert.equal(scheduledMeals[0].nutrition_per_person.protein_g, 6);
+});
+test('actual Recipe Chat response renders cards before one canonical store-price batch finishes',async()=>{
+  const {context,elements}=setup();
+  context.window.SNAPP_ACTIVE_STORE={id:'ctown:PS41_311'};
+  context.window.SNAPP_STORES={stores:[{id:'ctown:PS41_311',retailer:'ctown',address:'330 Graham Avenue'}]};
+  context.getApiEndpoints=p=>[p];
+  const create=context.document.createElement;context.document.createElement=tag=>{const e=create(tag);e.dataset={};e.isConnected=true;return e;};
+  const requests=[];let finish;
+  context.fetch=async(url,options)=>{
+    const body=JSON.parse(options.body);requests.push({url,body});
+    if(url.endsWith('/chat'))return {ok:true,json:async()=>({message:'Recipes',state:{},results:Array.from({length:5},(_,i)=>({id:'r'+i,title:'Rice '+i,servings:4,ingredients_text:['8 oz rice','2 oz butter']}))})};
+    return new Promise(resolve=>{finish=()=>resolve({ok:true,json:async()=>({store_id:body.store_id,prices:body.recipes.map(r=>({id:body.store_id,recipe_id:r.id,inventory_version:'v1',complete:true,basket_total:6.92,checkout_total_known:6.92,unknown_cost_items:[]}))})});});
+  };
+  for(const file of ['recipe_requirements.js','recipe_store_prices.js'])vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'../',file),'utf8'),context);
+  elements.get('recipe-chat-input').value='rice';
+  await elements.get('recipe-chat-form').listeners.submit({preventDefault(){}});
+  assert.match(text(elements.get('recipe-chat-history')),/Rice 4/);
+  assert.equal(requests.filter(r=>r.url.endsWith('/store-prices')).length,1);
+  assert.deepEqual(requests[1].body.recipes[0].ingredients,['8 oz rice','2 oz butter']);
+  assert.doesNotMatch(text(elements.get('recipe-chat-history')),/\$6.92/);
+  finish();await new Promise(resolve=>setImmediate(resolve));
+  assert.match(text(elements.get('recipe-chat-history')),/C-Town — 330 Graham Avenue/);
+  assert.match(text(elements.get('recipe-chat-history')),/\$6.92 total/);
+});
+test('scheduling preserves source quantities and serving intent without consuming pantry before basket allocation',async()=>{
+ const {context,scheduledMeals}=setup();let consumed=0;
+ context.window.SNAPP_ACTIVE_STORE={id:'ctown:PS41_311'};
+ context.consumePantryForScheduledDish=async()=>{consumed++;};
+ const dish={recipe_id:'r-quantity',name:'Beef',recipe:{servings:4,ingredients:[{name:'ground beef',display:'1 lb ground beef',measure:'1 pound ground beef'}]}};
+ await context.addMealToSchedule(dish);
+ assert.equal(consumed,0);assert.equal(scheduledMeals[0].target_servings,2);
+ const saved=JSON.parse(JSON.stringify(scheduledMeals[0]));
+ assert.equal(saved.recipe.ingredients[0].display,'1 lb ground beef');assert.equal(saved.recipe.servings,4);
 });

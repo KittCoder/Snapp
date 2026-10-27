@@ -493,6 +493,7 @@ CORS_ORIGINS = {
 MATCHER_WARMUP_EXEMPT_ENDPOINTS = {
     "store_comparison.stores",
     "store_comparison.compare",
+    "store_comparison.recipe_prices",
     "health",
     "static",
     "recipe_search",
