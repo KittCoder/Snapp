@@ -3281,3 +3281,6 @@ html[dir="rtl"] .recipe-chat-error { border-left: 0; border-right: 3px solid var
 .shopping-support-group li { padding:5px 10px; border-radius:8px; background:#fffdf7; font-size:.85rem; }
 .shopping-package-cost { display:block; font-variant-numeric:tabular-nums; font-weight:650; margin-top:6px; }
 @media(max-width:640px) { .shopping-list-item { flex-wrap:wrap; } .shopping-item-details { min-width:0; overflow-wrap:anywhere; } }
+
+.recipe-store-price.is-checking, .recipe-store-price.is-unavailable { flex-direction:row; align-items:center; gap:8px; padding:5px 0; border:0; background:transparent; font-size:.82rem; }
+.recipe-store-price button { padding:3px 9px; border:1px solid #acc9bc; border-radius:7px; background:#fffdf7; color:#20594c; cursor:pointer; }

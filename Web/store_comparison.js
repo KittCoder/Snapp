@@ -12,6 +12,7 @@
   const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(cls)n.className=cls;return n;};
   const currency=value=>new Intl.NumberFormat(window.SNAPP_I18N.locale,{style:'currency',currency:'USD'}).format(value);
   async function api(path,body){
+    if(body)return window.SNAPP_PRICE_REQUEST(path,body);
     let error;
     for(const endpoint of getApiEndpoints(path)){
       try{

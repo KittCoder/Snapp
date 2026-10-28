@@ -23,7 +23,7 @@ function setup() {
   const listeners = {};
   const document = { getElementById(id) { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); }, createElement: tag => new Element(tag), querySelector: () => null, addEventListener: (event, callback) => { listeners[event] = callback; } };
   const calls = []; let scheduledMeals = [];
-  const context = vm.createContext({ document, AbortController, console,
+  const context = vm.createContext({ document, AbortController, console, setTimeout, clearTimeout,
     window: { location: { hostname: 'localhost' }, setTimeout, clearTimeout },
     t: (key, values = {}) => { const catalog = JSON.parse(fs.readFileSync(require('node:path').join(__dirname, '../i18n/en.json'), 'utf8')); return (catalog[key] || '').replace(/\{(\w+)\}/g, (m,k) => values[k] == null ? m : String(values[k])); },
     getLanguage: () => 'en', getHouseholdSize: () => 2,
@@ -302,7 +302,7 @@ test('actual Recipe Chat response renders cards before one canonical store-price
     if(url.endsWith('/chat'))return {ok:true,json:async()=>({message:'Recipes',state:{},results:Array.from({length:5},(_,i)=>({id:'r'+i,title:'Rice '+i,servings:4,ingredients_text:['8 oz rice','2 oz butter']}))})};
     return new Promise(resolve=>{finish=()=>resolve({ok:true,json:async()=>({store_id:body.store_id,prices:body.recipes.map(r=>({id:body.store_id,recipe_id:r.id,inventory_version:'v1',complete:true,basket_total:6.92,checkout_total_known:6.92,unknown_cost_items:[]}))})});});
   };
-  for(const file of ['recipe_requirements.js','recipe_store_prices.js'])vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'../',file),'utf8'),context);
+  for(const file of ['recipe_requirements.js','store_pricing_transport.js','recipe_store_prices.js'])vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'../',file),'utf8'),context);
   elements.get('recipe-chat-input').value='rice';
   await elements.get('recipe-chat-form').listeners.submit({preventDefault(){}});
   assert.match(text(elements.get('recipe-chat-history')),/Rice 4/);

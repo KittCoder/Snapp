@@ -1003,7 +1003,7 @@ def profile_from_query(ingredient_text: str, overrides: OverrideStore | None = N
     return profile, parsed.to_dict()
 
 
-def profile_from_feature(feature: dict[str, Any]) -> IngredientProfile:
+def profile_from_feature(feature: dict[str, Any], ontology: FoodIdentity | None = None) -> IngredientProfile:
     text = feature.get("normalized_name") or ""
     profile = classify_identity(
         text,
@@ -1019,7 +1019,7 @@ def profile_from_feature(feature: dict[str, Any]) -> IngredientProfile:
         raw_text=feature.get("original_product_name") or text,
     )
 
-    profile.ontology = describe(feature.get("original_product_name") or text, feature=feature, product=True)
+    profile.ontology = ontology if ontology is not None else describe(feature.get("original_product_name") or text, feature=feature, product=True)
     return profile
 
 def classify_identity(
@@ -2324,7 +2324,8 @@ class ProductMatchService:
         product_id = str(feature.get("product_id") or "")
         cached = self._product_profile_cache.get(product_id)
         if cached is None:
-            cached = profile_from_feature(feature)
+            identity = self._identity_catalog.identities.get(product_id) if self._identity_catalog is not None else None
+            cached = profile_from_feature(feature, ontology=identity)
             if product_id:
                 self._product_profile_cache[product_id] = cached
         return cached

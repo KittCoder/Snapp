@@ -806,6 +806,7 @@ class BasketBuilder:
         recipes: list[Any],
         optimization_mode: str = "balanced",
         use_semantic: bool = True,
+        matched_results: list | None = None,
     ) -> RecipeBasket:
         started = time.perf_counter()
         cache_key = self._basket_cache_key(recipes, optimization_mode, use_semantic=use_semantic)
@@ -825,16 +826,21 @@ class BasketBuilder:
             recipe_refs.append({"recipe_id": recipe_id, "ingredient_count": len(ingredients)})
             prepared_recipes.append((recipe_index, recipe_id, ingredients))
             all_ingredients.extend(ingredients)
-        try:
-            all_results = self.match_service.match_recipe_ingredients(
-                all_ingredients,
-                limit=15,
-                use_semantic=use_semantic,
-            )
-        except TypeError as exc:
-            if "use_semantic" not in str(exc):
-                raise
-            all_results = self.match_service.match_recipe_ingredients(all_ingredients, limit=15)
+        if matched_results is not None:
+            if len(matched_results) != len(all_ingredients):
+                raise ValueError('One precomputed match is required per ingredient')
+            all_results = matched_results
+        else:
+            try:
+                all_results = self.match_service.match_recipe_ingredients(
+                    all_ingredients,
+                    limit=15,
+                    use_semantic=use_semantic,
+                )
+            except TypeError as exc:
+                if "use_semantic" not in str(exc):
+                    raise
+                all_results = self.match_service.match_recipe_ingredients(all_ingredients, limit=15)
         result_offset = 0
         for _recipe_index, recipe_id, ingredients in prepared_recipes:
             results = all_results[result_offset : result_offset + len(ingredients)]

@@ -169,7 +169,8 @@ class PreparedCatalogCache:
 
 
 class DatabaseStoreCatalog:
-    def __init__(self, metadata, version_id, gateway, cache, prepared_cache=None):
+    def __init__(self, metadata, version_id, gateway, cache, prepared_cache=None, hot_cache=None):
+        self.hot_cache = hot_cache
         self.metadata = metadata
         self.version_id = version_id
         self.gateway = gateway
@@ -195,6 +196,11 @@ class DatabaseStoreCatalog:
                 and versions[0].get('product_count')==self.metadata.product_count
                 and current_hash==self.override_hash)
     def request_catalog(self, recipes):
+        if self.hot_cache is not None:
+            prepared = self.hot_cache.get(self)
+            prepared.builder()._basket_cache.clear()
+            return prepared
+        # Reference remote-pool path retained for output-parity diagnostics.
         rows = {}
         pools = {}
         def query_pool(field, values):
@@ -323,6 +329,8 @@ class DatabaseStoreRegistry:
             self.cache = cache or CandidateCache()
         self.stores = {}
         self.prepared_cache = PreparedCatalogCache()
+        from hot_store_catalog import HotStoreCatalogCache
+        self.hot_cache = HotStoreCatalogCache()
         self.errors = []
         self.manifest_path = ROOT/'Model/store_catalog_manifest.json'
         self.manifest_hash = digest(self.manifest_path)
@@ -344,7 +352,7 @@ class DatabaseStoreRegistry:
                 raise CatalogUnavailable('Inventory metadata/version mismatch')
             if asdict(metadata)!=allowed[metadata.id]:
                 raise CatalogUnavailable('Verified store identity/source version mismatch')
-            self.stores[metadata.id] = DatabaseStoreCatalog(metadata,version['id'],self.gateway,self.cache,self.prepared_cache)
+            self.stores[metadata.id] = DatabaseStoreCatalog(metadata,version['id'],self.gateway,self.cache,self.prepared_cache,self.hot_cache)
         if not self.stores: raise CatalogUnavailable('No verified database inventories available')
     def select(self, ids):
         if digest(self.manifest_path)!=self.manifest_hash:

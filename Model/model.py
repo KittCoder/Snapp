@@ -494,6 +494,7 @@ MATCHER_WARMUP_EXEMPT_ENDPOINTS = {
     "store_comparison.stores",
     "store_comparison.compare",
     "store_comparison.recipe_prices",
+    "store_comparison.warm_store",
     "health",
     "static",
     "recipe_search",

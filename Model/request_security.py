@@ -8,7 +8,7 @@ from flask import jsonify, request
 from flask_limiter import Limiter
 from werkzeug.exceptions import HTTPException
 
-PUBLIC_ENDPOINTS = {'store_comparison.stores', 'store_comparison.compare', 'store_comparison.recipe_prices', 'index', 'health', 'ready', 'recipe_search', 'recipe_chat',
+PUBLIC_ENDPOINTS = {'store_comparison.stores', 'store_comparison.compare', 'store_comparison.recipe_prices', 'store_comparison.warm_store', 'index', 'health', 'ready', 'recipe_search', 'recipe_chat',
  'recipe_chat_detail', 'recipe_nutrition_preview', 'grocery_stores', 'trader_joes_store',
  'sale_ingredients', 'dishes', 'chat', 'static', 'dev_product_candidates', 'dev_product_match'}
 

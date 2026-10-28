@@ -34,20 +34,74 @@ class BasketComparison:
         self.registry=registry or StoreRegistry();self.cache=OrderedDict();self.cache_lock=threading.Lock();self.pool=ThreadPoolExecutor(max_workers=4,thread_name_prefix='store-basket')
     def key(self,recipes,catalogs,semantic):
         return hashlib.sha256(json.dumps({'recipes':recipes,'stores':sorted((c.metadata.id,c.metadata.inventory_version) for c in catalogs),'overrides':sorted({c.override_hash or 'default' for c in catalogs}),'matcher':MATCHER_VERSION,'ontology':ONTOLOGY_VERSION,'optimizer':DEAL_OPTIMIZER_VERSION,'basket':OPTIMIZER_VERSION,'adapter':ADAPTER_VERSION,'mw_semantic':semantic},sort_keys=True,allow_nan=False).encode()).hexdigest()
-    def compare(self,recipes,store_ids,mw_semantic=False,pantry_items=None):
+    def _plan(self, recipes, catalogs, semantic, pantry_items):
         validate_recipes(recipes)
         from store_requirements import prepare_recipes
-        quantity_context = [(r.get("source_servings") or r.get("servings"), r.get("target_servings")) for r in recipes]
-        recipes, pantry = prepare_recipes(recipes, pantry_items)
-        catalogs=self.registry.select(store_ids)
-        current = self.registry.all_current(catalogs) if hasattr(self.registry, 'all_current') else all(c.current() for c in catalogs)
-        if not current:raise CatalogError('Store inventory changed or unavailable; reload registry')
-        key=self.key({"recipes":recipes,"pantry":pantry,"servings":quantity_context},catalogs,mw_semantic)
+        quantities = [(r.get('source_servings') or r.get('servings'), r.get('target_servings')) for r in recipes]
+        prepared, pantry = prepare_recipes(recipes, pantry_items)
+        key = self.key({'recipes':prepared,'pantry':pantry,'servings':quantities},catalogs,semantic)
         cache_key = (key, tuple(sorted((c.metadata.id, getattr(c, 'cache_version', None)) for c in catalogs)))
+        return prepared, pantry, key, cache_key
+
+    def _cached(self, plan):
         with self.cache_lock:
-            if cache_key in self.cache:
-                result=copy.deepcopy(self.cache[cache_key]);result['cache_hit']=True;return result
-        started=time.perf_counter();futures=[self.pool.submit(copy_context().run,self.store_basket,c,recipes,mw_semantic) for c in catalogs];results=[f.result() for f in futures]
+            value = self.cache.get(plan[3])
+            if value is None:
+                return None
+            self.cache.move_to_end(plan[3])
+            result = copy.deepcopy(value)
+            result['cache_hit'] = True
+            return result
+
+    def _current(self, catalogs):
+        current = self.registry.all_current(catalogs) if hasattr(self.registry, 'all_current') else all(c.current() for c in catalogs)
+        if not current:
+            raise CatalogError('Store inventory changed or unavailable; reload registry')
+
+    def compare(self, recipes, store_ids, mw_semantic=False, pantry_items=None):
+        catalogs = self.registry.select(store_ids)
+        self._current(catalogs)
+        plan = self._plan(recipes,catalogs,mw_semantic,pantry_items)
+        cached = self._cached(plan)
+        return cached if cached is not None else self._calculate(plan,catalogs,mw_semantic)
+
+    def compare_recipes(self, recipes, store_id, mw_semantic=False, pantry_items=None):
+        """One version check and one matching/embedding batch; independent purchases."""
+        validate_recipes(recipes)
+        if len(recipes)>10:
+            raise CatalogError('Price at most 10 recipes at once')
+        catalogs = self.registry.select([store_id])
+        self._current(catalogs)
+        catalog = catalogs[0]
+        plans = [self._plan([recipe],catalogs,mw_semantic,pantry_items) for recipe in recipes]
+        results = [self._cached(plan) for plan in plans]
+        missing = [i for i, value in enumerate(results) if value is None]
+        if missing:
+            from types import SimpleNamespace
+            with catalog.lock, store_timing(store_id):
+                prepared_recipes = [recipe for i in missing for recipe in plans[i][0]]
+                prepared = catalog.request_catalog(prepared_recipes) if hasattr(catalog,'request_catalog') else catalog
+                builder = prepared.builder()
+                lines = list(dict.fromkeys(line for recipe in prepared_recipes for line in recipe_ingredients(recipe)[1]))
+                semantic = mw_semantic if catalog.metadata.retailer=='morton_williams' else False
+                # The matcher deduplicates quantity-independent identities internally and
+                # batches all missing embeddings in this single call.
+                with timing('batch_match'):
+                    matched = builder.match_service.match_recipe_ingredients(lines,limit=15,use_semantic=semantic)
+                matches = dict(zip(lines,matched))
+                snapshot = SimpleNamespace(metadata=prepared.metadata,lock=threading.RLock(),
+                    builder=prepared.builder,source_row=prepared.source_row,_rows=prepared._rows)
+                try:
+                    for i in missing:
+                        results[i] = self._calculate(plans[i],[snapshot],mw_semantic,matches)
+                finally:
+                    builder._basket_cache.clear()
+        return [dict(result['stores'][0],recipe_id=str(recipe.get('id')),basket_id=result['basket_id'],
+                     versions=result['versions'],cache_hit=result['cache_hit']) for recipe,result in zip(recipes,results)]
+
+    def _calculate(self, plan, catalogs, mw_semantic, matches=None):
+        recipes, pantry, key, cache_key = plan
+        started=time.perf_counter();futures=[self.pool.submit(copy_context().run,self.store_basket,c,recipes,mw_semantic,matches) for c in catalogs];results=[f.result() for f in futures]
         for result in results:
             result['pantry_items'] = pantry
             if not result['ingredients_requested']:
@@ -64,10 +118,12 @@ class BasketComparison:
             while len(self.cache)>64:self.cache.popitem(last=False)
         return result
     @staticmethod
-    def store_basket(catalog,recipes,mw_semantic=False):
+    def store_basket(catalog,recipes,mw_semantic=False,matches=None):
         with catalog.lock, store_timing(catalog.metadata.id), timing('store_basket'):
             catalog=catalog.request_catalog(recipes) if hasattr(catalog,'request_catalog') else catalog
-            builder=catalog.builder();basket=builder.build_multi_recipe_basket(recipes,use_semantic=mw_semantic if catalog.metadata.retailer=='morton_williams' else False)
+            builder=catalog.builder()
+            kwargs = {'matched_results':[matches[line] for recipe in recipes for line in recipe_ingredients(recipe)[1]]} if matches is not None else {}
+            basket=builder.build_multi_recipe_basket(recipes,use_semantic=mw_semantic if catalog.metadata.retailer=='morton_williams' else False,**kwargs)
             # Every candidate and selected product must belong to this catalog.
             owned=set(builder.match_service.feature_by_id)
             if catalog.metadata.retailer=='ctown' and owned!=set(catalog._rows):raise CatalogError('Cross-store feature inventory rejected')

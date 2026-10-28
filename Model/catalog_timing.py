@@ -18,17 +18,18 @@ class TimingTrace:
         self.lock = threading.Lock()
         self.stages = {}
 
-    def add(self, stage, elapsed):
+    def add(self, stage, elapsed, cpu_elapsed=0.0):
         key = (_store.get(), stage)
         with self.lock:
-            value = self.stages.setdefault(key, {'calls': 0, 'ms': 0.0})
+            value = self.stages.setdefault(key, {'calls': 0, 'ms': 0.0, 'cpu_ms': 0.0})
             value['calls'] += 1
             value['ms'] += elapsed * 1000
+            value['cpu_ms'] += cpu_elapsed * 1000
 
     def summary(self):
         with self.lock:
             return [{'store_id': store, 'stage': stage, 'calls': value['calls'],
-                     'ms': round(value['ms'], 3)}
+                     'ms': round(value['ms'], 3), 'cpu_ms': round(value['cpu_ms'], 3)}
                     for (store, stage), value in sorted(self.stages.items(), key=str)]
 
 
@@ -58,10 +59,11 @@ def timing(stage):
         yield
         return
     started = time.perf_counter()
+    cpu_started = time.thread_time()
     try:
         yield
     finally:
-        trace.add(stage, time.perf_counter() - started)
+        trace.add(stage, time.perf_counter() - started, time.thread_time() - cpu_started)
 
 
 def timed(stage):

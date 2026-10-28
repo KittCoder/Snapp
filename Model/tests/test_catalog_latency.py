@@ -66,6 +66,9 @@ class CatalogLatencyTests(unittest.TestCase):
         self.gateway = Gateway()
         self.cache = CandidateCache(Cache())
         self.registry = DatabaseStoreRegistry(self.gateway, self.cache)
+        # Reference remote-pool behavior; hot bulk loading has separate parity tests.
+        for catalog in self.registry.stores.values():
+            catalog.hot_cache = None
         self.engine = BasketComparison(self.registry)
         self.addCleanup(self.engine.pool.shutdown)
         self.ids = ['ctown:PS41_311', 'ctown:PU41_023']
@@ -173,6 +176,8 @@ class CatalogLatencyTests(unittest.TestCase):
         client.get.side_effect = OSError('connection unavailable')
         client.setex.side_effect = OSError('connection unavailable')
         fresh = BasketComparison(DatabaseStoreRegistry(self.gateway, CandidateCache(client)))
+        for catalog in fresh.registry.stores.values():
+            catalog.hot_cache = None
         self.addCleanup(fresh.pool.shutdown)
         self.assertEqual(stable(expected), stable(fresh.compare(self.recipes, self.ids)))
 

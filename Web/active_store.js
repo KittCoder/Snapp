@@ -35,16 +35,14 @@
     if(!storeId||!basket.length){paint(storeId?'Add recipes to price your basket.':'Choose your shopping store to see prices.');return;}
     paint('Updating prices for your store…');
     try{
-      let data,error;
-      for(const endpoint of getApiEndpoints('/api/shopping/compare')){
-        try{const response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({store_ids:[storeId],recipes:basket,...(typeof pantryItems!=='undefined'?{pantry_items:pantryItems.map(({name,quantity})=>({name,quantity}))}:{})})});if(!response.ok)throw new Error('Pricing unavailable');data=await response.json();break;}catch(e){error=e;if(version!==sequence)return;}
-      }
+      const data=await window.SNAPP_PRICE_REQUEST('/api/shopping/compare',{store_ids:[storeId],recipes:basket,
+        ...(typeof pantryItems!=='undefined'?{pantry_items:pantryItems.map(({name,quantity})=>({name,quantity}))}:{})},controller.signal);
       if(version!==sequence||id!==storeId)return;
-      if(!data)throw error;
+      if(!data)throw new Error('Pricing unavailable');
       const priced=data.stores.find(s=>s.id===storeId);
       if(!priced||data.stores.length!==1)throw new Error('Store mismatch');
       result={...priced,basket_id:data.basket_id,versions:data.versions};paint('Prices from your active store. Recipe quantities adjusted for servings and pantry. Fees and taxes excluded.');
-    }catch(_){if(version===sequence)paint('Prices unavailable. Try again by selecting your store.');}
+    }catch(_){if(version===sequence){paint('Price temporarily unavailable');const retry=node('button','Retry');retry.type='button';retry.addEventListener('click',refresh);header.append(retry);}}
   }
   window.SNAPP_ACTIVE_STORE={get id(){return id;},get result(){return result;},refresh,
     select(next){if(!window.SNAPP_STORES.stores.some(s=>s.id===next))return;id=next;result=null;try{localStorage.setItem(key,id);}catch(_){}document.dispatchEvent(new Event('snapp:active-store'));return refresh();},
