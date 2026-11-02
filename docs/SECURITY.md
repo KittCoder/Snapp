@@ -1,7 +1,7 @@
 # SNAPP security operations
 
 This repository hardening is not a certification or proof of the deployed configuration.
-Before a government-facing demo, complete the deployment and database checks below.
+Before a public release, complete the deployment and database checks below.
 See [the inspection threat model](SECURITY_THREAT_MODEL.md) and local audit artifacts
 in `data/security_audit/` (ignored by Git). Never publish those artifacts without review.
 
@@ -64,7 +64,7 @@ email confirmation, redirect allowlists and supported leaked-password protection
 the dashboard. SDK signUp responses and account lifecycle must be tested with the
 project's email-confirmation settings; this patch does not change signup semantics.
 Enable MFA through Supabase's supported enrollment/challenge/AAL APIs, initially for
-operators. Normal demo users are not forced to enroll. A complete MFA UX/AAL policy
+operators. Normal users are not forced to enroll. A complete MFA UX/AAL policy
 rollout is future work; no custom OTP is present. See the official
 [Supabase MFA guide](https://supabase.com/docs/guides/auth/auth-mfa).
 
@@ -203,7 +203,7 @@ not implied by locally passing Flask tests or prepared SQL.
 - Insecure design: legacy shared chat removed from production, public computation bounded;
   cost abuse across distributed IPs still needs an edge/WAF budget strategy.
 - Misconfiguration: launch preflight, allowlisted CORS, CSP/headers and readiness;
-  apply Vercel/Render config and staging-test before demo.
+  apply Vercel/Render config and staging-test before release.
 - Vulnerable components: candidate Python/browser audits clean; deploy the tested
   pinned runtime and verify native Linux startup/inference.
 - Integrity: pinned CDN/SRI and trusted artifacts; verify model builds and update provenance.

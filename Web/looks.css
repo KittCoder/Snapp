@@ -2797,7 +2797,7 @@ tbody tr:last-child td {
   }
 }
 
-/* Experimental Recipe Chat: styles are confined to the new panel. */
+/* Recipe Chat: styles are confined to the new panel. */
 .recipe-chat-panel {
   max-width: 880px;
   margin-inline: auto;

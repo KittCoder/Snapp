@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'Model'))
 from product_compatibility import ProductMatchService,profile_from_query
 from product_ontology import compatibility
-OUT=ROOT/'data/matcher_demo_hardening'
+OUT=ROOT/'data/matcher_release_hardening'
 SUPPORTED={
 'f399fc150a3074e52306':('Eggplant','Aubergine is eggplant; plain purchased vegetable.'),
 '226cb030436d5f173e17':('Progresso Italian Style Bread Crumbs','Explicit Italian crumb style.'),

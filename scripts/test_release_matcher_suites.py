@@ -10,6 +10,6 @@ def flatten(s):
 cases=list(flatten(suite));patterns={'ontology':r'^test_product_ontology\.','compatibility':r'^test_product_compatibility\.','retrieval':r'^test_product_retrieval\.','cheese':r'cheese|parmesan|pecorino|mozzarella|neufchatel|feta|ricotta|cheddar','meat_cut':r'meat|cut|species|chicken|beef|pork|bacon|ground|ham','prepared_food':r'prepared|semantic_head|derivative|component|nonfood|pastry|grocery','nonfood':r'nonfood|food_domain','tomato':r'tomato|salsa|ketchup','broth':r'broth|stock','milk':r'milk|dairy','yogurt':r'yogurt','state_form':r'state|fresh|frozen|canned|dried|form','historical_regressions':r'regression|test_real_recipe_regressions\.'};counts={}
 for group,pattern in patterns.items():
  chosen=[c for c in cases if re.search(pattern,c.id())];assert chosen
- with (ROOT/('data/matcher_demo_hardening/'+group+'_tests.log')).open('w') as f:r=unittest.TextTestRunner(stream=f,verbosity=1).run(unittest.TestSuite(chosen))
+ with (ROOT/('data/matcher_release_hardening/'+group+'_tests.log')).open('w') as f:r=unittest.TextTestRunner(stream=f,verbosity=1).run(unittest.TestSuite(chosen))
  counts[group]={'tests':r.testsRun,'passed':r.wasSuccessful(),'failures':len(r.failures),'errors':len(r.errors)}
-(ROOT/'data/matcher_demo_hardening/separate_test_results.json').write_text(json.dumps(counts,indent=2)+'\n');print(json.dumps(counts,indent=2));assert all(r['passed'] for r in counts.values())
+(ROOT/'data/matcher_release_hardening/separate_test_results.json').write_text(json.dumps(counts,indent=2)+'\n');print(json.dumps(counts,indent=2));assert all(r['passed'] for r in counts.values())

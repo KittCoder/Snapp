@@ -1606,7 +1606,7 @@ async function handleSignOut() {
 }
 
 // Display source prices at their full value.
-function demoPrice(value) {
+function displayPrice(value) {
   return Number(value || 0);
 }
 
@@ -4050,7 +4050,7 @@ dietSelect.addEventListener("change", () => {
   queueSettingsSave();
 });
 
-// Experimental Recipe Chat. State and rendering stay separate from Dishes.
+// Recipe Chat. State and rendering stay separate from Dishes.
 const recipeChat = (() => {
   const panel = document.getElementById("recipe-chat");
   const form = document.getElementById("recipe-chat-form");
@@ -4278,7 +4278,7 @@ const recipeChat = (() => {
   }
 
   function endpoint() {
-    // Only this experimental feature targets Flask locally. Shared API routing is unchanged.
+    // Only Recipe Chat targets Flask locally. Shared API routing is unchanged.
     const override = document.querySelector('meta[name="snapp-recipe-chat-api-base-url"]')?.content?.trim().replace(/\/+$/, "");
     if (override) return `${override}/api/recipes/chat`;
     if (["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname)) {
@@ -4412,7 +4412,7 @@ const recipeChat = (() => {
   }
   return { reset, searchIngredient, nutritionFor };
 })();
-// End experimental Recipe Chat.
+// End Recipe Chat.
 
 populatePantrySpiceSuggestions();
 updatePantryQuantityVisibility();

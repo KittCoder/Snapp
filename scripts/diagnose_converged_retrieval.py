@@ -6,7 +6,7 @@ ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'Model'))
 from product_compatibility import ProductMatchService,profile_from_query
 from product_ontology import compatibility,describe
 OUT=ROOT/'data/matcher_convergence_audit';service=ProductMatchService()
-known=json.load((ROOT/'data/matcher_demo_hardening/holdout_diagnostics.json').open())['candidate_references']
+known=json.load((ROOT/'data/matcher_release_hardening/holdout_diagnostics.json').open())['candidate_references']
 suggested=[r for r in json.load((ROOT/'data/matcher_structural_audit/root_causes.json').open())['cases'] if r['review_label']=='SHOULD_HAVE_MATCHED']
 sets={'inspected_known_valid_10':[{'case_id':r['case_id'],'query':r['query'],'reference_ids':[r['reference_product_id']],'provenance':r['provenance']} for r in known],'historical_suggested_52':[{'case_id':r['case_id'],'query':r['ingredient_query'],'reference_ids':r['reference_product_ids'],'provenance':r['reference_status']} for r in suggested]}
 report={}

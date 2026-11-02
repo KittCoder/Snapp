@@ -102,7 +102,7 @@ alter table public.user_info
   add column if not exists store_distance_miles numeric;
 ```
 
-In the Supabase dashboard, enable Email auth and disable email confirmation while this username prototype is active. Password reset emails will not work until the app moves to real email addresses.
+In the Supabase dashboard, enable Email auth and disable email confirmation while this username sign-in flow is active. Password reset emails will not work until the app moves to real email addresses.
 
 ## Local Backend
 
@@ -223,7 +223,7 @@ python3 -m unittest discover -s Model/tests -p 'test_recipe_search_*.py'
 
 ## Trader Joe's Price Data
 
-The backend loads [Model/data.json](Model/data.json) first for grocery products and prices. If that file has no products, it falls back to the demo grocery database.
+The backend loads [Model/data.json](Model/data.json) first for grocery products and prices. If that file has no products, it falls back to the reference grocery database.
 
 Refresh Trader Joe's pricing once or twice a week:
 

@@ -1,8 +1,10 @@
 {
+  "catalog_kind": "reference",
+  "verified_store_inventory": false,
   "stores": [
-    {"id":"wm_11201","name":"Demo Walmart Supercenter","zip":"11201","city":"Brooklyn","accepts_snap":true},
-    {"id":"aldi_11201","name":"Demo ALDI","zip":"11201","city":"Brooklyn","accepts_snap":true},
-    {"id":"target_11201","name":"Demo Target Grocery","zip":"11201","city":"Brooklyn","accepts_snap":true}
+    {"id":"wm_11201","name":"Walmart Supercenter","zip":"11201","city":"Brooklyn","accepts_snap":true},
+    {"id":"aldi_11201","name":"ALDI","zip":"11201","city":"Brooklyn","accepts_snap":true},
+    {"id":"target_11201","name":"Target Grocery","zip":"11201","city":"Brooklyn","accepts_snap":true}
   ],
   "products": [
     {"id":"p001","store_id":"wm_11201","ingredient":"rice","product_name":"Long Grain White Rice","food_group":"grains","package_size":"2 lb","package_grams":907,"price":2.48,"sale_price":2.18,"in_stock":true,"snap_eligible":true,"calories_per_100g":130},

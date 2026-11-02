@@ -20,7 +20,7 @@ def shopping_payload(query, names, prices, sizes=None):
     recipe={'id':'shopping-deal-test','title':'Shopping presentation','servings':2,'ingredients':[query],'instructions':[]}
     with patch('basket_quantity.get_basket_builder',return_value=builder),patch.object(model,'should_use_semantic_recipe_matching',return_value=False),patch.object(model,'basket_builder_match_service',return_value=service):
         matches=model.match_recipe_ingredients_to_morton_williams(recipe,pantry_items=[])
-        dish=model.spoonacular_recipe_to_demo_dish(recipe,matches,{},2)
+        dish=model.spoonacular_recipe_to_dish(recipe,matches,{},2)
     return dish
 
 

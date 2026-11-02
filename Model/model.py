@@ -78,7 +78,7 @@ SCRAPED_GROCERY_DB_FILENAME = os.getenv(
     "SNAPP_GROCERY_DB_FILENAME",
     "database.scrape-20260721-143928.json",
 )
-DEMO_GROCERY_DB_FILENAME = "snapp_demo_grocery_db.json"
+REFERENCE_GROCERY_DB_FILENAME = "snapp_reference_grocery_db.json"
 ALL_RECIPES_DB_FILENAME = "all_recipes.json"
 ALL_RECIPES_SEARCH_INDEX_FILENAME = "all_recipes_search_index.json"
 ALL_RECIPES_SEARCH_DB_FILENAME = "all_recipes_search.sqlite"
@@ -1118,12 +1118,12 @@ def distance_miles(lat1, lon1, lat2, lon2):
     )
 
 
-def load_demo_grocery_db():
+def load_grocery_db():
     search_paths = (
         Path(__file__).with_name(SCRAPED_GROCERY_DB_FILENAME),
         Path(__file__).resolve().parent.parent / SCRAPED_GROCERY_DB_FILENAME,
-        Path(__file__).with_name(DEMO_GROCERY_DB_FILENAME),
-        Path(__file__).resolve().parent.parent / DEMO_GROCERY_DB_FILENAME,
+        Path(__file__).with_name(REFERENCE_GROCERY_DB_FILENAME),
+        Path(__file__).resolve().parent.parent / REFERENCE_GROCERY_DB_FILENAME,
     )
     for path in search_paths:
         if not path.exists():
@@ -1133,22 +1133,22 @@ def load_demo_grocery_db():
         if path.name == SCRAPED_GROCERY_DB_FILENAME and not grocery_db.get("products"):
             continue
         return grocery_db
-    raise RuntimeError("The SNAPP demo grocery database is missing.")
+    raise RuntimeError("The SNAPP reference grocery database is missing.")
 
 
-def load_snapp_demo_grocery_db():
+def load_snapp_reference_grocery_db():
     search_paths = (
-        Path(__file__).with_name(DEMO_GROCERY_DB_FILENAME),
-        Path(__file__).resolve().parent.parent / DEMO_GROCERY_DB_FILENAME,
+        Path(__file__).with_name(REFERENCE_GROCERY_DB_FILENAME),
+        Path(__file__).resolve().parent.parent / REFERENCE_GROCERY_DB_FILENAME,
     )
     for path in search_paths:
         if not path.exists():
             continue
         with path.open(encoding="utf-8") as file:
             grocery_db = json.load(file)
-        grocery_db["pricing_source"] = "demo"
+        grocery_db["pricing_source"] = "reference"
         return grocery_db
-    raise RuntimeError("The SNAPP demo grocery database is missing.")
+    raise RuntimeError("The SNAPP reference grocery database is missing.")
 
 
 def parse_sale_price_amount(value):
@@ -1438,7 +1438,7 @@ def sale_candidate_score_components(feature, product, recipe_count, discount):
 def build_sale_ingredient_pool(grocery_db=None, *, include_diagnostics=False):
     from ingredient_normalization import extract_product_features
 
-    grocery_db = grocery_db or load_demo_grocery_db()
+    grocery_db = grocery_db or load_grocery_db()
     products = grocery_db.get("products") if isinstance(grocery_db, dict) else []
     by_ingredient = {}
     exclusions = []
@@ -1595,9 +1595,9 @@ def grocery_db_for_store(store_number=None):
             "pricing_source": "trader_joes",
             "pricing_unavailable": True,
         }
-    demo_db = load_demo_grocery_db()
-    demo_db["pricing_source"] = "demo"
-    return demo_db
+    grocery_db = load_grocery_db()
+    grocery_db["pricing_source"] = "reference"
+    return grocery_db
 
 
 def product_effective_price(product):
@@ -1610,7 +1610,7 @@ def product_effective_price(product):
         return 0
 
 
-def available_demo_products(grocery_db):
+def available_grocery_products(grocery_db):
     return [
         product
         for product in grocery_db.get("products", [])
@@ -1618,7 +1618,7 @@ def available_demo_products(grocery_db):
     ]
 
 
-def demo_store_lookup(grocery_db):
+def grocery_store_lookup(grocery_db):
     return {
         store["id"]: store
         for store in grocery_db.get("stores", [])
@@ -1626,7 +1626,7 @@ def demo_store_lookup(grocery_db):
     }
 
 
-def demo_catalog_for_prompt(products, stores):
+def grocery_catalog_for_prompt(products, stores):
     catalog = []
     for product in products:
         store = stores.get(product.get("store_id"), {})
@@ -2027,7 +2027,7 @@ Return this JSON shape only:
     return dishes
 
 
-def generate_demo_grocery_dish_candidates(
+def generate_grocery_dish_candidates(
     meal_prompt, household_size, catalog, dietary_restrictions="", pantry_items=None
 ):
     api_key = os.getenv("OPENAI_API_KEY")
@@ -2323,7 +2323,7 @@ def build_dishes(dish_candidates):
     return dishes, sorted(set(missing_ingredients), key=str.casefold)
 
 
-def build_demo_grocery_dishes(dish_candidates, products_by_id, stores):
+def build_grocery_dishes(dish_candidates, products_by_id, stores):
     dishes = []
     for candidate in dish_candidates:
         ingredient_lines = []
@@ -3904,7 +3904,7 @@ def pantry_adjusted_recipe_ingredients(recipe, pantry_items=None, servings=None)
     return adjusted, original_by_text
 
 
-def morton_williams_feature_to_demo_product(feature, ranked_match=None):
+def morton_williams_feature_to_product(feature, ranked_match=None):
     from basket_quantity import parse_package_info, parse_price_info
 
     package = parse_package_info(feature)
@@ -3945,7 +3945,7 @@ def morton_williams_feature_to_demo_product(feature, ranked_match=None):
 
 
 def basket_item_to_morton_williams_product(item, feature):
-    product = morton_williams_feature_to_demo_product(feature)
+    product = morton_williams_feature_to_product(feature)
     checkout_cost = item.checkout_cost
     if checkout_cost is not None:
         product["price"] = round(float(checkout_cost), 2)
@@ -4081,7 +4081,7 @@ def match_recipe_ingredients_to_morton_williams(recipe, pantry_items=None, servi
         feature = service.feature_by_id.get(matched.product_id)
         if not feature:
             continue
-        product = morton_williams_feature_to_demo_product(feature)
+        product = morton_williams_feature_to_product(feature)
         product["pricing_source"] = "morton_williams_match_fallback"
         product["quantity_optimization_warnings"] = matched.warnings
         ingredient = original_by_text.get(
@@ -4106,7 +4106,7 @@ def matched_product_count(matched_products):
     return sum(1 for _ingredient, product in matched_products if product)
 
 
-def spoonacular_recipe_to_demo_dish(
+def spoonacular_recipe_to_dish(
     recipe,
     matched_products,
     stores,
@@ -4207,7 +4207,7 @@ def spoonacular_recipe_to_demo_dish(
     }
 
 
-def build_spoonacular_demo_grocery_dishes(
+def build_spoonacular_grocery_dishes(
     meal_prompt,
     household_size,
     dietary_restrictions,
@@ -4264,7 +4264,7 @@ def build_spoonacular_demo_grocery_dishes(
         matches = match_recipe_ingredients_to_products(recipe, products)
         if matched_product_count(matches) < minimum_matches:
             return False
-        dishes.append(spoonacular_recipe_to_demo_dish(recipe, matches, stores, household_size))
+        dishes.append(spoonacular_recipe_to_dish(recipe, matches, stores, household_size))
         used_ids.add(recipe_id)
         used_recipe_names.add(recipe_name)
         if meal_area:
@@ -4657,7 +4657,7 @@ def recipe_result_from_recipe(
     grocery_label="grocery database",
 ):
     servings = filters["servings"]
-    dish = spoonacular_recipe_to_demo_dish(
+    dish = spoonacular_recipe_to_dish(
         recipe,
         matched_products,
         stores,
@@ -5796,7 +5796,7 @@ def recipe_chat_detail():
                 dish["grocery_estimate"] = {"total": None, "currency": "USD", "status": "unavailable"}
         if data.get("for_schedule"):
             estimate = dish["grocery_estimate"]
-            dish = spoonacular_recipe_to_demo_dish(
+            dish = spoonacular_recipe_to_dish(
                 recipe, matches, morton_williams_store_lookup(),
                 parse_household_size(data.get("household_size")), grocery_label="Morton Williams")
             dish["recipe"] = detail

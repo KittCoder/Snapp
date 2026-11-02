@@ -3,9 +3,9 @@ import json,sys,unittest
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2];sys.path.insert(0,str(ROOT/'Model'))
 from product_ontology import describe,compatibility
-class DemoPrecisionTests(unittest.TestCase):
+class ReleasePrecisionTests(unittest.TestCase):
  def test_reviewed_pairs_and_direct_aliases(self):
-  for r in map(json.loads,(ROOT/'Model/evaluation/demo_hardening_regressions.jsonl').open()):
+  for r in map(json.loads,(ROOT/'Model/evaluation/release_hardening_regressions.jsonl').open()):
    with self.subTest(case=r['case_id']):self.assertEqual(compatibility(describe(r['ingredient']),describe(r['product_name'],feature=r.get('product_feature'),product=True)).allowed,r['expected_allowed'])
  def test_prepared_food_semantic_heads(self):
   for q,p in [('white cherries','Cherries in White Chocolate'),('cranberries','Cranberry Relish'),('cooking oil','Anchovies in Olive Oil'),('salt','Multi Grain Sea Salt')]:

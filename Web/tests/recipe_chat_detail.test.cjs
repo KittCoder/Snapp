@@ -41,7 +41,7 @@ function setup() {
     getShoppingCategory: () => 'Other',
   });
   for (const [start, end] of [
-    ['function demoPrice(', 'function getHouseholdSize('],
+    ['function displayPrice(', 'function getHouseholdSize('],
     ['function recipeItemList(', 'function appendModalSection('],
     ['async function addMealToSchedule(', 'function openDishModal('],
     ['function getIngredientName(', 'function getIngredientQuantity('],
@@ -51,7 +51,7 @@ function setup() {
     if (b < 0) b = source.indexOf('\nfunction ', a + 10);
     vm.runInContext(source.slice(a, b), context);
   }
-  vm.runInContext(source.slice(source.indexOf('const recipeChat = (() =>'), source.indexOf('// End experimental Recipe Chat.')), context);
+  vm.runInContext(source.slice(source.indexOf('const recipeChat = (() =>'), source.indexOf('// End Recipe Chat.')), context);
   return { context, elements, calls, scheduledMeals, listeners };
 }
 test('click opens full recipe; back preserves draft, history and follow-up state; schedule feeds shared shopping list', async () => {

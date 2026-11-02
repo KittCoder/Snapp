@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import csv,json,hashlib,collections
 from pathlib import Path
-ROOT=Path(__file__).resolve().parents[1];OUT=ROOT/'data/matcher_demo_hardening'
+ROOT=Path(__file__).resolve().parents[1];OUT=ROOT/'data/matcher_release_hardening'
 RULES={
 'f399fc150a3074e52306':('PREPARED_FOOD_LEAKAGE','produce','Fried/breaded produce is a prepared head, not raw produce.','Explicit fried requests need own identities.'),
 '476f4e2faa23e99d3969':('REQUIRED_ATTRIBUTE_UNVERIFIED','produce','Require white cherry variety evidence through shared specificity.','Unknown variety abstains.'),

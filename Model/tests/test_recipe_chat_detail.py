@@ -94,7 +94,7 @@ class DetailTests(unittest.TestCase):
         matches = [({'measure': '2 eggs', 'name': 'egg'},
                     {'estimated_price_total': 4.5, 'source_ingredients': ['2 eggs']})]
         with patch.object(model, 'match_recipe_ingredients_to_morton_williams', return_value=matches), \
-             patch.object(model, 'spoonacular_recipe_to_demo_dish') as schedule_adapter:
+             patch.object(model, 'spoonacular_recipe_to_dish') as schedule_adapter:
             response = self.request(include_price_estimate=True)
         self.assertEqual(response.status_code, 200)
         dish = response.get_json()['dish']
@@ -124,7 +124,7 @@ class DetailTests(unittest.TestCase):
         matches = [({'name': 'egg', 'measure': f'{index} eggs'},
                     {'estimated_price_total': 1, 'price': 1, 'package_grams': 100})
                    for index in range(1, 13)]
-        dish = model.spoonacular_recipe_to_demo_dish(
+        dish = model.spoonacular_recipe_to_dish(
             {'id': 'full-recipe', 'title': 'Egg dinner', 'extendedIngredients': []}, matches, {}, 2)
         self.assertEqual(dish['estimated_price_total'], 12)
         self.assertEqual(len(dish['ingredients_to_buy']), 12)

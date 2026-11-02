@@ -661,7 +661,7 @@ class CompatibilityRuleTests(unittest.TestCase):
         self.assertEqual(orange_juice.selected_match.product_id, "juice")
         self.assertIn("orange", {item.product_id for item in orange_juice.rejected_candidates})
 
-    def test_demo_identity_regressions(self):
+    def test_release_identity_regressions(self):
         cases = [
             ("apples", "apple", ["juice"], [feature("juice", "Snapple Juice Drink, Apple", None, "beverage"), feature("apple", "Bowl & Basket Macintosh Apples", "apple", "produce")]),
             ("almond butter", "almond", ["butter"], [feature("butter", "Bowl & Basket Butter", "butter", "dairy"), feature("almond", "Justin's Classic Almond Butter", None, "pantry")]),
@@ -1102,7 +1102,7 @@ class OverrideCacheBatchEndpointTests(unittest.TestCase):
             907,
         )
 
-    def test_demo_dish_does_not_emit_unavailable_buy_rows(self):
+    def test_release_dish_does_not_emit_unavailable_buy_rows(self):
         import model
 
         recipe = {
@@ -1115,7 +1115,7 @@ class OverrideCacheBatchEndpointTests(unittest.TestCase):
             ],
             "instructions": "Cook.",
         }
-        dish = model.spoonacular_recipe_to_demo_dish(
+        dish = model.spoonacular_recipe_to_dish(
             recipe,
             [({"name": "missing", "measure": "1 missing ingredient"}, None)],
             model.morton_williams_store_lookup(),
@@ -1124,7 +1124,7 @@ class OverrideCacheBatchEndpointTests(unittest.TestCase):
         )
         self.assertEqual(dish["ingredients_to_buy"], [])
 
-    def test_demo_dish_keeps_variable_weight_beef_purchase_row(self):
+    def test_release_dish_keeps_variable_weight_beef_purchase_row(self):
         import model
 
         recipe = {
@@ -1140,7 +1140,7 @@ class OverrideCacheBatchEndpointTests(unittest.TestCase):
             "instructions": "Cook.",
         }
         matches = model.match_recipe_ingredients_to_morton_williams(recipe, pantry_items=[], servings=4)
-        dish = model.spoonacular_recipe_to_demo_dish(
+        dish = model.spoonacular_recipe_to_dish(
             recipe,
             matches,
             model.morton_williams_store_lookup(),

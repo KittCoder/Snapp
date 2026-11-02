@@ -1,4 +1,4 @@
-# Local recipe conversation prototype
+# Local recipe conversation service
 
 `recipe_chat.py` wraps the existing `recipe_search_typesense.search_recipes` function. It does not build or change the index, generate recipes, call the old `/chat` flow, or require a conversational model. The existing `/api/recipes/search` route remains independent.
 
@@ -79,7 +79,7 @@ Examples exercised against the live index:
 
 ## Optional model interface
 
-`RecipeChatModel` is a provider-independent protocol. Leave `SNAPP_RECIPE_CHAT_MODEL_FACTORY` blank for deterministic mode. To plug in a local adapter, set it to `package.module:create_model`; the no-argument factory must return an object implementing both methods. Adapters own their vendor configuration and secrets in environment variables and must set bounded request timeouts/retries. This prototype ships no vendor adapter and no external model is needed or tested live.
+`RecipeChatModel` is a provider-independent protocol. Leave `SNAPP_RECIPE_CHAT_MODEL_FACTORY` blank for deterministic mode. To plug in a local adapter, set it to `package.module:create_model`; the no-argument factory must return an object implementing both methods. Adapters own their vendor configuration and secrets in environment variables and must set bounded request timeouts/retries. This implementation ships no vendor adapter and no external model is needed or tested live.
 
 - `interpret(message, context)` is used only for an unresolved/general turn. The only accepted output is `{"semantic_query": "short soft preference"}`. Outputs containing parser-recognized hard constraints or additional keys are ignored. It cannot change exclusions, times, categories, IDs, or selection.
 - `compose(context)` receives at most five small records: ID, clipped title, up to eight clipped ingredient names, recorded times, categories and servings. The only accepted output is `{"ordered_recipe_ids": [...]}`, an exact permutation of the retrieved IDs. Order is reflected in both rendered text and ordinal state.
@@ -99,6 +99,6 @@ The review script uses the same environment configuration, reads the live index 
 
 The chat tests use the real parser/search function with a fixture Typesense transport. They exercise multi-turn state and grounding, including hostile model outputs, authoritative document refetches, API validation, alpha 0.7 and embedding-error keyword fallback. They do not require a local server.
 
-## Prototype limitations
+## Current limitations
 
-The deterministic grammar is intentionally limited; ambiguous or unfamiliar phrasings may need an explicit ingredient, time limit, ordinal, or reset. Relative speed uses a documented heuristic. Filter-only queries use the existing keyword/wildcard ordering. Relevance, incomplete vegetarian tags, and broth/sauce derivative matches remain properties of the frozen retrieval system. No guarantee of dietary suitability, allergen safety, reliable cost, health ranking, or household-sized servings is added. The current index usually lacks servings and does not index cooking instructions, so this prototype cannot answer those missing facts. No corpus, frontend, database, or deployment changes are part of this work.
+The deterministic grammar is intentionally limited; ambiguous or unfamiliar phrasings may need an explicit ingredient, time limit, ordinal, or reset. Relative speed uses a documented heuristic. Filter-only queries use the existing keyword/wildcard ordering. Relevance, incomplete vegetarian tags, and broth/sauce derivative matches remain properties of the frozen retrieval system. No guarantee of dietary suitability, allergen safety, reliable cost, health ranking, or household-sized servings is added. The current index usually lacks servings and does not index cooking instructions, so this implementation cannot answer those missing facts. No corpus, frontend, database, or deployment changes are part of this work.

@@ -1,4 +1,4 @@
-# SNAPP government demo deployment
+# SNAPP deployment
 
 This release freezes current application behavior. It does not certify a live
 cloud deployment or Supabase owner boundaries. The active grocery source remains
@@ -8,7 +8,7 @@ cloud deployment or Supabase owner boundaries. The active grocery source remains
 ## Numbered deployment steps
 
 1. **GitHub.** Use `https://github.com/KittCoder/Snapp.git`, release branch
-   `demo/government-demo`. Review the release commit and local release reports
+   the configured release branch. Review the release commit and local release reports
    before selecting that branch in hosting dashboards. Do not deploy `main`
    accidentally. Never upload `.env`, `.venv`, local databases or `data/` audits.
 
@@ -109,7 +109,7 @@ cloud deployment or Supabase owner boundaries. The active grocery source remains
     Best Deal presentation, current full Morton Williams prices, refresh and
     logout/login. Replay Patty Melts, Lamb in Pitas and Tuscan Salad. Garlic must
     remain garlic for “3 cloves garlic”; absent minced lamb/skirt steak abstain.
-    Do not call the demo ready while RLS or remote index checks are pending.
+    Do not call the release ready while RLS or remote index checks are pending.
 
 11. **Rollback.** Git: create a reviewed rollback commit; never force-push shared history.
     Keep remediated dependency pins and security/ownership guards. The original
@@ -137,7 +137,7 @@ python scripts/security_check.py --history
 
 Frontend fixture generation uses `SNAPP_TEST_PYTHON` or `python3`; it never
 requires the developer's preserved `.venv`. Local Python 3.12 tests and dependency audit are recorded under ignored
-`data/government_demo_release/`. Clean checkout tests must use committed fixtures,
+`data/release_validation/`. Clean checkout tests must use committed fixtures,
 not temporary audit folders. Runtime translations now live under
 `Model/recipe_chat_translations/`; the original local files are retained.
 No actual cloud service creation, remote indexing, live RLS or device/incognito
