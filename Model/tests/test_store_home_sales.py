@@ -11,7 +11,9 @@ class HomeSalesTests(unittest.TestCase):
    def catalog(sid, rows):
     path=Path(directory)/sid;path.write_text(json.dumps(rows))
     return SimpleNamespace(metadata=SimpleNamespace(id=sid,inventory_version='v1',retailer='ctown'),path=path)
-   def build(db):return [{'ingredient_id':p['name'],'sale_price':p['sale_price']} for p in db['products']]
+   def build(db):
+    self.assertTrue(all(p.get('source')=='ctown-public-staging' for p in db['products']))
+    return [{'ingredient_id':p['name'],'sale_price':float(p['sale_price'].lstrip('$'))} for p in db['products']]
    mw=lambda:self.fail('Must not use MW deals for another retailer')
    a=store_sale_pool(catalog('a',[{'name':'rice','sale_price':2,'regular_price':3}]),build,mw)
    b=store_sale_pool(catalog('b',[{'name':'milk','sale_price':4},{'name':'rice','sale_price':1,'availability':False}]),build,mw)
@@ -46,3 +48,12 @@ class HomeSalesEndpointTests(unittest.TestCase):
    self.assertEqual(response.status_code,200)
    self.assertEqual(response.json['store_id'],'a')
    self.assertEqual([i['store_id'] for i in response.json['sale_ingredients']],['a'])
+ def test_home_uses_prebuilt_recipe_membership_without_full_corpus_scan(self):
+  from unittest.mock import patch
+  import model
+  product={'source':'ctown-public-staging','name':'Rice','price':'$2.00','sale_price':'$2.00','original_price':'$3.00','is_on_sale':True,'unit':'16 oz'}
+  artifact={'candidates':[{'ingredient_id':'rice','recipe_ids':['r1','r2','r3']}]}
+  with patch.object(model,'load_sale_candidate_artifact',return_value=artifact), patch.object(model,'sale_recipe_index',side_effect=AssertionError('Full recipe scan')):
+   result=model.build_sale_ingredient_pool({'products':[product]},recipe_lookup=model.artifact_recipe_ids_for_sale_ingredient)
+  self.assertTrue(result)
+  self.assertEqual(result[0]['recipe_count'],3)

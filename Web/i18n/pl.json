@@ -183,7 +183,7 @@
   "copy.there": "Tam",
   "copy.start.with.sale.ingredients.that.already.have.recipe.matches": "Start with sale ingredients from your selected grocery store that already have recipe matches.",
   "copy.best.sale.ingredients.today": "Najlepiej sprzedające się dzisiaj składniki",
-  "copy.ranked.from.current.morton.williams.sale.data.and.matched": "Zestawione na podstawie aktualnych danych dotyczących sprzedaży Mortona Williamsa i dopasowane do przepisów, które może wycenić SNAPP.",
+  "copy.ranked.from.current.morton.williams.sale.data.and.matched": "Ranked from your selected grocery store’s sale inventory and matched to recipes.",
   "copy.loading.sales": "Ładowanie wyprzedaży...",
   "copy.my.stores": "Moje sklepy",
   "copy.morton.williams.23rd.street": "Ulica Mortona Williamsa 23",
@@ -676,5 +676,7 @@
   "shopping.noKnownProducts": "No grocery items to display yet. Check the pricing status above.",
   "shopping.pantry.quantityNeeded": "Quantity needed",
   "shopping.pantry.missingQuantities": "Added items with known quantities. Items without a recipe quantity still need review.",
-  "home.setupRequired": "Choose your grocery store in setup to see its deals."
+  "home.setupRequired": "Choose your grocery store in setup to see its deals.",
+  "home.salesTimeout": "Store deals are taking longer than expected. Try again.",
+  "home.retryDeals": "Retry store deals"
 }

@@ -183,7 +183,7 @@
   "copy.there": "هناك",
   "copy.start.with.sale.ingredients.that.already.have.recipe.matches": "Start with sale ingredients from your selected grocery store that already have recipe matches.",
   "copy.best.sale.ingredients.today": "أفضل بيع المكونات اليوم",
-  "copy.ranked.from.current.morton.williams.sale.data.and.matched": "تم تصنيفه من بيانات بيع Morton Williams الحالية ومطابقته للوصفات التي يمكن لـ SNAPP تسعيرها.",
+  "copy.ranked.from.current.morton.williams.sale.data.and.matched": "Ranked from your selected grocery store’s sale inventory and matched to recipes.",
   "copy.loading.sales": "جارٍ تحميل المبيعات...",
   "copy.my.stores": "متاجري",
   "copy.morton.williams.23rd.street": "مورتون ويليامز شارع 23",
@@ -676,5 +676,7 @@
   "shopping.noKnownProducts": "No grocery items to display yet. Check the pricing status above.",
   "shopping.pantry.quantityNeeded": "Quantity needed",
   "shopping.pantry.missingQuantities": "Added items with known quantities. Items without a recipe quantity still need review.",
-  "home.setupRequired": "Choose your grocery store in setup to see its deals."
+  "home.setupRequired": "Choose your grocery store in setup to see its deals.",
+  "home.salesTimeout": "Store deals are taking longer than expected. Try again.",
+  "home.retryDeals": "Retry store deals"
 }

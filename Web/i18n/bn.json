@@ -183,7 +183,7 @@
   "copy.there": "সেখানে",
   "copy.start.with.sale.ingredients.that.already.have.recipe.matches": "Start with sale ingredients from your selected grocery store that already have recipe matches.",
   "copy.best.sale.ingredients.today": "সেরা বিক্রয় উপাদান আজ",
-  "copy.ranked.from.current.morton.williams.sale.data.and.matched": "বর্তমান মর্টন উইলিয়ামস বিক্রয় ডেটা থেকে র‌্যাঙ্ক করা হয়েছে এবং রেসিপির সাথে মিলেছে SNAPP মূল্য দিতে পারে।",
+  "copy.ranked.from.current.morton.williams.sale.data.and.matched": "Ranked from your selected grocery store’s sale inventory and matched to recipes.",
   "copy.loading.sales": "বিক্রয় লোড হচ্ছে...",
   "copy.my.stores": "আমার দোকান",
   "copy.morton.williams.23rd.street": "মর্টন উইলিয়ামস 23 তম রাস্তা",
@@ -676,5 +676,7 @@
   "shopping.noKnownProducts": "No grocery items to display yet. Check the pricing status above.",
   "shopping.pantry.quantityNeeded": "Quantity needed",
   "shopping.pantry.missingQuantities": "Added items with known quantities. Items without a recipe quantity still need review.",
-  "home.setupRequired": "Choose your grocery store in setup to see its deals."
+  "home.setupRequired": "Choose your grocery store in setup to see its deals.",
+  "home.salesTimeout": "Store deals are taking longer than expected. Try again.",
+  "home.retryDeals": "Retry store deals"
 }

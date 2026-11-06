@@ -148,9 +148,15 @@ class SaleIngredientTests(unittest.TestCase):
                 }
             ]
         }
-        with mock.patch.object(model, "load_sale_candidate_artifact", return_value=artifact):
+        from types import SimpleNamespace
+        import store_home_sales
+        store_home_sales._cache.clear()
+        catalog = SimpleNamespace(metadata=SimpleNamespace(id="morton-williams",
+            retailer="morton_williams", inventory_version="fixture", store_name="Selected store"))
+        engine = SimpleNamespace(registry=SimpleNamespace(select=lambda ids: [catalog]))
+        with mock.patch.object(model, "load_sale_candidate_artifact", return_value=artifact), mock.patch("store_comparison_api.engine", return_value=engine):
             with model.app.test_client() as client:
-                response = client.get("/sale-ingredients")
+                response = client.get("/sale-ingredients?store_id=morton-williams")
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
         self.assertEqual(data["candidate_pool_size"], 1)

@@ -7,6 +7,10 @@ _cache = OrderedDict()
 _lock = Lock()
 
 
+def price_text(value):
+    return f'${value:.2f}' if isinstance(value, (int, float)) else value
+
+
 def store_sale_pool(catalog, build_pool, mw_pool):
     key = (catalog.metadata.id, catalog.metadata.inventory_version, getattr(catalog, 'version_id', None))
     with _lock:
@@ -20,7 +24,7 @@ def store_sale_pool(catalog, build_pool, mw_pool):
             rows = []
             while True:
                 page = catalog.gateway.select('store_products', {
-                    'select': 'source_json,feature_json', 'store_id': 'eq.' + catalog.metadata.id,
+                    'select': 'name,source_product_id,sale_price,regular_price,raw_size_text,availability,source_json', 'store_id': 'eq.' + catalog.metadata.id,
                     'inventory_version_id': 'eq.' + catalog.version_id,
                     'sale_price': 'not.is.null', 'order': 'source_position.asc',
                     'limit': 900, 'offset': len(rows),
@@ -28,7 +32,7 @@ def store_sale_pool(catalog, build_pool, mw_pool):
                 rows.extend(page)
                 if len(page) < 900:
                     break
-            products = [r['source_json'] for r in rows]
+            products = [{**r.get('source_json', {}), **{k: v for k, v in r.items() if k != 'source_json' and v is not None}} for r in rows]
         else:
             products = json.loads(catalog.path.read_text())
         converted = []
@@ -38,9 +42,10 @@ def store_sale_pool(catalog, build_pool, mw_pool):
             sale = row.get('sale_price')
             if sale is None:
                 continue
-            converted.append({**row, 'id': row.get('source_product_id'),
-                'price': sale, 'original_price': row.get('regular_price') or row.get('original_price'),
-                'sale_price': sale, 'is_on_sale': True, 'unit': row.get('raw_size_text') or row.get('unit')})
+            converted.append({**row, 'source': catalog.metadata.retailer + '-public-staging',
+                'id': row.get('source_product_id'),
+                'price': price_text(sale), 'original_price': price_text(row.get('regular_price') or row.get('original_price')),
+                'sale_price': price_text(sale), 'is_on_sale': True, 'unit': row.get('raw_size_text') or row.get('unit')})
         pool = build_pool({'products': converted}) if converted else []
     pool = [{**item, 'store_id': catalog.metadata.id} for item in pool]
     with _lock:

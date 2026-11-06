@@ -183,7 +183,7 @@
   "copy.there": "там",
   "copy.start.with.sale.ingredients.that.already.have.recipe.matches": "Start with sale ingredients from your selected grocery store that already have recipe matches.",
   "copy.best.sale.ingredients.today": "Лучшие ингредиенты для продажи сегодня",
-  "copy.ranked.from.current.morton.williams.sale.data.and.matched": "Составлено на основе текущих данных о продажах Morton Williams и сопоставлено с рецептами, которые может оценить SNAPP.",
+  "copy.ranked.from.current.morton.williams.sale.data.and.matched": "Ranked from your selected grocery store’s sale inventory and matched to recipes.",
   "copy.loading.sales": "Загрузка продаж...",
   "copy.my.stores": "Мои магазины",
   "copy.morton.williams.23rd.street": "Мортон Уильямс, 23-я улица",
@@ -676,5 +676,7 @@
   "shopping.noKnownProducts": "No grocery items to display yet. Check the pricing status above.",
   "shopping.pantry.quantityNeeded": "Quantity needed",
   "shopping.pantry.missingQuantities": "Added items with known quantities. Items without a recipe quantity still need review.",
-  "home.setupRequired": "Choose your grocery store in setup to see its deals."
+  "home.setupRequired": "Choose your grocery store in setup to see its deals.",
+  "home.salesTimeout": "Store deals are taking longer than expected. Try again.",
+  "home.retryDeals": "Retry store deals"
 }

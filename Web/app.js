@@ -3323,12 +3323,26 @@ async function fetchDishes(mealPrompt, options = {}) {
 }
 
 async function fetchSaleIngredients(storeId) {
+  const controller = new AbortController();
+  let timer;
+  try {
+    return await Promise.race([
+      requestSaleIngredients(storeId, controller.signal),
+      new Promise((_, reject) => { timer = setTimeout(() => {
+        controller.abort(); reject(new Error(t("home.salesTimeout")));
+      }, 8000); }),
+    ]);
+  } finally { clearTimeout(timer); }
+}
+
+async function requestSaleIngredients(storeId, signal) {
   let lastError = API_BASE_URL
     ? "Unable to reach the sale ingredient backend."
     : "Backend URL is not configured.";
   for (const endpoint of getApiEndpoints("/sale-ingredients")) {
+    if (signal.aborted) throw new Error(t("home.salesTimeout"));
     try {
-      const response = await fetch(`${endpoint}?store_id=${encodeURIComponent(storeId)}`);
+      const response = await fetch(`${endpoint}?store_id=${encodeURIComponent(storeId)}`, {signal});
       const responseText = await response.text();
       let data = {};
       try {
@@ -3429,6 +3443,10 @@ async function loadSaleIngredients() {
   } catch (error) {
     if (sequence !== homeSalesSequence || isOnboardingRequired() || selectedShoppingStore()?.id !== store.id) return;
     saleIngredientsStatus.textContent = error.message;
+    const retry = document.createElement("button");
+    retry.type = "button"; retry.textContent = t("home.retryDeals");
+    retry.addEventListener("click", loadSaleIngredients);
+    saleIngredientsGrid.append(retry);
   }
 }
 

@@ -183,7 +183,7 @@
   "copy.there": "거기",
   "copy.start.with.sale.ingredients.that.already.have.recipe.matches": "Start with sale ingredients from your selected grocery store that already have recipe matches.",
   "copy.best.sale.ingredients.today": "오늘 베스트 세일 재료",
-  "copy.ranked.from.current.morton.williams.sale.data.and.matched": "현재 Morton Williams 판매 데이터를 기준으로 순위를 매기고 SNAPP에서 가격을 책정할 수 있는 레시피와 일치시킵니다.",
+  "copy.ranked.from.current.morton.williams.sale.data.and.matched": "Ranked from your selected grocery store’s sale inventory and matched to recipes.",
   "copy.loading.sales": "판매 로드 중...",
   "copy.my.stores": "내 매장",
   "copy.morton.williams.23rd.street": "모튼 윌리엄스 23번가",
@@ -676,5 +676,7 @@
   "shopping.noKnownProducts": "No grocery items to display yet. Check the pricing status above.",
   "shopping.pantry.quantityNeeded": "Quantity needed",
   "shopping.pantry.missingQuantities": "Added items with known quantities. Items without a recipe quantity still need review.",
-  "home.setupRequired": "Choose your grocery store in setup to see its deals."
+  "home.setupRequired": "Choose your grocery store in setup to see its deals.",
+  "home.salesTimeout": "Store deals are taking longer than expected. Try again.",
+  "home.retryDeals": "Retry store deals"
 }

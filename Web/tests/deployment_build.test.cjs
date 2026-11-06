@@ -8,3 +8,14 @@ test('release build emits public config and i18n, excluding backend credentials'
 test('release build rejects privileged Supabase credentials and localhost production APIs',()=>{
  for(const change of [{SUPABASE_ANON_KEY:'sb_secret_fixture'},{SNAPP_API_BASE_URL:'http://localhost:5000'}])assert.notEqual(cp.spawnSync(process.execPath,['scripts/build_frontend.cjs'],{cwd:root,env:{...env,...change}}).status,0);
 });
+test('release HTML versions local assets by content and includes store onboarding',()=>{
+ cp.execFileSync(process.execPath,['scripts/build_frontend.cjs'],{cwd:root,env});
+ const html=fs.readFileSync(path.join(root,'dist/index.html'),'utf8');
+ const hash=require('node:crypto').createHash('sha256').update(fs.readFileSync(path.join(root,'dist/app.js'))).digest('hex').slice(0,12);
+ assert.ok(html.includes(`src="app.js?v=${hash}"`));
+ assert.match(html,/src="onboarding_store\.js\?v=[a-f0-9]{12}"/);
+ assert.match(html,/href="looks\.css\?v=[a-f0-9]{12}"/);
+ assert.doesNotMatch(html,/Morton Williams/);
+ const config=JSON.parse(fs.readFileSync(path.join(root,'vercel.json'),'utf8'));
+ assert.ok(config.headers.some(rule=>rule.headers.some(header=>header.key==='Cache-Control'&&header.value.includes('must-revalidate'))));
+});

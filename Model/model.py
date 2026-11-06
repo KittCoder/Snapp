@@ -1435,7 +1435,7 @@ def sale_candidate_score_components(feature, product, recipe_count, discount):
     }
 
 
-def build_sale_ingredient_pool(grocery_db=None, *, include_diagnostics=False):
+def build_sale_ingredient_pool(grocery_db=None, *, include_diagnostics=False, recipe_lookup=None):
     from ingredient_normalization import extract_product_features
 
     grocery_db = grocery_db or load_grocery_db()
@@ -1452,7 +1452,7 @@ def build_sale_ingredient_pool(grocery_db=None, *, include_diagnostics=False):
         product_name = feature.get("original_product_name") or product.get("name") or ""
         ingredient_id = sale_ingredient_id_for_feature(feature)
         discount = trusted_discount(product.get("original_price"), product.get("sale_price") or product.get("price"))
-        recipe_ids = recipe_ids_for_sale_ingredient(ingredient_id, use_artifact=False) if ingredient_id else []
+        recipe_ids = (recipe_lookup(ingredient_id) if recipe_lookup else recipe_ids_for_sale_ingredient(ingredient_id, use_artifact=False)) if ingredient_id else []
         recipe_count = len(recipe_ids)
         reasons = []
         if not feature.get("eligible_for_retrieval"):
@@ -5957,7 +5957,8 @@ def sale_ingredients():
         return jsonify({"error": "Select a grocery store first."}), 400
     try:
         catalog = engine().registry.select([store_id])[0]
-        pool = store_sale_pool(catalog, build_sale_ingredient_pool, sale_ingredient_pool)
+        pool = store_sale_pool(catalog, lambda db: build_sale_ingredient_pool(
+            db, recipe_lookup=artifact_recipe_ids_for_sale_ingredient), sale_ingredient_pool)
         selected = weighted_sale_sample(pool)
         return jsonify({"store_id": store_id, "inventory_version": catalog.metadata.inventory_version,
             "candidate_pool_size": len(pool),
