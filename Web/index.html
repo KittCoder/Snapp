@@ -115,7 +115,7 @@
         </div>
       </section>
 
-      <section id="account-loading" class="panel" role="status" aria-live="polite"><p data-i18n="home.loadingAccount">Loading your account and selected store…</p></section>
+      <section id="account-loading" class="panel" role="status" aria-live="polite"><p data-i18n="home.loadingAccount">Loading your account…</p></section>
 
       <section id="onboarding" class="panel onboarding-panel" aria-label="Set up your SNAPP account" data-i18n-aria-label-key="copy.set.up.your.snapp.account">
         <div class="onboarding-shell">
@@ -159,11 +159,6 @@
                   placeholder="e.g. 10001"
                   required data-i18n-placeholder-key="copy.e.g.10001" />
               </label>
-              <label class="onboarding-field" for="onboarding-store">Grocery store
-                <select id="onboarding-store" required><option value="">Loading stores…</option></select>
-              </label>
-              <p id="onboarding-store-status" role="status"></p>
-              <button id="onboarding-store-retry" type="button" hidden>Retry stores</button>
             </div>
 
             <div class="onboarding-step" data-step="1" hidden>
@@ -503,7 +498,7 @@
               <p class="eyebrow"><span data-i18n="copy.today.s.store.plan">Today's Store Plan</span></p>
               <h1><span data-i18n="copy.hello">Hello</span> <span id="home-username"><span data-i18n="copy.there">there</span></span></h1>
               <p>
-                <span data-i18n="copy.start.with.sale.ingredients.that.already.have.recipe.matches">Start with sale ingredients from your selected grocery store that already have recipe matches.</span>
+                <span data-i18n="copy.start.with.sale.ingredients.that.already.have.recipe.matches">Explore recipe-ready sale ingredients from Morton Williams.</span>
               </p>
             </div>
           </div>
@@ -513,8 +508,7 @@
           <div class="section-heading-row">
             <div>
               <h2><span data-i18n="copy.best.sale.ingredients.today">Best sale ingredients today</span></h2>
-              <p id="home-store-context">Select a grocery store in setup to see its ranked deals.</p>
-              <button id="home-change-store" type="button" data-i18n="home.changeStore">Change store</button>
+              <p id="home-store-context">Ranked from Morton Williams sale inventory and matched to recipes.</p>
             </div>
             <span id="sale-ingredients-status" class="sale-ingredients-status" role="status" aria-live="polite"><span data-i18n="copy.loading.sales">Loading sales...</span></span>
           </div>
@@ -989,7 +983,6 @@
     <script src="active_store.js"></script>
     <script src="store_warm.js"></script>
     <script src="store_locator.js"></script>
-    <script src="onboarding_store.js"></script>
     <script src="store_comparison.js"></script>
     <script src="recipe_store_prices.js"></script>
   </body>

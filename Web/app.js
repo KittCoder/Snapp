@@ -497,16 +497,12 @@ function showPanel(id) {
   }
 }
 
-function selectedShoppingStore() {
-  return window.SNAPP_STORES?.stores?.find(store => store.id === window.SNAPP_ACTIVE_STORE?.id);
-}
-
 function isAccountSetupPending() {
-  return Boolean(currentUser && (authStateLoading || !currentUserInfo || !window.SNAPP_STORES || window.SNAPP_STORES.settled === false));
+  return Boolean(currentUser && (authStateLoading || !currentUserInfo));
 }
 
 function isOnboardingRequired() {
-  return Boolean(currentUser && !isAccountSetupPending() && (!hasCompletedOnboarding(currentUserInfo, currentUser) || !selectedShoppingStore()));
+  return Boolean(currentUser && !isAccountSetupPending() && !hasCompletedOnboarding(currentUserInfo, currentUser));
 }
 
 function onboardingCompletedStorageKey(user = currentUser) {
@@ -1128,8 +1124,6 @@ function getOnboardingStepError() {
     return "Enter a valid 5-digit US ZIP code.";
   }
 
-  if (onboardingStepIndex === 0 && !selectedShoppingStore()) return "Select your grocery store to continue.";
-
   if (onboardingStepIndex === 1) {
     const householdSize = getClampedHouseholdSize(onboardingHouseholdInput.value);
     if (householdSize < HOUSEHOLD_MIN || householdSize > HOUSEHOLD_MAX) {
@@ -1153,12 +1147,6 @@ async function saveOnboardingToUser() {
     return false;
   }
 
-  if (!selectedShoppingStore()) {
-    onboardingStepIndex = 0;
-    renderOnboardingStep();
-    setOnboardingStatus("Select your grocery store to continue.", "error");
-    return false;
-  }
   setOnboardingStatus(t("copy.saving.your.setup", {}));
   onboardingContinueButton.disabled = true;
   onboardingBackButton.disabled = true;
@@ -1576,7 +1564,6 @@ async function renderAuthState(user) {
   if (user) {
     currentUserInfo = await ensureUserInfo(user);
     currentUserInfo = await repairOnboardingCompletionIfNeeded(user, currentUserInfo);
-    await window.SNAPP_STORES?.load();
     if (renderId !== authRenderSequence) return;
   }
   authStateLoading = false;
@@ -3439,20 +3426,21 @@ async function loadSaleIngredients() {
   const sequence = ++homeSalesSequence;
   if (!saleIngredientsGrid || !saleIngredientsStatus) return;
   saleIngredientsGrid.replaceChildren();
-  const store = selectedShoppingStore();
-  if (!currentUser || isAccountSetupPending() || isOnboardingRequired() || !store) {
+  const storeId = "morton-williams";
+  const userId = currentUser?.id;
+  if (!currentUser || isAccountSetupPending() || isOnboardingRequired()) {
     saleIngredientsStatus.textContent = t("home.setupRequired");
     return;
   }
   saleIngredientsStatus.textContent = t("copy.loading.sales", {});
   const context = document.getElementById("home-store-context");
-  if (context) context.textContent = t("home.storeContext", {address: store.address ? " — " + store.address : ""});
+  if (context) context.textContent = t("home.storeContext");
   try {
-    const data = await fetchSaleIngredients(store.id);
-    if (sequence !== homeSalesSequence || isOnboardingRequired() || selectedShoppingStore()?.id !== store.id) return;
+    const data = await fetchSaleIngredients(storeId);
+    if (sequence !== homeSalesSequence || currentUser?.id !== userId || isAccountSetupPending() || isOnboardingRequired()) return;
     renderSaleIngredients(data.sale_ingredients || []);
   } catch (error) {
-    if (sequence !== homeSalesSequence || isOnboardingRequired() || selectedShoppingStore()?.id !== store.id) return;
+    if (sequence !== homeSalesSequence || currentUser?.id !== userId || isAccountSetupPending() || isOnboardingRequired()) return;
     saleIngredientsStatus.textContent = error.message;
     const retry = document.createElement("button");
     retry.type = "button"; retry.textContent = t("home.retryDeals");
@@ -3460,13 +3448,6 @@ async function loadSaleIngredients() {
     saleIngredientsGrid.append(retry);
   }
 }
-
-document.getElementById("home-change-store")?.addEventListener("click", () => showPanel("my"));
-
-document.addEventListener("snapp:active-store", () => {
-  renderHomeForAuthState();
-  if (currentUser && isOnboardingRequired()) showPanel(ONBOARDING_PANEL_ID);
-});
 
 async function generateRecipesForSaleIngredient(item) {
   const ingredientId = item.ingredient_id;

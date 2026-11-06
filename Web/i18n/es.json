@@ -181,9 +181,9 @@
   "copy.today.s.store.plan": "Plan de tienda de hoy",
   "copy.hello": "Hola",
   "copy.there": "allá",
-  "copy.start.with.sale.ingredients.that.already.have.recipe.matches": "Start with sale ingredients from your selected grocery store that already have recipe matches.",
+  "copy.start.with.sale.ingredients.that.already.have.recipe.matches": "Explore recipe-ready sale ingredients from Morton Williams.",
   "copy.best.sale.ingredients.today": "Los ingredientes más vendidos hoy",
-  "copy.ranked.from.current.morton.williams.sale.data.and.matched": "Ranked from your selected grocery store’s sale inventory and matched to recipes.",
+  "copy.ranked.from.current.morton.williams.sale.data.and.matched": "Ranked from Morton Williams sale inventory and matched to recipes.",
   "copy.loading.sales": "Cargando ventas...",
   "copy.my.stores": "Mis tiendas",
   "copy.morton.williams.23rd.street": "Morton Williams Calle 23",
@@ -676,10 +676,9 @@
   "shopping.noKnownProducts": "Aún no hay artículos que mostrar. Revisa el estado de los precios arriba.",
   "shopping.pantry.quantityNeeded": "Falta la cantidad",
   "shopping.pantry.missingQuantities": "Se añadieron los artículos con cantidades conocidas. Revisa los que no tienen cantidad.",
-  "home.setupRequired": "Choose your grocery store in setup to see its deals.",
+  "home.setupRequired": "Complete your account setup to see ranked ingredients.",
   "home.salesTimeout": "Store deals are taking longer than expected. Try again.",
   "home.retryDeals": "Retry store deals",
-  "home.loadingAccount": "Loading your account and selected store…",
-  "home.storeContext": "Ranked deals from your selected grocery store{address}. Only items from this location are shown.",
-  "home.changeStore": "Change store"
+  "home.loadingAccount": "Loading your account…",
+  "home.storeContext": "Ranked from Morton Williams sale inventory and matched to recipes."
 }

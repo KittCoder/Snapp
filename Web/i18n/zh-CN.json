@@ -181,9 +181,9 @@
   "copy.today.s.store.plan": "今日店铺计划",
   "copy.hello": "你好",
   "copy.there": "那里",
-  "copy.start.with.sale.ingredients.that.already.have.recipe.matches": "Start with sale ingredients from your selected grocery store that already have recipe matches.",
+  "copy.start.with.sale.ingredients.that.already.have.recipe.matches": "Explore recipe-ready sale ingredients from Morton Williams.",
   "copy.best.sale.ingredients.today": "今日最畅销食材",
-  "copy.ranked.from.current.morton.williams.sale.data.and.matched": "Ranked from your selected grocery store’s sale inventory and matched to recipes.",
+  "copy.ranked.from.current.morton.williams.sale.data.and.matched": "Ranked from Morton Williams sale inventory and matched to recipes.",
   "copy.loading.sales": "正在加载销售...",
   "copy.my.stores": "我的商店",
   "copy.morton.williams.23rd.street": "莫顿·威廉姆斯 23 街",
@@ -676,10 +676,9 @@
   "shopping.noKnownProducts": "No grocery items to display yet. Check the pricing status above.",
   "shopping.pantry.quantityNeeded": "Quantity needed",
   "shopping.pantry.missingQuantities": "Added items with known quantities. Items without a recipe quantity still need review.",
-  "home.setupRequired": "Choose your grocery store in setup to see its deals.",
+  "home.setupRequired": "Complete your account setup to see ranked ingredients.",
   "home.salesTimeout": "Store deals are taking longer than expected. Try again.",
   "home.retryDeals": "Retry store deals",
-  "home.loadingAccount": "Loading your account and selected store…",
-  "home.storeContext": "Ranked deals from your selected grocery store{address}. Only items from this location are shown.",
-  "home.changeStore": "Change store"
+  "home.loadingAccount": "Loading your account…",
+  "home.storeContext": "Ranked from Morton Williams sale inventory and matched to recipes."
 }
