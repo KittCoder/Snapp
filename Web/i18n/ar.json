@@ -181,7 +181,7 @@
   "copy.today.s.store.plan": "خطة المتجر اليوم",
   "copy.hello": "مرحبًا",
   "copy.there": "هناك",
-  "copy.start.with.sale.ingredients.that.already.have.recipe.matches": "ابدأ بمكونات البيع التي تحتوي بالفعل على وصفات مطابقة وتقديرات أسعار مورتون ويليامز.",
+  "copy.start.with.sale.ingredients.that.already.have.recipe.matches": "Start with sale ingredients from your selected grocery store that already have recipe matches.",
   "copy.best.sale.ingredients.today": "أفضل بيع المكونات اليوم",
   "copy.ranked.from.current.morton.williams.sale.data.and.matched": "تم تصنيفه من بيانات بيع Morton Williams الحالية ومطابقته للوصفات التي يمكن لـ SNAPP تسعيرها.",
   "copy.loading.sales": "جارٍ تحميل المبيعات...",
@@ -675,5 +675,6 @@
   "shopping.pantry.covered": "Your pantry covers these meals. Nothing to buy right now.",
   "shopping.noKnownProducts": "No grocery items to display yet. Check the pricing status above.",
   "shopping.pantry.quantityNeeded": "Quantity needed",
-  "shopping.pantry.missingQuantities": "Added items with known quantities. Items without a recipe quantity still need review."
+  "shopping.pantry.missingQuantities": "Added items with known quantities. Items without a recipe quantity still need review.",
+  "home.setupRequired": "Choose your grocery store in setup to see its deals."
 }

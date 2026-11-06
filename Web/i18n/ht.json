@@ -181,7 +181,7 @@
   "copy.today.s.store.plan": "Plan magazen jodi a",
   "copy.hello": "Bonjou",
   "copy.there": "la",
-  "copy.start.with.sale.ingredients.that.already.have.recipe.matches": "Kòmanse ak engredyan lavant ki deja gen alimèt resèt ak estimasyon pri Morton Williams.",
+  "copy.start.with.sale.ingredients.that.already.have.recipe.matches": "Start with sale ingredients from your selected grocery store that already have recipe matches.",
   "copy.best.sale.ingredients.today": "Pi bon engredyan vann jodi a",
   "copy.ranked.from.current.morton.williams.sale.data.and.matched": "Klase apati done aktyèl sou vant Morton Williams ak matche ak resèt SNAPP ka pri.",
   "copy.loading.sales": "Chaje lavant...",
@@ -675,5 +675,6 @@
   "shopping.pantry.covered": "Your pantry covers these meals. Nothing to buy right now.",
   "shopping.noKnownProducts": "No grocery items to display yet. Check the pricing status above.",
   "shopping.pantry.quantityNeeded": "Quantity needed",
-  "shopping.pantry.missingQuantities": "Added items with known quantities. Items without a recipe quantity still need review."
+  "shopping.pantry.missingQuantities": "Added items with known quantities. Items without a recipe quantity still need review.",
+  "home.setupRequired": "Choose your grocery store in setup to see its deals."
 }

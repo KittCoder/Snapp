@@ -181,7 +181,7 @@
   "copy.today.s.store.plan": "오늘의 매장 계획",
   "copy.hello": "안녕하세요",
   "copy.there": "거기",
-  "copy.start.with.sale.ingredients.that.already.have.recipe.matches": "이미 레시피 일치와 Morton Williams 가격 견적이 있는 판매 재료부터 시작하세요.",
+  "copy.start.with.sale.ingredients.that.already.have.recipe.matches": "Start with sale ingredients from your selected grocery store that already have recipe matches.",
   "copy.best.sale.ingredients.today": "오늘 베스트 세일 재료",
   "copy.ranked.from.current.morton.williams.sale.data.and.matched": "현재 Morton Williams 판매 데이터를 기준으로 순위를 매기고 SNAPP에서 가격을 책정할 수 있는 레시피와 일치시킵니다.",
   "copy.loading.sales": "판매 로드 중...",
@@ -675,5 +675,6 @@
   "shopping.pantry.covered": "Your pantry covers these meals. Nothing to buy right now.",
   "shopping.noKnownProducts": "No grocery items to display yet. Check the pricing status above.",
   "shopping.pantry.quantityNeeded": "Quantity needed",
-  "shopping.pantry.missingQuantities": "Added items with known quantities. Items without a recipe quantity still need review."
+  "shopping.pantry.missingQuantities": "Added items with known quantities. Items without a recipe quantity still need review.",
+  "home.setupRequired": "Choose your grocery store in setup to see its deals."
 }

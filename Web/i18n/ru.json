@@ -181,7 +181,7 @@
   "copy.today.s.store.plan": "План магазина на сегодня",
   "copy.hello": "Привет",
   "copy.there": "там",
-  "copy.start.with.sale.ingredients.that.already.have.recipe.matches": "Начните с ингредиентов, рецепты которых уже соответствуют рецепту, и ориентировочной цене Мортона Уильямса.",
+  "copy.start.with.sale.ingredients.that.already.have.recipe.matches": "Start with sale ingredients from your selected grocery store that already have recipe matches.",
   "copy.best.sale.ingredients.today": "Лучшие ингредиенты для продажи сегодня",
   "copy.ranked.from.current.morton.williams.sale.data.and.matched": "Составлено на основе текущих данных о продажах Morton Williams и сопоставлено с рецептами, которые может оценить SNAPP.",
   "copy.loading.sales": "Загрузка продаж...",
@@ -675,5 +675,6 @@
   "shopping.pantry.covered": "Your pantry covers these meals. Nothing to buy right now.",
   "shopping.noKnownProducts": "No grocery items to display yet. Check the pricing status above.",
   "shopping.pantry.quantityNeeded": "Quantity needed",
-  "shopping.pantry.missingQuantities": "Added items with known quantities. Items without a recipe quantity still need review."
+  "shopping.pantry.missingQuantities": "Added items with known quantities. Items without a recipe quantity still need review.",
+  "home.setupRequired": "Choose your grocery store in setup to see its deals."
 }

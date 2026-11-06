@@ -5949,27 +5949,22 @@ def trader_joes_store_options():
 
 @app.get("/sale-ingredients")
 def sale_ingredients():
-    diagnostics = str(request.args.get("diagnostics") or "").casefold() in {"1", "true", "yes"}
+    from store_catalogs import CatalogError
+    from store_comparison_api import engine
+    from store_home_sales import store_sale_pool
+    store_id = request.args.get("store_id", "")
+    if not store_id:
+        return jsonify({"error": "Select a grocery store first."}), 400
     try:
-        if diagnostics:
-            audit = build_sale_ingredient_pool(include_diagnostics=True)
-            return jsonify(
-                {
-                    "candidate_pool_size": len(audit["candidates"]),
-                    "candidates": audit["candidates"],
-                    "exclusions": audit["exclusions"],
-                    "weights": audit["weights"],
-                }
-            )
-        pool = sale_ingredient_pool()
+        catalog = engine().registry.select([store_id])[0]
+        pool = store_sale_pool(catalog, build_sale_ingredient_pool, sale_ingredient_pool)
         selected = weighted_sale_sample(pool)
-        return jsonify(
-            {
-                "candidate_pool_size": len(pool),
-                "sale_ingredients": [public_sale_candidate(candidate) for candidate in selected],
-                "source": "Morton Williams sale database",
-            }
-        )
+        return jsonify({"store_id": store_id, "inventory_version": catalog.metadata.inventory_version,
+            "candidate_pool_size": len(pool),
+            "sale_ingredients": [public_sale_candidate(candidate) for candidate in selected],
+            "source": catalog.metadata.store_name})
+    except CatalogError:
+        return jsonify({"error": "Selected store is unavailable."}), 400
     except Exception as exc:
         log_event("sale_ingredients_failed", request_id=request.snapp_request_id, error_type=type(exc).__name__)
         return jsonify({"error": "Sale ingredients are temporarily unavailable."}), 503

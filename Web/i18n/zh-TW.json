@@ -181,7 +181,7 @@
   "copy.today.s.store.plan": "今日店舖計劃",
   "copy.hello": "你好",
   "copy.there": "那裡",
-  "copy.start.with.sale.ingredients.that.already.have.recipe.matches": "從已經有配方匹配和莫頓·威廉姆斯價格估算的銷售原料開始。",
+  "copy.start.with.sale.ingredients.that.already.have.recipe.matches": "Start with sale ingredients from your selected grocery store that already have recipe matches.",
   "copy.best.sale.ingredients.today": "今日最暢銷食材",
   "copy.ranked.from.current.morton.williams.sale.data.and.matched": "根據目前 Morton Williams 銷售數據排名，並與 SNAPP 可以定價的食譜相符。",
   "copy.loading.sales": "正在加載銷售...",
@@ -675,5 +675,6 @@
   "shopping.pantry.covered": "Your pantry covers these meals. Nothing to buy right now.",
   "shopping.noKnownProducts": "No grocery items to display yet. Check the pricing status above.",
   "shopping.pantry.quantityNeeded": "Quantity needed",
-  "shopping.pantry.missingQuantities": "Added items with known quantities. Items without a recipe quantity still need review."
+  "shopping.pantry.missingQuantities": "Added items with known quantities. Items without a recipe quantity still need review.",
+  "home.setupRequired": "Choose your grocery store in setup to see its deals."
 }

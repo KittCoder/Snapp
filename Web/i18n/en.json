@@ -181,7 +181,7 @@
   "copy.today.s.store.plan": "Today's Store Plan",
   "copy.hello": "Hello",
   "copy.there": "there",
-  "copy.start.with.sale.ingredients.that.already.have.recipe.matches": "Start with sale ingredients that already have recipe matches and Morton Williams price estimates.",
+  "copy.start.with.sale.ingredients.that.already.have.recipe.matches": "Start with sale ingredients from your selected grocery store that already have recipe matches.",
   "copy.best.sale.ingredients.today": "Best sale ingredients today",
   "copy.ranked.from.current.morton.williams.sale.data.and.matched": "Ranked from current Morton Williams sale data and matched to recipes SNAPP can price.",
   "copy.loading.sales": "Loading sales...",
@@ -675,5 +675,6 @@
   "shopping.pantry.covered": "Your pantry covers these meals. Nothing to buy right now.",
   "shopping.noKnownProducts": "No grocery items to display yet. Check the pricing status above.",
   "shopping.pantry.quantityNeeded": "Quantity needed",
-  "shopping.pantry.missingQuantities": "Added items with known quantities. Items without a recipe quantity still need review."
+  "shopping.pantry.missingQuantities": "Added items with known quantities. Items without a recipe quantity still need review.",
+  "home.setupRequired": "Choose your grocery store in setup to see its deals."
 }

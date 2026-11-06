@@ -493,8 +493,12 @@ function showPanel(id) {
   }
 }
 
+function selectedShoppingStore() {
+  return window.SNAPP_STORES?.stores?.find(store => store.id === window.SNAPP_ACTIVE_STORE?.id);
+}
+
 function isOnboardingRequired() {
-  return Boolean(onboardingForNewAccount && currentUser && currentUserInfo && !hasCompletedOnboarding(currentUserInfo, currentUser));
+  return Boolean(currentUser && (!currentUserInfo || !hasCompletedOnboarding(currentUserInfo, currentUser) || !selectedShoppingStore()));
 }
 
 function onboardingCompletedStorageKey(user = currentUser) {
@@ -589,7 +593,7 @@ function renderHomeForAuthState() {
   if (homeUsername) {
     homeUsername.textContent = getDisplayUsername(currentUser);
   }
-  if (isSignedIn) {
+  if (isSignedIn && !isOnboardingRequired()) {
     loadSaleIngredients();
   } else if (saleIngredientsGrid && saleIngredientsStatus) {
     saleIngredientsGrid.replaceChildren();
@@ -1116,6 +1120,8 @@ function getOnboardingStepError() {
     return "Enter a valid 5-digit US ZIP code.";
   }
 
+  if (onboardingStepIndex === 0 && !selectedShoppingStore()) return "Select your grocery store to continue.";
+
   if (onboardingStepIndex === 1) {
     const householdSize = getClampedHouseholdSize(onboardingHouseholdInput.value);
     if (householdSize < HOUSEHOLD_MIN || householdSize > HOUSEHOLD_MAX) {
@@ -1139,6 +1145,12 @@ async function saveOnboardingToUser() {
     return false;
   }
 
+  if (!selectedShoppingStore()) {
+    onboardingStepIndex = 0;
+    renderOnboardingStep();
+    setOnboardingStatus("Select your grocery store to continue.", "error");
+    return false;
+  }
   setOnboardingStatus(t("copy.saving.your.setup", {}));
   onboardingContinueButton.disabled = true;
   onboardingBackButton.disabled = true;
@@ -1174,6 +1186,7 @@ async function saveOnboardingToUser() {
   onboardingForNewAccount = false;
   syncSettingsFromUserInfo(currentUser, currentUserInfo);
   setOnboardingStatus(t("copy.setup.saved", {}), "success");
+  renderHomeForAuthState();
   return true;
 }
 
@@ -1549,6 +1562,7 @@ async function renderAuthState(user) {
   syncSettingsFromUserInfo(user, null);
   syncSnapCalculatorHouseholdSize();
   renderHomeForAuthState();
+  if (user && activeAppMode === "snapp") showPanel(ONBOARDING_PANEL_ID);
 
   if (user) {
     currentUserInfo = await ensureUserInfo(user);
@@ -3308,13 +3322,13 @@ async function fetchDishes(mealPrompt, options = {}) {
   throw new Error(lastError);
 }
 
-async function fetchSaleIngredients() {
+async function fetchSaleIngredients(storeId) {
   let lastError = API_BASE_URL
     ? "Unable to reach the sale ingredient backend."
     : "Backend URL is not configured.";
   for (const endpoint of getApiEndpoints("/sale-ingredients")) {
     try {
-      const response = await fetch(endpoint);
+      const response = await fetch(`${endpoint}?store_id=${encodeURIComponent(storeId)}`);
       const responseText = await response.text();
       let data = {};
       try {
@@ -3326,6 +3340,7 @@ async function fetchSaleIngredients() {
         lastError = data.error || `Sale request failed (${response.status}).`;
         continue;
       }
+      if (data.store_id !== storeId || (data.sale_ingredients || []).some(item => item.store_id !== storeId)) throw new Error("Store mismatch");
       return data;
     } catch (error) {
       lastError = error.message || "Network error while loading sale ingredients.";
@@ -3394,17 +3409,33 @@ function renderSaleIngredients(items) {
   });
 }
 
+let homeSalesSequence = 0;
 async function loadSaleIngredients() {
+  const sequence = ++homeSalesSequence;
   if (!saleIngredientsGrid || !saleIngredientsStatus) return;
+  saleIngredientsGrid.replaceChildren();
+  const store = selectedShoppingStore();
+  if (!currentUser || isOnboardingRequired() || !store) {
+    saleIngredientsStatus.textContent = t("home.setupRequired");
+    return;
+  }
   saleIngredientsStatus.textContent = t("copy.loading.sales", {});
+  const context = document.getElementById("home-store-context");
+  if (context) context.textContent = `Ranked deals at ${store.store_name}${store.address ? " — " + store.address : ""}. Only items from this location are shown.`;
   try {
-    const data = await fetchSaleIngredients();
+    const data = await fetchSaleIngredients(store.id);
+    if (sequence !== homeSalesSequence || isOnboardingRequired() || selectedShoppingStore()?.id !== store.id) return;
     renderSaleIngredients(data.sale_ingredients || []);
   } catch (error) {
-    saleIngredientsGrid.replaceChildren();
+    if (sequence !== homeSalesSequence || isOnboardingRequired() || selectedShoppingStore()?.id !== store.id) return;
     saleIngredientsStatus.textContent = error.message;
   }
 }
+
+document.addEventListener("snapp:active-store", () => {
+  renderHomeForAuthState();
+  if (currentUser && isOnboardingRequired()) showPanel(ONBOARDING_PANEL_ID);
+});
 
 async function generateRecipesForSaleIngredient(item) {
   const ingredientId = item.ingredient_id;

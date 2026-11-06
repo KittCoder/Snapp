@@ -181,7 +181,7 @@
   "copy.today.s.store.plan": "আজকের দোকান পরিকল্পনা",
   "copy.hello": "হ্যালো",
   "copy.there": "সেখানে",
-  "copy.start.with.sale.ingredients.that.already.have.recipe.matches": "রেসিপি ম্যাচ এবং মর্টন উইলিয়ামসের মূল্য অনুমান আছে এমন বিক্রয় উপাদান দিয়ে শুরু করুন।",
+  "copy.start.with.sale.ingredients.that.already.have.recipe.matches": "Start with sale ingredients from your selected grocery store that already have recipe matches.",
   "copy.best.sale.ingredients.today": "সেরা বিক্রয় উপাদান আজ",
   "copy.ranked.from.current.morton.williams.sale.data.and.matched": "বর্তমান মর্টন উইলিয়ামস বিক্রয় ডেটা থেকে র‌্যাঙ্ক করা হয়েছে এবং রেসিপির সাথে মিলেছে SNAPP মূল্য দিতে পারে।",
   "copy.loading.sales": "বিক্রয় লোড হচ্ছে...",
@@ -675,5 +675,6 @@
   "shopping.pantry.covered": "Your pantry covers these meals. Nothing to buy right now.",
   "shopping.noKnownProducts": "No grocery items to display yet. Check the pricing status above.",
   "shopping.pantry.quantityNeeded": "Quantity needed",
-  "shopping.pantry.missingQuantities": "Added items with known quantities. Items without a recipe quantity still need review."
+  "shopping.pantry.missingQuantities": "Added items with known quantities. Items without a recipe quantity still need review.",
+  "home.setupRequired": "Choose your grocery store in setup to see its deals."
 }
