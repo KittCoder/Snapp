@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   const key='snapp:stores:v1', ttl=20*60*1000;
-  let stores=[], pending=null, fetched=false, error=null;
+  let stores=[], pending=null, fetched=false, settled=false, error=null;
   const listeners=new Set();
   const fields=['id','store_name','retailer','address','borough','zip_code','latitude','longitude','product_count','verified_at'];
   function normalize(rows){
@@ -25,9 +25,9 @@
         stores=result;error=null;fetched=true;
         try{localStorage.setItem(key,JSON.stringify({time:Date.now(),stores}));}catch(_){}
       }catch(e){error=e;}
-      emit();return stores;
+      settled=true;emit();return stores;
     })();
     try{return await pending;}finally{pending=null;}
   }
-  window.SNAPP_STORES={load,normalize,subscribe(listener){listeners.add(listener);listener(stores,error);return()=>listeners.delete(listener);},get stores(){return stores;}};
+  window.SNAPP_STORES={load,normalize,subscribe(listener){listeners.add(listener);listener(stores,error);return()=>listeners.delete(listener);},get stores(){return stores;},get settled(){return settled;}};
 })();

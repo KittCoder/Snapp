@@ -24,15 +24,24 @@ def store_sale_pool(catalog, build_pool, mw_pool):
             rows = []
             while True:
                 page = catalog.gateway.select('store_products', {
-                    'select': 'name,source_product_id,sale_price,regular_price,raw_size_text,availability,source_json', 'store_id': 'eq.' + catalog.metadata.id,
+                    'select': 'name,source_product_id,sale_price,regular_price,raw_size_text,availability,source_json,feature_json', 'store_id': 'eq.' + catalog.metadata.id,
                     'inventory_version_id': 'eq.' + catalog.version_id,
-                    'sale_price': 'not.is.null', 'order': 'source_position.asc',
+                    'or': '(sale_price.not.is.null,feature_json->>is_on_sale.eq.true)', 'order': 'source_position.asc',
                     'limit': 900, 'offset': len(rows),
                 })
                 rows.extend(page)
                 if len(page) < 900:
                     break
-            products = [{**r.get('source_json', {}), **{k: v for k, v in r.items() if k != 'source_json' and v is not None}} for r in rows]
+            products = []
+            for row in rows:
+                feature = row.get('feature_json') or {}
+                product = {'name': feature.get('original_product_name'),
+                    'sale_price': feature.get('raw_sale_price') or (feature.get('raw_price') if feature.get('is_on_sale') is True else None),
+                    'regular_price': feature.get('raw_original_price'),
+                    'raw_size_text': feature.get('raw_size_text') or feature.get('raw_unit_text'),
+                    **(row.get('source_json') or {})}
+                product.update({k: v for k, v in row.items() if k not in {'source_json', 'feature_json'} and v is not None})
+                products.append(product)
         else:
             products = json.loads(catalog.path.read_text())
         converted = []

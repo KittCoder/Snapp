@@ -27,7 +27,7 @@
   window.SNAPP_STORES.subscribe(() => {
     render();
     renderHomeForAuthState();
-    if (currentUser && isOnboardingRequired()) {
+    if (currentUser && !isAccountSetupPending() && isOnboardingRequired()) {
       if (currentUserInfo) syncOnboardingFromUserInfo(currentUserInfo);
       showPanel(ONBOARDING_PANEL_ID);
     }

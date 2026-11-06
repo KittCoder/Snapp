@@ -678,5 +678,8 @@
   "shopping.pantry.missingQuantities": "Added items with known quantities. Items without a recipe quantity still need review.",
   "home.setupRequired": "Choose your grocery store in setup to see its deals.",
   "home.salesTimeout": "Store deals are taking longer than expected. Try again.",
-  "home.retryDeals": "Retry store deals"
+  "home.retryDeals": "Retry store deals",
+  "home.loadingAccount": "Loading your account and selected store…",
+  "home.storeContext": "Ranked deals from your selected grocery store{address}. Only items from this location are shown.",
+  "home.changeStore": "Change store"
 }

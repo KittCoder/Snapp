@@ -139,6 +139,7 @@ let savedMyStores = [];
 let activeAuthUserId = null;
 let dishProgressTimer = null;
 let authRenderSequence = 0;
+let authStateLoading = false;
 let activeAppMode = "snapp";
 let hydrationTaps = 3;
 const selectedMyStoreIds = new Set();
@@ -314,6 +315,7 @@ const SNAP101_PANEL_IDS = new Set(["snap101-snap", "snap101-nutrition", "snap101
 const SNAP101_DEFAULT_PANEL_ID = "snap101-snap";
 const SNAPP_PANEL_IDS = new Set([
   "account",
+  "account-loading",
   "onboarding",
   "home",
   "dishes",
@@ -470,6 +472,8 @@ function showPanel(id) {
     targetId = ONBOARDING_PANEL_ID;
   }
 
+  if (activeAppMode === "snapp" && isAccountSetupPending() && targetId !== "account") targetId = "account-loading";
+
   panels.forEach((panel) =>
     panel.classList.toggle("visible", panel.id === targetId)
   );
@@ -497,8 +501,12 @@ function selectedShoppingStore() {
   return window.SNAPP_STORES?.stores?.find(store => store.id === window.SNAPP_ACTIVE_STORE?.id);
 }
 
+function isAccountSetupPending() {
+  return Boolean(currentUser && (authStateLoading || !currentUserInfo || !window.SNAPP_STORES || window.SNAPP_STORES.settled === false));
+}
+
 function isOnboardingRequired() {
-  return Boolean(currentUser && (!currentUserInfo || !hasCompletedOnboarding(currentUserInfo, currentUser) || !selectedShoppingStore()));
+  return Boolean(currentUser && !isAccountSetupPending() && (!hasCompletedOnboarding(currentUserInfo, currentUser) || !selectedShoppingStore()));
 }
 
 function onboardingCompletedStorageKey(user = currentUser) {
@@ -593,7 +601,7 @@ function renderHomeForAuthState() {
   if (homeUsername) {
     homeUsername.textContent = getDisplayUsername(currentUser);
   }
-  if (isSignedIn && !isOnboardingRequired()) {
+  if (isSignedIn && !isAccountSetupPending() && !isOnboardingRequired()) {
     loadSaleIngredients();
   } else if (saleIngredientsGrid && saleIngredientsStatus) {
     saleIngredientsGrid.replaceChildren();
@@ -1555,6 +1563,7 @@ async function renderAuthState(user) {
   }
   activeAuthUserId = nextUserId;
   currentUser = user;
+  authStateLoading = Boolean(user);
   currentUserInfo = null;
   document.body.classList.toggle("signed-in", Boolean(user));
   renderNavigationForAuthState();
@@ -1562,13 +1571,15 @@ async function renderAuthState(user) {
   syncSettingsFromUserInfo(user, null);
   syncSnapCalculatorHouseholdSize();
   renderHomeForAuthState();
-  if (user && activeAppMode === "snapp") showPanel(ONBOARDING_PANEL_ID);
+  if (user && activeAppMode === "snapp") showPanel("account-loading");
 
   if (user) {
     currentUserInfo = await ensureUserInfo(user);
     currentUserInfo = await repairOnboardingCompletionIfNeeded(user, currentUserInfo);
+    await window.SNAPP_STORES?.load();
     if (renderId !== authRenderSequence) return;
   }
+  authStateLoading = false;
 
   renderAccountForAuthState();
   syncSettingsFromUserInfo(user, currentUserInfo);
@@ -1593,7 +1604,7 @@ async function renderAuthState(user) {
       showPanel(isOnboardingRequired() ? ONBOARDING_PANEL_ID : SIGNED_IN_DEFAULT_PANEL_ID);
     } else if (activeAppMode === "snapp" && isOnboardingRequired()) {
       showPanel(ONBOARDING_PANEL_ID);
-    } else if (activeAppMode === "snapp" && document.querySelector(".panel.visible")?.id === ONBOARDING_PANEL_ID) {
+    } else if (activeAppMode === "snapp" && [ONBOARDING_PANEL_ID, "account-loading"].includes(document.querySelector(".panel.visible")?.id)) {
       showPanel(SIGNED_IN_DEFAULT_PANEL_ID);
     }
     return;
@@ -3429,13 +3440,13 @@ async function loadSaleIngredients() {
   if (!saleIngredientsGrid || !saleIngredientsStatus) return;
   saleIngredientsGrid.replaceChildren();
   const store = selectedShoppingStore();
-  if (!currentUser || isOnboardingRequired() || !store) {
+  if (!currentUser || isAccountSetupPending() || isOnboardingRequired() || !store) {
     saleIngredientsStatus.textContent = t("home.setupRequired");
     return;
   }
   saleIngredientsStatus.textContent = t("copy.loading.sales", {});
   const context = document.getElementById("home-store-context");
-  if (context) context.textContent = `Ranked deals at ${store.store_name}${store.address ? " — " + store.address : ""}. Only items from this location are shown.`;
+  if (context) context.textContent = t("home.storeContext", {address: store.address ? " — " + store.address : ""});
   try {
     const data = await fetchSaleIngredients(store.id);
     if (sequence !== homeSalesSequence || isOnboardingRequired() || selectedShoppingStore()?.id !== store.id) return;
@@ -3449,6 +3460,8 @@ async function loadSaleIngredients() {
     saleIngredientsGrid.append(retry);
   }
 }
+
+document.getElementById("home-change-store")?.addEventListener("click", () => showPanel("my"));
 
 document.addEventListener("snapp:active-store", () => {
   renderHomeForAuthState();

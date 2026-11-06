@@ -28,7 +28,25 @@ class HomeSalesTests(unittest.TestCase):
   self.assertEqual(pool[0]['store_id'],'db-a')
   self.assertEqual(calls[0][1]['store_id'],'eq.db-a')
   self.assertEqual(calls[0][1]['inventory_version_id'],'eq.version-a')
-  self.assertEqual(calls[0][1]['sale_price'],'not.is.null')
+  self.assertEqual(calls[0][1]['or'],'(sale_price.not.is.null,feature_json->>is_on_sale.eq.true)')
+
+ def test_imported_feature_only_sales_retain_prices_and_store_identity(self):
+  import model
+  from unittest.mock import patch
+  feature={'original_product_name':'Mozzarella Cheese','raw_sale_price':'$2.00',
+           'raw_original_price':'$3.00','raw_price':'$2.00','raw_unit_text':'16 oz','is_on_sale':True}
+  calls=[]
+  gateway=SimpleNamespace(select=lambda table,params:(calls.append(params) or [
+      {'name':'Mozzarella Cheese','source_json':{},'feature_json':feature,
+       'sale_price':None,'regular_price':None,'raw_size_text':None}]))
+  c=SimpleNamespace(metadata=SimpleNamespace(id='morton-williams',inventory_version='feature-only',retailer='morton_williams'),version_id='db-version',gateway=gateway)
+  artifact={'candidates':[{'ingredient_id':'mozzarella cheese','recipe_ids':['r1','r2','r3']}]}
+  with patch.object(model,'load_sale_candidate_artifact',return_value=artifact):
+   pool=store_sale_pool(c,lambda db:model.build_sale_ingredient_pool(db,recipe_lookup=model.artifact_recipe_ids_for_sale_ingredient),lambda:self.fail('Cannot substitute local inventory'))
+  self.assertEqual(len(pool),1)
+  self.assertEqual(pool[0]['store_id'],'morton-williams')
+  self.assertEqual(pool[0]['sale_price'],2)
+  self.assertEqual(pool[0]['original_price'],3)
 
 class HomeSalesEndpointTests(unittest.TestCase):
  def test_requires_store_and_returns_only_selected_store(self):
