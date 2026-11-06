@@ -2502,7 +2502,7 @@ body.dark-theme .snack-options button.active {
   gap: 0.75rem;
 }
 
-.budget-summary span {
+.budget-summary > div {
   padding: 0.65rem 0.9rem;
   border: 1px solid var(--color-border);
   border-radius: 0.85rem;
@@ -3284,3 +3284,31 @@ html[dir="rtl"] .recipe-chat-error { border-left: 0; border-right: 3px solid var
 
 .recipe-store-price.is-checking, .recipe-store-price.is-unavailable { flex-direction:row; align-items:center; gap:8px; padding:5px 0; border:0; background:transparent; font-size:.82rem; }
 .recipe-store-price button { padding:3px 9px; border:1px solid #acc9bc; border-radius:7px; background:#fffdf7; color:#20594c; cursor:pointer; }
+
+/* Budget figures stay compact; loading and partial states use supporting copy. */
+#budget .budget-editor-controls input { flex: 1 1 14rem; width: auto; }
+#budget .budget-store-context { color: var(--color-muted); overflow-wrap: anywhere; margin: 1.25rem 0 .75rem; font-size: .9rem; }
+#budget .budget-display { min-height: 220px; padding: 2rem 1.25rem; border: 1px solid var(--color-border); border-radius: 1rem; background: linear-gradient(135deg, #edf9f4, var(--color-panel-strong)); }
+#budget #remaining-budget { font-size: clamp(2.75rem, 7vw, 5.5rem); overflow-wrap: anywhere; max-width: 100%; }
+#budget .budget-pricing-status { max-width: 38rem; margin: .75rem 0 0; color: var(--color-muted); font-size: .9rem; line-height: 1.6; }
+#budget .budget-pricing-status[data-state="partial"] { color: #885115; }
+#budget .budget-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin: 1rem 0 0; }
+#budget .budget-summary > div { padding: 1.15rem; min-width: 0; }
+#budget .budget-summary dt { font-size: .85rem; line-height: 1.5; color: var(--color-muted); }
+#budget .budget-summary dd { margin: .5rem 0 0; font-size: 1.35rem; overflow-wrap: anywhere; }
+#budget .budget-refresh-prices { margin-top: .6rem; padding: .6rem 1rem; border: 1px solid var(--color-primary); border-radius: .7rem; background: white; color: var(--color-primary); font: inherit; font-weight: 650; cursor: pointer; }
+#budget button:disabled { cursor: wait; opacity: .6; }
+.store-comparison { border-color: var(--color-border); background: var(--color-panel-strong); padding: 1.25rem; }
+.store-comparison h3 { margin: 0 0 .85rem; }
+.store-comparison details { margin-bottom: .85rem; }
+.store-comparison summary { cursor: pointer; color: var(--color-primary-strong); font-weight: 650; }
+.store-comparison button { padding: .65rem 1rem; border: 0; border-radius: .7rem; background: var(--color-primary); color: white; font: inherit; font-weight: 650; cursor: pointer; }
+.store-comparison button:disabled { opacity: .6; cursor: wait; }
+.store-comparison p { color: var(--color-muted); line-height: 1.6; }
+@media (max-width: 640px) {
+  #budget .budget-summary { grid-template-columns: 1fr; }
+  #budget .budget-editor-controls { flex-direction: column; }
+  #budget .budget-editor-controls input { flex-basis: auto; width: 100%; }
+  #budget .budget-editor-controls button { width: 100%; }
+  #budget .budget-display { padding: 1.5rem 1rem; min-height: 200px; }
+}

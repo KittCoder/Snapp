@@ -660,5 +660,20 @@
   "stores.disclaimer": "Estimates exclude taxes and fees. Store prices and availability may change. SNAP eligibility is unknown.",
   "stores.scope": "Compare full recipe quantities for your scheduled meals. Pantry deductions are not included.",
   "stores.effectiveCost": "Cost used for ingredients: {amount}",
-  "stores.snapshot": "Inventory observed: {date}"
+  "stores.snapshot": "Inventory observed: {date}",
+  "budget.balance.planned": "Budget after planned shopping",
+  "budget.balance.partial": "Budget after known items",
+  "budget.status.noBudget": "Set your monthly budget above to see how your planned groceries fit.",
+  "budget.status.empty": "Add recipes to your schedule to plan grocery spending.",
+  "budget.status.noStore": "Choose a shopping store to see its grocery estimate.",
+  "budget.status.partial": "Partial estimate: unpriced ingredients are not included. Your remaining budget may be lower.",
+  "budget.status.complete": "Estimated planned checkout at your selected store, after pantry deductions. Taxes and fees excluded.",
+  "budget.status.error": "Store prices could not be loaded. Refresh prices to try again.",
+  "budget.status.loading": "Updating prices for your selected store…",
+  "budget.cost.known": "Known scheduled cost",
+  "budget.refresh": "Refresh prices",
+  "shopping.pantry.covered": "Your pantry covers these meals. Nothing to buy right now.",
+  "shopping.noKnownProducts": "No grocery items to display yet. Check the pricing status above.",
+  "shopping.pantry.quantityNeeded": "Quantity needed",
+  "shopping.pantry.missingQuantities": "Added items with known quantities. Items without a recipe quantity still need review."
 }

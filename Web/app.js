@@ -1435,7 +1435,12 @@ async function loadPantryItems() {
 
   pantryItems = data || [];
   renderPantryItems();
+  notifyPantryChanged();
   setPantryStatus("");
+}
+
+function notifyPantryChanged() {
+  if (document.dispatchEvent && typeof Event === "function") document.dispatchEvent(new Event("snapp:shopping-changed"));
 }
 
 async function addPantryItem(name, quantity) {
@@ -1459,6 +1464,7 @@ async function addPantryItem(name, quantity) {
 
   pantryItems = [data, ...pantryItems];
   renderPantryItems();
+  notifyPantryChanged();
   setPantryStatus(t("copy.pantry.item.added", {}), "success");
   return true;
 }
@@ -1469,8 +1475,8 @@ async function addPantryItems(items) {
   setPantryStatus(t("copy.adding.arg0.pantry.item.arg1", {arg0: (items.length), arg1: (items.length === 1 ? "" : "s")}));
   const rows = items.map((item) => ({
     user_id: currentUser.id,
-    name: item.name,
-    quantity: item.quantity,
+    name: item.pantryName || item.name,
+    quantity: item.pantryQuantity || item.quantity,
   }));
   const { data, error } = await supabaseClient
     .from("user_pantry_items")
@@ -1484,6 +1490,7 @@ async function addPantryItems(items) {
 
   pantryItems = [...(data || []), ...pantryItems];
   renderPantryItems();
+  notifyPantryChanged();
   setPantryStatus(t("copy.arg0.pantry.item.arg1.added", {arg0: (items.length), arg1: (items.length === 1 ? "" : "s")}), "success");
   return true;
 }
@@ -1504,6 +1511,7 @@ async function deletePantryItem(itemId) {
 
   pantryItems = pantryItems.filter((item) => item.id !== itemId);
   renderPantryItems();
+  notifyPantryChanged();
   setPantryStatus(t("copy.pantry.item.removed", {}), "success");
 }
 
@@ -1611,8 +1619,12 @@ function displayPrice(value) {
 }
 
 function getScheduledMealTotal() {
-  const basket = window.SNAPP_ACTIVE_STORE?.result;
-  return basket?.complete ? basket.basket_total : null;
+  if (!scheduledMeals.length) return 0;
+  const active = window.SNAPP_ACTIVE_STORE;
+  const basket = active?.result;
+  if (!basket || basket.id !== active.id) return null;
+  const value = basket.complete ? basket.basket_total : basket.checkout_total_known;
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : null;
 }
 
 function getHouseholdSize() {
@@ -1623,19 +1635,46 @@ function getHouseholdSize() {
 function renderBudget() {
   const editor = document.getElementById("budget-monthly-input");
   if (editor && document.activeElement !== editor) editor.value = budgetInput.value;
-  const hasBudget = budgetInput.value !== "";
-  const budget = hasBudget ? Number(budgetInput.value || 0) : 0;
-  const scheduledTotal = getScheduledMealTotal();
-  const remaining = budget - scheduledTotal;
-
-  if (budgetEmptyMessage) {
-    budgetEmptyMessage.hidden = hasBudget;
-  }
-  currentBudget.textContent = currencyFormatter.format(budget);
-  remainingBudget.textContent = scheduledTotal == null ? "Awaiting store pricing" : currencyFormatter.format(remaining);
-  remainingBudget.classList.toggle("over-budget", remaining < 0);
+  const budget = Number(budgetInput.value);
+  const hasBudget = budgetInput.value !== "" && Number.isFinite(budget) && budget >= 0;
+  const cost = getScheduledMealTotal();
+  const active = window.SNAPP_ACTIVE_STORE;
+  const basket = active?.result && active.result.id === active.id ? active.result : null;
+  const partial = scheduledMeals.length > 0 && basket && !basket.complete;
+  const remaining = hasBudget && cost !== null ? budget-cost : null;
+  if (budgetEmptyMessage) budgetEmptyMessage.hidden = hasBudget;
+  currentBudget.textContent = hasBudget ? currencyFormatter.format(budget) : "—";
+  remainingBudget.textContent = remaining === null ? "—" : currencyFormatter.format(remaining);
+  remainingBudget.classList.toggle("over-budget", remaining !== null && remaining < 0);
   budgetMealCount.textContent = scheduledMeals.length;
-  scheduledMealCost.textContent = scheduledTotal == null ? "See Shopping for partial or pending prices" : currencyFormatter.format(scheduledTotal);
+  scheduledMealCost.textContent = cost === null ? "—" : currencyFormatter.format(cost);
+  const label = document.getElementById("budget-balance-label");
+  if (label) {
+    label.dataset.i18n = partial ? "budget.balance.partial" : "budget.balance.planned";
+    label.textContent = t(label.dataset.i18n);
+  }
+  const status = document.getElementById("budget-pricing-status");
+  if (status) {
+    status.dataset.state = partial ? "partial" : cost !== null ? "ready" : active?.status || "idle";
+    status.textContent = !hasBudget ? t("budget.status.noBudget")
+      : !scheduledMeals.length ? t("budget.status.empty")
+      : !active?.id ? t("budget.status.noStore")
+      : partial ? t("budget.status.partial", {count:basket.unknown_cost_items?.length || 0})
+      : cost !== null ? t("budget.status.complete")
+      : t(active.status === "error" ? "budget.status.error" : "budget.status.loading");
+  }
+  const costLabel = document.getElementById("budget-cost-label");
+  if (costLabel) {
+    costLabel.dataset.i18n = partial ? "budget.cost.known" : "copy.scheduled.cost";
+    costLabel.textContent = t(costLabel.dataset.i18n);
+  }
+  const retry = document.getElementById("budget-refresh-prices");
+  if (retry) { retry.hidden = !active?.id || !scheduledMeals.length; retry.disabled = active?.status === "loading"; }
+  const context = document.getElementById("budget-store-context");
+  if (context) {
+    const store = window.SNAPP_STORES?.stores?.find(s=>s.id===active?.id);
+    context.textContent = store ? [store.retailer === "food_bazaar" ? "Food Bazaar" : store.retailer === "ctown" ? "C-Town" : store.store_name,store.address].filter(Boolean).join(" · ") : t("budget.status.noStore");
+  }
 }
 
 function getPortionMacroValue(meal, macroKey) {
@@ -2178,7 +2217,8 @@ function updateShoppingAddButton(items = getShoppingIngredients()) {
   shoppingAddPantryButton.textContent = selectedCount
     ? t("copy.add.selected.to.pantry", {})
     : t("copy.add.all.to.pantry", {});
-  shoppingAddPantryButton.disabled = !items.length;
+  const candidates = selectedCount ? items.filter(item => selectedShoppingIngredientIds.has(item.id)) : items;
+  shoppingAddPantryButton.disabled = !candidates.some(item => item.pantryQuantity !== null);
 }
 
 function appendShoppingDeal(container, item) {
@@ -2256,7 +2296,11 @@ function renderShoppingList(priceRefresh = false) {
   if (!items.length) {
     const emptyItem = document.createElement("li");
     emptyItem.className = "shopping-empty";
-    emptyItem.textContent = t("copy.your.next.shop.starts.with.a.meal.add.recipes", {});
+    const active = window.SNAPP_ACTIVE_STORE;
+    emptyItem.textContent = scheduledMeals.length && active?.status === "loading" ? t("budget.status.loading")
+      : scheduledMeals.length && active?.result?.complete ? t("shopping.pantry.covered")
+      : scheduledMeals.length && active?.id ? t("shopping.noKnownProducts")
+      : t("copy.your.next.shop.starts.with.a.meal.add.recipes", {});
     shoppingList.appendChild(emptyItem);
     shoppingStatus.textContent = "";
     updateShoppingAddButton(items);
@@ -2310,16 +2354,17 @@ function renderShoppingList(priceRefresh = false) {
       } else appendShoppingDeal(details, item);
 
       addButton.type = "button";
-      addButton.textContent = t("copy.add.to.pantry", {});
+      addButton.textContent = t(item.pantryQuantity === null ? "shopping.pantry.quantityNeeded" : "copy.add.to.pantry", {});
+      addButton.disabled = item.pantryQuantity === null;
       addButton.addEventListener("click", async () => {
         addButton.disabled = true;
         shoppingStatus.textContent = t("copy.adding.arg0.to.pantry", {arg0: (item.name)});
-        const wasAdded = await addPantryItem(item.name, item.quantity);
+        const wasAdded = await addPantryItem(item.pantryName || item.name, item.pantryQuantity || item.quantity);
         if (wasAdded) {
           pantryHandledShoppingIngredientIds.add(item.id);
           selectedShoppingIngredientIds.delete(item.id);
           shoppingStatus.textContent = t("copy.arg0.added.to.pantry", {arg0: (item.name)});
-          renderShoppingList();
+          renderShoppingList(true);
           return;
         }
         shoppingStatus.textContent = t("copy.could.not.add.ingredient.to.pantry", {});
@@ -3910,9 +3955,10 @@ pantryNameInput.addEventListener("change", updatePantryQuantityVisibility);
 
 shoppingAddPantryButton.addEventListener("click", async () => {
   const items = getShoppingIngredients();
-  const itemsToAdd = selectedShoppingIngredientIds.size
+  const chosenItems = selectedShoppingIngredientIds.size
     ? items.filter((item) => selectedShoppingIngredientIds.has(item.id))
     : items;
+  const itemsToAdd = chosenItems.filter(item => item.pantryQuantity !== null);
 
   if (!itemsToAdd.length) return;
 
@@ -3924,7 +3970,8 @@ shoppingAddPantryButton.addEventListener("click", async () => {
     itemsToAdd.forEach((item) => pantryHandledShoppingIngredientIds.add(item.id));
     selectedShoppingIngredientIds.clear();
     shoppingStatus.textContent = t("copy.arg0.ingredient.arg1.added.to.pantry", {arg0: (itemsToAdd.length), arg1: (itemsToAdd.length === 1 ? "" : "s")});
-    renderShoppingList();
+    renderShoppingList(true);
+    if (itemsToAdd.length < chosenItems.length) shoppingStatus.textContent = t("shopping.pantry.missingQuantities");
   } else {
     shoppingStatus.textContent = t("copy.could.not.add.ingredients.to.pantry", {});
     updateShoppingAddButton(items);
@@ -4424,3 +4471,6 @@ renderSchedule();
 showAuthMode("sign-in");
 initializeAuth();
 handleInitialUrlState();
+
+// Retry the selected store without changing tabs or losing the entered budget.
+document.getElementById("budget-refresh-prices")?.addEventListener("click", () => window.SNAPP_ACTIVE_STORE?.refresh());

@@ -3801,6 +3801,10 @@ def pantry_ingredient_identity_key(text):
     identity = describe(text).to_dict()
     if not identity.get("family"):
         return ingredient_identity_key(text)
+    # Whole pantry ingredients can be chopped/sliced/grated during cooking.
+    # Keep purchase forms such as ground meat and all subtype/cut constraints.
+    if identity.get("form") in {"chopped", "minced", "diced", "sliced", "shredded", "grated"}:
+        identity["form"] = None
     for key in ("normalized_text", "evidence", "brand"):
         identity.pop(key, None)
     return json.dumps(identity, sort_keys=True)

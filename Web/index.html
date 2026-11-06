@@ -850,15 +850,18 @@
           <span data-i18n="copy.set.a.budget.above.or.use.snap.101.to">Set a budget above, or use SNAP 101 to estimate one.</span>
           <button id="budget-open-snap101" type="button"><span data-i18n="copy.open.snap.101">Open SNAP 101</span></button>
         </p>
+        <p id="budget-store-context" class="budget-store-context"></p>
         <div class="budget-display" aria-live="polite">
-          <span class="budget-label"><span data-i18n="copy.remaining.monthly.budget">Remaining monthly budget</span></span>
-          <strong id="remaining-budget">$0.00</strong>
+          <span id="budget-balance-label" class="budget-label" data-i18n="budget.balance.planned">Budget after planned shopping</span>
+          <strong id="remaining-budget">—</strong>
+          <p id="budget-pricing-status" class="budget-pricing-status" role="status"></p>
+          <button id="budget-refresh-prices" type="button" class="budget-refresh-prices" hidden data-i18n="budget.refresh">Refresh prices</button>
         </div>
-        <div class="budget-summary">
-          <span><span data-i18n="copy.monthly.food.budget.b199ea">Monthly food budget:</span> <strong id="current-budget">$0.00</strong></span>
-          <span><span data-i18n="copy.scheduled.meals">Scheduled meals:</span> <strong id="budget-meal-count">0</strong></span>
-          <span><span data-i18n="copy.scheduled.cost">Scheduled cost:</span> <strong id="scheduled-meal-cost">$0.00</strong></span>
-        </div>
+        <dl class="budget-summary">
+          <div><dt data-i18n="copy.monthly.food.budget.b199ea">Monthly food budget:</dt><dd><strong id="current-budget">—</strong></dd></div>
+          <div><dt data-i18n="copy.scheduled.meals">Scheduled meals:</dt><dd><strong id="budget-meal-count">0</strong></dd></div>
+          <div><dt id="budget-cost-label" data-i18n="copy.scheduled.cost">Scheduled cost:</dt><dd><strong id="scheduled-meal-cost">—</strong></dd></div>
+        </dl>
       </section>
 
       <section id="settings" class="panel">

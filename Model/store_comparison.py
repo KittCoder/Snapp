@@ -15,8 +15,21 @@ DEAL_OPTIMIZER_VERSION=hashlib.sha256(Path(deal_optimizer.__file__).read_bytes()
 from deal_presentation import shopping_deal_fields
 from store_catalogs import StoreRegistry,CatalogError
 
-ADAPTER_VERSION='whole-store-comparison-v2-quantities'
+ADAPTER_VERSION='whole-store-comparison-v3-pantry-transfer'
 def money(values):return float(sum((Decimal(str(v)).quantize(Decimal('.01')) for v in values),Decimal(0)))
+
+def pantry_transfer_payload(lines, required, selected=None, reliable=False):
+    from ingredient_normalization import extract_quantity_and_unit
+    name=extract_quantity_and_unit(lines[0])[-1]
+    amount,unit=required.base_quantity,required.base_unit
+    if reliable and selected and not (selected.package.sold_by_weight or selected.package.variable_weight):
+        package=selected.package
+        if package.base_quantity and package.base_unit and selected.packages_needed:
+            amount=package.base_quantity*selected.packages_needed
+            unit=package.base_unit
+    if not name or amount is None or amount<=0 or not unit:return None
+    return {'name':name,'quantity':f'{amount:.12g} {unit}'}
+
 
 def validate_recipes(recipes):
     if not isinstance(recipes,list) or not 1<=len(recipes)<=30:raise CatalogError('Supply between 1 and 30 recipes')
@@ -152,6 +165,7 @@ class BasketComparison:
                     from ingredient_normalization import parse_ingredient
                     label = parse_ingredient(lines[0]).canonical_name
                     row={'display_name':label,'product_id':purchase.product_id,'product_name':purchase.product_name,'ingredients':lines,'total_required':purchase.total_required.to_dict(),'package_size':f'{selected.package.package_quantity:g} {selected.package.package_unit}' if selected and selected.package.package_quantity and selected.package.package_unit else None,'packages_needed':deal.get('packages_needed'),'checkout_cost':cost,'effective_cost':deal.get('effective_cost') if reliable else None,'deal':deal,'snap_eligible':None,'warnings':purchase.warnings,**{k:v for k,v in catalog.metadata.public().items() if k in ('retailer','store_id','store_name','address','borough')}}
+                    row['pantry_transfer']=pantry_transfer_payload(lines,purchase.total_required,selected,reliable)
                     source=catalog.source_row(purchase.product_id)
                     if source:row.update(source_url=source['source_url'],availability=source.get('availability'))
                     selections.append(row)
