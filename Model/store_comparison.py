@@ -139,7 +139,7 @@ class BasketComparison:
             basket=builder.build_multi_recipe_basket(recipes,use_semantic=mw_semantic if catalog.metadata.retailer=='morton_williams' else False,**kwargs)
             # Every candidate and selected product must belong to this catalog.
             owned=set(builder.match_service.feature_by_id)
-            if catalog.metadata.retailer=='ctown' and owned!=set(catalog._rows):raise CatalogError('Cross-store feature inventory rejected')
+            if catalog.metadata.retailer!='morton_williams' and owned!=set(catalog._rows):raise CatalogError('Cross-store feature inventory rejected')
             requested=defaultdict(list);matched=defaultdict(list)
             for index,recipe in enumerate(recipes):
                 for line in recipe_ingredients(recipe,index)[1]:requested[ingredient_aggregation_signature(line)[0]].append(line)

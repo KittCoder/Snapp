@@ -245,7 +245,7 @@ class DatabaseStoreCatalog:
                 if len(candidates)>POOL_LIMIT: raise CatalogUnavailable('Cached candidate pool exceeds safe limit')
                 for row in candidates:
                     source = row['source_json']
-                    if self.metadata.retailer=='ctown' and (source.get('retailer')!='ctown' or source.get('store_id')!=self.metadata.store_id):
+                    if self.metadata.retailer!='morton_williams' and (source.get('retailer')!=self.metadata.retailer or source.get('store_id')!=self.metadata.store_id):
                         raise CatalogUnavailable('Cross-store candidate provenance rejected')
                     rows[row['feature_json']['product_id']] = row
                 if len(rows)>BASKET_POOL_LIMIT: raise CatalogUnavailable('Basket candidate pool exceeds safe limit')
@@ -334,13 +334,28 @@ class DatabaseStoreRegistry:
         self.errors = []
         self.manifest_path = ROOT/'Model/store_catalog_manifest.json'
         self.manifest_hash = digest(self.manifest_path)
-        allowed = {entry['id']:entry for entry in json.loads(self.manifest_path.read_text())}
-        entries = self.gateway.select('stores', {'select':'id,metadata','verified':'eq.true','active':'eq.true','limit':14})
+        self.allowed = {entry['id']:entry for entry in json.loads(self.manifest_path.read_text())}
+        self.registry_limit = len(self.allowed)+1
+        self._registry_lock = threading.RLock()
+        self._refresh()
+
+    def _refresh(self):
+        # Discover newly activated catalogs without rebuilding existing caches.
+        # A manifest entry alone never exposes an unimported inventory.
+        with self._registry_lock:
+            if digest(self.manifest_path)!=self.manifest_hash:
+                raise CatalogUnavailable('Verified inventory manifest changed; reload registry')
+            self._load_active()
+
+    def _load_active(self):
+        allowed = self.allowed
+        updated = {}
+        entries = self.gateway.select('stores', {'select':'id,metadata','verified':'eq.true','active':'eq.true','limit':len(allowed)+1})
         versions = self.gateway.select('store_inventory_versions', {'select':'id,store_id,source_version,product_count,feature_version',
-                                      'active':'eq.true','limit':14})
+                                      'active':'eq.true','limit':len(allowed)+1})
         by_store = {v['store_id']:v for v in versions}
-        if len(entries)>13 or len(by_store)!=len(versions): raise CatalogUnavailable('Invalid active inventory registry')
-        if {entry['id'] for entry in entries} != set(allowed):
+        if len(entries)>len(allowed) or len(by_store)!=len(versions): raise CatalogUnavailable('Invalid active inventory registry')
+        if not {entry['id'] for entry in entries} <= set(allowed):
             raise CatalogUnavailable('Database inventory set differs from verified whitelist')
         for entry in entries:
             version = by_store.get(entry['id'])
@@ -352,21 +367,26 @@ class DatabaseStoreRegistry:
                 raise CatalogUnavailable('Inventory metadata/version mismatch')
             if asdict(metadata)!=allowed[metadata.id]:
                 raise CatalogUnavailable('Verified store identity/source version mismatch')
-            self.stores[metadata.id] = DatabaseStoreCatalog(metadata,version['id'],self.gateway,self.cache,self.prepared_cache,self.hot_cache)
-        if not self.stores: raise CatalogUnavailable('No verified database inventories available')
+            existing = self.stores.get(metadata.id)
+            updated[metadata.id] = existing if existing is not None and existing.version_id==version['id'] and existing.metadata==metadata else DatabaseStoreCatalog(metadata,version['id'],self.gateway,self.cache,self.prepared_cache,self.hot_cache)
+        if not updated: raise CatalogUnavailable('No verified database inventories available')
+        self.stores = updated
     def select(self, ids):
         if digest(self.manifest_path)!=self.manifest_hash:
             raise CatalogUnavailable('Verified inventory manifest changed; reload registry')
-        if not isinstance(ids,list) or not 1<=len(ids)<=13 or any(not isinstance(i,str) or i not in self.stores for i in ids):
+        if isinstance(ids,list) and any(isinstance(i,str) and i in self.allowed and i not in self.stores for i in ids):
+            self._refresh()
+        stores = self.stores
+        if not isinstance(ids,list) or not 1<=len(ids)<=len(stores) or any(not isinstance(i,str) or i not in stores for i in ids):
             raise CatalogError('Choose only available verified stores')
-        return [self.stores[i] for i in dict.fromkeys(ids)]
+        return [stores[i] for i in dict.fromkeys(ids)]
     @timed('active_inventory_versions')
     def current_catalogs(self, catalogs):
         # A fresh single read on EVERY request, including completed-basket hits.
         # A TTL on mutable active versions would allow stale products/results.
         versions = self.gateway.select('store_inventory_versions', {
             'select':'id,store_id,source_version,product_count,feature_version',
-            'active':'eq.true', 'limit':14})
+            'active':'eq.true', 'limit':self.registry_limit})
         by_store = {}
         for version in versions:
             by_store.setdefault(version['store_id'], []).append(version)
@@ -377,7 +397,8 @@ class DatabaseStoreRegistry:
         return len(self.current_catalogs(catalogs)) == len(catalogs)
 
     def public(self):
-        catalogs = self.select(list(self.stores))
+        self._refresh()
+        catalogs = list(self.stores.values())
         return [c.metadata.public() for c in self.current_catalogs(catalogs)]
 
 def configured_registry():

@@ -99,20 +99,26 @@ class StoreRegistry:
         whitelist=self.root/'integration_ready_stores.json'
         try:entries=json.loads(whitelist.read_text());self.whitelist_version=digest(whitelist)
         except (OSError,ValueError):entries=[];self.errors.append('Verified store whitelist unavailable')
-        locations=json.loads((self.root/'ctown/stores.json').read_text()) if (self.root/'ctown/stores.json').exists() else []
-        byid={s['store_id']:s for s in locations}
+        locations_by_retailer={}
         for entry in entries:
-            if entry.get('retailer')!='ctown' or entry.get('status')!='VERIFIED':continue
-            sid=entry.get('store_id');key='ctown:'+str(sid)
+            if entry.get('retailer') not in ('ctown','food_bazaar') or entry.get('status')!='VERIFIED':continue
+            retailer=entry.get('retailer','ctown')
+            if retailer not in locations_by_retailer:
+                path=self.root/retailer/'stores.json'
+                locations_by_retailer[retailer]={s['store_id']:s for s in json.loads(path.read_text())} if path.exists() else {}
+            byid=locations_by_retailer[retailer]
+            sid=entry.get('store_id');key=retailer+':'+str(sid)
             try:
                 if not isinstance(sid,str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,64}',sid):raise CatalogError('Invalid whitelist store ID')
                 if key in self.stores:raise CatalogError('Duplicate verified store')
                 location=byid.get(sid)
                 if not location or location['address']!=entry['address'] or location['borough']!=entry['borough']:raise CatalogError('Verified physical store identity mismatch')
-                path=(self.root/'ctown/normalized'/(sid+'.json')).resolve()
-                if not path.is_relative_to(self.root/'ctown/normalized'):raise CatalogError('Invalid catalog path')
+                path=(self.root/retailer/'normalized'/(sid+'.json')).resolve()
+                if not path.is_relative_to(self.root/retailer/'normalized'):raise CatalogError('Invalid catalog path')
                 rows=json.loads(path.read_text());self.validate_rows(rows,entry,location)
-                version=digest(path);metadata=StoreMetadata(key,'ctown',sid,entry['store_name'],entry['address'],entry['borough'],location['zip_code'],len(rows),version,max(r['scraped_at'] for r in rows),entry.get('price_coverage'),entry.get('package_coverage'),location.get('catalog_url'))
+                version=digest(path)
+                if retailer=='food_bazaar' and entry.get('inventory_version')!=version:raise CatalogError('Food Bazaar inventory hash mismatch')
+                metadata=StoreMetadata(key,retailer,sid,entry['store_name'],entry['address'],entry['borough'],location['zip_code'],len(rows),version,max(r['scraped_at'] for r in rows),entry.get('price_coverage'),entry.get('package_coverage'),location.get('catalog_url') or location.get('source_url'))
                 self.stores[key]=StoreCatalog(metadata,path)
             except (OSError,ValueError,KeyError,TypeError) as exc:self.errors.append({'store_id':sid,'reason':str(exc)})
         if mw:
@@ -128,7 +134,7 @@ class StoreRegistry:
         seen=set();priced=0;packaged=0
         for r in rows:
             if not isinstance(r,dict):raise CatalogError('Malformed product row')
-            if r.get('retailer')!='ctown' or r.get('store_id')!=entry['store_id'] or r.get('store_address')!=location['address'] or r.get('zip_code')!=location['zip_code']:raise CatalogError('Cross-store row or physical context mismatch')
+            if r.get('retailer')!=entry.get('retailer','ctown') or r.get('store_id')!=entry['store_id'] or r.get('store_address')!=location['address'] or r.get('zip_code')!=location['zip_code']:raise CatalogError('Cross-store row or physical context mismatch')
             pid=r.get('source_product_id')
             if not pid or pid in seen or not str(r.get('name') or '').strip() or not r.get('source_url') or not r.get('scraped_at'):raise CatalogError('Malformed/duplicate source product')
             seen.add(pid)
@@ -138,14 +144,21 @@ class StoreRegistry:
             if r.get('price_basis') not in ('package','weight','each','unknown'):raise CatalogError('Invalid price basis')
             q=r.get('package_quantity');u=r.get('package_unit')
             if q is not None and (type(q) not in (int,float) or not math.isfinite(q) or q<=0 or not u):raise CatalogError('Invalid package metadata')
-            if r.get('snap_eligible') is not None:raise CatalogError('Unverified product SNAP eligibility')
-            parsed_q,parsed_u,*_=parse_package_size(r.get('raw_size_text') or '')
-            if q is not None and (parsed_q is None or not math.isclose(q,parsed_q,rel_tol=1e-6) or u!=parsed_u):raise CatalogError('Package metadata no longer matches validated parser')
+            if r.get('snap_eligible') is not None and (entry.get('retailer','ctown')=='ctown' or not r.get('snap_evidence')):raise CatalogError('Unverified product SNAP eligibility')
+            if entry.get('retailer','ctown')=='food_bazaar':
+                metadata=r.get('source_metadata') or {}
+                if str(metadata.get('retailer_location_id'))!=entry['store_id'] or metadata.get('item_id')!='items_'+entry['store_id']+'-'+str(pid):raise CatalogError('Cross-store Food Bazaar provenance rejected')
+            # Food Bazaar quantities include audited multipack/estimated-weight
+            # handling and are pinned by the promoted inventory hash. Preserve
+            # the original C-Town parser validation for its existing artifacts.
+            if entry.get('retailer','ctown')=='ctown':
+                parsed_q,parsed_u,*_=parse_package_size(r.get('raw_size_text') or '')
+                if q is not None and (parsed_q is None or not math.isclose(q,parsed_q,rel_tol=1e-6) or u!=parsed_u):raise CatalogError('Package metadata no longer matches validated parser')
             priced+=r.get('effective_current_price') is not None;packaged+=q is not None and bool(u)
         if abs(100*priced/len(rows)-entry['price_coverage'])>.02 or abs(100*packaged/len(rows)-entry['package_coverage'])>.02:raise CatalogError('Verified price/package coverage changed')
     def select(self,ids):
         if self.whitelist_version and digest(self.root/'integration_ready_stores.json')!=self.whitelist_version:raise CatalogError('Verified whitelist changed; reload registry')
-        if not isinstance(ids,list) or not 1<=len(ids)<=13 or any(not isinstance(i,str) or i not in self.stores for i in ids):raise CatalogError('Choose only available verified stores')
+        if not isinstance(ids,list) or not 1<=len(ids)<=len(self.stores) or any(not isinstance(i,str) or i not in self.stores for i in ids):raise CatalogError('Choose only available verified stores')
         return [self.stores[i] for i in dict.fromkeys(ids)]
     def public(self):
         if self.whitelist_version and digest(self.root/'integration_ready_stores.json')!=self.whitelist_version:raise CatalogError('Verified whitelist changed; reload registry')

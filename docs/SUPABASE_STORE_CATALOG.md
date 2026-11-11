@@ -1,13 +1,27 @@
 # Supabase store catalog handoff
 
-Implementation is prepared; **live Supabase migration/import is blocked**. This workspace has no `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, or database connection environment variables. No remote migration, import, or redeployment was performed. The local SQL rehearsal is not evidence of Postgres RLS execution or live PostgREST performance.
+The live store API last checked on November 10, 2026 exposes 12 C-Town catalogs and Morton Williams. The Food Bazaar extension is prepared locally; its production import still requires privileged Supabase access. Do not treat the local manifest or an import dry run as evidence that a location is live.
+
+## Food Bazaar activation
+
+The November 5 source snapshot contains 258,282 product/location records for 22 verified NYC locations. Twelve other directory locations have no exposed catalog and are excluded. Each promoted file is hash-pinned; records must carry the matching retailer location and item ID. Coordinates come from that location's captured retailer metadata. Existing C-Town and Morton Williams manifest entries are unchanged.
+
+After deploying the expanded backend manifest, run the following from the repository root with server-only Supabase credentials configured:
+
+```sh
+.venv/bin/python scripts/import_store_catalog.py --dry-run --retailer food_bazaar
+.venv/bin/python scripts/import_store_catalog.py --retailer food_bazaar
+.venv/bin/python scripts/import_store_catalog.py --verify --retailer food_bazaar
+```
+
+The importer validates and atomically activates each location after its complete count matches. The database registry exposes only active versions that match the manifest, so deploying code before importing inventory preserves the existing stores. After activation, check `/api/stores` for all 35 catalogs and compare recipe prices at different Food Bazaar locations. Home rankings remain fixed to Morton Williams; Food Bazaar is available through Stores, Shopping, Budget, recipe pricing and store comparison after activation.
 
 ## Files and behavior
 
 - `supabase/migrations/20261016000100_store_catalog.sql`: stores, inventory versions, products, indexes, recursive null-preserving updates, count-checked atomic activation, RLS and backend-only grants.
 - `supabase/tests/store_catalog_security.sql`: deployed privilege/RLS assertions for an administrator to run.
-- `scripts/import_store_catalog.py`: imports exactly 12 VERIFIED C-Towns from the existing whitelist plus the active Morton Williams artifact. Batches 100 products, reports inserted/updated/skipped, and validates full counts before activation. Repeating an identical import skips unchanged products. No deletion or scraping.
-- `Model/store_catalog_manifest.json`: small, source-version-pinned public metadata manifest for the 13 approved inventories. Production does not need the large local C-Town JSON files. A future inventory promotion must update this manifest from the validated source registry and re-import matching feature versions.
+- `scripts/import_store_catalog.py`: imports verified catalogs from the existing whitelist and the active Morton Williams artifact; `--retailer food_bazaar` imports only Food Bazaar. Batches 100 products, reports inserted/updated/skipped, and validates full counts before activation. Repeating an identical import skips unchanged products. No deletion or scraping.
+- `Model/store_catalog_manifest.json`: small, source-version-pinned public metadata manifest for 35 approved inventories (12 C-Town, Morton Williams, and 22 Food Bazaar). Production uses imported database inventory and does not need the large local JSON files. A future inventory promotion must update this manifest from the validated source registry and re-import matching feature versions.
 - `Model/supabase_store_catalog.py`: credential-safe server gateway, bounded database candidates, Redis caching, and request-local matching adapters. Inventory version IDs include exact source hash plus matcher/ontology/feature adapter fingerprint.
 - `Model/store_comparison.py`: one additive request-catalog hook before the existing basket calculation.
 - `Model/store_comparison_api.py`: backend selection and generic database-unavailable 503 responses.

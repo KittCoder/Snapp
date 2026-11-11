@@ -1,5 +1,6 @@
-"""Static NYC Planning GeoSearch address points, precomputed 2026-10-25.
-Source: https://geosearch.planninglabs.nyc (NYC PAD). No runtime geocoding.
+"""Static verified catalog coordinates; no runtime geocoding.
+C-Town: NYC Planning GeoSearch address points, precomputed 2026-10-25.
+Food Bazaar: coordinates captured with each verified retailer-location record.
 Morton Williams is an unlocated catalog, not a verified physical branch.
 """
 STORE_COORDINATES = {
@@ -52,3 +53,10 @@ STORE_COORDINATES = {
         -73.884053
     ]
 }
+
+# Coordinates captured with each verified Food Bazaar physical catalog.
+import json as _json
+from pathlib import Path as _Path
+_food_bazaar_coordinates = _Path(__file__).with_name('food_bazaar_store_coordinates.json')
+if _food_bazaar_coordinates.exists():
+    STORE_COORDINATES.update(_json.loads(_food_bazaar_coordinates.read_text()))

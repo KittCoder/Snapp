@@ -71,7 +71,7 @@ def prepare(path):
             db.execute('INSERT INTO stores VALUES(?,?,1,1)',(m.id,json.dumps(m.public())))
             db.execute('INSERT INTO store_inventory_versions VALUES(?,?,?,?,?,1)',(vid,m.id,m.inventory_version,m.product_count,FEATURE_VERSION))
             builder=None
-            if m.retailer=='ctown':
+            if m.retailer!='morton_williams':
                 # Validate the deterministic feature cache through the production file adapter.
                 builder=catalog.builder();features=builder.match_service.retriever.features
                 identities=builder.match_service.identity_catalog.identities;sources=catalog._rows

@@ -11,8 +11,8 @@
   function paint(message){
     header.replaceChildren();
     const store=window.SNAPP_STORES.stores.find(s=>s.id===id);
-    const name=store?.retailer==='ctown'?'C-Town':store?.store_name||'Select a store';
-    const badge=node('span',store?.retailer==='ctown'?'C':'MW');badge.className='retailer-badge';
+    const name=store?.retailer==='food_bazaar'?'Food Bazaar':store?.retailer==='ctown'?'C-Town':store?.store_name||'Select a store';
+    const badge=node('span',store?.retailer==='food_bazaar'?'FB':store?.retailer==='ctown'?'C':'MW');badge.className='retailer-badge';
     const change=node('button','Change store');change.type='button';change.addEventListener('click',()=>showPanel('my'));
     header.append(badge,node('strong',`Shopping at ${name}${store?.address?' — '+store.address:''}`),change);
     if(message)header.append(node('p',message));

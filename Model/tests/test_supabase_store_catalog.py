@@ -50,12 +50,28 @@ class DatabaseCatalogTests(unittest.TestCase):
         gateway.select.side_effect = select
         return gateway, versions
 
-    def test_matching_feature_version_initializes_registry_for_all_13_stores(self):
+    def test_matching_feature_version_initializes_all_manifest_stores(self):
         gateway, versions = self.registry_fixture()
         registry = DatabaseStoreRegistry(gateway, CandidateCache(Cache()))
-        self.assertEqual(len(versions), 13)
-        self.assertEqual(len(registry.stores), 13)
-        self.assertEqual(len(registry.public()), 13)
+        self.assertEqual(set(registry.stores),{v['store_id'] for v in versions})
+        self.assertEqual(len(registry.public()), len(versions))
+
+    def test_new_locations_appear_only_after_atomic_activation_without_dropping_existing_stores(self):
+        gateway, versions = self.registry_fixture()
+        entries = gateway.select('stores', {})
+        legacy = {e['id'] for e in entries if e['metadata']['retailer']!='food_bazaar'}
+        active = {'ids':legacy}
+        def select(table, params):
+            rows = entries if table=='stores' else versions
+            return copy.deepcopy([r for r in rows if (r['id'] if table=='stores' else r['store_id']) in active['ids']])
+        gateway.select.side_effect = select
+        registry = DatabaseStoreRegistry(gateway, CandidateCache(Cache()))
+        self.assertEqual(set(registry.stores),legacy)
+        first = next(iter(legacy));before = registry.stores[first]
+        active['ids'] = {e['id'] for e in entries}
+        self.assertEqual({r['id'] for r in registry.public()},active['ids'])
+        self.assertIs(registry.stores[first],before)
+        self.assertTrue(all(call.args[1]['limit']>len(entries) for call in gateway.select.call_args_list if 'limit' in call.args[1]))
 
     def test_missing_or_null_feature_version_fails_closed(self):
         for value in ('absent', None):
@@ -91,7 +107,7 @@ class DatabaseCatalogTests(unittest.TestCase):
         versions[2]['feature_version'] = None
         report = feature_version_diagnostics(versions)
         self.assertEqual(report['expected_feature_version'], FEATURE_VERSION)
-        self.assertEqual(len(report['active_feature_versions']), 13)
+        self.assertEqual(len(report['active_feature_versions']), len(versions))
         self.assertEqual(report['feature_version_mismatch_count'], 3)
         self.assertEqual([v['state'] for v in report['active_feature_versions'][:3]],
                          ['mismatched', 'absent', 'null'])

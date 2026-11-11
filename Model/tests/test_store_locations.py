@@ -15,7 +15,7 @@ class StoreLocationsTests(unittest.TestCase):
             metadata = StoreMetadata(**row)
             public = metadata.public()
             self.assertEqual({k:v for k,v in public.items() if k not in ('latitude','longitude')}, asdict(metadata))
-            if metadata.retailer == 'ctown':
+            if metadata.retailer in ('ctown','food_bazaar'):
                 self.assertIn(metadata.id, STORE_COORDINATES)
                 self.assertTrue(40.4 < public['latitude'] < 41)
                 self.assertTrue(-74.3 < public['longitude'] < -73.6)

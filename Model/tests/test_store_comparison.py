@@ -59,7 +59,7 @@ class RegistryTests(unittest.TestCase):
     def test_actual_whitelist_exactly_12_and_named_stores(self):
         r=StoreRegistry();self.assertEqual(len([s for s in r.stores if s.startswith('ctown:')]),12);self.assertEqual(r.errors,[])
         for sid in ['PS41_311','U41_131','U41_205']:self.assertIn('ctown:'+sid,r.stores)
-        for bad in ['ctown:PS41_029','key_food:2498','food_bazaar:31555','../../etc/passwd','ctown:../PS41_311']:
+        for bad in ['ctown:PS41_029','key_food:2498','food_bazaar:not-verified','../../etc/passwd','ctown:../PS41_311']:
             with self.assertRaises(CatalogError):r.select([bad])
     def test_corrupt_count_and_cross_store_rows_rejected(self):
         entry={'store_id':'A','product_count':1,'price_coverage':100.,'package_coverage':100.};location={'address':'1 Test St','zip_code':'10462'}
@@ -79,11 +79,11 @@ class ApiTests(unittest.TestCase):
         import model
         cls.client=model.app.test_client()
     def test_store_path_injection_and_partial_ids_rejected(self):
-        for sid in ['../../etc/passwd','ctown:PS41_029','food_bazaar:31555']:
+        for sid in ['../../etc/passwd','ctown:PS41_029','food_bazaar:not-verified']:
             r=self.client.post('/api/shopping/compare',json={'store_ids':[sid],'recipes':[{'ingredients':['8 oz rice']}]});self.assertEqual(r.status_code,400)
     @requires_catalogs
     def test_registry_and_preflight(self):
-        r=self.client.get('/api/stores');self.assertEqual(r.status_code,200);self.assertEqual(len(r.json['stores']),13);self.assertNotIn('catalog_path',r.json['stores'][0]);self.assertEqual(self.client.options('/api/shopping/compare').status_code,204)
+        r=self.client.get('/api/stores');self.assertEqual(r.status_code,200);self.assertEqual(len(r.json['stores']),len(StoreRegistry().stores));self.assertNotIn('catalog_path',r.json['stores'][0]);self.assertEqual(self.client.options('/api/shopping/compare').status_code,204)
     @requires_catalogs
     def test_valid_comparison_request_uses_only_selected_store(self):
         r=self.client.post('/api/shopping/compare',json={'store_ids':['ctown:PS41_311'],'recipes':[{'ingredients':['8 oz rice']} ]})

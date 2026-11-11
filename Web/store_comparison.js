@@ -27,7 +27,7 @@
     selector.replaceChildren();
     for(const store of stores){
         const label=node('label',null,'comparison-store-option');const check=node('input');check.type='checkbox';check.value=store.id;check.checked=window.SNAPP_SELECTED_STORES ? window.SNAPP_SELECTED_STORES.has(store.id) : store.id==='morton-williams';
-        label.append(check,node('span',[store.store_name,store.address,store.borough].filter(Boolean).join(' — ')));selector.append(label);
+        label.append(check,node('span',[store.retailer==='food_bazaar'?'Food Bazaar':store.store_name,store.address,store.borough].filter(Boolean).join(' — ')));selector.append(label);
       }
   }
   if(window.SNAPP_STORES)window.SNAPP_STORES.subscribe(stores=>{if(loaded)renderOptions(stores);});
@@ -46,7 +46,7 @@
   function render(data){
     output.replaceChildren();
     for(const store of data.stores){
-      const card=node('article',null,'comparison-result');card.append(node('h3',[store.store_name,store.address].filter(Boolean).join(' — ')));
+      const card=node('article',null,'comparison-result');card.append(node('h3',[store.retailer==='food_bazaar'?'Food Bazaar':store.store_name,store.address].filter(Boolean).join(' — ')));
       if(store.borough)card.append(node('p',store.borough));
       if(store.verified_at)card.append(node('p',tx('stores.snapshot',{date:new Date(store.verified_at).toLocaleString(window.SNAPP_I18N.locale)})));
       if(store.best_basket)card.append(node('strong',tx('stores.bestBasket'),'comparison-best'));
