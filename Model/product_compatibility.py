@@ -25,7 +25,7 @@ from product_retrieval import (
 )
 
 
-MATCHER_VERSION = "ingredient-product-matcher-v3.9"
+MATCHER_VERSION = "ingredient-product-matcher-v3.10"
 DEFAULT_OVERRIDES_PATH = Path(__file__).resolve().parent / "product_match_overrides.json"
 DEFAULT_EVALUATION_FIXTURE = Path(__file__).resolve().parent / "evaluation" / "product_match_cases.jsonl"
 
@@ -1000,6 +1000,12 @@ def profile_from_query(ingredient_text: str, overrides: OverrideStore | None = N
     else:
         profile.normalized_signature = normalize_text(normalized)
     profile.ontology = describe(ingredient_text)
+    # Preparation-only parser output must not replace a known food identity.
+    # Otherwise "half a lemon, juiced" retrieves products for "juiced".
+    if (profile.ontology.family=='produce' and profile.ontology.head
+            and not profile.ontology.ambiguous
+            and re.fullmatch(r'(?:juiced|zested|peeled|chopped|diced|grated|sliced|shredded)',profile.normalized_signature)):
+        profile.normalized_signature=profile.ontology.head
     return profile, parsed.to_dict()
 
 

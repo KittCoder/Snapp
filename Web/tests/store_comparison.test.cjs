@@ -6,13 +6,13 @@ function setup(locale='en'){
  const copy=JSON.parse(fs.readFileSync(path.join(__dirname,'../i18n',locale+'.json')));const events={};const requests=[];
  const stores=[{id:'morton-williams',store_name:'Morton Williams'},{id:'ctown:A',store_name:'C-Town',address:'1 Test St',borough:'Bronx'}];
  const result={stores:[{id:'ctown:A',store_name:'C-Town',address:'1 Test St',borough:'Bronx',complete:false,best_basket:false,coverage_count:1,ingredients_requested:[{},{}],checkout_total_known:4,unknown_cost_items:[{}],ingredients_unmatched:[{ingredients:['8 oz rice']}],product_selections:[{ingredients:['8 oz cheese','10 oz cheese'],product_name:'Cheddar Cheese',checkout_cost:4,effective_cost:3,packages_needed:2,deal:{quality_tier:'A',best_deal:true,savings_vs_closest_match:1}}]}]};
- const context=vm.createContext({AbortController,setTimeout,clearTimeout,Intl,Date,console,document:{getElementById:()=>host,createElement:t=>new E(t),addEventListener:(n,f)=>events[n]=f},window:{SNAPP_I18N:{locale,t:(k,v={})=>(copy[k]||'').replace(/\{(\w+)\}/g,(_,key)=>v[key])}},getApiEndpoints:p=>[p],scheduledMeals:[{schedule_id:1,recipe:{ingredients:[{name:'cheese',quantity:8,unit:'oz',product_id:'must-not-send',price:999}]}}],fetch:async(url,options)=>{requests.push({url,options});return {ok:true,json:async()=>url==='/api/stores'?{stores}:result};}});
+ const context=vm.createContext({AbortController,setTimeout,clearTimeout,Intl,Date,console,document:{getElementById:()=>host,createElement:t=>new E(t),addEventListener:(n,f)=>events[n]=f},window:{SNAPP_ACTIVE_STORE:{id:'ctown:A'},SNAPP_I18N:{locale,t:(k,v={})=>(copy[k]||'').replace(/\{(\w+)\}/g,(_,key)=>v[key])}},getApiEndpoints:p=>[p],scheduledMeals:[{schedule_id:1,recipe:{ingredients:[{name:'cheese',quantity:8,unit:'oz',product_id:'must-not-send',price:999}]}}],fetch:async(url,options)=>{requests.push({url,options});return {ok:true,json:async()=>url==='/api/stores'?{stores}:result};}});
  vm.runInContext(fs.readFileSync('Web/store_pricing_transport.js','utf8'),context);
  vm.runInContext(fs.readFileSync('Web/recipe_requirements.js','utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(__dirname,'../store_comparison.js'),'utf8'),context);return {controls,requests,events,context};
 }
 test('compact selection preserves raw recipe quantities and never submits product packages',async()=>{
- const s=setup();await s.controls.details.listeners.toggle({target:{open:true}});assert.equal(s.controls.options.children.length,2);await s.controls.button.listeners.click();const payload=JSON.parse(s.requests[1].options.body);assert.deepEqual(payload.store_ids,['morton-williams']);assert.equal(payload.recipes[0].ingredients[0].quantity,8);assert.equal(payload.recipes[0].ingredients[0].product_id,undefined);assert.equal(payload.recipes[0].ingredients[0].price,undefined);assert.match(text(s.controls.results),/Known subtotal/);assert.doesNotMatch(text(s.controls.results),/Lowest complete basket total/);
+ const s=setup();await s.controls.details.listeners.toggle({target:{open:true}});assert.equal(s.controls.options.children.length,1);await s.controls.button.listeners.click();const payload=JSON.parse(s.requests[1].options.body);assert.deepEqual(payload.store_ids,['ctown:A']);assert.equal(payload.recipes[0].ingredients[0].quantity,8);assert.equal(payload.recipes[0].ingredients[0].product_id,undefined);assert.equal(payload.recipes[0].ingredients[0].price,undefined);assert.match(text(s.controls.results),/Known subtotal/);assert.doesNotMatch(text(s.controls.results),/Lowest complete basket total/);
 });
 test('English and Spanish show coverage, missing items, packages and within-store deals',async()=>{
  for(const locale of ['en','es']){const s=setup(locale);await s.controls.details.listeners.toggle({target:{open:true}});await s.controls.button.listeners.click();const value=text(s.controls.results);assert.match(value,locale==='en'?/Ingredients found: 1\/2/:/Ingredientes encontrados: 1\/2/);assert.match(value,locale==='en'?/Missing ingredient/:/Ingrediente faltante/);assert.match(value,locale==='en'?/Excellent match/:/Excelente coincidencia/);assert.match(value,locale==='en'?/2 packages needed/:/2 paquetes/);assert.match(value,/Cheddar Cheese/);}
@@ -24,13 +24,18 @@ test('all comparison strings exist in English and Spanish with matching placehol
  const source=fs.readFileSync(path.join(__dirname,'../store_comparison.js'),'utf8');const en=JSON.parse(fs.readFileSync(path.join(__dirname,'../i18n/en.json')));const es=JSON.parse(fs.readFileSync(path.join(__dirname,'../i18n/es.json')));
  for(const [,key] of source.matchAll(/tx\('([^']+)'/g)){assert.ok(en[key],key);assert.ok(es[key],key);assert.deepEqual((en[key].match(/\{\w+\}/g)||[]).sort(),(es[key].match(/\{\w+\}/g)||[]).sort());}
 });
-test('three canonical comparison IDs render independent complete and partial store results in one request',async()=>{
+test('only the active store is requested even if legacy selections contain other stores',async()=>{
  const s=setup();await s.controls.details.listeners.toggle({target:{open:true}});
- const ids=['ctown:PS41_311','ctown:U41_186','morton-williams'];
- s.controls.options.children=ids.map(id=>{const label=new E('label'),check=new E('input');check.checked=true;check.value=id;label.append(check);return label;});
- let payload;
- s.context.fetch=async(url,options)=>{payload=JSON.parse(options.body);return {ok:true,json:async()=>({stores:ids.map((id,i)=>({id,store_name:id,complete:i!==2,best_basket:i===0,coverage_count:1,ingredients_requested:[{}],basket_total:i===2?null:[8,12][i],checkout_total_known:[8,12,3][i],unknown_cost_items:i===2?[{}]:[],ingredients_unmatched:[],product_selections:[{product_id:id+'-rice',ingredients:['8 oz rice'],product_name:id+' Rice',checkout_cost:[8,12,3][i]}]}))})};};
- await s.controls.button.listeners.click();assert.deepEqual(payload.store_ids,ids);assert.equal(s.controls.results.children.length,3);
- for(const [i,card] of s.controls.results.children.entries()){assert.match(text(card),new RegExp(ids[i]));for(const other of ids.filter(id=>id!==ids[i]))assert.ok(!text(card).includes(other));}
- assert.match(text(s.controls.results.children[2]),/Known subtotal/);assert.doesNotMatch(text(s.controls.results.children[2]),/Lowest complete basket/);
+ s.context.window.SNAPP_SELECTED_STORES=new Set(['ctown:A','morton-williams']);
+ await s.controls.button.listeners.click();
+ assert.deepEqual(JSON.parse(s.requests[1].options.body).store_ids,['ctown:A']);
+ assert.equal(s.controls.results.children.length,1);
+});
+test('no selected store sends no pricing request',async()=>{
+ const s=setup();s.context.window.SNAPP_ACTIVE_STORE.id=null;
+ await s.controls.button.listeners.click();assert.equal(s.requests.length,0);
+});
+test('a wrong-store response is rejected',async()=>{
+ const s=setup();s.context.window.SNAPP_ACTIVE_STORE.id='morton-williams';
+ await s.controls.button.listeners.click();assert.equal(s.controls.results.children.length,0);
 });

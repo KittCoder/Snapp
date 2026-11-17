@@ -10,14 +10,23 @@
   async function refresh(){
     queued=false;const seq=++version;controller?.abort();controller=new AbortController();
     const storeId=window.SNAPP_ACTIVE_STORE?.id,store=window.SNAPP_STORES.stores.find(s=>s.id===storeId);
-    const current=[...entries.values()].filter(e=>e.host.isConnected!==false);
+    for(const [host] of entries)if(host.isConnected===false)entries.delete(host);
+    const current=[...entries.values()];
     for(const entry of current)placeholder(entry,storeId?`${storeName()} · checking price…`:'Choose a shopping store to see prices.');
     if(!storeId||!current.length)return;
     const name=store?.retailer==='food_bazaar'?'Food Bazaar':store?.retailer==='ctown'?'C-Town':store?.store_name||storeId;
-    const groups=[];for(let i=0;i<current.length;i+=10)groups.push(current.slice(i,i+10));
+    // Bound both recipe count and ingredient count, as required by the API.
+    const groups=[];let group=[],lineCount=0;
+    for(const entry of current){
+      const recipe=window.SNAPP_RECIPE_REQUIREMENTS(entry.recipe);
+      const count=(recipe.extendedIngredients||recipe.ingredients||[]).length;
+      if(group.length&&(group.length===10||lineCount+count>250)){groups.push(group);group=[];lineCount=0;}
+      group.push(entry);lineCount+=count;
+    }
+    if(group.length)groups.push(group);
     await Promise.all(groups.map(async group=>{
       try{
-        const recipes=group.map(e=>window.SNAPP_RECIPE_REQUIREMENTS(e.recipe));
+        const recipes=group.map((e,index)=>({...window.SNAPP_RECIPE_REQUIREMENTS(e.recipe),id:String(index)}));
         const data=await window.SNAPP_PRICE_REQUEST('/api/recipes/store-prices',{
           store_id:storeId,recipes,pantry_items:typeof pantryItems==='undefined'?[]:pantryItems.map(({name,quantity})=>({name,quantity}))
         },controller.signal);

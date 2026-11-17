@@ -49,5 +49,15 @@
     items(){if(!result||result.id!==id)return [];return result.product_selections.map((p,index)=>({...p,store_id:id,store_name:result.store_name,inventory_version:result.inventory_version,package_price:p.deal?.package_price,cost_known:p.checkout_cost!=null,id:`${id}:${p.product_id}:${index}`,name:p.display_name||p.ingredients[0],requestedIngredient:p.display_name||p.ingredients[0],productName:p.product_name,pantryName:p.pantry_transfer?.name || (p.ingredients?.[0]||p.display_name||'').replace(/^\s*\d+(?:\.\d+)?(?:\s+\d+\/\d+|\/\d+)?\s*(?:(?:fluid ounces?|fl oz|ounces?|oz|pounds?|lbs?|grams?|g|milliliters?|ml|liters?|cups?|tablespoons?|teaspoons?|count|each|slices?|cloves?)\b\s*)?/i,''),pantryQuantity:p.pantry_transfer?.quantity || (p.total_required?.quantity!=null?`${p.total_required.quantity} ${p.total_required.unit||''}`:null),quantity:p.total_required?.quantity!=null?`${p.total_required.quantity} ${p.total_required.unit||''}`:p.packages_needed==null?'Quantity unverified':`${p.packages_needed} package(s)`,dishName:'Scheduled meals',category:'Other',deal:p.deal}));}
   };
   document.addEventListener('snapp:shopping-changed',refresh);
-  window.SNAPP_STORES.subscribe(stores=>{if(stores.length&&!stores.some(s=>s.id===id)){id=null;result=null;}paint();});
+  let restored=false;
+  window.SNAPP_STORES.subscribe(stores=>{
+    if(!stores.length){paint();return;}
+    if(!stores.some(s=>s.id===id)){
+      id=null;result=null;++sequence;controller?.abort();
+      try{localStorage.removeItem(key);}catch(_){}
+      document.dispatchEvent(new Event('snapp:active-store'));
+    }
+    paint();
+    if(!restored&&id){restored=true;refresh();}
+  });
 })();

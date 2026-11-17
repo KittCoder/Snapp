@@ -37,6 +37,14 @@ class QuantityRoundTripTests(unittest.TestCase):
         bottled,_=prepare_recipes([{'ingredients':['1 bottle mineral water']}])
         self.assertTrue(bottled[0]['ingredients'])
 
+    def test_to_taste_and_optional_ingredients_are_not_silently_pantry(self):
+        prepared,pantry=prepare_recipes([{'ingredients':['salt to taste','parsley as desired','1 tsp black pepper']}])
+        self.assertEqual(len(prepared[0]['ingredients']),3)
+        self.assertEqual(pantry,[])
+        prepared,pantry=prepare_recipes([{'ingredients':['salt to taste']}],[{'name':'salt','quantity':'1 tsp'}])
+        self.assertEqual(prepared[0]['ingredients'],[])
+        self.assertEqual(len(pantry),1)
+
     def test_duplicate_requirements_keep_both_quantities_until_basket_aggregation(self):
         registry=FixtureRegistry();registry.stores={'ctown:PS41_311':catalog('ctown:PS41_311',4,('Rice',))}
         engine=BasketComparison(registry);self.addCleanup(engine.pool.shutdown)

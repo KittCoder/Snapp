@@ -7,12 +7,12 @@
   const button=host.querySelector('[data-compare-stores]');
   const status=host.querySelector('[data-comparison-status]');
   const output=host.querySelector('[data-comparison-results]');
-  let loaded=false,requestVersion=0,lastPayload=null;
+  let loaded=false,requestVersion=0,lastPayload=null,controller=null;
   const tx=(key,values={})=>window.SNAPP_I18N.t(key,values);
   const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(cls)n.className=cls;return n;};
   const currency=value=>new Intl.NumberFormat(window.SNAPP_I18N.locale,{style:'currency',currency:'USD'}).format(value);
-  async function api(path,body){
-    if(body)return window.SNAPP_PRICE_REQUEST(path,body);
+  async function api(path,body,signal){
+    if(body)return window.SNAPP_PRICE_REQUEST(path,body,signal);
     let error;
     for(const endpoint of getApiEndpoints(path)){
       try{
@@ -25,10 +25,9 @@
   }
   function renderOptions(stores){
     selector.replaceChildren();
-    for(const store of stores){
-        const label=node('label',null,'comparison-store-option');const check=node('input');check.type='checkbox';check.value=store.id;check.checked=window.SNAPP_SELECTED_STORES ? window.SNAPP_SELECTED_STORES.has(store.id) : store.id==='morton-williams';
-        label.append(check,node('span',[store.retailer==='food_bazaar'?'Food Bazaar':store.store_name,store.address,store.borough].filter(Boolean).join(' — ')));selector.append(label);
-      }
+    const active=stores.find(store=>store.id===window.SNAPP_ACTIVE_STORE?.id);
+    if(active)selector.append(node('span',[active.store_name,active.address,active.borough].filter(Boolean).join(' — ')));
+
   }
   if(window.SNAPP_STORES)window.SNAPP_STORES.subscribe(stores=>{if(loaded)renderOptions(stores);});
   async function load(){
@@ -71,17 +70,22 @@
   }
   host.querySelector('details').addEventListener('toggle',async event=>{if(event.target.open)await load();});
   button.addEventListener('click',async()=>{
-    const version=++requestVersion;const ids=Array.from(selector.querySelectorAll('input:checked')).map(c=>c.value);const basket=recipes();
+    const version=++requestVersion;const storeId=window.SNAPP_ACTIVE_STORE?.id;const ids=storeId?[storeId]:[];const basket=recipes();
     if(!ids.length||!basket.length){status.textContent=tx('stores.chooseBasket');return;}
+    controller?.abort();controller=new AbortController();
     button.disabled=true;status.textContent=tx('stores.comparing');output.replaceChildren();
     try{
-      const result=await api('/api/shopping/compare',{store_ids:ids,recipes:basket,...(typeof pantryItems!=='undefined'?{pantry_items:pantryItems.map(({name,quantity})=>({name,quantity}))}:{})});
-      if(version!==requestVersion)return;lastPayload=result;render(result);status.textContent=tx('stores.disclaimer');
+      const result=await api('/api/shopping/compare',{store_ids:ids,recipes:basket,...(typeof pantryItems!=='undefined'?{pantry_items:pantryItems.map(({name,quantity})=>({name,quantity}))}:{})},controller.signal);
+      if(version!==requestVersion||window.SNAPP_ACTIVE_STORE?.id!==storeId)return;
+      if(result.stores?.length!==1||result.stores[0].id!==storeId)throw new Error('Store mismatch');
+      lastPayload=result;render(result);status.textContent=tx('stores.disclaimer');
     }catch(_){if(version===requestVersion)status.textContent=tx('stores.unavailable');}
     finally{if(version===requestVersion)button.disabled=false;}
   });
-  document.addEventListener('snapp:store-selection',()=>{for(const check of selector.querySelectorAll('input'))check.checked=window.SNAPP_SELECTED_STORES.has(check.value);++requestVersion;output.replaceChildren();});
-  selector.addEventListener('change',()=>{if(window.SNAPP_SELECTED_STORES){const selected=window.SNAPP_SELECTED_STORES;for(const check of selector.querySelectorAll('input')){if(check.checked)selected.add(check.value);else selected.delete(check.value);}try{localStorage.setItem('snapp:selected-stores:v1',JSON.stringify([...selected]));}catch(_){}document.dispatchEvent(new Event('snapp:comparison-selection'));}++requestVersion;lastPayload=null;output.replaceChildren();status.textContent='';button.disabled=false;});
-  document.addEventListener('snapp:shopping-changed',()=>{++requestVersion;lastPayload=null;output.replaceChildren();status.textContent='';button.disabled=false;});
+  document.addEventListener('snapp:active-store',()=>{
+    controller?.abort();++requestVersion;lastPayload=null;output.replaceChildren();status.textContent='';button.disabled=false;
+    if(window.SNAPP_STORES)renderOptions(window.SNAPP_STORES.stores);
+  });
+  document.addEventListener('snapp:shopping-changed',()=>{controller?.abort();++requestVersion;lastPayload=null;output.replaceChildren();status.textContent='';button.disabled=false;});
   document.addEventListener('snapp:localechange',()=>{if(lastPayload)render(lastPayload);});
 })();

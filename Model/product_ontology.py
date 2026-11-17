@@ -13,7 +13,7 @@ from food_identity_rules import (FOUNDATION_HEADS, BASIC_COMPOUNDS, COMPOSITE_MA
 
 from structural_identity_policy import (Evidence, REQUIRED_ATTRIBUTES, identity_form, semantic_head, required_evidence, generic_child, attribute_exception, derived_parts, purchased_compound_head, verified_whole_produce_base)
 
-ONTOLOGY_VERSION = 'food-identity-v3.13'
+ONTOLOGY_VERSION = 'food-identity-v3.14'
 
 @dataclass(frozen=True)
 class FoodIdentity:
@@ -339,10 +339,12 @@ def describe(text, *, feature=None, product=False):
     if ready:
         # A requested ready ingredient still cannot be a component of a snack.
         remainder=re.sub(r'potato pancake mix|pancake mix|cream of chicken soup|tomato soup|corn tortillas?|(?:whole wheat|wheat|flour).*?tortillas?|pita breads?|hummus|bread ?crumbs?|panko|sausages?',' ',detection)
+        if ready and ready[0]=='breadcrumbs':remainder=re.sub(r'\bseasoned\b',' ',remainder)
         if has(remainder,PREPARED):ready=None
     if not ready and purchased:ready=purchased[:2]
     residual=re.sub(BASIC_COMPOUNDS,' ',detection)
     if has(detection,r'(?:vegan|plant) butter'):residual=re.sub(r'plant based oil spread|\bspread\b',' ',residual)
+    if ready and ready[0]=='breadcrumbs':residual=re.sub(r'\bseasoned\b',' ',residual)
     if precision:residual=strip_precision_head(residual,*precision[:2])
     if micro:residual=strip_micro_head(residual,*micro[:2])
     if outer:
@@ -563,6 +565,7 @@ def describe(text, *, feature=None, product=False):
         flavors=[(m.start(),v) for v,p in [('honey',r'\bhoney\b'),('sweet',r'\bsweet\b'),('ranch',r'\branch\b'),('cinnamon',r'\bcinnamon\b'),('hot',r'\b(?:hot|spicy)\b'),('chocolate',r'\bchocolate\b'),('apple',r'\bapple\b'),('parmesan',r'\bparmesan\b'),('seasoned',r'\bseasoned\b'),('garlic',r'\bgarlic\b'),('lemon',r'\blemon\b'),('teriyaki',r'\bteriyaki\b'),('barbecue',r'\bbarbecue\b')] for m in regex(p).finditer(detection)]
         # The food-adjacent modifier takes precedence over earlier branding.
         if flavors:values['flavor']=max(flavors)[1]
+    if values.get('family')=='breadcrumbs' and not values.get('flavor') and has(detection,r'\bitalian\b'):values['flavor']='seasoned'
     if values.get('family')=='sauce' and values.get('subfamily')=='sweet_chili' and values.get('flavor') in ('sweet','hot'):values['flavor']=None
     if values.get('family')=='sausage':
         values['dietary_identity']='animal'
@@ -719,6 +722,14 @@ def describe(text, *, feature=None, product=False):
         set_identity(*commodity_head)
         values['prepared'] = 'prepared'
         evidence.append('outer_commodity_product_head')
+    # A fresh produce department supplies positive purchase-state evidence.
+    # Pantry herbs, frozen vegetables and composite foods retain their gates.
+    if product and values.get('family')=='produce' and not commodity_head and values.get('state') is None:
+        departments=norm(' '.join(str(x) for x in feature.get('source_categories',[])))
+        fresh_department=has(departments,r'\b(?:fresh produce|produce|fruits and veggies|fruits and vegetables)\b')
+        conflicting_department=has(departments,r'\b(?:frozen|pantry|spices|seasonings|deli|prepared|snacks)\b')
+        if fresh_department and not conflicting_department and not values.get('treatment') and not has(detection,PREPARED):
+            values['state']='fresh';evidence.append('fresh_produce_department')
     if values.get('family')=='sugar' and has(detection,r'\b(?:coconut|palm|date) sugar\b'):
         subtype=next(word for word in ('coconut','palm','date') if has(detection,rf'\b{word} sugar\b'))
         set_identity('sugar',subtype);evidence.append('named_sugar_material')
@@ -733,7 +744,7 @@ def describe(text, *, feature=None, product=False):
         if family=='beans' and has(detection,r'\b(?:pasta|penne|rotini|casarecce|fusilli|spaghetti|curry|kofta)\b'):outer='legume_prepared_food'
         if family=='seasoning' and has(detection,r'\bpaste\b'):outer='seasoning_paste'
         if family=='pasta' and has(detection,r'\b(?:beefaroni|pasta bowls?|ready to eat|fully cooked)\b'):outer='prepared_pasta_meal'
-        if family=='produce' and has(detection,r'\btandoori\b'):outer='unverified_prepared_aromatic'
+        if family=='produce' and has(detection,r'\b(?:tandoori|tzatziki|drops)\b'):outer='unverified_prepared_aromatic'
         if family in ('produce','seasoning') and has(detection,r'\b(?:naan|bread|crackers?|chips?|dressing|marinade|tea|candy|gum)\b'):outer='flavored_composite'
         if family=='beans' and has(detection,r'\b(?:potato|warm spices|chickpeas (?:and )?tomato (?:and )?onion)\b'):outer='legume_prepared_food'
         if family=='dairy' and values.get('subfamily')=='milk' and has(detection,r'\b(?:cheese|cookies?|biscuits?|fudge|chocolate|milk substitute|(?:orange|strawberry|banana|guava|coconut) with milk)\b'):outer='milk_composite_or_analogue'

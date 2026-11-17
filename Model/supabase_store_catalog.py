@@ -23,6 +23,11 @@ _FEATURE_DEPENDENCIES = ('scripts/store_scrapers/aggregate.py', 'Model/ingredien
                          'Model/product_ontology.py', 'Model/food_identity_rules.py', 'Model/structural_identity_policy.py')
 FEATURE_VERSION = MATCHER_VERSION + ':' + ONTOLOGY_VERSION + ':catalog-v2:' + hashlib.sha256(
     b''.join((ROOT / path).read_bytes() for path in _FEATURE_DEPENDENCIES)).hexdigest()
+# The preceding snapshot uses the identical feature schema. Rebuild its
+# identities once per hot-store load so a code rollout never blanks pricing
+# while the durable catalogs are being reindexed. All other versions fail closed.
+PREVIOUS_FEATURE_VERSION = 'ingredient-product-matcher-v3.9:food-identity-v3.13:catalog-v2:08bd3a11d806ee40eccae2f5e4fb963ee4912a99e234bc9fadcee4ea6ccaeaab'
+READABLE_FEATURE_VERSIONS = frozenset((FEATURE_VERSION, PREVIOUS_FEATURE_VERSION))
 POOL_LIMIT = 4500
 BASKET_POOL_LIMIT = 6000
 
@@ -169,7 +174,8 @@ class PreparedCatalogCache:
 
 
 class DatabaseStoreCatalog:
-    def __init__(self, metadata, version_id, gateway, cache, prepared_cache=None, hot_cache=None):
+    def __init__(self, metadata, version_id, gateway, cache, prepared_cache=None, hot_cache=None, feature_version=None):
+        self._feature_version = feature_version if feature_version!=FEATURE_VERSION else None
         self.hot_cache = hot_cache
         self.metadata = metadata
         self.version_id = version_id
@@ -178,6 +184,10 @@ class DatabaseStoreCatalog:
         self.prepared_cache = prepared_cache if prepared_cache is not None else PreparedCatalogCache()
         self.lock = threading.RLock()
         self.override_hash = digest(DEFAULT_OVERRIDES_PATH) if DEFAULT_OVERRIDES_PATH.exists() else None
+    @property
+    def feature_version(self):
+        return self._feature_version or FEATURE_VERSION
+
     @property
     def cache_version(self):
         return (self.version_id, FEATURE_VERSION)
@@ -192,7 +202,7 @@ class DatabaseStoreCatalog:
     def versions_current(self, versions, current_hash):
         return (len(versions)==1 and versions[0]['id']==self.version_id
                 and versions[0]['source_version']==self.metadata.inventory_version
-                and versions[0].get('feature_version')==FEATURE_VERSION
+                and versions[0].get('feature_version')==self.feature_version
                 and versions[0].get('product_count')==self.metadata.product_count
                 and current_hash==self.override_hash)
     def request_catalog(self, recipes):
@@ -259,7 +269,7 @@ class DatabaseStoreCatalog:
             key = (self.metadata.id, self.version_id, FEATURE_VERSION, self.override_hash, row_hash, self.metadata)
             prepared = self.prepared_cache.get(key)
         if prepared is None:
-            prepared = RequestCatalog(self.metadata, ordered)
+            prepared = RequestCatalog(self.metadata, ordered, rebuild_identities=self.feature_version!=FEATURE_VERSION)
             self.prepared_cache.put(key, prepared, len(ordered))
         # BasketBuilder's recipe cache is unbounded. Retain only bounded product
         # profiles, lexical indexes and query vectors, not prior recipe payloads.
@@ -281,7 +291,7 @@ class BoundedMortonRetriever(ProductCandidateRetriever):
 
 class RequestCatalog:
     @timed('row_conversion')
-    def __init__(self, metadata, rows):
+    def __init__(self, metadata, rows, rebuild_identities=False):
         self.metadata = metadata
         self._rows = {r['feature_json']['product_id']:r['source_json'] for r in rows}
         features = [r['feature_json'] for r in rows]
@@ -296,7 +306,9 @@ class RequestCatalog:
         retriever.retrieve_product_candidates_batch = timed('candidate_retrieval')(
             retriever.retrieve_product_candidates_batch)
         retriever.query_vectors = timed('semantic_embedding')(retriever.query_vectors)
-        if all('identity_json' in row for row in rows):
+        if rebuild_identities:
+            service._identity_catalog = IdentityCatalog(features)
+        elif all('identity_json' in row for row in rows):
             def restore(data):
                 values = {k:v for k,v in data.items() if k in FoodIdentity.__dataclass_fields__}
                 for key in ('absence_claims','dietary_requirements','purchase_variants','evidence'):
@@ -359,7 +371,7 @@ class DatabaseStoreRegistry:
             raise CatalogUnavailable('Database inventory set differs from verified whitelist')
         for entry in entries:
             version = by_store.get(entry['id'])
-            if not version or version.get('feature_version') != FEATURE_VERSION:
+            if not version or version.get('feature_version') not in READABLE_FEATURE_VERSIONS:
                 raise CatalogUnavailable('Inventory feature version is unavailable or stale')
             metadata = StoreMetadata(**entry['metadata'])
             if (metadata.id!=entry['id'] or metadata.inventory_version!=version['source_version']
@@ -368,7 +380,7 @@ class DatabaseStoreRegistry:
             if asdict(metadata)!=allowed[metadata.id]:
                 raise CatalogUnavailable('Verified store identity/source version mismatch')
             existing = self.stores.get(metadata.id)
-            updated[metadata.id] = existing if existing is not None and existing.version_id==version['id'] and existing.metadata==metadata else DatabaseStoreCatalog(metadata,version['id'],self.gateway,self.cache,self.prepared_cache,self.hot_cache)
+            updated[metadata.id] = existing if existing is not None and existing.version_id==version['id'] and existing.metadata==metadata and existing.feature_version==version['feature_version'] else DatabaseStoreCatalog(metadata,version['id'],self.gateway,self.cache,self.prepared_cache,self.hot_cache,feature_version=version['feature_version'])
         if not updated: raise CatalogUnavailable('No verified database inventories available')
         self.stores = updated
     def select(self, ids):
@@ -384,9 +396,12 @@ class DatabaseStoreRegistry:
     def current_catalogs(self, catalogs):
         # A fresh single read on EVERY request, including completed-basket hits.
         # A TTL on mutable active versions would allow stale products/results.
+        ids=sorted({c.metadata.id for c in catalogs})
+        if not ids:return []
+        store_filter='eq.'+ids[0] if len(ids)==1 else 'in.('+','.join(json.dumps(sid) for sid in ids)+')'
         versions = self.gateway.select('store_inventory_versions', {
             'select':'id,store_id,source_version,product_count,feature_version',
-            'active':'eq.true', 'limit':self.registry_limit})
+            'store_id':store_filter, 'active':'eq.true', 'limit':len(ids)+1})
         by_store = {}
         for version in versions:
             by_store.setdefault(version['store_id'], []).append(version)

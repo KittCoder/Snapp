@@ -86,7 +86,7 @@ class HotStoreCatalogCache:
 
     @staticmethod
     def load(catalog):
-        from supabase_store_catalog import RequestCatalog, CatalogUnavailable
+        from supabase_store_catalog import RequestCatalog, CatalogUnavailable, FEATURE_VERSION
         if not catalog.current():
             raise CatalogUnavailable('Inventory changed before store load')
         rows = []
@@ -124,7 +124,7 @@ class HotStoreCatalogCache:
             raise CatalogUnavailable('Bulk inventory count differs from verified version')
         if not catalog.current():
             raise CatalogUnavailable('Inventory changed during store load')
-        prepared = RequestCatalog(catalog.metadata, rows)
+        prepared = RequestCatalog(catalog.metadata, rows, rebuild_identities=catalog.feature_version!=FEATURE_VERSION)
         # Build lookup maps once, before the store is advertised as hot.
         service = prepared.builder().match_service
         _ = service.feature_by_id

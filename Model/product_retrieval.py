@@ -643,7 +643,7 @@ class ProductCandidateRetriever:
         lexical_started = time.perf_counter()
         self.stats.lexical_searches += 1
         lexical_space = self.gated_lexical_space(normalized_query, allowed_product_ids)
-        lexical = lexical_candidates(lexical_space, normalized_query, parsed, query_category, limit=max(80, limit * 3))
+        lexical = lexical_candidates(lexical_space, normalized_query, parsed, query_category, limit=max(80, limit * 3), verified_identity_gate=allowed_product_ids is not None)
         lexical_latency = round((time.perf_counter() - lexical_started) * 1000, 2)
         self.stats.lexical_ms += lexical_latency
 
@@ -734,7 +734,7 @@ class ProductCandidateRetriever:
         for normalized_query, parsed, query_category, gate in zip(normalized_queries, [item[1] for item in normalized_items], query_categories, gates):
             self.stats.lexical_searches += 1
             lexical_space = self.gated_lexical_space(normalized_query, gate)
-            lexical_results.append(lexical_candidates(lexical_space, normalized_query, parsed, query_category, limit=max(80, limit * 3)))
+            lexical_results.append(lexical_candidates(lexical_space, normalized_query, parsed, query_category, limit=max(80, limit * 3), verified_identity_gate=gate is not None))
         lexical_total = round((time.perf_counter() - lexical_started) * 1000, 2)
         self.stats.lexical_ms += lexical_total
 
@@ -893,15 +893,22 @@ def lexical_candidates(
     parsed: dict[str, Any],
     query_category: str | None,
     limit: int = 90,
+    verified_identity_gate: bool = False,
 ) -> list[Candidate]:
     candidates = []
+    identity_fallbacks = []
     for item in features:
         feature = item["feature"] if "feature" in item else item
         score, reasons, exact, alias = lexical_score(query, item)
         if score < 0.18 and not exact and not alias:
-            continue
+            if not verified_identity_gate:
+                continue
+            # The ontology has already verified this product. Synonymous
+            # purchase names need not share tokens (scallions / green onions).
+            reasons.append("verified_identity_retrieval")
         category_match = category_signal(query_category, feature.get("category"))
-        candidates.append(
+        target=identity_fallbacks if score < 0.18 and not exact and not alias else candidates
+        target.append(
             Candidate(
                 product_id=feature["product_id"],
                 original_product_name=feature.get("original_product_name") or feature.get("normalized_name"),
@@ -916,6 +923,9 @@ def lexical_candidates(
                 source_rank=None,
             )
         )
+    # Keep existing lexical winners and optimizer pools unchanged. Use the
+    # verified identity pool only when lexical retrieval found nothing.
+    candidates = candidates or identity_fallbacks
     candidates.sort(key=lambda item: (-item.lexical_similarity, item.category_match_signal != "match", item.normalized_name))
     for rank, candidate in enumerate(candidates[:limit]):
         candidate.source_rank = rank

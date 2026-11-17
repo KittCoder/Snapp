@@ -41,7 +41,9 @@ class Gateway:
         self.selects.append((table, copy.deepcopy(params)))
         rows = self.entries if table == 'stores' else self.versions
         if 'store_id' in params:
-            rows = [v for v in rows if 'eq.' + v['store_id'] == params['store_id']]
+            predicate=params['store_id']
+            ids=json.loads('['+predicate[4:-1]+']') if predicate.startswith('in.') else [predicate[3:]]
+            rows = [v for v in rows if v['store_id'] in ids]
         return copy.deepcopy(rows)
 
     def candidates(self, store, version, field, values, limit):

@@ -34,7 +34,10 @@ def prepare_recipes(recipes, pantry_items=None):
             ingredient = {'name': item.ingredient_name, 'display': text}
             # Tap water is not a purchase; explicitly bottled water still is.
             water = bool(re.fullmatch(r'(?:tap |cold |warm |hot |boiling |fresh )*water', item.ingredient_name.lower()))
-            buy = should_buy_recipe_ingredient(ingredient) or ('water' in item.ingredient_name.lower() and not water)
+            # Serving suggestions are not pantry coverage. Keep optional and
+            # 'to taste' ingredients in matching even when quantity is unknown.
+            purchase_identity = re.sub(r'\b(?:to taste|as desired)\b', '', item.ingredient_name, flags=re.I).strip(' ,')
+            buy = should_buy_recipe_ingredient({'name': purchase_identity}) or ('water' in item.ingredient_name.lower() and not water)
             adjusted = pantry_adjusted_ingredient_text(ingredient, buckets, spices) if buy and not water else None
             if adjusted:
                 lines.append(adjusted)

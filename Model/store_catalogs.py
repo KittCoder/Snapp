@@ -99,6 +99,13 @@ class StoreRegistry:
         whitelist=self.root/'integration_ready_stores.json'
         try:entries=json.loads(whitelist.read_text());self.whitelist_version=digest(whitelist)
         except (OSError,ValueError):entries=[];self.errors.append('Verified store whitelist unavailable')
+        # Promoted metadata is usable only for the exact immutable snapshot.
+        # Avoid decoding and validating every other store's full inventory on
+        # the first selected-store pricing request.
+        promoted={}
+        if self.root==(ROOT/'data/store_scrapes').resolve():
+            try:promoted={m['id']:m for m in json.loads((ROOT/'Model/store_catalog_manifest.json').read_text())}
+            except (OSError,ValueError,KeyError,TypeError):pass
         locations_by_retailer={}
         for entry in entries:
             if entry.get('retailer') not in ('ctown','food_bazaar') or entry.get('status')!='VERIFIED':continue
@@ -115,8 +122,16 @@ class StoreRegistry:
                 if not location or location['address']!=entry['address'] or location['borough']!=entry['borough']:raise CatalogError('Verified physical store identity mismatch')
                 path=(self.root/retailer/'normalized'/(sid+'.json')).resolve()
                 if not path.is_relative_to(self.root/retailer/'normalized'):raise CatalogError('Invalid catalog path')
-                rows=json.loads(path.read_text());self.validate_rows(rows,entry,location)
                 version=digest(path)
+                pinned=promoted.get(key)
+                if (pinned and pinned.get('inventory_version')==version
+                    and (retailer!='food_bazaar' or entry.get('inventory_version')==version)
+                    and all(pinned.get(k)==entry.get(k) for k in ('retailer','store_id','store_name','address','borough','product_count','price_coverage','package_coverage'))
+                    and pinned.get('zip_code')==location['zip_code']):
+                    metadata=StoreMetadata(**pinned)
+                    self.stores[key]=StoreCatalog(metadata,path)
+                    continue
+                rows=json.loads(path.read_text());self.validate_rows(rows,entry,location)
                 if retailer=='food_bazaar' and entry.get('inventory_version')!=version:raise CatalogError('Food Bazaar inventory hash mismatch')
                 metadata=StoreMetadata(key,retailer,sid,entry['store_name'],entry['address'],entry['borough'],location['zip_code'],len(rows),version,max(r['scraped_at'] for r in rows),entry.get('price_coverage'),entry.get('package_coverage'),location.get('catalog_url') or location.get('source_url'))
                 self.stores[key]=StoreCatalog(metadata,path)

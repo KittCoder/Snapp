@@ -45,10 +45,26 @@ class DatabaseCatalogTests(unittest.TestCase):
                 return copy.deepcopy(entries)
             rows = versions
             if 'store_id' in params:
-                rows = [v for v in versions if 'eq.' + v['store_id'] == params['store_id']]
+                predicate=params['store_id']
+                ids=json.loads('['+predicate[4:-1]+']') if predicate.startswith('in.') else [predicate[3:]]
+                rows = [v for v in versions if v['store_id'] in ids]
             return copy.deepcopy(rows)
         gateway.select.side_effect = select
         return gateway, versions
+
+    def test_preceding_feature_schema_stays_available_during_matcher_rollout(self):
+        from supabase_store_catalog import PREVIOUS_FEATURE_VERSION
+        gateway,versions=self.registry_fixture()
+        for version in versions:version['feature_version']=PREVIOUS_FEATURE_VERSION
+        registry=DatabaseStoreRegistry(gateway,CandidateCache(Cache()))
+        selected=registry.select(['ctown:PS41_311'])
+        self.assertTrue(registry.all_current(selected))
+        self.assertEqual(selected[0].feature_version,PREVIOUS_FEATURE_VERSION)
+        from scripts.diagnose_store_catalog import feature_version_diagnostics
+        report=feature_version_diagnostics(versions)
+        self.assertEqual(report['feature_version_mismatch_count'],0)
+        self.assertEqual(report['identity_rebuild_store_count'],len(versions))
+        self.assertEqual(gateway.select.call_args.args[1]['store_id'],'eq.ctown:PS41_311')
 
     def test_matching_feature_version_initializes_all_manifest_stores(self):
         gateway, versions = self.registry_fixture()

@@ -1,7 +1,7 @@
 /* One bounded deadline across API fallbacks, including stalled response bodies. */
 (() => {
   'use strict';
-  window.SNAPP_PRICE_REQUEST = async (path, body, parentSignal, timeoutMs=5000) => {
+  window.SNAPP_PRICE_REQUEST = async (path, body, parentSignal, timeoutMs=45000) => {
     const controller=new AbortController();
     let timer,abort;
     const stopped=new Promise((_,reject)=>{

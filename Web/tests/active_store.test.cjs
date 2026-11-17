@@ -1,10 +1,11 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');const vm=require('node:vm');const fs=require('node:fs');
 class E {constructor(){this.children=[];}append(...n){this.children.push(...n);}replaceChildren(...n){this.children=n;}before(){}setAttribute(){}addEventListener(){}}
 const text=n=>[n.textContent||'',...n.children.map(text)].join(' ');
-function setup(){
+function setup(savedId=null){
  const events={},requests=[],values=new Map(),elements=[];
+ if(savedId)values.set('snapp:active-store:v1',savedId);
  const ids=['ctown:PS41_311','morton-williams','ctown:U41_186','food_bazaar:31553'];
- const context=vm.createContext({setTimeout,clearTimeout,Intl,AbortController,Event,localStorage:{getItem:k=>values.get(k),setItem:(k,v)=>values.set(k,v)},scheduledMeals:[{recipe:{ingredients:['8 oz rice','2 oz butter']}}],renderShoppingList:()=>{},showPanel:()=>{},getApiEndpoints:p=>[p],document:{getElementById:()=>new E(),createElement:()=>{const e=new E();elements.push(e);return e;},addEventListener:(n,f)=>events[n]=f,dispatchEvent:e=>events[e.type]?.()},window:{SNAPP_STORES:{stores:ids.map(id=>({id,store_name:id,retailer:id.startsWith('food_bazaar:')?'food_bazaar':id.startsWith('ctown')?'ctown':'morton_williams',address:'Test street'})),subscribe:f=>f([])}},fetch:(url,options)=>new Promise(resolve=>requests.push({url,options,finish:(id,total,complete=true)=>resolve({ok:true,json:async()=>({basket_id:id,stores:[{id,store_name:id,inventory_version:'v1',complete,basket_total:complete?total:null,checkout_total_known:total,unknown_cost_items:complete?[]:[{ingredients:['butter'],reason:'UNKNOWN_COST'}],product_selections:[{product_id:id+'-rice',product_name:'Rice',ingredients:['8 oz rice'],checkout_cost:total,deal:{package_price:total}}]}]})})}))});
+ const context=vm.createContext({setTimeout,clearTimeout,Intl,AbortController,Event,localStorage:{getItem:k=>values.get(k),setItem:(k,v)=>values.set(k,v)},scheduledMeals:[{recipe:{ingredients:['8 oz rice','2 oz butter']}}],renderShoppingList:()=>{},showPanel:()=>{},getApiEndpoints:p=>[p],document:{getElementById:()=>new E(),createElement:()=>{const e=new E();elements.push(e);return e;},addEventListener:(n,f)=>events[n]=f,dispatchEvent:e=>events[e.type]?.()},window:{SNAPP_STORES:{stores:ids.map(id=>({id,store_name:id,retailer:id.startsWith('food_bazaar:')?'food_bazaar':id.startsWith('ctown')?'ctown':'morton_williams',address:'Test street'})),subscribe:f=>f(ids.map(id=>({id})))}},fetch:(url,options)=>new Promise(resolve=>requests.push({url,options,finish:(id,total,complete=true)=>resolve({ok:true,json:async()=>({basket_id:id,stores:[{id,store_name:id,inventory_version:'v1',complete,basket_total:complete?total:null,checkout_total_known:total,unknown_cost_items:complete?[]:[{ingredients:['butter'],reason:'UNKNOWN_COST'}],product_selections:[{product_id:id+'-rice',product_name:'Rice',ingredients:['8 oz rice'],checkout_cost:total,deal:{package_price:total}}]}]})})}))});
  vm.runInContext(fs.readFileSync('Web/store_pricing_transport.js','utf8'),context);
  vm.runInContext(fs.readFileSync('Web/recipe_requirements.js','utf8'),context);
  vm.runInContext(fs.readFileSync('Web/active_store.js','utf8'),context);return {api:context.window.SNAPP_ACTIVE_STORE,requests,values,elements,events};
@@ -29,3 +30,10 @@ test('late store A response cannot overwrite store B and old request is aborted'
  s.events['snapp:shopping-changed']();assert.equal(s.api.result,null);assert.equal(s.requests.length,3);s.requests[2].finish('ctown:U41_186',6);await new Promise(resolve=>setImmediate(resolve));
 });
 test('wrong-store server result is rejected',async()=>{const s=setup(),p=s.api.select('ctown:PS41_311');s.requests[0].finish('morton-williams',99);await p;assert.equal(s.api.result,null);assert.match(text(s.elements[0]),/Price temporarily unavailable/);});
+
+test('restored store prices the saved basket once registry is available',async()=>{
+ const s=setup('ctown:PS41_311');assert.equal(s.requests.length,1);
+ assert.deepEqual(JSON.parse(s.requests[0].options.body).store_ids,['ctown:PS41_311']);
+ s.requests[0].finish('ctown:PS41_311',6);await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(s.api.result.basket_total,6);
+});
