@@ -42,7 +42,15 @@
           entry.host.append(node('strong',result.complete?`${money(result.basket_total)} total`:known>0?`${money(known)} known · partial estimate`:'Could not price this recipe yet'));
           const servings=recipes[index].target_servings||recipes[index].source_servings;
           if(result.complete&&servings)entry.host.append(node('small',`${money(result.basket_total/servings)} / serving`));
-          if(!result.complete)entry.host.append(node('small',`${result.unknown_cost_items.length} unpriced`));
+          if(!result.complete){
+            entry.host.append(node('small',`${result.unknown_cost_items.length} unpriced`));
+            const details=node('details');details.append(node('summary','Why some ingredients are unpriced'));
+            const reasons={NO_SAFE_MATCH:'No suitable product match',MISSING_RECIPE_QUANTITY:'Recipe quantity or unit is missing',QUANTITY_CONVERSION_UNAVAILABLE:'Cannot convert the recipe quantity to the package unit',PACKAGE_SIZE_UNAVAILABLE:'Store package size is missing or uncertain',UNKNOWN_COST:'Package price or quantity could not be verified'};
+            const list=node('ul');
+            for(const item of result.unknown_cost_items)list.append(node('li',`${item.ingredients?.[0]||'Ingredient'} — ${reasons[item.detail||item.reason]||reasons.UNKNOWN_COST}`));
+            details.append(list);entry.host.append(details);
+          }
+          if(result.product_selections?.some(p=>p.warnings?.includes('recipe volume converted using standard ingredient weight')))entry.host.append(node('small','Volume-to-weight quantities use standard cooking estimates.'));
         }
       }catch(_){if(seq===version)for(const entry of group)unavailable(entry);}
     }));

@@ -985,7 +985,7 @@ def parse_package_size(value: str | None) -> tuple[float | None, str | None, flo
     if re.search(r"\d\s*-\s*\d", text):
         return None, None, None, None
     number = r"(?:\d+\s+\d+/\d+|\d+/\d+|\d+(?:\.\d+)?)"
-    units = r"fl oz|fluid ounces?|oz|ounces?|lbs?|pounds?|kg|kilograms?|g|grams?|ct|count|each|ml|l|liters?|pints?|quarts?|gallons?|gal|pack"
+    units = r"fl oz|fluid ounces?|oz|ounces?|lbs?|pounds?|kg|kilograms?|g|grams?|ct|count|each|ml|l|liters?|pints?|pt|quarts?|qt|gallons?|gal|pack"
     tokens = list(re.finditer(rf"(?<![\d./])(?P<amount>{number})\s*(?P<unit>{units})\b", text))
     if re.search(r"\d\s*x\s*\d", text):
         multi = re.search(rf"(?P<count>\d+)\s*x\s*(?P<amount>{number})\s*(?P<unit>{units})\b", text)

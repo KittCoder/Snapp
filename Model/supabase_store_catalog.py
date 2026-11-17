@@ -27,7 +27,8 @@ FEATURE_VERSION = MATCHER_VERSION + ':' + ONTOLOGY_VERSION + ':catalog-v2:' + ha
 # identities once per hot-store load so a code rollout never blanks pricing
 # while the durable catalogs are being reindexed. All other versions fail closed.
 PREVIOUS_FEATURE_VERSION = 'ingredient-product-matcher-v3.9:food-identity-v3.13:catalog-v2:08bd3a11d806ee40eccae2f5e4fb963ee4912a99e234bc9fadcee4ea6ccaeaab'
-READABLE_FEATURE_VERSIONS = frozenset((FEATURE_VERSION, PREVIOUS_FEATURE_VERSION))
+KITCHEN_PREVIOUS_FEATURE_VERSION = 'ingredient-product-matcher-v3.10:food-identity-v3.14:catalog-v2:b026a525a5dd5ca7d43a7a05116a14c9d116972079f4d20f7c7e798e241ea402'
+READABLE_FEATURE_VERSIONS = frozenset((FEATURE_VERSION, PREVIOUS_FEATURE_VERSION, KITCHEN_PREVIOUS_FEATURE_VERSION))
 POOL_LIMIT = 4500
 BASKET_POOL_LIMIT = 6000
 

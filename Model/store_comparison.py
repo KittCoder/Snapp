@@ -15,7 +15,7 @@ DEAL_OPTIMIZER_VERSION=hashlib.sha256(Path(deal_optimizer.__file__).read_bytes()
 from deal_presentation import shopping_deal_fields
 from store_catalogs import StoreRegistry,CatalogError
 
-ADAPTER_VERSION='whole-store-comparison-v3-pantry-transfer'
+ADAPTER_VERSION='whole-store-comparison-v4-pricing-explanations'
 def money(values):return float(sum((Decimal(str(v)).quantize(Decimal('.01')) for v in values),Decimal(0)))
 
 def pantry_transfer_payload(lines, required, selected=None, reliable=False):
@@ -151,14 +151,14 @@ class BasketComparison:
             for signature,lines in requested.items():
                 observations=matched.get(signature,[]);has_match=bool(observations and all(m.product_id for m in observations));matched_count+=has_match
                 if not has_match:unmatched.append({'ingredients':lines,'reason':'NO_SAFE_MATCH'})
-                purchase=purchases.get(signature);cost=None;deal={};row=None
+                purchase=purchases.get(signature);cost=None;deal={};row=None;selected=None
+                quantities_safe=bool(observations and all(m.required_quantity.base_quantity is not None for m in observations) and len({m.required_quantity.base_unit for m in observations})==1)
                 if purchase:
                     if purchase.product_id not in owned:raise CatalogError('Cross-store selection rejected')
                     optimized=purchase.optimized_purchase
                     for candidate in ([optimized.selected] if optimized and optimized.selected else [])+(optimized.alternatives if optimized else []):
                         if candidate.product_id not in owned:raise CatalogError('Cross-store optimizer input rejected')
                     selected=optimized.selected if optimized else None;deal=shopping_deal_fields(optimized)
-                    quantities_safe=bool(observations and all(m.required_quantity.base_quantity is not None for m in observations) and len({m.required_quantity.base_unit for m in observations})==1)
                     reliable=bool(has_match and quantities_safe and selected and selected.deal_confidence=='high' and not selected.exclusion_reasons and selected.cost.checkout_cost is not None)
                     cost=purchase.checkout_cost if reliable else None
                     if not reliable:deal=dict(deal,best_deal=False,savings_vs_closest_match=None,effective_cost=None,packages_needed=None,deal_confidence='unknown')
@@ -170,6 +170,12 @@ class BasketComparison:
                     if source:row.update(source_url=source['source_url'],availability=source.get('availability'))
                     selections.append(row)
                 if cost is not None:known.append(cost)
-                else:unknown.append({'ingredients':lines,'reason':'NO_SAFE_MATCH' if not has_match else 'UNKNOWN_COST'})
+                else:
+                    detail='NO_SAFE_MATCH' if not has_match else 'UNKNOWN_COST'
+                    if has_match:
+                        if not quantities_safe:detail='MISSING_RECIPE_QUANTITY'
+                        elif purchase and 'unknown conversions' in purchase.warnings:detail='QUANTITY_CONVERSION_UNAVAILABLE'
+                        elif selected and not selected.package.eligible_for_optimization:detail='PACKAGE_SIZE_UNAVAILABLE'
+                    unknown.append({'ingredients':lines,'reason':'NO_SAFE_MATCH' if not has_match else 'UNKNOWN_COST','detail':detail})
             count=len(requested);complete=bool(count and matched_count==count and not unknown);meta=catalog.metadata.public()
             return dict(meta,ingredients_requested=[{'signature':k,'ingredients':v} for k,v in requested.items()],ingredients_matched=matched_count,ingredients_unmatched=unmatched,coverage_count=matched_count,coverage_percent=round(100*matched_count/count,2) if count else 0,product_selections=selections,checkout_total_known=money(known),unknown_cost_items=unknown,basket_total=money(known) if complete else None,complete=complete,latency_ms=basket.latency_ms)

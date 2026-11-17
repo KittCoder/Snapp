@@ -291,7 +291,7 @@ class QuantityEngineTests(unittest.TestCase):
         self.assertEqual(canonical_quantity(3, "egg").base_unit, "egg")
 
     def test_unknown_volume_to_mass_without_density(self):
-        converted = convert_quantity(canonical_quantity(1, "cup"), "gram", "flour")
+        converted = convert_quantity(canonical_quantity(1, "cup"), "gram", "almond flour")
         self.assertEqual(converted.status, UNKNOWN)
         self.assertEqual(converted.reason, "unsafe conversion")
 

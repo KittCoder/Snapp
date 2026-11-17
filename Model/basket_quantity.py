@@ -9,6 +9,7 @@ import time
 from dataclasses import asdict, dataclass, field
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Any
+from functools import lru_cache
 
 from ingredient_normalization import (
     normalize_package_text,
@@ -16,6 +17,7 @@ from ingredient_normalization import (
     normalize_unit,
     parse_ingredient,
     parse_number,
+    parse_package_size,
     validate_package_parse,
 )
 from product_compatibility import (
@@ -28,7 +30,7 @@ from product_compatibility import (
     profile_from_query,
 )
 
-OPTIMIZER_VERSION = "basket-optimizer-v4-quality-constrained"
+OPTIMIZER_VERSION = "basket-optimizer-v5-kitchen-quantities"
 
 
 UNKNOWN = "UNKNOWN"
@@ -372,6 +374,8 @@ def canonical_quantity(quantity: float | None, unit: str | None, ingredient_key:
     if quantity is None:
         return Quantity(None, unit, status=UNKNOWN, reason="missing quantity")
     normalized_unit = normalize_count_unit(unit) or normalize_unit(unit)
+    if normalized_unit is None and normalize_text(ingredient_key or '') in {'egg','eggs'}:
+        normalized_unit='egg'
     if normalized_unit is None:
         return Quantity(quantity, None, status=UNKNOWN, reason="missing unit")
     if normalized_unit == "dozen":
@@ -416,8 +420,22 @@ def convert_quantity(quantity: Quantity, target_unit: str, ingredient_key: str |
     return Quantity(None, target_unit, target_dimension, status=UNKNOWN, reason="unsafe conversion")
 
 
+@lru_cache(maxsize=2048)
 def density_for_ingredient(ingredient_key: str | None) -> float | None:
     normalized = normalize_text(ingredient_key or "")
+    # Standard cooking estimates, scoped to food identity AND preparation.
+    # King Arthur: https://www.kingarthurbaking.com/learn/ingredient-weight-chart
+    # USDA SR28 household measures: https://ods.od.nih.gov/pubs/usdandb/Zinc-Food.pdf
+    identity=profile_from_query(ingredient_key or '')[0].ontology
+    cup=VOLUME_TO_MILLILITER['cup'];tsp=VOLUME_TO_MILLILITER['teaspoon']
+    if identity.family=='flour' and identity.subfamily=='all_purpose':return 120/cup
+    if identity.family=='cheese' and identity.subfamily=='parmesan' and re.search(r'\bgrated\b',normalized):return 100/cup
+    if identity.family=='breadcrumbs' and re.search(r'\bpanko\b',normalized):return 50/cup
+    if identity.family=='seasoning':
+        if identity.subfamily=='paprika':return 2.3/tsp
+        if identity.subfamily=='black_pepper' and not re.search(r'peppercorn|whole',normalized):return 2.3/tsp
+        if identity.subfamily=='salt' and not re.search(r'kosher|coarse|flakes?|rock',normalized):return 6/tsp
+    if identity.family=='produce' and identity.subfamily=='parsley' and re.search(r'\b(?:dried|flakes)\b',normalized):return .5/tsp
     if normalized in DENSITY_G_PER_ML:
         return DENSITY_G_PER_ML[normalized]
     for key, density in DENSITY_G_PER_ML.items():
@@ -440,6 +458,15 @@ def parse_package_info(feature: dict[str, Any] | None) -> PackageInfo:
     warnings: list[str] = list(feature.get("package_parse_warnings") or [])
     confidence = feature.get("package_parse_confidence") or "unknown"
     source_text = feature.get("raw_unit_text") or feature.get("package_size") or feature.get("unit")
+    # Older snapshots marked exact qt/pt labels unknown. Repair only that
+    # parser failure, preserving source uncertainty and variable-weight vetoes.
+    parser_warnings={'package size unavailable','unrecognized or ambiguous source package size; not optimized'}
+    if (confidence=='low' and not feature.get('package_quantity') and source_text
+            and warnings and set(warnings)<=parser_warnings):
+        q,u,base,base_unit=parse_package_size(source_text)
+        fixed_confidence,source,fixed_warnings=validate_package_parse(q,u,source_text,feature.get('original_product_name'))
+        if fixed_confidence=='high' and q is not None:
+            return PackageInfo(q,u,1.0,base,base_unit,source=source or 'structured',confidence='high',source_text=source_text,warnings=fixed_warnings)
     if confidence == "low":
         return PackageInfo(
             feature.get("package_quantity"),
@@ -608,6 +635,8 @@ def calculate_coverage(required: Quantity, package: PackageInfo, ingredient_key:
     if comparable_required.base_quantity is None:
         warnings.append("unknown conversions")
         return QuantityCoverage(required, package, None, None, required, Quantity(None, package.package_unit, status=UNKNOWN, reason="unsafe conversion"), None, warnings)
+    if required.dimension!=comparable_required.dimension:
+        warnings.append('recipe volume converted using standard ingredient weight')
     packages_required = max(1, math.ceil(comparable_required.base_quantity / package.base_quantity))
     purchased_base = packages_required * package.base_quantity
     leftover_base = round(max(0.0, purchased_base - comparable_required.base_quantity), 3)
@@ -862,7 +891,7 @@ class BasketBuilder:
                     continue
                 feature = self.match_service.feature_by_id.get(result.selected_match.product_id, {})
                 package = self._package_for_feature(result.selected_match.product_id, feature)
-                coverage = calculate_coverage(required, package, parsed.canonical_name)
+                coverage = calculate_coverage(required, package, raw)
                 price = parse_price_info(feature.get("raw_price") or feature.get("price"), feature)
                 cost = calculate_cost(coverage, price)
                 item_warnings.extend(coverage.warnings)
@@ -900,7 +929,7 @@ class BasketBuilder:
                             "base_unit": required.base_unit,
                             "dimension": required.dimension,
                             "unit": required.unit,
-                            "ingredient_key": parsed.canonical_name,
+                            "ingredient_key": raw,
                             "warnings": [],
                         },
                     )

@@ -4,7 +4,7 @@ const text=n=>[n.textContent||'',...n.children.map(text)].join(' ');
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
 function setup(){
  const events={},requests=[],cards=[];
- const context=vm.createContext({setTimeout,clearTimeout,Intl,AbortController,Event,Promise,getHouseholdSize:()=>2,pantryItems:[],getApiEndpoints:p=>[p],document:{createElement:()=>new E(),addEventListener:(n,f)=>events[n]=f},window:{SNAPP_ACTIVE_STORE:{id:'ctown:PS41_311'},SNAPP_STORES:{stores:[{id:'ctown:PS41_311',retailer:'ctown',address:'330 Graham Avenue'},{id:'morton-williams',store_name:'Morton Williams'}]}},fetch:(url,options)=>new Promise(resolve=>requests.push({url,options,finish:(partial=false)=>{const payload=JSON.parse(options.body);resolve({ok:true,json:async()=>({store_id:payload.store_id,prices:payload.recipes.map(r=>({id:payload.store_id,recipe_id:r.id,inventory_version:'v2',complete:!partial,basket_total:partial?null:8,checkout_total_known:partial?3:8,unknown_cost_items:partial?[{}]:[]}))})});}}))});
+ const context=vm.createContext({setTimeout,clearTimeout,Intl,AbortController,Event,Promise,getHouseholdSize:()=>2,pantryItems:[],getApiEndpoints:p=>[p],document:{createElement:()=>new E(),addEventListener:(n,f)=>events[n]=f},window:{SNAPP_ACTIVE_STORE:{id:'ctown:PS41_311'},SNAPP_STORES:{stores:[{id:'ctown:PS41_311',retailer:'ctown',address:'330 Graham Avenue'},{id:'morton-williams',store_name:'Morton Williams'}]}},fetch:(url,options)=>new Promise(resolve=>requests.push({url,options,finish:(partial=false,overrides={})=>{const payload=JSON.parse(options.body);resolve({ok:true,json:async()=>({store_id:payload.store_id,prices:payload.recipes.map(r=>({id:payload.store_id,recipe_id:r.id,inventory_version:'v2',complete:!partial,basket_total:partial?null:8,checkout_total_known:partial?3:8,unknown_cost_items:partial?[{}]:[],...overrides}))})});}}))});
  for(const file of ['recipe_requirements.js','store_pricing_transport.js','recipe_store_prices.js'])vm.runInContext(fs.readFileSync('Web/'+file,'utf8'),context);
  return {context,requests,events,cards,register(recipe){const card=new E();cards.push(card);context.window.SNAPP_RECIPE_PRICES.register(card,recipe);return card;}};
 }
@@ -28,4 +28,13 @@ test('ingredient-heavy cards split into valid batches and each card has its own 
  await tick();assert.equal(s.requests.length,2);
  for(const request of s.requests){const body=JSON.parse(request.options.body);assert.ok(body.recipes.reduce((n,r)=>n+r.ingredients.length,0)<=250);assert.equal(new Set(body.recipes.map(r=>r.id)).size,body.recipes.length);request.finish();}
  await tick();for(const card of s.cards)assert.match(text(card),/\$8.00 total/);
+});
+
+test('partial recipe prices explain missing matches separately from quantity problems',async()=>{
+ const s=setup(),card=s.register({ingredients:['1 cup flour','chicken']});await tick();
+ s.requests[0].finish(true,{unknown_cost_items:[{ingredients:['1 cup flour'],reason:'UNKNOWN_COST',detail:'QUANTITY_CONVERSION_UNAVAILABLE'},{ingredients:['chicken'],reason:'NO_SAFE_MATCH'}]});await tick();
+ assert.match(text(card),/Why some ingredients are unpriced/);
+ assert.match(text(card),/1 cup flour — Cannot convert the recipe quantity/);
+ assert.match(text(card),/chicken — No suitable product match/);
+ assert.match(text(card),/partial estimate/);
 });

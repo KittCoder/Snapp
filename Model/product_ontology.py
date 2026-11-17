@@ -13,7 +13,7 @@ from food_identity_rules import (FOUNDATION_HEADS, BASIC_COMPOUNDS, COMPOSITE_MA
 
 from structural_identity_policy import (Evidence, REQUIRED_ATTRIBUTES, identity_form, semantic_head, required_evidence, generic_child, attribute_exception, derived_parts, purchased_compound_head, verified_whole_produce_base)
 
-ONTOLOGY_VERSION = 'food-identity-v3.14'
+ONTOLOGY_VERSION = 'food-identity-v3.15'
 
 @dataclass(frozen=True)
 class FoodIdentity:
@@ -470,7 +470,7 @@ def describe(text, *, feature=None, product=False):
         # Ground is processing, not an anatomical cut. Keep both when named.
         anatomical=next((name for name,pattern in CUTS if name!='ground' and has(detection,rf'\b(?:{pattern})\b')),None)
         if anatomical:values['cut']=anatomical;values['head']=anatomical
-    if product and values.get('family')=='produce' and values.get('subfamily') in ('parsley','basil','chives','mint') and has(detection,r'flakes|freeze[- ]dried'):
+    if values.get('family')=='produce' and values.get('subfamily') in ('parsley','basil','chives','mint') and has(detection,r'flakes|freeze[- ]dried'):
         values['state']='dried';values['form']='flakes'
     if product and values.get('family')=='produce' and values.get('subfamily') in ('onion','garlic') and not values.get('state'):
         source_aisles = re.sub(r'[-_]', ' ', ' '.join(str(x) for x in feature.get('source_categories', [])))
