@@ -79,3 +79,64 @@ class RealNuggetPricingTests(unittest.TestCase):
         self.assertEqual({i['ingredients'][0] for i in result['unknown_cost_items']},{NUGGETS['ingredients'][1],'cooking spray'})
         parsley=next(p for p in result['product_selections'] if 'parsley' in p['ingredients'][0])
         self.assertIn('dried',parsley['product_name'].lower())
+
+SLOPPY={'id':'sloppy-package-regression','ingredients':[
+ {'name':'ground beef','display':'1 pound ground beef ground'},
+ {'name':'chili sauce','display':'1 bottle chili sauce 12 ounce'},
+ {'name':'mustard','display':'2 tablespoon mustard'},
+ {'name':'brown sugar','display':'2 tablespoon brown sugar'},
+ {'name':'vinegar','display':'1 tablespoon vinegar'}]}
+
+class PackageAndCondimentPricingTests(unittest.TestCase):
+    def test_package_sizes_survive_text_structured_scaling_and_pantry_roundtrips(self):
+        from store_requirements import prepare_recipes
+        from recipe_ingredient_adapter import canonical_recipe_ingredients
+        labels=['1 bottle chili sauce 12 ounce','1 bottle chili sauce (12 oz)','1 12-ounce bottle chili sauce','1 bottle (12 oz) chili sauce']
+        for label in labels:
+            for value in (label,{'name':'chili sauce','display':label}):
+                with self.subTest(value=value):
+                    prepared,_=prepare_recipes([{'ingredients':[value],'source_servings':4,'target_servings':8}])
+                    parsed=canonical_recipe_ingredients(prepared[0])[0]
+                    self.assertEqual(parsed.quantity,24)
+                    self.assertEqual(parsed.unit,'ounce')
+                    self.assertIn('chili sauce',prepared[0]['ingredients'][0])
+                    again,_=prepare_recipes(prepared)
+                    self.assertEqual(again,prepared)
+        prepared,_=prepare_recipes([{'ingredients':['2 cans tomatoes (28 oz)']}])
+        self.assertIn('56 ounce',prepared[0]['ingredients'][0])
+        self.assertIn('canned',prepared[0]['ingredients'][0])
+        prepared,_=prepare_recipes([SLOPPY],pantry_items=[{'name':'chili sauce','quantity':'6 oz'}])
+        self.assertIn('6 ounce chili sauce',prepared[0]['ingredients'])
+
+    def test_unspecified_package_size_and_ambiguous_size_ranges_are_not_invented(self):
+        from recipe_ingredient_adapter import canonical_ingredient_from_text
+        for label in ['1 bottle chili sauce','1 can tomatoes 12-14 oz','1 bottle sauce 6 oz or 12 oz']:
+            self.assertIsNone(canonical_ingredient_from_text(label).package_quantity)
+
+    def test_screenshot_recipe_gets_a_real_partial_total_for_all_four_condiments(self):
+        from product_retrieval import DEFAULT_FEATURES_PATH
+        if not DEFAULT_FEATURES_PATH.exists():self.skipTest('Optional Morton Williams catalog unavailable')
+        from store_comparison import BasketComparison
+        from test_store_comparison import FixtureRegistry
+        from store_catalogs import StoreCatalog,StoreMetadata,digest
+        registry=FixtureRegistry();registry.stores={'morton-williams':StoreCatalog(StoreMetadata('morton-williams','morton_williams','morton-williams','Morton Williams',None,None,None,0,digest(DEFAULT_FEATURES_PATH),None))}
+        engine=BasketComparison(registry);self.addCleanup(engine.pool.shutdown)
+        result=engine.compare([SLOPPY],['morton-williams'])['stores'][0]
+        for word in ('chili sauce','mustard','brown sugar','vinegar'):
+            matches=[p for p in result['product_selections'] if word in ' '.join(p['ingredients'])]
+            self.assertEqual(len(matches),1,word)
+            self.assertIsNotNone(matches[0]['checkout_cost'],word)
+        self.assertGreater(result['checkout_total_known'],0)
+        pantry_result=engine.compare([SLOPPY],['morton-williams'],pantry_items=[{'name':'ground beef','quantity':'1 lb'}])['stores'][0]
+        self.assertTrue(pantry_result['complete'])
+        self.assertGreater(pantry_result['basket_total'],0)
+        self.assertEqual(pantry_result['unknown_cost_items'],[])
+
+
+class GenericVinegarPolicyTests(unittest.TestCase):
+    def test_white_is_the_generic_default_without_replacing_explicit_vinegar_types(self):
+        from test_product_compatibility import FakeRetriever,feature
+        from product_compatibility import ProductMatchService
+        service=ProductMatchService(retriever=FakeRetriever([feature('rice','Rice Vinegar'),feature('white','White Vinegar')]))
+        self.assertEqual(service.match_recipe_ingredient('vinegar').selected_match.product_id,'white')
+        self.assertEqual(service.match_recipe_ingredient('rice vinegar').selected_match.product_id,'rice')

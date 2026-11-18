@@ -67,3 +67,54 @@ test('unresolved store metadata does not block Home or onboarding',()=>{
  assert.equal(c.isAccountSetupPending(),false);assert.equal(c.isOnboardingRequired(),false);
  c.window.SNAPP_STORES.settled=true;assert.equal(c.isAccountSetupPending(),false);
 });
+class SaleNode {constructor(){this.children=[];}replaceChildren(){this.children=[];}append(...nodes){this.children.push(...nodes);}addEventListener(){} }
+function salesContext(storage=new Map()) {
+ const c=context();c.currentUserInfo.onboarding_completed=true;
+ c.localStorage={getItem:key=>storage.get(key),setItem:(key,value)=>storage.set(key,value)};
+ c.saleIngredientsGrid=new SaleNode();c.saleIngredientsStatus={};c.document={getElementById:()=>null,createElement:()=>new SaleNode()};
+ c.rendered=[];c.renderSaleIngredients=items=>c.rendered.push(items);
+ vm.runInContext(source.slice(source.indexOf('let homeSalesSequence ='),source.indexOf('async function generateRecipesForSaleIngredient')),c);
+ return c;
+}
+const salesPayload={store_id:'morton-williams',sale_ingredients:[{store_id:'morton-williams',product_name:'Sale rice'}]};
+const settle=()=>new Promise(resolve=>setImmediate(resolve));
+test('public sales prefetch finishes during account startup and paints immediately after setup',async()=>{
+ const c=salesContext();c.currentUserInfo=null;let calls=0;c.fetchSaleIngredients=async()=>{calls++;return salesPayload;};
+ c.primeHomeSales();await settle();assert.equal(calls,1);assert.equal(c.rendered.length,0);
+ c.currentUserInfo={onboarding_completed:true};const pending=c.loadSaleIngredients();
+ assert.equal(c.rendered.length,1);await pending;assert.equal(calls,1);
+});
+test('persisted fresh sales display synchronously on reload with no network wait',async()=>{
+ const storage=new Map(),first=salesContext(storage);first.fetchSaleIngredients=async()=>salesPayload;
+ await first.loadSaleIngredients();const reloaded=salesContext(storage);
+ reloaded.fetchSaleIngredients=()=>assert.fail('Fresh persisted sales should not wait on network');
+ const pending=reloaded.loadSaleIngredients();assert.equal(reloaded.rendered[0][0].product_name,'Sale rice');await pending;
+});
+test('prefetch and repeated Home loads share one request and reject superseded rendering',async()=>{
+ const c=salesContext();let resolve,calls=0;c.fetchSaleIngredients=()=>{calls++;return new Promise(r=>resolve=r);};
+ c.primeHomeSales();const a=c.loadSaleIngredients(),b=c.loadSaleIngredients();assert.equal(calls,1);
+ resolve(salesPayload);await Promise.all([a,b]);assert.equal(c.rendered.length,1);
+});
+test('sales retry automatically after a transient error without a button click',async()=>{
+ const c=salesContext(),timers=[];c.setTimeout=(callback,ms)=>{timers.push({callback,ms});return timers.length;};c.clearTimeout=()=>{};
+ let calls=0;c.fetchSaleIngredients=async()=>{if(++calls===1)throw new Error('Temporary failure');return salesPayload;};
+ await c.loadSaleIngredients();assert.equal(timers[0].ms,1000);assert.equal(c.rendered.length,0);
+ timers[0].callback();await settle();assert.equal(calls,2);assert.equal(c.rendered.length,1);
+});
+test('signing out prevents an automatic retry from fetching or painting',async()=>{
+ const c=salesContext(),timers=[];c.setTimeout=callback=>{timers.push(callback);return timers.length;};c.clearTimeout=()=>{};
+ let calls=0;c.fetchSaleIngredients=async()=>{calls++;throw new Error('Temporary failure');};
+ await c.loadSaleIngredients();c.currentUser=null;timers[0]();await settle();assert.equal(calls,1);assert.equal(c.rendered.length,0);
+});
+test('auth callbacks release the Supabase lock before account reads; token refresh preserves loaded Home',async()=>{
+ const c=context(),timers=[],renders=[];let listener,locked=false;
+ c.currentUserInfo={onboarding_completed:true};c.authStateLoading=false;
+ c.renderAuthState=async user=>{assert.equal(locked,false);renders.push(user?.id||null);};
+ c.setTimeout=callback=>timers.push(callback);c.setAuthStatus=()=>{};
+ c.supabaseClient={auth:{getSession:async()=>({data:{session:{user:{id:'user'}}}}),onAuthStateChange:callback=>listener=callback}};
+ vm.runInContext(source.slice(source.indexOf('async function initializeAuth()'),source.indexOf('navButtons.forEach((button) =>\n  button.addEventListener')),c);
+ await c.initializeAuth();assert.deepEqual(renders,['user']);
+ locked=true;assert.equal(listener('TOKEN_REFRESHED',{user:{id:'user'}}),undefined);assert.equal(timers.length,0);
+ assert.equal(listener('SIGNED_OUT',null),undefined);assert.equal(renders.length,1);locked=false;
+ timers[0]();await settle();assert.deepEqual(renders,['user',null]);
+});

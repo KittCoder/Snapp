@@ -28,9 +28,13 @@ def prepare_recipes(recipes, pantry_items=None):
                 raise CatalogError('Scaling requires positive source and target servings')
         lines = []
         for item in canonical_recipe_ingredients(recipe):
-            text = item.raw_text if item.source_schema == 'raw_text_line' else item.matcher_text
+            text = item.raw_text if item.source_schema == 'raw_text_line' and item.package_quantity is None else item.matcher_text
             if multiplier != 1 and item.quantity is not None:
-                text = ingredient_with_quantity(text, item.quantity * multiplier, item.unit)
+                amount=item.quantity*multiplier
+                unit=item.unit
+                if item.package_quantity is not None and item.package_unit:
+                    amount*=item.package_quantity;unit=item.package_unit
+                text = ingredient_with_quantity(text, amount, unit)
             ingredient = {'name': item.ingredient_name, 'display': text}
             # Tap water is not a purchase; explicitly bottled water still is.
             water = bool(re.fullmatch(r'(?:tap |cold |warm |hot |boiling |fresh )*water', item.ingredient_name.lower()))

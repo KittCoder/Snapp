@@ -59,8 +59,8 @@ class StructuralMatcherClassTests(unittest.TestCase):
         self.assertFalse(compatibility(describe('tomato sauce no salt added'),describe('Low Sodium Tomato Sauce',product=True)).allowed)
 
     def test_near_tied_material_identity_abstains_not_package_ties(self):
-        svc=ProductMatchService(retriever=FakeRetriever([feature('rice','Rice Vinegar'),feature('white','White Vinegar')]))
-        result=svc.match_recipe_ingredient('vinegar')
+        svc=ProductMatchService(retriever=FakeRetriever([feature('red','Red Wine Vinegar'),feature('white','White Wine Vinegar')]))
+        result=svc.match_recipe_ingredient('wine vinegar')
         self.assertIsNone(result.selected_match)
         self.assertIn('ambiguous_material_identity_margin',result.reason_codes)
         self.assertEqual(result.diagnostics['material_top1_top2_margin'],0)

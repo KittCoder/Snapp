@@ -25,6 +25,8 @@ SMALL_NUMBERS = {
 }
 
 COUNT_CONTAINER_UNITS = {
+    "bottle",
+    "carton",
     "bunch",
     "can",
     "clove",
@@ -66,10 +68,12 @@ class CanonicalRecipeIngredient:
     @property
     def matcher_text(self) -> str:
         parts = []
-        if self.quantity is not None:
-            parts.append(f"{self.quantity:g}")
-        if self.unit:
-            parts.append(self.unit)
+        package_sized=self.quantity is not None and self.package_quantity is not None and self.package_unit is not None
+        if package_sized:
+            parts.extend((f"{self.quantity*self.package_quantity:g}",self.package_unit))
+        else:
+            if self.quantity is not None:parts.append(f"{self.quantity:g}")
+            if self.unit:parts.append(self.unit)
         name = self.ingredient_name
         # Source labels may be broad (e.g. nameClean="oil"). Preserve the
         # structural identity in the original line before appending preparation.
@@ -88,6 +92,8 @@ class CanonicalRecipeIngredient:
                         "fat_level", "salt_level", "dietary_identity", "flavor", "purchase_variants")
         ):
             name = original_name
+        if package_sized and self.unit=='can' and describe(name).family in {'produce','tomato','beans'} and not re.search(r'\bcanned\b',name,re.I):
+            name='canned '+name
         if name:
             parts.append(name)
         # Notes remain separate; preparation already in the identity is not
@@ -117,12 +123,23 @@ def split_package_descriptor(text: str) -> tuple[str, float | None, str | None]:
         r"^\s*(?P<count>a|an|one|two|three|four|five|six|seven|eight|nine|ten|twelve|\d+(?:\.\d+)?)\s+"
         r"(?P<pkg_qty>\d+(?:\.\d+)?(?:\s+\d+/\d+|/\d+)?)\s*[- ]\s*"
         r"(?P<pkg_unit>ounces?|oz|pounds?|lbs?|grams?|g|cups?|fluid ounces?|fl oz)\s+"
-        r"(?P<container>cans?|packages?|pkg|jars?|packs?)\b\s*(?P<rest>.*)$",
+        r"(?P<container>cans?|packages?|pkg|jars?|packs?|bottles?|cartons?)\b\s*(?P<rest>.*)$",
         re.I,
     )
     match = pattern.match(text or "")
     if not match:
-        return text, None, None
+        # Also preserve sizes stored after the container or food name, e.g.
+        # "1 bottle chili sauce 12 ounce" and "1 can tomatoes (28 oz)".
+        container=re.match(r'^\s*(?P<count>\d+(?:\.\d+)?|a|an|one|two|three|four)\s+(?P<container>cans?|jars?|packages?|packs?|bottles?|cartons?)\b(?P<rest>.*)$',text or '',re.I)
+        if not container:return text,None,None
+        rest=container['rest']
+        sizes=list(re.finditer(r'(?<![\d./-])(?P<amount>\d+(?:\.\d+)?)\s*[- ]?\s*(?P<unit>fluid ounces?|fl oz|ounces?|oz|pounds?|lbs?|grams?|g|milliliters?|ml|liters?)\b',rest,re.I))
+        if len(sizes)!=1 or re.search(r'\d\s*-\s*\d',rest):return text,None,None
+        size=sizes[0];quantity=parse_number(size['amount']);unit=normalize_unit(size['unit'])
+        if quantity is None or quantity<=0:return text,None,None
+        rest=(rest[:size.start()]+rest[size.end():]).strip(' ,()')
+        count=parse_small_number(container['count'])
+        return f"{count:g} {container['container']} {rest}",quantity,unit
     count = parse_small_number(match.group("count"))
     container = normalize_unit(match.group("container")) or normalize_text(match.group("container"))
     rest = match.group("rest").strip(" ,")
@@ -159,8 +176,7 @@ def canonical_ingredient_from_structured(
     }
 
     parse_text = raw_text or " ".join(part for part in (str(ingredient.get("quantity") or ""), str(ingredient.get("unit") or ""), name, note) if part)
-    package_quantity = None
-    package_unit = None
+    rewritten, package_quantity, package_unit = split_package_descriptor(parse_text)
     if quantity is None or not unit or not name:
         rewritten, package_quantity, package_unit = split_package_descriptor(parse_text)
         parsed = parse_ingredient(rewritten)

@@ -25,7 +25,7 @@ from product_retrieval import (
 )
 
 
-MATCHER_VERSION = "ingredient-product-matcher-v3.10"
+MATCHER_VERSION = "ingredient-product-matcher-v3.11"
 DEFAULT_OVERRIDES_PATH = Path(__file__).resolve().parent / "product_match_overrides.json"
 DEFAULT_EVALUATION_FIXTURE = Path(__file__).resolve().parent / "evaluation" / "product_match_cases.jsonl"
 
@@ -2261,6 +2261,9 @@ def rank_identity_candidate(candidate, query, product, decision):
     # Prefer an unmodified dairy variant for generic requests. This cannot
     # rescue structural conflicts and is independent of brand/package/price.
     breakdown["unrequested_variant"] = -.04 if query.family == "dairy" and not query.fat_level and product.fat_level and query.subfamily != "milk" else 0.0
+    # Plain white vinegar is the default for an unspecified vinegar request.
+    # Explicit wine/cider/balsamic requirements retain all existing identity gates.
+    breakdown['generic_vinegar_variant'] = -.04 if query.family=='acid' and query.subfamily=='vinegar' and product.subfamily!='white_vinegar' else 0.0
     score = max(0.0, min(1.0, sum(breakdown.values())))
     if decision.match_type == "substitute": score = min(score, .70)
     conflicts = [{"rule": reason, "classification": HARD_REJECT, "message": reason.replace("_", " ")}

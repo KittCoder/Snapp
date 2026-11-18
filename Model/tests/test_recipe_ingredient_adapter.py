@@ -45,7 +45,7 @@ class RecipeIngredientAdapterTests(unittest.TestCase):
         self.assertEqual(ingredient.quantity, 1)
         self.assertEqual(ingredient.unit, "can")
         self.assertEqual(ingredient.ingredient_name, "whole corn")
-        self.assertNotIn("15.2", ingredient.matcher_text)
+        self.assertIn("15.2 ounce", ingredient.matcher_text)
         self.assertNotIn("low-sodium canned vegetable", ingredient.matcher_text)
 
 

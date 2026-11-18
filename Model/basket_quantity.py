@@ -30,7 +30,7 @@ from product_compatibility import (
     profile_from_query,
 )
 
-OPTIMIZER_VERSION = "basket-optimizer-v5-kitchen-quantities"
+OPTIMIZER_VERSION = "basket-optimizer-v6-package-portions"
 
 
 UNKNOWN = "UNKNOWN"
@@ -431,7 +431,19 @@ def density_for_ingredient(ingredient_key: str | None) -> float | None:
     if identity.family=='flour' and identity.subfamily=='all_purpose':return 120/cup
     if identity.family=='cheese' and identity.subfamily=='parmesan' and re.search(r'\bgrated\b',normalized):return 100/cup
     if identity.family=='breadcrumbs' and re.search(r'\bpanko\b',normalized):return 50/cup
+    # USDA SR Legacy household portions in usda_nutrition_catalog.json.gz:
+    # prepared mustard #172234: 249 g/cup; sugar #168833: 220 g/packed cup;
+    # granulated sugar #169655: 200 g/cup; cornstarch #169698: 128 g/cup.
+    if identity.family=='sauce' and identity.subfamily=='mustard':return 249/cup
+    if identity.family=='sauce' and identity.subfamily=='ketchup':return 240/cup
+    if identity.family=='sugar' and identity.subfamily=='brown':return (145 if 'unpacked' in normalized else 220)/cup
+    if identity.family=='sugar' and identity.subfamily=='granulated':return 200/cup
+    if identity.family=='starch' and identity.subfamily=='corn':return 128/cup
+    if identity.family=='tomato' and identity.subfamily=='paste':return 262/cup
     if identity.family=='seasoning':
+        if identity.subfamily=='chili_powder':return 2.7/tsp
+        if identity.subfamily=='cinnamon' and not re.search(r'\bwhole|sticks?\b',normalized):return 2.6/tsp
+        if identity.subfamily=='garlic_powder':return 3.1/tsp
         if identity.subfamily=='paprika':return 2.3/tsp
         if identity.subfamily=='black_pepper' and not re.search(r'peppercorn|whole',normalized):return 2.3/tsp
         if identity.subfamily=='salt' and not re.search(r'kosher|coarse|flakes?|rock',normalized):return 6/tsp
@@ -809,7 +821,7 @@ def recipe_ingredients(recipe: Any, recipe_index: int = 0) -> tuple[str, list[st
     canonical = canonical_recipe_ingredients(recipe)
     # Keep raw text rows stable for plain-text recipes; structured labels use the
     # adapter's identity-preserving matcher text instead of dict repr strings.
-    return recipe_id, [item.raw_text if item.source_schema == "raw_text_line" else item.matcher_text for item in canonical]
+    return recipe_id, [item.raw_text if item.source_schema == "raw_text_line" and item.package_quantity is None else item.matcher_text for item in canonical]
 
 
 class BasketBuilder:

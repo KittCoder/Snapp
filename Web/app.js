@@ -482,6 +482,7 @@ function showPanel(id) {
     button.classList.toggle("active", button.dataset.target === navTargetId)
   );
 
+  if (targetId === "home" && currentUser && !isAccountSetupPending() && !isOnboardingRequired()) void loadSaleIngredients();
   if (targetId === "snap101-centers") renderSnapSignupCenters();
 
   if (targetId === "my" && myStoreMap) {
@@ -3422,30 +3423,72 @@ function renderSaleIngredients(items) {
 }
 
 let homeSalesSequence = 0;
-async function loadSaleIngredients() {
+let homeSalesRequest = null, homeSalesCache = null, homeSalesRetry = null, homeSalesRetryCount = 0;
+const HOME_SALES_CACHE_KEY = "snapp:home-sales:morton-williams:v1";
+const HOME_SALES_TTL = 60 * 1000;
+function readHomeSalesCache() {
+  if (homeSalesCache) return homeSalesCache;
+  try {
+    const saved = JSON.parse(localStorage.getItem(HOME_SALES_CACHE_KEY));
+    if (saved && saved.time <= Date.now() && Date.now() - saved.time < HOME_SALES_TTL &&
+        saved.data?.store_id === "morton-williams" && Array.isArray(saved.data.sale_ingredients) &&
+        saved.data.sale_ingredients.every(item => item.store_id === "morton-williams")) homeSalesCache = saved;
+  } catch (_) {}
+  return homeSalesCache;
+}
+function homeSalesData(force = false) {
+  if (homeSalesRequest) return homeSalesRequest;
+  const cached = readHomeSalesCache();
+  if (!force && cached && Date.now() - cached.time < HOME_SALES_TTL) return Promise.resolve(cached.data);
+  homeSalesRequest = fetchSaleIngredients("morton-williams").then(data => {
+    if (data?.store_id !== "morton-williams" || !Array.isArray(data.sale_ingredients) ||
+        data.sale_ingredients.some(item => item.store_id !== "morton-williams")) throw new Error("Store mismatch");
+    homeSalesCache = {time: Date.now(), data};
+    try { localStorage.setItem(HOME_SALES_CACHE_KEY, JSON.stringify(homeSalesCache)); } catch (_) {}
+    return data;
+  }).finally(() => { homeSalesRequest = null; });
+  return homeSalesRequest;
+}
+function primeHomeSales() {
+  // Public, store-scoped data can load while authentication/profile startup runs.
+  // Rendering still waits for the signed-in account's setup checks.
+  void homeSalesData().catch(() => {});
+}
+async function loadSaleIngredients(options = {}) {
   const sequence = ++homeSalesSequence;
+  clearTimeout(homeSalesRetry); homeSalesRetry = null;
   if (!saleIngredientsGrid || !saleIngredientsStatus) return;
-  saleIngredientsGrid.replaceChildren();
-  const storeId = "morton-williams";
   const userId = currentUser?.id;
   if (!currentUser || isAccountSetupPending() || isOnboardingRequired()) {
+    saleIngredientsGrid.replaceChildren();
     saleIngredientsStatus.textContent = t("home.setupRequired");
     return;
   }
-  saleIngredientsStatus.textContent = t("copy.loading.sales", {});
+  const cached = readHomeSalesCache();
+  if (cached && Date.now() - cached.time < HOME_SALES_TTL) {
+    renderSaleIngredients(cached.data.sale_ingredients);
+    if (!options.force) return;
+  } else {
+    saleIngredientsGrid.replaceChildren();
+    saleIngredientsStatus.textContent = t("copy.loading.sales", {});
+  }
   const context = document.getElementById("home-store-context");
   if (context) context.textContent = t("home.storeContext");
   try {
-    const data = await fetchSaleIngredients(storeId);
+    const data = await homeSalesData(Boolean(options.force));
     if (sequence !== homeSalesSequence || currentUser?.id !== userId || isAccountSetupPending() || isOnboardingRequired()) return;
-    renderSaleIngredients(data.sale_ingredients || []);
+    homeSalesRetryCount = 0;
+    renderSaleIngredients(data.sale_ingredients);
   } catch (error) {
     if (sequence !== homeSalesSequence || currentUser?.id !== userId || isAccountSetupPending() || isOnboardingRequired()) return;
     saleIngredientsStatus.textContent = error.message;
     const retry = document.createElement("button");
     retry.type = "button"; retry.textContent = t("home.retryDeals");
-    retry.addEventListener("click", loadSaleIngredients);
+    retry.addEventListener("click", () => loadSaleIngredients({force:true}));
     saleIngredientsGrid.append(retry);
+    homeSalesRetry = setTimeout(() => {
+      if (sequence === homeSalesSequence && currentUser?.id === userId && !isAccountSetupPending() && !isOnboardingRequired()) void loadSaleIngredients({force:true});
+    }, Math.min(30000, 1000 * 2 ** Math.min(homeSalesRetryCount++, 5)));
   }
 }
 
@@ -3668,8 +3711,14 @@ async function initializeAuth() {
   }
   await renderAuthState(data.session?.user || null);
 
-  supabaseClient.auth.onAuthStateChange(async (_event, session) => {
-    await renderAuthState(session?.user || null);
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    // Supabase invokes this callback under its auth lock; defer database work.
+    if (["INITIAL_SESSION", "TOKEN_REFRESHED", "SIGNED_IN"].includes(event) &&
+        session?.user?.id === currentUser?.id && currentUserInfo && !authStateLoading) {
+      currentUser = session.user;
+      return;
+    }
+    setTimeout(() => { void renderAuthState(session?.user || null); }, 0);
   });
 }
 
@@ -4512,6 +4561,7 @@ updateWaterGame();
 applyLanguage();
 renderSchedule();
 showAuthMode("sign-in");
+primeHomeSales();
 initializeAuth();
 handleInitialUrlState();
 
