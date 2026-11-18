@@ -13,7 +13,7 @@ from food_identity_rules import (FOUNDATION_HEADS, BASIC_COMPOUNDS, COMPOSITE_MA
 
 from structural_identity_policy import (Evidence, REQUIRED_ATTRIBUTES, identity_form, semantic_head, required_evidence, generic_child, attribute_exception, derived_parts, purchased_compound_head, verified_whole_produce_base)
 
-ONTOLOGY_VERSION = 'food-identity-v3.16'
+ONTOLOGY_VERSION = 'food-identity-v3.17'
 
 @dataclass(frozen=True)
 class FoodIdentity:
@@ -322,7 +322,7 @@ def describe(text, *, feature=None, product=False):
     micro=micro_identity(detection)
     outer=precision or micro or final_identity(detection)
     compound=outer or head_identity(detection)
-    purchased=outer if outer and outer[0] in (PURCHASED_FINAL_FAMILIES | {'bread','chips','cracker','pickle','syrup','cereal','pastry','beverage'}) else purchased_identity(detection)
+    purchased=outer if outer and (outer[0] in (PURCHASED_FINAL_FAMILIES | {'bread','chips','cracker','pickle','syrup','cereal','pastry','beverage'}) or outer[:2]==('sauce','pesto')) else purchased_identity(detection)
     ready=purchased[:2] if outer and purchased else None
     if not ready and has(detection,r'potato pancake mix'):ready=('baking_mix','potato_pancake')
     elif not ready and has(detection,r'pancake mix'):ready=('baking_mix','pancake')
@@ -341,6 +341,8 @@ def describe(text, *, feature=None, product=False):
         # A requested ready ingredient still cannot be a component of a snack.
         remainder=re.sub(r'potato pancake mix|pancake mix|cream of chicken soup|tomato soup|corn tortillas?|(?:whole wheat|wheat|flour).*?tortillas?|pita breads?|hummus|bread ?crumbs?|panko|sausages?',' ',detection)
         if ready and ready[0]=='breadcrumbs':remainder=re.sub(r'\bseasoned\b',' ',remainder)
+        if ready==('bread','ciabatta'):remainder=re.sub(r'\bciabatta|bread|rolls?|sandwich buns?\b',' ',remainder)
+        if ready==('sauce','pesto'):remainder=re.sub(r'\bpesto|sauce|prepared\b',' ',remainder)
         if has(remainder,PREPARED):ready=None
     if not ready and purchased:ready=purchased[:2]
     residual=re.sub(BASIC_COMPOUNDS,' ',detection)
@@ -356,6 +358,8 @@ def describe(text, *, feature=None, product=False):
         residual=re.sub(re.escape(purchased[2]),' ',residual)
     # Purchased foods still cannot be components of a different composite head.
     composite=has(detection,r'\bbaked(?: black|red|kidney|pinto)? beans\b') or has(residual,COMPOSITE_MARKERS) or (has(residual,PREPARED) and not ready)
+    if ready==('bread','ciabatta'):residual=re.sub(r'\b(?:rolls?|buns?|bread)\b',' ',residual)
+    if ready==('sauce','pesto'):residual=re.sub(r'\b(?:prepared|sauce)\b',' ',residual)
     if ready and purchased and (has(residual,COMPOSITE_MARKERS) or has(residual,PREPARED)):ready=None;composite=True
     if ready and has(detection,r'\bsauce\b') and ready[0] not in ('sauce','tomato'):
         ready=None;composite=True
@@ -567,6 +571,11 @@ def describe(text, *, feature=None, product=False):
         # The food-adjacent modifier takes precedence over earlier branding.
         if flavors:values['flavor']=max(flavors)[1]
     if values.get('family')=='breadcrumbs' and not values.get('flavor') and has(detection,r'\bitalian\b'):values['flavor']='seasoned'
+    if values.get('family')=='sauce' and values.get('subfamily')=='pesto':
+        if has(detection,r'\btomato(?:es)?\b'):
+            values['flavor']='tomato'
+            if has(detection,r'\bsun ?dried\b'):values['state']=None
+        elif has(detection,r'\bred pepper\b'):values['flavor']='red_pepper'
     if values.get('family')=='sauce' and values.get('subfamily')=='sweet_chili' and values.get('flavor') in ('sweet','hot'):values['flavor']=None
     if values.get('family')=='sausage':
         values['dietary_identity']='animal'

@@ -24,7 +24,7 @@ GENERIC_CHILDREN={
  ('acid','vinegar'):frozenset({'cider_vinegar','rice_vinegar','white_vinegar','white_wine_vinegar','red_wine_vinegar','balsamic_vinegar','raspberry_vinegar'}),
  ('acid','wine_vinegar'):frozenset({'red_wine_vinegar','white_wine_vinegar'}),
  ('fat','cooking_oil'):frozenset({'olive_oil','canola_oil','vegetable_oil','coconut_oil','sesame_oil','sunflower_oil','corn_oil','peanut_oil','avocado_oil'}),
- ('bread','plain'):frozenset({'whole_grain','whole_wheat'}),
+ ('bread','plain'):frozenset({'whole_grain','whole_wheat','ciabatta'}),
 }
 
 def identity_form(identity):
@@ -72,6 +72,8 @@ def derived_parts(text):
     return match.groups() if match else None
 
 PURCHASED_COMPOUND_HEADS=(
+    ('bread','ciabatta',r'\bciabatta(?: bread| rolls?| sandwich buns?)?\b'),
+    ('sauce','pesto',r'\b(?:prepared |basil |genovese )?pesto(?: sauce)?\b'),
     ('bread','focaccia',r'\bfocaccia\b'),
     ('bread','english_muffin',r'\benglish muffins?\b'),
     ('confection','sprinkles',r'\b(?:sprinkles?|nonpareils?|jimmies)\b'),
@@ -99,7 +101,11 @@ def purchased_compound_head(text):
         if re.search(r'\bcream flavou?red\b',text):return 'prepared','flavored_food',text
     for family,subfamily,pattern in PURCHASED_COMPOUND_HEADS:
         match=re.search(pattern,text)
-        if match:return family,subfamily,match.group()
+        if match:
+            if (family,subfamily)==('sauce','pesto') and re.search(r'\b(?:pasta|rigatoni|tortellini|ravioli|spaghetti|penne|chicken|turkey|tuna|salmon|quinoa|meal|bowls?|sandwich|pizza)\b',text):continue
+            if (family,subfamily)==('sauce','pesto') and re.search(r'\b(?:paste|concentrate)\b',text):return 'condiment_paste','pesto',match.group()
+            if (family,subfamily)==('bread','ciabatta') and re.search(r'\b(?:chicken|ham|salami|turkey|prosciutto|tuna|stuffed|filled)\b|\bsandwich\b(?!\s+(?:buns?|rolls?|bread))',text):continue
+            return family,subfamily,match.group()
     return None
 
 

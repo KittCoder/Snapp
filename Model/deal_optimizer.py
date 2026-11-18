@@ -1,7 +1,9 @@
 """Constrained economics over already structurally eligible matcher candidates.
 
 Scores reuse the identity matcher's normalized evidence; bands are policy,
-not claims of human calibration. No price can cross a quality band.
+not claims of human calibration. Economics are compared within the highest
+priceable quality band; unverified packaging cannot block a verified exact or
+equivalent purchase.
 """
 import math
 
@@ -17,12 +19,15 @@ class DealOptimizer:
         safe = [e for e in evaluations if not e.exclusion_reasons]
         if not safe:
             return None, 'no candidate clears structural and quality requirements'
+        costable = [e for e in safe if e.deal_confidence=='high' and e.match_type in ('EXACT','EQUIVALENT')]
+        ranked = costable or safe
+        packaging_fallback = bool(costable and any(e.product_id==top1_id and e.deal_confidence!='high' for e in safe))
         best = min(({'A': 0, 'B': 1, 'C': 2, 'S': 3}[e.quality_tier],
-                    {'EXACT': 0, 'EQUIVALENT': 1, 'SUBSTITUTE': 2}[e.match_type]) for e in safe)
-        pool = [e for e in safe if ({'A': 0, 'B': 1, 'C': 2, 'S': 3}[e.quality_tier],
+                    {'EXACT': 0, 'EQUIVALENT': 1, 'SUBSTITUTE': 2}[e.match_type]) for e in ranked)
+        pool = [e for e in ranked if ({'A': 0, 'B': 1, 'C': 2, 'S': 3}[e.quality_tier],
                     {'EXACT': 0, 'EQUIVALENT': 1, 'SUBSTITUTE': 2}[e.match_type]) == best]
         top = next((e for e in pool if e.product_id == top1_id), None)
-        # Uncertain economics do not invalidate identity or justify a price switch.
+        # Keep the strongest identity when every safe candidate lacks reliable economics.
         priced = [e for e in pool if e.deal_confidence == 'high']
         if not priced:
             chosen = top or max(pool, key=lambda e: e.match_score)
@@ -35,4 +40,5 @@ class DealOptimizer:
                                           e.effective_cost, -e.match_score, e.product_id))
         savings = (top.effective_cost - chosen.effective_cost) if top and top.effective_cost is not None else 0
         reason = f'Selected Tier {chosen.quality_tier}; lowers checkout cost by ${savings:.2f} within comparable match quality' if savings > 0 else f'Selected Tier {chosen.quality_tier} by recipe checkout cost and waste'
+        if packaging_fallback:reason='Highest-ranked product has unverified package/price; selected the highest-quality priceable exact/equivalent match. '+reason
         return chosen, reason

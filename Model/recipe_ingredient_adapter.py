@@ -73,7 +73,7 @@ class CanonicalRecipeIngredient:
             parts.extend((f"{self.quantity*self.package_quantity:g}",self.package_unit))
         else:
             if self.quantity is not None:parts.append(f"{self.quantity:g}")
-            if self.unit:parts.append(self.unit)
+            if self.unit:parts.append({"slice":"slices","leaf":"leaves","roll":"rolls"}.get(self.unit,self.unit) if self.quantity != 1 else self.unit)
         name = self.ingredient_name
         # Source labels may be broad (e.g. nameClean="oil"). Preserve the
         # structural identity in the original line before appending preparation.
@@ -184,8 +184,8 @@ def canonical_ingredient_from_structured(
             quantity = parsed.quantity
         if not unit:
             unit = parsed.unit
-        if not name:
-            name = parsed.canonical_name
+        if not name or re.match(r"^\s*\d",name):
+            name = extract_quantity_and_unit(rewritten)[-1]
         if parsed.quantity_max is not None:
             warnings.append("quantity range parsed from raw text")
     else:

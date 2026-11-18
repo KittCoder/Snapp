@@ -10,6 +10,7 @@ from dataclasses import asdict, dataclass, field
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Any
 from functools import lru_cache
+from pathlib import Path
 
 from ingredient_normalization import (
     normalize_package_text,
@@ -30,7 +31,8 @@ from product_compatibility import (
     profile_from_query,
 )
 
-OPTIMIZER_VERSION = "basket-optimizer-v7-produce-portions"
+_COUNT_EVIDENCE_PATH=Path(__file__).with_name('verified_package_counts.json')
+OPTIMIZER_VERSION = "basket-optimizer-v8-household-portions:"+hashlib.sha256(_COUNT_EVIDENCE_PATH.read_bytes()).hexdigest()[:12]
 
 
 UNKNOWN = "UNKNOWN"
@@ -55,6 +57,7 @@ VOLUME_TO_MILLILITER = {
 }
 
 COUNT_UNITS = {
+    "slice", "leaf", "roll",
     "count",
     "each",
     "egg",
@@ -79,6 +82,7 @@ COUNT_UNITS = {
 }
 
 COUNT_ALIASES = {
+    "slice":"slice", "slices":"slice", "leaf":"leaf", "leaves":"leaf", "roll":"roll", "rolls":"roll",
     "eggs": "egg",
     "egg": "egg",
     "onions": "onion",
@@ -199,6 +203,10 @@ class PackageInfo:
     source_text: str | None = None
     eligible_for_optimization: bool = True
     warnings: list[str] = field(default_factory=list)
+
+    item_count: float | None = None
+    item_unit: str | None = None
+    item_count_source: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -398,12 +406,24 @@ def convert_quantity(quantity: Quantity, target_unit: str, ingredient_key: str |
     target_dimension = unit_dimension(target_unit)
     if quantity.status == UNKNOWN or quantity.base_quantity is None:
         return Quantity(None, target_unit, target_dimension, status=UNKNOWN, reason=quantity.reason or "unknown source quantity")
+    # Discrete portion units can be compared by verified/standard household
+    # weights; a leaf is never silently treated as a whole head or package.
+    if quantity.dimension=='count' and target_dimension=='mass':
+        grams=household_portion_grams(ingredient_key,quantity.base_unit)
+        if grams is not None:
+            base=quantity.base_quantity*grams
+            return Quantity(round(base/MASS_TO_GRAM[target_unit],4),target_unit,'mass',round(base,3),'gram')
+    if quantity.dimension=='count' and target_dimension=='count' and quantity.base_unit!=target_unit and target_unit not in {'each','count'}:
+        source=household_portion_grams(ingredient_key,quantity.base_unit);target=household_portion_grams(ingredient_key,target_unit)
+        if source is not None and target is not None:
+            count=quantity.base_quantity*source/target
+            return Quantity(count,target_unit,'count',count,target_unit)
     if quantity.dimension == target_dimension:
         if target_dimension == "mass":
             return Quantity(round(quantity.base_quantity / MASS_TO_GRAM[target_unit], 4), target_unit, target_dimension, quantity.base_quantity, "gram")
         if target_dimension == "volume":
             return Quantity(round(quantity.base_quantity / VOLUME_TO_MILLILITER[target_unit], 4), target_unit, target_dimension, quantity.base_quantity, "milliliter")
-        if target_dimension == "count" and (quantity.base_unit == target_unit or target_unit in {"count", "each"}):
+        if target_dimension == "count" and (quantity.base_unit == target_unit or target_unit in {"count", "each"} and quantity.base_unit not in {"slice","leaf","roll"}):
             return Quantity(quantity.base_quantity, target_unit, target_dimension, quantity.base_quantity, target_unit)
         if target_dimension == "count":
             return Quantity(None, target_unit, target_dimension, status=UNKNOWN, reason="count unit identity differs")
@@ -421,6 +441,27 @@ def convert_quantity(quantity: Quantity, target_unit: str, ingredient_key: str |
 
 
 @lru_cache(maxsize=2048)
+def household_portion_grams(ingredient_key,unit):
+    """USDA household measures, not arbitrary package or serving guesses.
+
+    SR Legacy #170850 provolone, #170000 onions, #169247 romaine,
+    #172232 fresh basil; source portions ship in usda_nutrition_catalog.json.gz.
+    """
+    if not ingredient_key:return None
+    identity=profile_from_query(ingredient_key)[0].ontology
+    text=normalize_text(ingredient_key)
+    if identity.family=='cheese' and identity.subfamily=='provolone' and unit=='slice':return 28.0
+    if identity.family=='produce' and identity.state in (None,'fresh'):
+        if identity.subfamily=='onion' and unit=='onion':
+            return 70.0 if re.search(r'\bsmall\b',text) else 150.0 if re.search(r'\blarge\b',text) else 110.0
+        if identity.subfamily=='lettuce' and identity.variety=='romaine':
+            if unit=='leaf':return 6.0 if re.search(r'\binner\b',text) else 28.0
+            if unit=='head':return 626.0
+        if identity.subfamily=='basil' and unit=='leaf':return .5
+    return None
+
+
+@lru_cache(maxsize=2048)
 def density_for_ingredient(ingredient_key: str | None) -> float | None:
     normalized = normalize_text(ingredient_key or "")
     # Standard cooking estimates, scoped to food identity AND preparation.
@@ -434,6 +475,9 @@ def density_for_ingredient(ingredient_key: str | None) -> float | None:
     # USDA SR Legacy household portions in usda_nutrition_catalog.json.gz:
     # prepared mustard #172234: 249 g/cup; sugar #168833: 220 g/packed cup;
     # granulated sugar #169655: 200 g/cup; cornstarch #169698: 128 g/cup.
+    if identity.family=='produce' and identity.subfamily=='basil' and identity.state in (None,'fresh'):
+        return (42.4 if identity.form=='chopped' else 24)/cup
+    if identity.family=='sauce' and identity.subfamily=='pesto':return 248/cup
     if identity.family=='sauce' and identity.subfamily=='mustard':return 249/cup
     if identity.family=='sauce' and identity.subfamily=='ketchup':return 240/cup
     if identity.family=='sugar' and identity.subfamily=='brown':return (145 if 'unpacked' in normalized else 220)/cup
@@ -474,7 +518,7 @@ def _first_number(text: str) -> float | None:
     return parse_number(match.group(0)) if match else None
 
 
-def parse_package_info(feature: dict[str, Any] | None) -> PackageInfo:
+def _parse_package_info(feature: dict[str, Any] | None) -> PackageInfo:
     feature = feature or {}
     warnings: list[str] = list(feature.get("package_parse_warnings") or [])
     confidence = feature.get("package_parse_confidence") or "unknown"
@@ -587,6 +631,29 @@ def parse_package_info(feature: dict[str, Any] | None) -> PackageInfo:
     return PackageInfo(None, None, confidence="none", source_text=source_text or text, eligible_for_optimization=False, warnings=warnings)
 
 
+@lru_cache(maxsize=1)
+def audited_package_counts():
+    return json.loads(_COUNT_EVIDENCE_PATH.read_text())
+
+
+def parse_package_info(feature: dict[str, Any] | None) -> PackageInfo:
+    feature=feature or {}
+    package=_parse_package_info(feature)
+    name=feature.get('original_product_name') or feature.get('normalized_name') or ''
+    identity=profile_from_query(name)[0].ontology
+    record=audited_package_counts().get(feature.get('product_id'))
+    if record and name==record['product_name'] and normalize_package_text(package.source_text)==normalize_package_text(record['raw_size_text']):
+        package.item_count=record['item_count'];package.item_unit=record['item_unit'];package.item_count_source=record['source_url']
+    elif package.base_unit=='count' and package.base_quantity:
+        # Count labels are interpreted as slices/rolls only with an explicit
+        # purchased noun, never by assuming a mass-only bag contains N items.
+        if identity.family in ('cheese','bread') and re.search(r'\bslic(?:es?|ed)\b',name,re.I):package.item_unit='slice'
+        elif identity.family=='bread' and re.search(r'\b(?:rolls?|buns?)\b',name,re.I):package.item_unit='roll'
+        elif identity.family=='produce' and identity.subfamily=='lettuce' and not re.search(r'hearts?',name,re.I):package.item_unit='head'
+        if package.item_unit:package.item_count=package.base_quantity;package.item_count_source=package.source_text
+    return package
+
+
 def parse_price_info(value: Any, feature: dict[str, Any] | None = None) -> PriceInfo:
     if feature and feature.get("sale_price") is not None:
         sale = parse_price_info(feature["sale_price"])
@@ -654,13 +721,21 @@ def calculate_coverage(required: Quantity, package: PackageInfo, ingredient_key:
         warnings.append("insufficient package size")
         return QuantityCoverage(required, package, None, None, required, Quantity(None, required.unit, status=UNKNOWN), None, warnings)
     comparable_required = required
-    if required.base_unit != package.base_unit:
+    if required.dimension=='count' and package.item_count and package.item_unit:
+        portions=convert_quantity(required,package.item_unit,ingredient_key)
+        if portions.base_quantity is not None:
+            base=portions.base_quantity/package.item_count*package.base_quantity
+            comparable_required=Quantity(base,package.base_unit,unit_dimension(package.base_unit),base,package.base_unit)
+        else:comparable_required=portions
+    elif required.base_unit != package.base_unit:
         comparable_required = convert_quantity(required, package.base_unit, ingredient_key)
     if comparable_required.base_quantity is None:
         warnings.append("unknown conversions")
         return QuantityCoverage(required, package, None, None, required, Quantity(None, package.package_unit, status=UNKNOWN, reason="unsafe conversion"), None, warnings)
-    if required.dimension!=comparable_required.dimension:
+    if required.dimension=='volume' and comparable_required.dimension=='mass':
         warnings.append('recipe volume converted using standard ingredient weight')
+    elif required.dimension=='count' and (comparable_required.dimension=='mass' or comparable_required.base_unit!=required.base_unit) and not (package.item_count and package.item_unit==required.base_unit):
+        warnings.append('recipe quantities converted using standard household measures')
     packages_required = max(1, math.ceil(comparable_required.base_quantity / package.base_quantity))
     purchased_base = packages_required * package.base_quantity
     leftover_base = round(max(0.0, purchased_base - comparable_required.base_quantity), 3)

@@ -39,6 +39,7 @@ UNICODE_FRACTIONS = {
 }
 
 UNIT_ALIASES = {
+    "slice":"slice", "slices":"slice", "leaf":"leaf", "leaves":"leaf", "roll":"roll", "rolls":"roll",
     "c": "cup",
     "cup": "cup",
     "cups": "cup",
@@ -777,6 +778,13 @@ def parse_ingredient(raw_text: str) -> ParsedIngredient:
         if canonical_words and canonical_words[0] in COUNT_INGREDIENT_UNITS:
             unit = canonical_words[0].rstrip("s") if canonical_words[0] != "potatoes" else "potato"
             canonical_source = COUNT_INGREDIENT_UNITS[canonical_words[0]]
+    if quantity is not None and unit is None:
+        # A color precedes the counted noun in "half a red onion".
+        words=canonical_source.split()
+        if len(words)==2 and words[0] in {'red','yellow','white','green','brown'} and words[1] in COUNT_INGREDIENT_UNITS:
+            unit=words[1].rstrip('s')
+        elif re.fullmatch(r'(?:ciabatta|hamburger|burger|brioche|dinner|kaiser) (?:rolls?|buns?)',canonical_source):
+            unit='roll'
     canonical = apply_alias(canonical_source)
     canonical = re.sub(r"\s+", " ", canonical).strip(" ,-")
     if re.search(r"\begg\s+(?:yolks?|whites?)\b|\b(?:yolks?|whites)\b", normalized_raw):
@@ -985,7 +993,7 @@ def parse_package_size(value: str | None) -> tuple[float | None, str | None, flo
     if re.search(r"\d\s*-\s*\d", text):
         return None, None, None, None
     number = r"(?:\d+\s+\d+/\d+|\d+/\d+|\d+(?:\.\d+)?)"
-    units = r"fl oz|fluid ounces?|oz|ounces?|lbs?|pounds?|kg|kilograms?|g|grams?|ct|count|each|ml|l|liters?|pints?|pt|quarts?|qt|gallons?|gal|pack"
+    units = r"fl oz|fluid ounces?|oz|ounces?|lbs?|pounds?|kg|kilograms?|g|grams?|ct|count|each|ea|slices?|rolls?|leaves|leaf|ml|l|liters?|pints?|pt|quarts?|qt|gallons?|gal|pack"
     tokens = list(re.finditer(rf"(?<![\d./])(?P<amount>{number})\s*(?P<unit>{units})\b", text))
     if re.search(r"\d\s*x\s*\d", text):
         multi = re.search(rf"(?P<count>\d+)\s*x\s*(?P<amount>{number})\s*(?P<unit>{units})\b", text)

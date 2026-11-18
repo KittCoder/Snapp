@@ -24,7 +24,10 @@ def pantry_transfer_payload(lines, required, selected=None, reliable=False):
     amount,unit=required.base_quantity,required.base_unit
     if reliable and selected and not (selected.package.sold_by_weight or selected.package.variable_weight):
         package=selected.package
-        if package.base_quantity and package.base_unit and selected.packages_needed:
+        if package.item_count and package.item_unit and selected.packages_needed:
+            amount=package.item_count*selected.packages_needed
+            unit=package.item_unit
+        elif package.base_quantity and package.base_unit and selected.packages_needed:
             amount=package.base_quantity*selected.packages_needed
             unit=package.base_unit
     if not name or amount is None or amount<=0 or not unit:return None

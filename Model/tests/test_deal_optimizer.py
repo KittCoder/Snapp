@@ -60,3 +60,16 @@ class CheapWrongIdentityTests(unittest.TestCase):
                 basket=BasketBuilder(service).build_recipe_basket({'ingredients':[query]},use_semantic=False)
                 self.assertTrue(basket.shopping_basket)
                 self.assertEqual(basket.shopping_basket[0].product_id,'right')
+
+class VerifiedPackageFallbackTests(DealTests):
+    def test_unpriceable_name_winner_uses_highest_priceable_verified_quality(self):
+        result=self.choose(scores=(.99,.94),sizes=(None,16),prices=(6,8))
+        self.assertEqual(result.selected.product_id,'1')
+        self.assertEqual(result.selected.cost.checkout_cost,8)
+        self.assertIn('unverified package/price',result.explanation)
+
+    def test_price_cannot_rescue_an_ineligible_or_substitution_only_product(self):
+        below_floor=self.choose(scores=(.99,.84),sizes=(None,16),prices=(6,.01))
+        self.assertEqual(below_floor.selected.product_id,'0')
+        substitution=self.choose(sizes=(None,16),types=('exact','substitute'),prices=(6,.01))
+        self.assertEqual(substitution.selected.product_id,'0')
