@@ -120,7 +120,7 @@ def parse_small_number(value: Any) -> float | None:
 
 def split_package_descriptor(text: str) -> tuple[str, float | None, str | None]:
     pattern = re.compile(
-        r"^\s*(?P<count>a|an|one|two|three|four|five|six|seven|eight|nine|ten|twelve|\d+(?:\.\d+)?)\s+"
+        r"^\s*(?P<count>a|an|one|two|three|four|five|six|seven|eight|nine|ten|twelve|\d+(?:\s+\d+/\d+|/\d+|\.\d+)?)\s+"
         r"(?P<pkg_qty>\d+(?:\.\d+)?(?:\s+\d+/\d+|/\d+)?)\s*[- ]\s*"
         r"(?P<pkg_unit>ounces?|oz|pounds?|lbs?|grams?|g|cups?|fluid ounces?|fl oz)\s+"
         r"(?P<container>cans?|packages?|pkg|jars?|packs?|bottles?|cartons?)\b\s*(?P<rest>.*)$",
@@ -130,7 +130,7 @@ def split_package_descriptor(text: str) -> tuple[str, float | None, str | None]:
     if not match:
         # Also preserve sizes stored after the container or food name, e.g.
         # "1 bottle chili sauce 12 ounce" and "1 can tomatoes (28 oz)".
-        container=re.match(r'^\s*(?P<count>\d+(?:\.\d+)?|a|an|one|two|three|four)\s+(?P<container>cans?|jars?|packages?|packs?|bottles?|cartons?)\b(?P<rest>.*)$',text or '',re.I)
+        container=re.match(r'^\s*(?P<count>\d+(?:\s+\d+/\d+|/\d+|\.\d+)?|a|an|one|two|three|four)\s+(?P<container>cans?|jars?|packages?|packs?|bottles?|cartons?)\b(?P<rest>.*)$',text or '',re.I)
         if not container:return text,None,None
         rest=container['rest']
         sizes=list(re.finditer(r'(?<![\d./-])(?P<amount>\d+(?:\.\d+)?)\s*[- ]?\s*(?P<unit>fluid ounces?|fl oz|ounces?|oz|pounds?|lbs?|grams?|g|milliliters?|ml|liters?)\b',rest,re.I))
@@ -255,7 +255,7 @@ def canonical_ingredient_from_spoonacular(
 def canonical_ingredient_from_text(value: Any, *, source_recipe_id: str = "") -> CanonicalRecipeIngredient:
     raw_text = re.sub(r"\s+", " ", str(value or "").strip())
     juice_match = re.match(
-        r"^\s*juice of\s+(?P<count>a|an|one|two|three|four|five|six|seven|eight|nine|ten|twelve|\d+(?:\.\d+)?)\s+lemons?\b",
+        r"^\s*juice of\s+(?P<count>a|an|one|two|three|four|five|six|seven|eight|nine|ten|twelve|\d+(?:\s+\d+/\d+|/\d+|\.\d+)?)\s+lemons?\b",
         raw_text,
         flags=re.I,
     )

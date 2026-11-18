@@ -32,7 +32,7 @@ from product_compatibility import (
 )
 
 _COUNT_EVIDENCE_PATH=Path(__file__).with_name('verified_package_counts.json')
-OPTIMIZER_VERSION = "basket-optimizer-v8-household-portions:"+hashlib.sha256(_COUNT_EVIDENCE_PATH.read_bytes()).hexdigest()[:12]
+OPTIMIZER_VERSION = "basket-optimizer-v9-lossless-quantities:"+hashlib.sha256(_COUNT_EVIDENCE_PATH.read_bytes()).hexdigest()[:12]
 
 
 UNKNOWN = "UNKNOWN"
@@ -45,13 +45,13 @@ MASS_TO_GRAM = {
 }
 
 VOLUME_TO_MILLILITER = {
-    "teaspoon": 4.92892,
-    "tablespoon": 14.7868,
+    "teaspoon": 236.588 / 48,
+    "tablespoon": 236.588 / 16,
     "cup": 236.588,
     "fluid ounce": 29.5735,
     "pint": 473.176,
-    "quart": 946.353,
-    "gallon": 3785.41,
+    "quart": 236.588 * 4,
+    "gallon": 236.588 * 16,
     "milliliter": 1.0,
     "liter": 1000.0,
 }
@@ -381,6 +381,8 @@ def normalize_count_unit(unit: str | None) -> str | None:
 def canonical_quantity(quantity: float | None, unit: str | None, ingredient_key: str | None = None) -> Quantity:
     if quantity is None:
         return Quantity(None, unit, status=UNKNOWN, reason="missing quantity")
+    if not isinstance(quantity,(int,float)) or not math.isfinite(quantity) or quantity < 0:
+        return Quantity(None,unit,status=UNKNOWN,reason="invalid quantity")
     normalized_unit = normalize_count_unit(unit) or normalize_unit(unit)
     if normalized_unit is None and normalize_text(ingredient_key or '') in {'egg','eggs'}:
         normalized_unit='egg'
@@ -391,9 +393,9 @@ def canonical_quantity(quantity: float | None, unit: str | None, ingredient_key:
         quantity *= 12
     dimension = unit_dimension(normalized_unit)
     if dimension == "mass":
-        return Quantity(quantity, normalized_unit, dimension, round(quantity * MASS_TO_GRAM[normalized_unit], 3), "gram")
+        return Quantity(quantity, normalized_unit, dimension, quantity * MASS_TO_GRAM[normalized_unit], "gram")
     if dimension == "volume":
-        return Quantity(quantity, normalized_unit, dimension, round(quantity * VOLUME_TO_MILLILITER[normalized_unit], 3), "milliliter")
+        return Quantity(quantity, normalized_unit, dimension, quantity * VOLUME_TO_MILLILITER[normalized_unit], "milliliter")
     if dimension == "count":
         if normalized_unit == "dozen":
             quantity *= 12
@@ -412,17 +414,24 @@ def convert_quantity(quantity: Quantity, target_unit: str, ingredient_key: str |
         grams=household_portion_grams(ingredient_key,quantity.base_unit)
         if grams is not None:
             base=quantity.base_quantity*grams
-            return Quantity(round(base/MASS_TO_GRAM[target_unit],4),target_unit,'mass',round(base,3),'gram')
+            return Quantity(base/MASS_TO_GRAM[target_unit],target_unit,'mass',base,'gram')
     if quantity.dimension=='count' and target_dimension=='count' and quantity.base_unit!=target_unit and target_unit not in {'each','count'}:
         source=household_portion_grams(ingredient_key,quantity.base_unit);target=household_portion_grams(ingredient_key,target_unit)
         if source is not None and target is not None:
             count=quantity.base_quantity*source/target
             return Quantity(count,target_unit,'count',count,target_unit)
+    if target_dimension=='count' and quantity.dimension in {'mass','volume'}:
+        grams=household_portion_grams(ingredient_key,target_unit)
+        density=density_for_ingredient(ingredient_key) if quantity.dimension=='volume' else None
+        mass=quantity.base_quantity if quantity.dimension=='mass' else quantity.base_quantity*density if density else None
+        if grams and mass is not None:
+            count=mass/grams
+            return Quantity(count,target_unit,'count',count,target_unit)
     if quantity.dimension == target_dimension:
         if target_dimension == "mass":
-            return Quantity(round(quantity.base_quantity / MASS_TO_GRAM[target_unit], 4), target_unit, target_dimension, quantity.base_quantity, "gram")
+            return Quantity(quantity.base_quantity / MASS_TO_GRAM[target_unit], target_unit, target_dimension, quantity.base_quantity, "gram")
         if target_dimension == "volume":
-            return Quantity(round(quantity.base_quantity / VOLUME_TO_MILLILITER[target_unit], 4), target_unit, target_dimension, quantity.base_quantity, "milliliter")
+            return Quantity(quantity.base_quantity / VOLUME_TO_MILLILITER[target_unit], target_unit, target_dimension, quantity.base_quantity, "milliliter")
         if target_dimension == "count" and (quantity.base_unit == target_unit or target_unit in {"count", "each"} and quantity.base_unit not in {"slice","leaf","roll"}):
             return Quantity(quantity.base_quantity, target_unit, target_dimension, quantity.base_quantity, target_unit)
         if target_dimension == "count":
@@ -431,12 +440,12 @@ def convert_quantity(quantity: Quantity, target_unit: str, ingredient_key: str |
         density = density_for_ingredient(ingredient_key)
         if density:
             grams = quantity.base_quantity * density
-            return Quantity(round(grams / MASS_TO_GRAM[target_unit], 4), target_unit, target_dimension, round(grams, 3), "gram")
+            return Quantity(grams / MASS_TO_GRAM[target_unit], target_unit, target_dimension, grams, "gram")
     if quantity.dimension == "mass" and target_dimension == "volume":
         density = density_for_ingredient(ingredient_key)
         if density:
             milliliters = quantity.base_quantity / density
-            return Quantity(round(milliliters / VOLUME_TO_MILLILITER[target_unit], 4), target_unit, target_dimension, round(milliliters, 3), "milliliter")
+            return Quantity(milliliters / VOLUME_TO_MILLILITER[target_unit], target_unit, target_dimension, milliliters, "milliliter")
     return Quantity(None, target_unit, target_dimension, status=UNKNOWN, reason="unsafe conversion")
 
 
@@ -510,7 +519,7 @@ def density_for_ingredient(ingredient_key: str | None) -> float | None:
 
 
 def currency_round(value: float) -> float:
-    return float(Decimal(str(value)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+    return float(Decimal(str(round(value,10))).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
 
 
 def _first_number(text: str) -> float | None:
@@ -712,7 +721,11 @@ def calculate_coverage(required: Quantity, package: PackageInfo, ingredient_key:
             if converted.quantity is not None:
                 purchase_amount = converted.quantity
                 used = converted
-                if required.dimension!=converted.dimension:warnings.append('recipe volume converted using standard ingredient weight')
+                if required.dimension!=converted.dimension:
+                    warnings.append('recipe quantities converted using standard household measures' if required.dimension=='count' else 'recipe volume converted using standard ingredient weight')
+            else:
+                warnings.append('unknown conversions')
+                return QuantityCoverage(required,package,None,None,converted,Quantity(None,required.unit,status=UNKNOWN),None,warnings)
         return QuantityCoverage(required, package, purchase_amount, 1.0, used, Quantity(0, required.unit, required.dimension, 0, required.base_unit), 0.0, warnings)
     if not package.eligible_for_optimization:
         warnings.append("package metadata excluded from optimization")
@@ -721,7 +734,7 @@ def calculate_coverage(required: Quantity, package: PackageInfo, ingredient_key:
         warnings.append("insufficient package size")
         return QuantityCoverage(required, package, None, None, required, Quantity(None, required.unit, status=UNKNOWN), None, warnings)
     comparable_required = required
-    if required.dimension=='count' and package.item_count and package.item_unit:
+    if package.item_count and package.item_unit and (required.dimension=='count' or package.base_unit=='count'):
         portions=convert_quantity(required,package.item_unit,ingredient_key)
         if portions.base_quantity is not None:
             base=portions.base_quantity/package.item_count*package.base_quantity
@@ -736,7 +749,12 @@ def calculate_coverage(required: Quantity, package: PackageInfo, ingredient_key:
         warnings.append('recipe volume converted using standard ingredient weight')
     elif required.dimension=='count' and (comparable_required.dimension=='mass' or comparable_required.base_unit!=required.base_unit) and not (package.item_count and package.item_unit==required.base_unit):
         warnings.append('recipe quantities converted using standard household measures')
-    packages_required = max(1, math.ceil(comparable_required.base_quantity / package.base_quantity))
+    ratio=comparable_required.base_quantity/package.base_quantity
+    # Source catalogs and unit constants round equivalent package sizes.
+    # Tolerate sub-milligram source rounding, never a real extra portion.
+    nearest=round(ratio)
+    if nearest>0 and math.isclose(comparable_required.base_quantity,nearest*package.base_quantity,rel_tol=1e-6,abs_tol=1e-6):ratio=float(nearest)
+    packages_required = max(0, math.ceil(ratio))
     purchased_base = packages_required * package.base_quantity
     leftover_base = round(max(0.0, purchased_base - comparable_required.base_quantity), 3)
     used = comparable_required
@@ -1012,8 +1030,19 @@ class BasketBuilder:
                     )
                 )
                 if required.base_quantity is not None:
+                    aggregate_key=signature
+                    aggregate_required=required
+                    existing=aggregate.get(aggregate_key)
+                    if existing and existing["base_unit"] != required.base_unit:
+                        converted=convert_quantity(required,existing["base_unit"],raw)
+                        if converted.base_quantity is not None:
+                            aggregate_required=converted
+                        else:
+                            # Unknown conversions remain separate purchases;
+                            # neither amount can disappear from the basket.
+                            aggregate_key=signature+"|quantity-unit:"+str(required.base_unit)
                     bucket = aggregate.setdefault(
-                        signature,
+                        aggregate_key,
                         {
                             "signature": signature,
                             "feature": feature,
@@ -1032,8 +1061,8 @@ class BasketBuilder:
                             "warnings": [],
                         },
                     )
-                    if bucket["base_unit"] == required.base_unit:
-                        bucket["required_base"] += required.base_quantity
+                    if bucket["base_unit"] == aggregate_required.base_unit:
+                        bucket["required_base"] += aggregate_required.base_quantity
                         bucket["ingredients"].append(raw)
                         bucket["matched_indexes"].append(len(matched) - 1)
                         existing_ids = {candidate.product_id for candidate in bucket["ranked_candidates"]}
@@ -1146,10 +1175,10 @@ class BasketBuilder:
 
     def _basket_item(self, signature: str, data: dict[str, Any], optimization_mode: str) -> BasketItem:
         required = Quantity(
-            round(data["required_base"], 3),
+            data["required_base"],
             data["base_unit"],
             unit_dimension(data["base_unit"]),
-            round(data["required_base"], 3),
+            data["required_base"],
             data["base_unit"],
         )
         optimized = self.optimize_ingredient_purchase(

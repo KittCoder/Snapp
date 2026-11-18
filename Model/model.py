@@ -3811,7 +3811,7 @@ def pantry_ingredient_identity_key(text):
 
 
 def pantry_quantity_buckets(pantry_items):
-    from basket_quantity import canonical_quantity
+    from basket_quantity import canonical_quantity, convert_quantity
     from ingredient_normalization import parse_ingredient
 
     buckets = {}
@@ -3832,12 +3832,33 @@ def pantry_quantity_buckets(pantry_items):
                 "base_quantity": 0.0,
             },
         )
-        if bucket["base_unit"] == quantity.base_unit:
-            bucket["base_quantity"] += quantity.base_quantity
+        candidates=[bucket]+bucket.get("alternatives",[])
+        for candidate in candidates:
+            converted=convert_quantity(quantity,candidate["base_unit"],text)
+            if converted.base_quantity is not None:
+                candidate["base_quantity"] += converted.base_quantity
+                break
+        else:
+            bucket.setdefault("alternatives",[]).append({
+                "base_unit":quantity.base_unit,"dimension":quantity.dimension,
+                "base_quantity":quantity.base_quantity})
     return buckets
 
 
 def pantry_adjusted_ingredient_text(ingredient, pantry_buckets, spice_keys, servings=None):
+    key=pantry_ingredient_identity_key(ingredient_display_text(ingredient))
+    bucket=pantry_buckets.get(key)
+    if not bucket:
+        return _pantry_adjusted_single(ingredient,pantry_buckets,spice_keys,servings)
+    remaining=ingredient
+    for index,candidate in enumerate([bucket]+bucket.get("alternatives",[])):
+        remaining=_pantry_adjusted_single(remaining,{key:candidate},spice_keys,servings if index==0 else None)
+        if remaining is None:return None
+        remaining={"name":ingredient.get("name"),"display":remaining}
+    return ingredient_display_text(remaining)
+
+
+def _pantry_adjusted_single(ingredient, pantry_buckets, spice_keys, servings=None):
     from basket_quantity import Quantity, canonical_quantity, convert_quantity
     from ingredient_normalization import parse_ingredient
 
@@ -3869,7 +3890,7 @@ def pantry_adjusted_ingredient_text(ingredient, pantry_buckets, spice_keys, serv
         pantry_base = bucket["base_quantity"]
     if pantry_base is None or pantry_base <= 0:
         return text
-    if pantry_base >= required.base_quantity:
+    if pantry_base >= required.base_quantity or math.isclose(pantry_base,required.base_quantity,rel_tol=1e-9,abs_tol=1e-9):
         if bucket["base_unit"] == required.base_unit:
             bucket["base_quantity"] = max(0.0, bucket["base_quantity"] - required.base_quantity)
         else:
