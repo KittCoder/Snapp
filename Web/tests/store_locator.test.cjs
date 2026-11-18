@@ -22,7 +22,7 @@ test('cached stores render synchronously while refresh is pending, refresh dedup
  let finish;const network=new Promise(resolve=>finish=resolve);const s=setup({time:Date.now(),stores:[stores[0]]},()=>network);
  let rendered;s.api.subscribe(rows=>rendered=rows);assert.equal(rendered.length,1);
  const pending=s.api.load();assert.equal(rendered.length,1);
- await Promise.resolve();await Promise.resolve();finish([...stores,stores[0]]);await pending;assert.equal(rendered.length,stores.length);assert.equal(rendered[0].inventory_version,undefined);
+ await Promise.resolve();await Promise.resolve();finish([{...stores[0],inventory_version:'verified-v3',catalog_path:'/private/catalog.json',feature_json:{}},...stores.slice(1),stores[0]]);await pending;assert.equal(rendered.length,stores.length);assert.equal(rendered[0].inventory_version,'verified-v3');assert.equal(rendered[0].catalog_path,undefined);assert.equal(rendered[0].feature_json,undefined);
 });
 test('expired cache discarded, network failure preserves fresh cache and selection is untouched',async()=>{
  const old=setup({time:Date.now()-21*60*1000,stores},async()=>{throw Error('offline');});assert.equal(old.api.stores.length,0);await old.api.load();

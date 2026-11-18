@@ -4,7 +4,7 @@
   const key='snapp:stores:v1', ttl=20*60*1000;
   let stores=[], pending=null, fetched=false, settled=false, error=null;
   const listeners=new Set();
-  const fields=['id','store_name','retailer','address','borough','zip_code','latitude','longitude','product_count','verified_at'];
+  const fields=['id','store_name','retailer','address','borough','zip_code','latitude','longitude','product_count','verified_at','inventory_version'];
   function normalize(rows){
     if(!Array.isArray(rows))throw new Error('Invalid store registry');
     const seen=new Set();

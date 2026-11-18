@@ -140,3 +140,58 @@ class GenericVinegarPolicyTests(unittest.TestCase):
         service=ProductMatchService(retriever=FakeRetriever([feature('rice','Rice Vinegar'),feature('white','White Vinegar')]))
         self.assertEqual(service.match_recipe_ingredient('vinegar').selected_match.product_id,'white')
         self.assertEqual(service.match_recipe_ingredient('rice vinegar').selected_match.product_id,'rice')
+
+class ProduceAndSpicePortionTests(unittest.TestCase):
+    def test_cabbage_portions_keep_preparation_and_state_separate(self):
+        for query,amount in [('shredded cabbage',70),('chopped cabbage',89)]:
+            converted=convert_quantity(canonical_quantity(1,'cup'),'gram',query)
+            self.assertAlmostEqual(converted.base_quantity,amount,places=1)
+        self.assertAlmostEqual(convert_quantity(canonical_quantity(10,'cup'),'gram','cabbage shredded').base_quantity,700,places=1)
+        for query in ['boiled cabbage shredded','cooked shredded cabbage','canned shredded cabbage','pickled cabbage','whole cabbage']:
+            self.assertIsNone(density_for_ingredient(query),query)
+
+    def test_red_pepper_flakes_convert_without_becoming_ground_pepper_or_cayenne(self):
+        converted=convert_quantity(canonical_quantity(.25,'teaspoon'),'gram','red pepper flakes')
+        self.assertAlmostEqual(converted.base_quantity,.5,places=2)
+        from product_ontology import describe,compatibility
+        query=describe('red pepper flakes')
+        self.assertFalse(compatibility(query,describe('Cayenne Pepper',product=True)).allowed)
+        self.assertFalse(compatibility(query,describe('Black Pepper',product=True)).allowed)
+
+    def test_weight_based_checkout_keeps_the_verified_volume_conversion(self):
+        from basket_quantity import calculate_coverage,calculate_cost,parse_price_info
+        package=parse_package_info({'original_product_name':'Cabbage per lb'})
+        coverage=calculate_coverage(canonical_quantity(10,'cup'),package,'shredded cabbage')
+        cost=calculate_cost(coverage,parse_price_info('$1.29 per lb'))
+        self.assertEqual(cost.checkout_cost,1.99)
+        self.assertIn('recipe volume converted using standard ingredient weight',cost.warnings)
+        unknown=calculate_coverage(canonical_quantity(1,'cup'),package,'unknown vegetable')
+        self.assertIsNone(calculate_cost(unknown,parse_price_info('$1.29 per lb')).checkout_cost)
+
+    def test_bulk_sausage_recognition_does_not_invent_species_or_ignore_spice_requirements(self):
+        from product_ontology import describe,compatibility
+        product=describe('Bulk Hot Sausage',product=True)
+        self.assertEqual(product.family,'sausage')
+        self.assertEqual(product.flavor,'hot')
+        self.assertTrue(compatibility(describe('hot bulk sausage'),product).allowed)
+        self.assertFalse(compatibility(describe('spicy bulk pork sausage'),product).allowed)
+        self.assertTrue(compatibility(describe('spicy bulk pork sausage'),describe('Bulk Hot Pork Sausage',product=True)).allowed)
+        self.assertFalse(compatibility(describe('spicy bulk pork sausage'),describe('Bulk Sweet Pork Sausage',product=True)).allowed)
+
+
+class RealCabbagePortionPricingTests(unittest.TestCase):
+    def test_screenshot_portions_receive_costs_in_the_verified_morton_inventory(self):
+        from product_retrieval import DEFAULT_FEATURES_PATH
+        if not DEFAULT_FEATURES_PATH.exists():self.skipTest('Optional Morton Williams catalog unavailable')
+        from store_comparison import BasketComparison
+        from test_store_comparison import FixtureRegistry
+        from store_catalogs import StoreCatalog,StoreMetadata,digest
+        registry=FixtureRegistry();registry.stores={'morton-williams':StoreCatalog(StoreMetadata('morton-williams','morton_williams','morton-williams','Morton Williams',None,None,None,0,digest(DEFAULT_FEATURES_PATH),None))}
+        engine=BasketComparison(registry);self.addCleanup(engine.pool.shutdown)
+        for ingredients in [['0.25 teaspoon red pepper flakes','10 cup cabbage shredded'],
+                [{'name':'red pepper flakes','display':'1/4 teaspoon red pepper flakes'},{'name':'cabbage','display':'10 cup cabbage shredded'}]]:
+            result=engine.compare([{'ingredients':ingredients}],['morton-williams'])['stores'][0]
+            self.assertEqual(result['coverage_count'],2)
+            self.assertTrue(result['complete'],result['unknown_cost_items'])
+            self.assertGreater(result['basket_total'],0)
+            self.assertTrue(all(p['checkout_cost'] is not None for p in result['product_selections']))

@@ -4,7 +4,7 @@ const vm = require('node:vm');
 const fs = require('node:fs');
 const source = fs.readFileSync(require('node:path').join(__dirname, '../app.js'), 'utf8');
 class Element {
-  constructor(tag = 'div') { this.tag = tag; this.children = []; this.listeners = {}; this.value = ''; this.hidden = false; this.classList = { contains: () => false }; }
+  constructor(tag = 'div') { this.tag = tag; this.dataset = {}; this.children = []; this.listeners = {}; this.value = ''; this.hidden = false; this.classList = { contains: () => false }; }
   append(...nodes) { nodes.forEach(n => { n.parent = this; this.children.push(n); }); }
   appendChild(node) { this.append(node); }
   replaceChildren(...nodes) { this.children = []; this.append(...nodes); }
@@ -322,4 +322,35 @@ test('scheduling preserves source quantities and serving intent without consumin
  assert.equal(consumed,0);assert.equal(scheduledMeals[0].target_servings,2);
  const saved=JSON.parse(JSON.stringify(scheduledMeals[0]));
  assert.equal(saved.recipe.ingredients[0].display,'1 lb ground beef');assert.equal(saved.recipe.servings,4);
+});
+
+test('completed recipe details are cached with household, pantry and locale isolation',async()=>{
+ const {context,elements,calls}=setup();elements.get('recipe-chat-input').value='rice';
+ await elements.get('recipe-chat-form').listeners.submit({preventDefault(){}});
+ const history=elements.get('recipe-chat-history'),card=history.children[1].children[2].children[0];
+ await card.listeners.click();history.afterNode.children[0].listeners.click();await card.listeners.click();
+ assert.equal(calls.filter(c=>c.url.endsWith('/detail')).length,1);
+ context.householdSizeInput.value='4';await card.listeners.click();assert.equal(calls.filter(c=>c.url.endsWith('/detail')).length,2);
+ context.pantryItems=[{name:'rice',quantity:'1 cup'}];await card.listeners.click();assert.equal(calls.filter(c=>c.url.endsWith('/detail')).length,3);
+ context.getLanguage=()=> 'es';await card.listeners.click();assert.equal(calls.filter(c=>c.url.endsWith('/detail')).length,4);
+});
+test('a cached calculated price appears on click before the detail response and is reused by the full card',async()=>{
+ const {context,elements}=setup();let finishDetail,priceCalls=0;
+ context.window.SNAPP_ACTIVE_STORE={id:'morton-williams'};
+ context.window.SNAPP_STORES={stores:[{id:'morton-williams',store_name:'Morton Williams'}]};
+ context.window.SNAPP_PRICE_REQUEST=async(path,body)=>{priceCalls++;return {store_id:body.store_id,prices:body.recipes.map(r=>({id:body.store_id,recipe_id:r.id,inventory_version:'v1',complete:true,basket_total:8.3,checkout_total_known:8.3,unknown_cost_items:[]}))};};
+ for(const file of ['recipe_requirements.js','recipe_store_prices.js'])vm.runInContext(fs.readFileSync('Web/'+file,'utf8'),context);
+ context.fetch=async(url,options)=>{
+  if(url.endsWith('/chat'))return {ok:true,json:async()=>({message:'Recipes',state:{last_result_ids:['r1']},results:[{id:'r1',title:'Rice',ingredients_text:['1 cup rice']}]})};
+  return new Promise(resolve=>{
+   finishDetail=()=>resolve({ok:true,json:async()=>({dish:{recipe_id:'r1',recipe:{ingredients:[{name:'rice',display:'1 cup rice'}],instructions:['Cook rice']}}})});
+  });
+ };
+ elements.get('recipe-chat-input').value='rice';await elements.get('recipe-chat-form').listeners.submit({preventDefault(){}});
+ await new Promise(resolve=>setImmediate(resolve));
+ const history=elements.get('recipe-chat-history'),card=history.children[1].children[2].children[0];
+ assert.match(text(card),/\$8.30 total/);
+ const pending=card.listeners.click();assert.match(text(history.afterNode),/\$8.30 total/);assert.equal(priceCalls,1);
+ finishDetail();await pending;await new Promise(resolve=>setImmediate(resolve));
+ assert.match(text(history.afterNode),/Cook rice/);assert.match(text(history.afterNode),/\$8.30 total/);assert.equal(priceCalls,1);
 });

@@ -30,7 +30,7 @@ from product_compatibility import (
     profile_from_query,
 )
 
-OPTIMIZER_VERSION = "basket-optimizer-v6-package-portions"
+OPTIMIZER_VERSION = "basket-optimizer-v7-produce-portions"
 
 
 UNKNOWN = "UNKNOWN"
@@ -440,7 +440,16 @@ def density_for_ingredient(ingredient_key: str | None) -> float | None:
     if identity.family=='sugar' and identity.subfamily=='granulated':return 200/cup
     if identity.family=='starch' and identity.subfamily=='corn':return 128/cup
     if identity.family=='tomato' and identity.subfamily=='paste':return 262/cup
+    # USDA SR Legacy #169975 distinguishes shredded (70 g/cup) from
+    # chopped (89 g/cup) raw cabbage; cooked/canned forms stay separate.
+    if identity.family=='produce' and identity.subfamily=='cabbage':
+        if identity.state not in (None,'fresh') or re.search(r'\b(?:cooked|boiled|steamed|sauteed|fried|pickled)\b',normalized):return None
+        if identity.form=='shredded':return 70/cup
+        if identity.form in ('chopped','diced'):return 89/cup
     if identity.family=='seasoning':
+        # McCormick Culinary crushed red pepper label: 1/4 tsp = 0.5 g.
+        # https://www.webstaurantstore.com/documents/nutrition/932631mccormickpepperredcrushedcrushed.pdf
+        if identity.subfamily=='red_pepper_flakes':return 2/tsp
         if identity.subfamily=='chili_powder':return 2.7/tsp
         if identity.subfamily=='cinnamon' and not re.search(r'\bwhole|sticks?\b',normalized):return 2.6/tsp
         if identity.subfamily=='garlic_powder':return 3.1/tsp
@@ -630,11 +639,14 @@ def calculate_coverage(required: Quantity, package: PackageInfo, ingredient_key:
         return QuantityCoverage(required, package, None, None, required, Quantity(None, required.unit, status=UNKNOWN), None, warnings)
     if package.sold_by_weight or package.variable_weight:
         purchase_amount = required.base_quantity
+        used = required
         if package.package_unit:
             converted = convert_quantity(required, package.package_unit, ingredient_key)
             if converted.quantity is not None:
                 purchase_amount = converted.quantity
-        return QuantityCoverage(required, package, purchase_amount, 1.0, required, Quantity(0, required.unit, required.dimension, 0, required.base_unit), 0.0, warnings)
+                used = converted
+                if required.dimension!=converted.dimension:warnings.append('recipe volume converted using standard ingredient weight')
+        return QuantityCoverage(required, package, purchase_amount, 1.0, used, Quantity(0, required.unit, required.dimension, 0, required.base_unit), 0.0, warnings)
     if not package.eligible_for_optimization:
         warnings.append("package metadata excluded from optimization")
         return QuantityCoverage(required, package, None, None, required, Quantity(None, required.unit, status=UNKNOWN, reason="low-confidence package metadata"), None, warnings)
@@ -672,7 +684,7 @@ def calculate_coverage(required: Quantity, package: PackageInfo, ingredient_key:
 def calculate_cost(coverage: QuantityCoverage, price: PriceInfo) -> CostBreakdown:
     warnings = list(price.warnings) + list(coverage.warnings)
     if coverage.package.sold_by_weight and price.unit_price is not None:
-        required = coverage.amount_required
+        required = coverage.used
         if price.price_unit and required.base_quantity is not None:
             converted = convert_quantity(required, price.price_unit)
             if converted.quantity is not None:

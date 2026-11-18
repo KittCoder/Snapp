@@ -13,7 +13,7 @@ from food_identity_rules import (FOUNDATION_HEADS, BASIC_COMPOUNDS, COMPOSITE_MA
 
 from structural_identity_policy import (Evidence, REQUIRED_ATTRIBUTES, identity_form, semantic_head, required_evidence, generic_child, attribute_exception, derived_parts, purchased_compound_head, verified_whole_produce_base)
 
-ONTOLOGY_VERSION = 'food-identity-v3.15'
+ONTOLOGY_VERSION = 'food-identity-v3.16'
 
 @dataclass(frozen=True)
 class FoodIdentity:
@@ -336,6 +336,7 @@ def describe(text, *, feature=None, product=False):
     elif not ready and has(detection,r'\b(?:bread ?crumbs?|panko)\b'):ready=('breadcrumbs','plain')
     elif has(detection,r'beef.*sausage|sausage.*beef'):ready=('sausage','beef')
     elif has(detection,r'pork.*sausage|sausage.*pork'):ready=('sausage','pork')
+    elif not ready and has(detection,r'\bbulk\b') and has(detection,r'\bsausages?\b'):ready=('sausage','generic')
     if ready:
         # A requested ready ingredient still cannot be a component of a snack.
         remainder=re.sub(r'potato pancake mix|pancake mix|cream of chicken soup|tomato soup|corn tortillas?|(?:whole wheat|wheat|flour).*?tortillas?|pita breads?|hummus|bread ?crumbs?|panko|sausages?',' ',detection)

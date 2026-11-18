@@ -4204,6 +4204,7 @@ const recipeChat = (() => {
   let activeRequest = null;
   let detailRequest = null;
   let detailVersion = 0;
+  const detailCache = new Map();
   let detailRecipe = null;
   const detailView = document.createElement("section");
   detailView.className = "recipe-chat-card recipe-chat-detail";
@@ -4221,6 +4222,12 @@ const recipeChat = (() => {
   }
 
   async function fetchDetail(recipeId, forSchedule = false) {
+    const cacheKey = JSON.stringify({recipeId, forSchedule, locale:getLanguage(),
+      user:currentUser?.id, store:window.SNAPP_ACTIVE_STORE?.id, household:householdSizeInput.value,
+      pantry:pantryItems.map(({name,quantity})=>({name,quantity}))});
+    const cached = detailCache.get(cacheKey);
+    if (cached && Date.now()-cached.time < 2*60*1000) return JSON.parse(JSON.stringify(cached.dish));
+    detailCache.delete(cacheKey);
     const controller = new AbortController();
     detailRequest?.abort();
     detailRequest = controller;
@@ -4240,7 +4247,9 @@ const recipeChat = (() => {
       if (!response.ok) throw new Error("Recipe load failed");
       const data = await response.json();
       if (data.dish?.recipe_id !== recipeId || !data.dish.recipe) throw new Error("Invalid recipe");
-      return data.dish;
+      detailCache.set(cacheKey,{time:Date.now(),dish:data.dish});
+      while(detailCache.size>24)detailCache.delete(detailCache.keys().next().value);
+      return JSON.parse(JSON.stringify(data.dish));
     } finally {
       window.clearTimeout(timeout);
       if (detailRequest === controller) detailRequest = null;
@@ -4261,6 +4270,10 @@ const recipeChat = (() => {
     const feedback = textElement("p", "recipe-chat-text", t("copy.loading.recipe", {}));
     feedback.setAttribute("role", "status");
     detailView.append(back, feedback);
+    // The already-priced result remains visible while full instructions load.
+    const pricePreview = textElement("div", "recipe-chat-price-preview", "");
+    detailView.append(pricePreview);
+    window.SNAPP_RECIPE_PRICES?.register(pricePreview, recipe.pricing_recipe || recipe);
     try {
       const dish = await fetchDetail(recipe.id);
       if (version !== detailVersion) return;
@@ -4272,6 +4285,7 @@ const recipeChat = (() => {
         canonical_ingredients_text: (canonical.ingredients || []).map((item) => item.display || item.measure || item.name),
         ingredients_text: (full.ingredients || []).map((item) => item.display || item.measure || item.name),
       }, 0, true);
+      pricePreview.remove();
       detailView.append(card);
       if (full._translation_status && full._translation_status !== "translated") {
         card.append(textElement("p", "recipe-chat-hint", t("copy.recipe.translation.unavailable.showing.original.english")));
