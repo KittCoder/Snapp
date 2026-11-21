@@ -3386,3 +3386,33 @@ body.dark-theme .store-chain-filter[aria-pressed="true"] { background:#17685d; }
  .top-bar .nav-button { flex:0 0 auto; white-space:nowrap; font-size:.78rem; padding:.5rem .75rem; }
 }
 @media(max-width:760px) { .top-bar .app-switch button { white-space:nowrap; } }
+
+/* Conversation workspace: a single scroll area and an anchored composer. */
+.chat-accessible-heading { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+#recipe-chat.visible { display:flex; flex-direction:column; height:calc(100dvh - 122px); min-height:460px; max-width:1080px; margin:auto; padding:0 1.6rem; background:var(--color-panel-strong); border-radius:20px; overflow:hidden; }
+#recipe-chat .recipe-chat-header { flex-shrink:0; padding:1rem 0; border-bottom:1px solid var(--color-border); margin:0; }
+.chat-brand-label { font-size:.9rem; font-weight:700; letter-spacing:.02em; }
+.chat-brand-label > span { font-weight:400; color:var(--color-muted); margin-left:.6rem; font-size:.8rem; }
+#recipe-chat .recipe-chat-header button { min-height:36px; padding:.45rem .8rem; font-size:.78rem; }
+#recipe-chat .recipe-chat-empty { flex:1; width:100%; max-width:700px; align-content:center; align-self:center; padding:2rem 0; margin:0; }
+#recipe-chat .recipe-chat-empty h2 { font-family:inherit; font-size:clamp(1.6rem,3vw,2.2rem); letter-spacing:-.04em; }
+#recipe-chat .recipe-chat-history,#recipe-chat .recipe-chat-detail { flex:1; min-height:0; max-height:none; overflow-y:auto; overscroll-behavior:contain; width:100%; max-width:820px; align-self:center; padding:1.5rem .4rem; margin:0; }
+#recipe-chat .recipe-chat-detail { border:0; border-radius:0; background:transparent; }
+#recipe-chat .recipe-chat-message-user { background:#eef3ef; color:#26392f; border:0; border-radius:20px 20px 4px 20px; padding:.8rem 1rem; }
+#recipe-chat .recipe-chat-speaker { font-size:.7rem; }
+#recipe-chat .recipe-chat-message-user .recipe-chat-speaker { display:none; }
+#recipe-chat .recipe-chat-card { border:1px solid var(--color-border); box-shadow:none; border-top-width:1px; background:var(--color-panel-strong); }
+#recipe-chat .recipe-chat-card h3 { font-family:inherit; font-size:1.1rem; line-height:1.4; }
+#recipe-chat .recipe-chat-form { flex-shrink:0; width:100%; max-width:820px; align-self:center; padding:.85rem 0 .4rem; margin:0; border:0; background:var(--color-panel-strong); box-shadow:0 -14px 20px var(--color-panel-strong); border-radius:0; }
+#recipe-chat .recipe-chat-form > label { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+#recipe-chat .recipe-chat-input-row { display:flex; align-items:flex-end; padding:.5rem; border:1px solid #cddbd2; border-radius:22px; background:#f7f9f7; gap:.5rem; box-shadow:0 3px 12px #1a3a2808; }
+#recipe-chat textarea { border:0; background:transparent; box-shadow:none; resize:none; min-height:48px; max-height:140px; padding:.65rem .8rem; font-size:.9rem; }
+#recipe-chat textarea:focus { outline:none; }
+#recipe-chat .recipe-chat-input-row:focus-within { outline:2px solid #89b8a7; outline-offset:2px; }
+#recipe-chat #recipe-chat-send { border-radius:50%; width:44px; height:44px; padding:0; flex-shrink:0; background:#17685d; color:white; font-size:0; }
+#recipe-chat #recipe-chat-send::after { content:'↑'; font-size:1.5rem; }
+#recipe-chat #recipe-chat-send span { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+#recipe-chat .recipe-chat-hint { text-align:center; font-size:.65rem; margin:.6rem 0; color:var(--color-muted); }
+#recipe-chat .recipe-chat-feedback { flex-shrink:0; margin:0 0 .4rem; font-size:.8rem; }
+body.dark-theme #recipe-chat .recipe-chat-input-row,body.dark-theme #recipe-chat .recipe-chat-message-user { background:#25332c; color:var(--color-text); }
+@media(max-width:760px) { #recipe-chat.visible { height:calc(100dvh - 220px); min-height:400px; padding:0 .85rem; border-radius:14px; } #recipe-chat .recipe-chat-prompts { grid-template-columns:1fr; gap:.45rem; } #recipe-chat .recipe-chat-prompts button { padding:.7rem; min-height:40px; } .chat-brand-label > span { display:none; } }

@@ -13,7 +13,7 @@ from food_identity_rules import (FOUNDATION_HEADS, BASIC_COMPOUNDS, COMPOSITE_MA
 
 from structural_identity_policy import (Evidence, REQUIRED_ATTRIBUTES, identity_form, semantic_head, required_evidence, generic_child, attribute_exception, derived_parts, purchased_compound_head, verified_whole_produce_base)
 
-ONTOLOGY_VERSION = 'food-identity-v3.17'
+ONTOLOGY_VERSION = 'food-identity-v3.18'
 
 @dataclass(frozen=True)
 class FoodIdentity:
@@ -541,6 +541,9 @@ def describe(text, *, feature=None, product=False):
         if color:values['variety']=color
     if values.get('family')=='produce' and values.get('subfamily')=='lettuce':
         variety=next((x for x in ('iceberg','romaine','butterhead','bibb') if has(detection,x)),None)
+        if variety:values['variety']=variety
+    if values.get('family')=='produce' and values.get('subfamily')=='tomato':
+        variety=next((x for x in ('cherry','grape','roma','plum','beefsteak') if has(detection,rf'\b{x}\b')),None)
         if variety:values['variety']=variety
     if product and values.get('family')=='meat' and has(detection,r'store sliced|deli sliced|oven roasted'):values['prepared']='cooked'
     if values.get('family')=='produce' and values.get('subfamily')=='cabbage':

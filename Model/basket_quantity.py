@@ -32,7 +32,7 @@ from product_compatibility import (
 )
 
 _COUNT_EVIDENCE_PATH=Path(__file__).with_name('verified_package_counts.json')
-OPTIMIZER_VERSION = "basket-optimizer-v9-lossless-quantities:"+hashlib.sha256(_COUNT_EVIDENCE_PATH.read_bytes()).hexdigest()[:12]
+OPTIMIZER_VERSION = "basket-optimizer-v10-counted-produce:"+hashlib.sha256(_COUNT_EVIDENCE_PATH.read_bytes()).hexdigest()[:12]
 
 
 UNKNOWN = "UNKNOWN"
@@ -461,6 +461,11 @@ def household_portion_grams(ingredient_key,unit):
     text=normalize_text(ingredient_key)
     if identity.family=='cheese' and identity.subfamily=='provolone' and unit=='slice':return 28.0
     if identity.family=='produce' and identity.state in (None,'fresh'):
+        # USDA SR Legacy #170457: one cherry tomato weighs 17 g.
+        if identity.subfamily=='tomato' and unit=='tomato':
+            if identity.variety=='cherry':return 17.0
+            if identity.variety in ('roma','plum'):return 62.0
+            if identity.variety is None:return 91.0 if re.search(r'\bsmall\b',text) else 182.0 if re.search(r'\blarge\b',text) else 123.0
         if identity.subfamily=='onion' and unit=='onion':
             return 70.0 if re.search(r'\bsmall\b',text) else 150.0 if re.search(r'\blarge\b',text) else 110.0
         if identity.subfamily=='lettuce' and identity.variety=='romaine':

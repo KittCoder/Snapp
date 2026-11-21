@@ -5,6 +5,7 @@
   let id=null,result=null,sequence=0,controller=null,status="idle";
   try{id=localStorage.getItem(key);}catch(_){}
   const node=(tag,text)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;return n;};
+  const cache=new Map();let pending=null,currentKey=null;
   const list=document.getElementById('shopping-list');
   const header=node('section');header.className='active-shopping-store';header.setAttribute('aria-live','polite');
   if(list)list.before(header);
@@ -29,26 +30,43 @@
   function recipes(){
     return scheduledMeals.map(window.SNAPP_RECIPE_REQUIREMENTS);
   }
-  async function refresh(){
-    const version=++sequence,storeId=id;controller?.abort();controller=new AbortController();result=null;
-    const basket=recipes();
-    if(!storeId||!basket.length){status="idle";paint(storeId?'Add recipes to price your basket.':'Choose your shopping store to see prices.');return;}
+  function refresh(force=false){
+    const storeId=id,basket=recipes();
+    const pantry=typeof pantryItems==='undefined'?[]:pantryItems.map(({name,quantity})=>({name,quantity}));
+    const inventory=window.SNAPP_STORES.stores.find(s=>s.id===storeId)?.inventory_version;
+    const requestKey=JSON.stringify({storeId,inventory,basket,pantry});
+    if(!force&&pending?.key===requestKey)return pending.promise;
+    const saved=cache.get(requestKey);
+    const single=!force&&basket.length===1?window.SNAPP_RECIPE_PRICES?.peek(basket[0]):null;
+    if(!force&&((saved&&Date.now()-saved.time<120000)||single)){
+      ++sequence;controller?.abort();pending=null;currentKey=requestKey;
+      result=single||saved.result;status='ready';paint('Prices from your active store.');return Promise.resolve();
+    }
+    const version=++sequence;controller?.abort();controller=new AbortController();
+    if(currentKey!==requestKey)result=null;
+    currentKey=requestKey;
+    if(!storeId||!basket.length){result=null;status='idle';paint(storeId?'Add recipes to price your basket.':'Choose your shopping store to see prices.');return Promise.resolve();}
     status='loading';paint('Updating prices for your store…');
-    try{
-      const data=await window.SNAPP_PRICE_REQUEST('/api/shopping/compare',{store_ids:[storeId],recipes:basket,
-        ...(typeof pantryItems!=='undefined'?{pantry_items:pantryItems.map(({name,quantity})=>({name,quantity}))}:{})},controller.signal);
-      if(version!==sequence||id!==storeId)return;
-      if(!data)throw new Error('Pricing unavailable');
-      const priced=data.stores.find(s=>s.id===storeId);
-      if(!priced||data.stores.length!==1)throw new Error('Store mismatch');
-      result={...priced,basket_id:data.basket_id,versions:data.versions};status='ready';paint('Prices from your active store. Recipe quantities adjusted for servings and pantry. Fees and taxes excluded.');
-    }catch(_){if(version===sequence){status='error';paint('Price temporarily unavailable');const retry=node('button','Retry');retry.type='button';retry.addEventListener('click',refresh);header.append(retry);}}
+    const promise=(async()=>{
+      try{
+        const data=await window.SNAPP_PRICE_REQUEST('/api/shopping/compare',{store_ids:[storeId],recipes:basket,
+          ...(typeof pantryItems!=='undefined'?{pantry_items:pantry}:{})},controller.signal);
+        if(version!==sequence||id!==storeId)return;
+        const priced=data?.stores?.find(s=>s.id===storeId);
+        if(!priced||data.stores.length!==1)throw new Error('Store mismatch');
+        result={...priced,basket_id:data.basket_id,versions:data.versions};status='ready';
+        cache.set(requestKey,{time:Date.now(),result});while(cache.size>16)cache.delete(cache.keys().next().value);
+        paint('Prices from your active store. Recipe quantities adjusted for servings and pantry. Fees and taxes excluded.');
+      }catch(_){if(version===sequence){status='error';paint('Price temporarily unavailable');const retry=node('button','Retry');retry.type='button';retry.addEventListener('click',()=>refresh(true));header.append(retry);}}
+      finally{if(pending?.key===requestKey&&version===sequence)pending=null;}
+    })();
+    pending={key:requestKey,promise};return promise;
   }
-  window.SNAPP_ACTIVE_STORE={get id(){return id;},get result(){return result;},get status(){return status;},refresh,
-    select(next){if(!window.SNAPP_STORES.stores.some(s=>s.id===next))return;id=next;result=null;try{localStorage.setItem(key,id);}catch(_){}document.dispatchEvent(new Event('snapp:active-store'));return refresh();},
-    items(){if(!result||result.id!==id)return [];return result.product_selections.map((p,index)=>({...p,store_id:id,store_name:result.store_name,inventory_version:result.inventory_version,package_price:p.deal?.package_price,cost_known:p.checkout_cost!=null,id:`${id}:${p.product_id}:${index}`,name:p.display_name||p.ingredients[0],requestedIngredient:p.display_name||p.ingredients[0],productName:p.product_name,pantryName:p.pantry_transfer?.name || (p.ingredients?.[0]||p.display_name||'').replace(/^\s*\d+(?:\.\d+)?(?:\s+\d+\/\d+|\/\d+)?\s*(?:(?:fluid ounces?|fl oz|ounces?|oz|pounds?|lbs?|grams?|g|milliliters?|ml|liters?|cups?|tablespoons?|teaspoons?|count|each|slices?|cloves?)\b\s*)?/i,''),pantryQuantity:p.pantry_transfer?.quantity || (p.total_required?.quantity!=null?`${p.total_required.quantity} ${p.total_required.unit||''}`:null),quantity:p.total_required?.quantity!=null?`${p.total_required.quantity} ${p.total_required.unit||''}`:p.packages_needed==null?'Quantity unverified':`${p.packages_needed} package(s)`,dishName:'Scheduled meals',category:'Other',deal:p.deal}));}
+  window.SNAPP_ACTIVE_STORE={get id(){return id;},get result(){return result;},get status(){return status;},refresh:()=>refresh(true),
+    select(next){if(!window.SNAPP_STORES.stores.some(s=>s.id===next))return;id=next;result=null;try{localStorage.setItem(key,id);}catch(_){}document.dispatchEvent(new Event('snapp:active-store'));return refresh(false);},
+    items(){if(!result||result.id!==id)return [];return result.product_selections.map((p,index)=>({...p,store_id:id,store_name:result.store_name,inventory_version:result.inventory_version,package_price:p.deal?.package_price,cost_known:p.checkout_cost!=null,id:`${id}:${p.product_id}:${index}`,name:p.display_name||p.ingredients[0],requestedIngredient:p.display_name||p.ingredients[0],productName:p.product_name,pantryName:p.pantry_transfer?.name || (p.ingredients?.[0]||p.display_name||'').replace(/^\s*\d+(?:\.\d+)?(?:\s+\d+\/\d+|\/\d+)?\s*(?:(?:fluid ounces?|fl oz|ounces?|oz|pounds?|lbs?|grams?|g|milliliters?|ml|liters?|cups?|tablespoons?|teaspoons?|count|each|slices?|cloves?)\b\s*)?/i,''),pantryQuantity:p.pantry_transfer?.quantity || (p.total_required?.quantity!=null?`${p.total_required.quantity} ${p.total_required.unit||''}`:null),quantity:p.total_required?.quantity!=null?(window.SNAPP_FORMAT_QUANTITY?.(p.total_required)||`${p.total_required.quantity} ${p.total_required.unit||''}`):p.packages_needed==null?'Quantity unverified':`${p.packages_needed} package(s)`,dishName:'Scheduled meals',category:'Other',deal:p.deal}));}
   };
-  document.addEventListener('snapp:shopping-changed',refresh);
+  document.addEventListener('snapp:shopping-changed',()=>refresh(false));
   let restored=false;
   window.SNAPP_STORES.subscribe(stores=>{
     if(!stores.length){paint();return;}

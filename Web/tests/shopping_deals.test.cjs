@@ -80,5 +80,5 @@ test('untrusted external links cannot execute scripts or contain credentials',()
 
 test('active-store Shopping rows show product, package size, package price and checkout without internal scores',()=>{
  const r=render({},'en',[{id:'rice',store_id:'ctown:PS41_311',name:'rice',requestedIngredient:'rice',quantity:'8 ounce',dishName:'Scheduled meals',productName:'Carolina Rice',package_size:'16 ounce',package_price:2,packages_needed:1,checkout_cost:2,deal:{match_score:.99,quality_tier:'A'}}]);
- assert.match(r.text,/Carolina Rice · 16 ounce/);assert.match(r.text,/1 package\(s\) × \$2.00 · \$2.00 checkout/);assert.doesNotMatch(r.text,/match_score|quality_tier|0.99/);
+ assert.match(r.text,/Carolina Rice · 16 ounce/);assert.match(r.text,/1 package × \$2.00 · \$2.00 checkout/);assert.doesNotMatch(r.text,/match_score|quality_tier|0.99/);
 });

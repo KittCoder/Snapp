@@ -15,7 +15,7 @@ DEAL_OPTIMIZER_VERSION=hashlib.sha256(Path(deal_optimizer.__file__).read_bytes()
 from deal_presentation import shopping_deal_fields
 from store_catalogs import StoreRegistry,CatalogError
 
-ADAPTER_VERSION='whole-store-comparison-v4-pricing-explanations'
+ADAPTER_VERSION='whole-store-comparison-v5-food-requirements'
 def money(values):return float(sum((Decimal(str(v)).quantize(Decimal('.01')) for v in values),Decimal(0)))
 
 def pantry_transfer_payload(lines, required, selected=None, reliable=False):
@@ -55,7 +55,8 @@ class BasketComparison:
         from store_requirements import prepare_recipes
         quantities = [(r.get('source_servings') or r.get('servings'), r.get('target_servings')) for r in recipes]
         prepared, pantry = prepare_recipes(recipes, pantry_items)
-        key = self.key({'recipes':prepared,'pantry':pantry,'servings':quantities},catalogs,semantic)
+        pricing_recipes=[{k:v for k,v in recipe.items() if k not in {'id','name','title'}} for recipe in prepared]
+        key = self.key({'recipes':pricing_recipes,'pantry':pantry,'servings':quantities},catalogs,semantic)
         cache_key = (key, tuple(sorted((c.metadata.id, getattr(c, 'cache_version', None)) for c in catalogs)))
         return prepared, pantry, key, cache_key
 

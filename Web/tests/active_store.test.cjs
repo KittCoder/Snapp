@@ -8,7 +8,7 @@ function setup(savedId=null){
  const context=vm.createContext({setTimeout,clearTimeout,Intl,AbortController,Event,localStorage:{getItem:k=>values.get(k),setItem:(k,v)=>values.set(k,v)},scheduledMeals:[{recipe:{ingredients:['8 oz rice','2 oz butter']}}],renderShoppingList:()=>{},showPanel:()=>{},getApiEndpoints:p=>[p],document:{getElementById:()=>new E(),createElement:()=>{const e=new E();elements.push(e);return e;},addEventListener:(n,f)=>events[n]=f,dispatchEvent:e=>events[e.type]?.()},window:{SNAPP_STORES:{stores:ids.map(id=>({id,store_name:id,retailer:id.startsWith('food_bazaar:')?'food_bazaar':id.startsWith('ctown')?'ctown':'morton_williams',address:'Test street'})),subscribe:f=>f(ids.map(id=>({id})))}},fetch:(url,options)=>new Promise(resolve=>requests.push({url,options,finish:(id,total,complete=true)=>resolve({ok:true,json:async()=>({basket_id:id,stores:[{id,store_name:id,inventory_version:'v1',complete,basket_total:complete?total:null,checkout_total_known:total,unknown_cost_items:complete?[]:[{ingredients:['butter'],reason:'UNKNOWN_COST'}],product_selections:[{product_id:id+'-rice',product_name:'Rice',ingredients:['8 oz rice'],checkout_cost:total,deal:{package_price:total}}]}]})})}))});
  vm.runInContext(fs.readFileSync('Web/store_pricing_transport.js','utf8'),context);
  vm.runInContext(fs.readFileSync('Web/recipe_requirements.js','utf8'),context);
- vm.runInContext(fs.readFileSync('Web/active_store.js','utf8'),context);return {api:context.window.SNAPP_ACTIVE_STORE,requests,values,elements,events};
+ vm.runInContext(fs.readFileSync('Web/active_store.js','utf8'),context);return {api:context.window.SNAPP_ACTIVE_STORE,requests,values,elements,events,context};
 }
 test('canonical store switch invalidates prices and displays independent backend totals, preserves partial basket',async()=>{
  const s=setup();const ids=['ctown:PS41_311','morton-williams','ctown:U41_186','food_bazaar:31553'];
@@ -27,7 +27,7 @@ test('late store A response cannot overwrite store B and old request is aborted'
  assert.equal(s.requests[0].options.signal.aborted,true);
  s.requests[1].finish('ctown:U41_186',6);await b;s.requests[0].finish('ctown:PS41_311',99);await a;
  assert.equal(s.api.result.id,'ctown:U41_186');assert.equal(s.api.result.basket_total,6);
- s.events['snapp:shopping-changed']();assert.equal(s.api.result,null);assert.equal(s.requests.length,3);s.requests[2].finish('ctown:U41_186',6);await new Promise(resolve=>setImmediate(resolve));
+ s.events['snapp:shopping-changed']();assert.equal(s.api.result.basket_total,6);assert.equal(s.requests.length,2);
 });
 test('wrong-store server result is rejected',async()=>{const s=setup(),p=s.api.select('ctown:PS41_311');s.requests[0].finish('morton-williams',99);await p;assert.equal(s.api.result,null);assert.match(text(s.elements[0]),/Price temporarily unavailable/);});
 
@@ -36,4 +36,18 @@ test('restored store prices the saved basket once registry is available',async()
  assert.deepEqual(JSON.parse(s.requests[0].options.body).store_ids,['ctown:PS41_311']);
  s.requests[0].finish('ctown:PS41_311',6);await new Promise(resolve=>setImmediate(resolve));
  assert.equal(s.api.result.basket_total,6);
+});
+
+test('repeated changes join one pending basket request and manual refresh can bypass the cache',async()=>{
+ const s=setup();const first=s.api.select('morton-williams');
+ s.events['snapp:shopping-changed']();s.events['snapp:shopping-changed']();assert.equal(s.requests.length,1);
+ s.requests[0].finish('morton-williams',8);await first;
+ s.events['snapp:shopping-changed']();assert.equal(s.requests.length,1);assert.equal(s.api.result.basket_total,8);
+ const fresh=s.api.refresh();assert.equal(s.requests.length,2);assert.equal(s.api.result.basket_total,8);
+ s.requests[1].finish('morton-williams',9);await fresh;assert.equal(s.api.result.basket_total,9);
+});
+
+test('one scheduled recipe reuses its calculated card price immediately without a budget request',async()=>{
+ const s=setup();s.context.window.SNAPP_RECIPE_PRICES={peek:()=>({id:'morton-williams',inventory_version:'v1',complete:true,basket_total:4,product_selections:[]})};
+ await s.api.select('morton-williams');assert.equal(s.requests.length,0);assert.equal(s.api.result.basket_total,4);
 });

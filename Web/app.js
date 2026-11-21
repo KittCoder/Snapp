@@ -2358,11 +2358,12 @@ function renderShoppingList(priceRefresh = false) {
       note.textContent = t("copy.get.arg0.arg1.arg2", {arg0: (item.quantity), arg1: (item.dishName), arg2: (item.unavailable ? " · Unavailable" : "")});
       details.append(name, note);
       if (item.store_id) {
-        const packageText = [item.productName, item.package_size].filter(Boolean).join(" · ");
+        const namedSize=/\b\d+(?:\.\d+)?\s*(?:oz|ounces?|pounds?|lbs?|count|ct|grams?|g|milliliters?|ml|liters?|fluid ounces?)\b/i.test(item.productName||"");
+        const packageText = [item.productName,namedSize?null:item.package_size].filter(Boolean).join(" · ");
         details.append(document.createTextNode(packageText));
         const cost = document.createElement("small");
         cost.className = "shopping-package-cost";
-        cost.textContent = item.checkout_cost == null ? "Package cost unverified" : `${item.packages_needed == null ? "" : item.packages_needed + " package(s) × "}${item.package_price == null ? "" : currencyFormatter.format(item.package_price)} · ${currencyFormatter.format(item.checkout_cost)} checkout`;
+        cost.textContent = item.checkout_cost == null ? "Package cost unverified" : `${item.packages_needed == null ? "" : item.packages_needed + (item.packages_needed === 1 ? " package × " : " packages × ")}${item.package_price == null ? "" : currencyFormatter.format(item.package_price)} · ${currencyFormatter.format(item.checkout_cost)} checkout`;
         details.append(cost);
       } else appendShoppingDeal(details, item);
 
@@ -2837,35 +2838,27 @@ async function addMealToSchedule(dish) {
     scheduled_slot: null,
   };
 
-  if (supabaseClient && currentUser) {
-    const { data, error } = await supabaseClient
-      .from("user_scheduled_meals")
-      .insert({
-        user_id: currentUser.id,
-        meal_name: dish.name,
-        scheduled_day: "Unscheduled",
-        meal_data: scheduledMeal,
-      })
-      .select("id,scheduled_day,meal_data,created_at")
-      .single();
-
-    if (!error && data) {
-      scheduledMeals.push(normalizeScheduledMeal(data));
-      saveScheduledMealsToStorage();
-      // Active-store baskets allocate pantry quantities together on the server.
-      if (!window.SNAPP_ACTIVE_STORE) await consumePantryForScheduledDish(dish);
-      renderSchedule();
-      showPanel("schedule");
-      return;
-    }
-  }
-
+  // Paint the local plan and its cached budget before cloud persistence.
   scheduledMeals.push(scheduledMeal);
   saveScheduledMealsToStorage();
-  // Active-store baskets allocate pantry quantities together on the server.
   if (!window.SNAPP_ACTIVE_STORE) await consumePantryForScheduledDish(dish);
   renderSchedule();
   showPanel("schedule");
+  if (supabaseClient && currentUser) {
+    const userId=currentUser.id;
+    try {
+      const {data,error}=await supabaseClient.from("user_scheduled_meals").insert({
+        user_id:userId,meal_name:dish.name,scheduled_day:"Unscheduled",meal_data:scheduledMeal,
+      }).select("id,scheduled_day,meal_data,created_at").single();
+      const index=scheduledMeals.indexOf(scheduledMeal);
+      if(!error&&data&&currentUser?.id===userId&&index>=0){
+        scheduledMeals[index]=normalizeScheduledMeal(data);
+        saveScheduledMealsToStorage();renderSchedule();
+      }else if(!error&&data&&currentUser?.id===userId&&index<0){
+        await supabaseClient.from("user_scheduled_meals").delete().eq("id",data.id).eq("user_id",userId);
+      }
+    }catch { /* The locally saved plan remains available for this session. */ }
+  }
 }
 
 function openDishModal(dish) {
@@ -4487,8 +4480,7 @@ const recipeChat = (() => {
       history.scrollTop = reply.offsetTop;
       if (panel.classList.contains("visible")) {
         requestAnimationFrame(() => {
-          const recipes = reply.querySelector(".recipe-chat-results") || reply;
-          recipes.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" });
+          history.scrollTo({ top:reply.offsetTop, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
         });
       }
     } catch {

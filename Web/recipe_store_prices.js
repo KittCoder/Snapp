@@ -141,6 +141,10 @@
       if(update(entry))schedule();
       return host;
     },
+    peek(recipe){
+      const entry={recipe},key=context(entry),value=cached(key,currentStore());
+      return value&&!value.stale?value.result:null;
+    },
     refresh:invalidate
   };
   document.addEventListener('snapp:active-store',invalidate);

@@ -28,6 +28,10 @@ def prepare_recipes(recipes, pantry_items=None):
                 raise CatalogError('Scaling requires positive source and target servings')
         lines = []
         for item in canonical_recipe_ingredients(recipe):
+            # Physical cooking supplies remain in the stored recipe, but are
+            # not food ingredients and must not make its food price partial.
+            if re.fullmatch(r'(?:wooden |bamboo )?(?:toothpicks?|skewers?)|parchment paper|baking paper',item.ingredient_name.strip(),re.I):
+                continue
             text = item.raw_text if item.source_schema == 'raw_text_line' and item.package_quantity is None else item.matcher_text
             if multiplier != 1 and item.quantity is not None:
                 amount=item.quantity*multiplier

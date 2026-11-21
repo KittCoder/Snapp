@@ -783,6 +783,8 @@ def parse_ingredient(raw_text: str) -> ParsedIngredient:
         words=canonical_source.split()
         if len(words)==2 and words[0] in {'red','yellow','white','green','brown'} and words[1] in COUNT_INGREDIENT_UNITS:
             unit=words[1].rstrip('s')
+        elif len(words)==2 and words[0] in {'cherry','grape','roma','plum','beefsteak'} and words[1] in {'tomato','tomatoes'}:
+            unit='tomato'
         elif re.fullmatch(r'(?:ciabatta|hamburger|burger|brioche|dinner|kaiser) (?:rolls?|buns?)',canonical_source):
             unit='roll'
     canonical = apply_alias(canonical_source)
