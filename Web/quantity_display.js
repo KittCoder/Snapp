@@ -2,6 +2,8 @@
 (() => {
  'use strict';
  const units={teaspoon:['teaspoon','teaspoons'],tablespoon:['tablespoon','tablespoons'],cup:['cup','cups'],ounce:['ounce','ounces'],pound:['pound','pounds'],gram:['gram','grams'],milliliter:['mL','mL'],liter:['liter','liters'],egg:['egg','eggs'],onion:['onion','onions'],tomato:['tomato','tomatoes'],slice:['slice','slices'],leaf:['leaf','leaves'],roll:['roll','rolls'],count:['item','items'],each:['item','items']};
+ for(const name of ['kilogram','pint','quart','gallon','clove','head','stalk','sprig','stick','can','bottle','package','jar','carrot','pepper','avocado','lemon','lime'])units[name]=[name,name+'s'];
+ units.bunch=['bunch','bunches'];units.potato=['potato','potatoes'];units['fluid ounce']=['fluid ounce','fluid ounces'];
  const number=n=>{
   if(n>0&&n<.01)return '< 0.01';
   const whole=Math.floor(n),part=n-whole;
