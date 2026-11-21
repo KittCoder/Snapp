@@ -149,7 +149,12 @@
     refresh:invalidate
   };
   document.addEventListener('snapp:active-store',invalidate);
-  document.addEventListener('snapp:shopping-changed',invalidate);
+  document.addEventListener('snapp:shopping-changed',()=>{
+    // Schedule renders do not change recipe prices. Only cancel work when
+    // its actual store/ingredients/servings/pantry context has changed.
+    if([...entries.values()].some(entry=>context(entry)!==entry.key))invalidate();
+    else schedule();
+  });
   window.SNAPP_STORES.subscribe?.(stores=>{
     for(const store of stores)if(store.inventory_version){
       const previous=inventoryVersions.get(store.id);

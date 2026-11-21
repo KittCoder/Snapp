@@ -123,3 +123,10 @@ test('physical cooking supplies stay visible separately from the food estimate',
  s.requests[0].finish(false,{recipe_supplies:['20 toothpicks']});await tick();
  assert.match(text(card),/\$8.00 total/);assert.match(text(card),/Cooking supplies not included in the food estimate: 20 toothpicks/);
 });
+
+test('schedule-only events do not cancel or restart an in-flight recipe estimate',async()=>{
+ const s=setup(),card=s.register({ingredients:['1 cup rice']});await tick();
+ s.events['snapp:shopping-changed']();s.events['snapp:shopping-changed']();await tick();
+ assert.equal(s.requests.length,1);assert.equal(s.requests[0].options.signal.aborted,false);
+ s.requests[0].finish();await tick();assert.match(text(card),/\$8.00 total/);
+});
