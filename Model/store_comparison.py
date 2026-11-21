@@ -81,7 +81,7 @@ class BasketComparison:
         cached = self._cached(plan)
         return cached if cached is not None else self._calculate(plan,catalogs,mw_semantic)
 
-    def compare_recipes(self, recipes, store_id, mw_semantic=False, pantry_items=None):
+    def compare_recipes(self, recipes, store_id, mw_semantic=False, pantry_items=None, on_result=None):
         """One version check and one matching/embedding batch; independent purchases."""
         validate_recipes(recipes)
         if len(recipes)>10:
@@ -91,6 +91,14 @@ class BasketComparison:
         catalog = catalogs[0]
         plans = [self._plan([recipe],catalogs,mw_semantic,pantry_items) for recipe in recipes]
         results = [self._cached(plan) for plan in plans]
+        def publish(i):
+            result=results[i]
+            price=dict(result['stores'][0],recipe_id=str(recipes[i].get('id')),basket_id=result['basket_id'],
+                       versions=result['versions'],cache_hit=result['cache_hit'])
+            if on_result:on_result(price)
+            return price
+        for i,value in enumerate(results):
+            if value is not None and on_result:publish(i)
         missing = [i for i, value in enumerate(results) if value is None]
         if missing:
             from types import SimpleNamespace
@@ -110,6 +118,7 @@ class BasketComparison:
                 try:
                     for i in missing:
                         results[i] = self._calculate(plans[i],[snapshot],mw_semantic,matches)
+                        if on_result:publish(i)
                 finally:
                     builder._basket_cache.clear()
         return [dict(result['stores'][0],recipe_id=str(recipe.get('id')),basket_id=result['basket_id'],

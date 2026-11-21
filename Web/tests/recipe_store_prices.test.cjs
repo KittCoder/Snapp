@@ -92,3 +92,28 @@ test('refreshing another card preserves an expanded partial-estimate explanation
  details.open=true;s.register({ingredients:['2 oz butter']});await tick();
  assert.equal(host.children.includes(details),true);assert.equal(details.open,true);s.requests[1].finish();await tick();
 });
+
+test('a completed streamed price paints its card and cache before the batch finishes',async()=>{
+ const s=setup();let publish,finish;
+ s.context.window.SNAPP_PRICE_REQUEST=(path,body,signal,timeout,onPrice)=>new Promise(resolve=>{publish=onPrice;finish=resolve;});
+ const first=s.register({ingredients:['8 oz rice']}),second=s.register({ingredients:['2 oz butter']});await tick();
+ const price={id:'ctown:PS41_311',recipe_id:'0',inventory_version:'v2',complete:true,basket_total:8,checkout_total_known:8,unknown_cost_items:[]};
+ publish({store_id:price.id,price});
+ assert.match(text(first),/\$8.00 total/);assert.match(text(second),/checking price/);
+ const reopened=s.register({ingredients:['8 oz rice']});assert.match(text(reopened),/\$8.00 total/);
+ finish({store_id:price.id,prices:[price,{...price,recipe_id:'1'}]});await tick();assert.match(text(second),/\$8.00 total/);
+});
+
+test('all cards assembled in a detached chat response remain registered until mounted',async()=>{
+ const s=setup(),hosts=[];
+ for(let i=0;i<5;i++){
+  const card=s.register({id:'r'+i,ingredients:[String(i+1)+' oz rice']});
+  const host=card.children[0];host.isConnected=false;hosts.push(host);
+ }
+ // recipeCard builds the entire response before history.append mounts it.
+ hosts.forEach(host=>host.isConnected=true);
+ await tick();assert.equal(s.requests.length,1);
+ assert.equal(JSON.parse(s.requests[0].options.body).recipes.length,5);
+ s.requests[0].finish();await tick();
+ for(const card of s.cards)assert.match(text(card),/\$8.00 total/);
+});

@@ -106,7 +106,14 @@
     await Promise.all(groups.map(async tasks=>{
       try{
         const recipes=tasks.map((task,index)=>({...task.requirements,id:String(index)}));
-        const data=await window.SNAPP_PRICE_REQUEST('/api/recipes/store-prices',{store_id:storeId,recipes,pantry_items:pantry()},signal);
+        const accept=message=>{
+          if(seq!==version||signal.aborted||window.SNAPP_ACTIVE_STORE?.id!==storeId)return;
+          const result=message.price,index=recipes.findIndex(r=>r.id===result?.recipe_id);
+          if(message.store_id!==storeId||index<0||result.id!==storeId||!result.inventory_version)throw new Error('Store mismatch');
+          const task=tasks[index];remember(task.key,result);
+          for(const entry of entries.values())if(entry.key===task.key){render(entry,result);entry.state='ready';}
+        };
+        const data=await window.SNAPP_PRICE_REQUEST('/api/recipes/store-prices',{store_id:storeId,recipes,pantry_items:pantry()},signal,45000,accept);
         if(seq!==version||signal.aborted||window.SNAPP_ACTIVE_STORE?.id!==storeId)return;
         if(data?.store_id!==storeId||!Array.isArray(data.prices))throw new Error('Store mismatch');
         const results=tasks.map((task,index)=>{
@@ -130,7 +137,6 @@
   }
   window.SNAPP_RECIPE_PRICES={
     register(card,recipe){
-      for(const [host] of entries)if(host.isConnected===false)entries.delete(host);
       const host=node('div','','recipe-store-price'),entry={host,recipe,key:null};card.append(host);entries.set(host,entry);
       if(update(entry))schedule();
       return host;

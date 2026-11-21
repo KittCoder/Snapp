@@ -3312,3 +3312,77 @@ html[dir="rtl"] .recipe-chat-error { border-left: 0; border-right: 3px solid var
   #budget .budget-editor-controls button { width: 100%; }
   #budget .budget-display { padding: 1.5rem 1rem; min-height: 200px; }
 }
+
+/* Store discovery: generous location cards, local brand assets, clear selection. */
+#my .my-stores-intro { max-width: 720px; padding-bottom: 1.8rem; }
+#my .my-stores-intro h2 { letter-spacing: -.045em; }
+#my .stores-toolbar { display:flex; align-items:center; justify-content:space-between; gap:2rem; padding:1.4rem 1.6rem; background:#f5f8f5; border:1px solid #dce6de; border-radius:18px; margin-bottom:1.4rem; }
+#my .store-search-form { margin:0; flex:1 1 440px; max-width:560px; }
+#my .store-search-form label { font-size:.82rem; margin-bottom:.5rem; }
+#my .store-search-controls { gap:.6rem; }
+#my .store-search-controls input { width:100%; min-width:0; background:white; }
+#my .store-search-controls button { white-space:nowrap; font-size:.85rem; }
+.stores-toolbar-note { display:flex; align-items:center; gap:.9rem; flex:0 1 320px; }
+.stores-toolbar-note strong { font-size:.9rem; }
+.stores-toolbar-note p { margin:.25rem 0 0; font-size:.8rem; color:var(--color-muted); line-height:1.6; }
+.stores-location-icon { display:grid; place-items:center; width:38px; height:38px; border:1px solid #cbded2; border-radius:50%; color:#147d70; flex-shrink:0; font-size:1.35rem; }
+.store-chain-filters { display:flex; flex-wrap:wrap; gap:.5rem; margin:.4rem 0 1rem; }
+.store-chain-filter { display:flex; align-items:center; gap:.65rem; border:1px solid #d6e1da; background:white; color:#4e6057; padding:.6rem .9rem; border-radius:100px; font-size:.8rem; font-weight:600; cursor:pointer; }
+.store-chain-filter span { background:#eff3ef; border-radius:100px; padding:.1rem .45rem; font-size:.72rem; }
+.store-chain-filter[aria-pressed="true"] { background:#17685d; color:white; border-color:#17685d; }
+.store-chain-filter[aria-pressed="true"] span { background:#ffffff25; }
+.store-chain-filter:focus-visible { outline:3px solid #dd9a36; outline-offset:3px; }
+#my .my-store-layout { display:grid; grid-template-columns:minmax(0,1fr) 290px; align-items:start; gap:1.5rem; }
+#my #my-store-status { font-size:.8rem; margin:.9rem 0; color:#627268; }
+#my #my-store-results { grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; }
+#my #my-store-results .catalog-store-card { padding:1.3rem; height:100%; box-sizing:border-box; gap:1.2rem; background:#fff; border-color:#dbe5de; border-radius:16px; box-shadow:0 2px 8px #173e3205; transition:box-shadow .18s,border-color .18s; }
+#my #my-store-results .catalog-store-card:hover { border-color:#81aa99; box-shadow:0 6px 20px #173e3210; }
+#my #my-store-results .catalog-store-card.selected { padding:calc(1.3rem - 1px); border:2px solid #177c6c; background:#f0f8f3; }
+#my .store-card-identity { display:flex; flex-direction:column; align-items:flex-start; gap:1rem; }
+#my .catalog-store-card h3 { font-family:inherit; font-size:1rem; font-weight:700; letter-spacing:-.02em; margin-bottom:.35rem; }
+#my .catalog-store-card p { font-size:.82rem; line-height:1.6; color:#5d6c63; }
+#my .catalog-store-card p + p { font-size:.75rem; margin-top:.35rem; color:#778379; }
+.retailer-badge.retailer-logo { width:105px; height:56px; border-radius:0; background:transparent; font-size:0; letter-spacing:normal; display:flex; justify-content:flex-start; }
+.retailer-logo img { display:block; width:auto; max-width:105px; height:auto; max-height:56px; object-fit:contain; }
+#my .store-card-meta { font-size:.72rem; gap:.5rem; margin-top:auto; color:#4f7462; }
+#my .catalog-store-card button { width:100%; border-color:#c4d8cd; background:white; color:#17685d; border-radius:9px; font-size:.8rem; padding:.7rem 1rem; }
+#my .catalog-store-card.selected button { background:#17685d; border-color:#17685d; color:white; }
+#my .catalog-store-card button:hover { background:#eaf3ed; }
+#my .catalog-store-card.selected button:hover { background:#12594f; }
+#my .catalog-store-card button:disabled { opacity:.5; cursor:default; }
+#my .selected-store-panel { position:sticky; top:110px; padding:1.4rem; border:1px solid #d5e3da; background:#f3f8f4; border-radius:18px; }
+#my .store-panel-eyebrow { margin:0 0 .7rem; font-size:.65rem; letter-spacing:.13em; color:#547465; font-weight:700; }
+#my .selected-store-panel h3 { font-size:1.4rem; line-height:1.25; margin:0 0 1.3rem; letter-spacing:-.025em; }
+#my #selected-store-list { margin:0; padding:0; list-style:none; }
+#my .active-store-summary { display:flex; flex-direction:column; align-items:flex-start; gap:.6rem; padding:0 0 1.4rem; background:transparent; border-bottom:1px solid #d5e3da; border-radius:0; }
+#my .active-store-summary strong { font-size:.95rem; color:#24392e; }
+#my .active-store-summary p { margin:0; font-size:.8rem; line-height:1.5; }
+#my .active-store-summary small { color:#17685d; font-size:.72rem; font-weight:600; }
+.store-panel-explainer { padding:1.2rem 0; }
+.store-panel-explainer strong { font-size:.8rem; }
+.store-panel-explainer p,.store-selection-empty { font-size:.8rem; line-height:1.65; color:#617269; margin:.35rem 0 0; }
+.store-recipe-link { display:flex; justify-content:space-between; gap:.5rem; color:#17685d; font-size:.8rem; font-weight:700; text-decoration:none; padding:.9rem 0 0; border-top:1px solid #d5e3da; }
+@media(max-width:1000px) { #my .my-store-layout { grid-template-columns:minmax(0,1fr) 250px; } .stores-toolbar-note { display:none; } }
+@media(max-width:760px) { #my .my-store-layout { grid-template-columns:1fr; } #my .selected-store-panel { position:static; grid-row:1; } #my .stores-toolbar { padding:1rem; } #my .store-search-form { max-width:none; } #my .selected-store-panel h3 { font-size:1.2rem; } .store-panel-explainer { padding:.8rem 0; } }
+@media(max-width:480px) { #my #my-store-results { grid-template-columns:1fr; } #my .store-search-controls { flex-direction:column; } #my .store-search-controls button { width:100%; } .store-chain-filter { font-size:.75rem; padding:.5rem .7rem; } }
+.retailer-badge.retailer-logo[data-retailer="ctown"] { background:#23352d; padding:8px; border-radius:8px; }
+.retailer-badge.retailer-logo[data-retailer="ctown"] img { max-width:89px; }
+body.dark-theme #my .stores-toolbar,body.dark-theme #my .selected-store-panel { background:var(--color-panel-strong); border-color:var(--color-border); }
+body.dark-theme #my #my-store-results .catalog-store-card,body.dark-theme .store-chain-filter,body.dark-theme #my .store-search-controls input { background:var(--color-panel-strong); color:var(--color-text); border-color:var(--color-border); }
+body.dark-theme #my #my-store-results .catalog-store-card.selected { background:#183d32; border-color:var(--color-primary); }
+body.dark-theme #my .catalog-store-card p,body.dark-theme #my .active-store-summary strong,body.dark-theme #my .store-card-meta,body.dark-theme #my .active-store-summary small,body.dark-theme #my #my-store-status,body.dark-theme .store-panel-explainer p,body.dark-theme .store-recipe-link { color:var(--color-text); }
+body.dark-theme .retailer-badge.retailer-logo { background:#fff; padding:6px; border-radius:8px; }
+body.dark-theme .retailer-logo img { max-width:93px; }
+body.dark-theme .retailer-badge.retailer-logo[data-retailer="ctown"] { background:#23352d; }
+body.dark-theme .store-chain-filter[aria-pressed="true"] { background:#17685d; }
+@media(max-width:760px) {
+ .top-bar { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:.8rem; padding:.8rem 1rem; }
+ .top-bar .brand { grid-column:1; grid-row:1; }
+ .top-bar .app-switch { grid-column:2; grid-row:1; width:auto; }
+ .top-bar .app-switch button { font-size:.73rem; padding:.45rem .6rem; }
+ .top-bar .global-language-control { grid-column:1; grid-row:2; width:130px; }
+ .top-bar .account-status { grid-column:2; grid-row:2; width:auto; font-size:.75rem; }
+ .top-bar .nav-buttons { grid-column:1 / -1; grid-row:3; flex-wrap:nowrap; overflow-x:auto; width:100%; gap:.3rem; padding-bottom:.25rem; scrollbar-width:thin; }
+ .top-bar .nav-button { flex:0 0 auto; white-space:nowrap; font-size:.78rem; padding:.5rem .75rem; }
+}
+@media(max-width:760px) { .top-bar .app-switch button { white-space:nowrap; } }

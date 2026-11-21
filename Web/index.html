@@ -773,6 +773,7 @@
 
       <section id="my" class="panel">
         <div class="my-stores-intro"><p class="eyebrow"><span data-i18n="copy.good.food.close.to.home">Good food, close to home</span></p><h2><span data-i18n="copy.my.stores">My stores</span></h2><p><span data-i18n="copy.find.your.neighborhood.favorites.select.where.you.like.to">Find your neighborhood favorites. Select where you like to shop.</span></p></div>
+        <div class="stores-toolbar">
         <form id="my-store-form" class="store-search-form">
           <label for="my-zip-code"><span data-i18n="copy.zip.code">ZIP code</span></label>
           <div class="store-search-controls">
@@ -789,6 +790,9 @@
             <button type="submit"><span data-i18n="copy.find.nearby.stores">Find nearby stores</span></button>
           </div>
         </form>
+        <div class="stores-toolbar-note"><span class="stores-location-icon" aria-hidden="true">↗</span><div><strong>Your neighborhood, connected.</strong><p>Compare local options. Choose one store for your recipe prices and shopping list.</p></div></div>
+        </div>
+        <div id="store-chain-filters" class="store-chain-filters" role="group" aria-label="Filter by grocery chain"></div>
         <div id="my-store-status" class="store-search-status" role="status" aria-live="polite"></div>
         <div id="my-store-start" class="my-store-start">
           <svg viewBox="0 0 80 80" fill="none" aria-hidden="true"><rect x="14" y="32" width="52" height="34" rx="5"/><path d="M10 32l8-18h44l8 18M10 32h60M30 32V14M50 32V14M27 66V45h15v21M51 44h7v9"/></svg>
@@ -798,8 +802,11 @@
         <div class="my-store-layout">
           <ul id="my-store-results" class="store-results selectable-store-results"></ul>
           <div class="selected-store-panel">
-            <h3>Your shopping store</h3>
+            <p class="store-panel-eyebrow">YOUR SHOPPING STORE</p>
+            <h3>Plan your next shop</h3>
             <ul id="selected-store-list"></ul>
+            <div class="store-panel-explainer"><strong>Everything stays in sync</strong><p>Your recipe estimates, weekly sales, and shopping list use the store you select.</p></div>
+            <a class="store-recipe-link" href="?panel=recipe-chat">Find something to cook <span aria-hidden="true">→</span></a>
           </div>
         </div>
         <p id="my-store-source" class="store-source" hidden>
