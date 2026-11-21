@@ -108,3 +108,8 @@ class ArtifactManifestTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class ShippedArtifactCompatibilityTests(unittest.TestCase):
+    def test_production_bundle_matches_running_matcher_and_optimizer(self):
+        result=validate_runtime_artifacts()
+        self.assertTrue(result.ok,result.errors)
