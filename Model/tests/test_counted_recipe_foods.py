@@ -19,6 +19,7 @@ class CountedRecipeFoodsTests(unittest.TestCase):
         prepared,pantry=prepare_recipes([{'ingredients':['20 toothpicks','20 cherry tomatoes','2 tablespoon olive oil']}],[])
         self.assertEqual(len(prepared[0]['ingredients']),2)
         self.assertEqual(pantry,[])
+        self.assertEqual(prepared[0]['recipe_supplies'],['20 toothpicks'])
 
     def test_pricing_cache_survives_card_to_schedule_recipe_id_and_title_changes(self):
         registry=FixtureRegistry();registry.stores={'a':catalog('a')}

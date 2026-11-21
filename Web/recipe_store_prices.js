@@ -61,6 +61,7 @@
       for(const item of result.unknown_cost_items)list.append(node('li',`${item.ingredients?.[0]||'Ingredient'} — ${reasons[item.detail||item.reason]||reasons.UNKNOWN_COST}`));
       details.append(list);entry.host.append(details);
     }
+    if(result.recipe_supplies?.length)entry.host.append(node('small','Cooking supplies not included in the food estimate: '+result.recipe_supplies.join(', ')));
     if(result.product_selections?.some(p=>p.warnings?.includes('recipe quantities converted using standard household measures')))entry.host.append(node('small','Recipe quantities use standard household estimates.'));
     else if(result.product_selections?.some(p=>p.warnings?.includes('recipe volume converted using standard ingredient weight')))entry.host.append(node('small','Volume-to-weight quantities use standard cooking estimates.'));
   }

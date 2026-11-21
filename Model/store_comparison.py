@@ -130,6 +130,8 @@ class BasketComparison:
         started=time.perf_counter();futures=[self.pool.submit(copy_context().run,self.store_basket,c,recipes,mw_semantic,matches) for c in catalogs];results=[f.result() for f in futures]
         for result in results:
             result['pantry_items'] = pantry
+            supplies=[item for recipe in recipes for item in recipe.get('recipe_supplies',[])]
+            if supplies:result['recipe_supplies']=supplies
             if not result['ingredients_requested']:
                 result.update(complete=True,basket_total=0.0)
         # Equal coverage alone is insufficient. Only complete, reliably costed baskets compare.

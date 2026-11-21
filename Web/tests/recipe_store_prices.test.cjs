@@ -117,3 +117,9 @@ test('all cards assembled in a detached chat response remain registered until mo
  s.requests[0].finish();await tick();
  for(const card of s.cards)assert.match(text(card),/\$8.00 total/);
 });
+
+test('physical cooking supplies stay visible separately from the food estimate',async()=>{
+ const s=setup(),card=s.register({ingredients:['1 oz rice','20 toothpicks']});await tick();
+ s.requests[0].finish(false,{recipe_supplies:['20 toothpicks']});await tick();
+ assert.match(text(card),/\$8.00 total/);assert.match(text(card),/Cooking supplies not included in the food estimate: 20 toothpicks/);
+});

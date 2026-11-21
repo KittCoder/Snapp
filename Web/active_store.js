@@ -22,6 +22,7 @@
       const total=node('p',result.complete?`Estimated checkout: ${amount}`:result.checkout_total_known>0?`Partial basket — ${amount} of known items`:'No reliable checkout estimate yet');total.className='checkout-summary-total';header.append(total);
       const group=(title,values)=>{if(!values?.length)return;const section=node('section');section.className='shopping-support-group';section.append(node('h4',title));const ul=node('ul');for(const value of values)ul.append(node('li',value));section.append(ul);header.append(section);};
       group('Pantry / already have',result.pantry_items);
+      group('Cooking supplies — not included in food total',result.recipe_supplies);
       group('Unavailable / could not price',(result.unknown_cost_items||[]).map(item=>item.ingredients[0]));
     }
     if(typeof renderShoppingList==='function')renderShoppingList(true);
