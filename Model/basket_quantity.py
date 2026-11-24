@@ -654,11 +654,11 @@ def parse_package_info(feature: dict[str, Any] | None) -> PackageInfo:
     feature=feature or {}
     package=_parse_package_info(feature)
     name=feature.get('original_product_name') or feature.get('normalized_name') or ''
-    identity=profile_from_query(name)[0].ontology
     record=audited_package_counts().get(feature.get('product_id'))
     if record and name==record['product_name'] and normalize_package_text(package.source_text)==normalize_package_text(record['raw_size_text']):
         package.item_count=record['item_count'];package.item_unit=record['item_unit'];package.item_count_source=record['source_url']
     elif package.base_unit=='count' and package.base_quantity:
+        identity=profile_from_query(name)[0].ontology
         # Count labels are interpreted as slices/rolls only with an explicit
         # purchased noun, never by assuming a mass-only bag contains N items.
         if identity.family in ('cheese','bread') and re.search(r'\bslic(?:es?|ed)\b',name,re.I):package.item_unit='slice'
@@ -819,6 +819,12 @@ def confidence_rank(value: str) -> int:
 
 
 def ingredient_aggregation_signature(ingredient_text: str) -> tuple[str, dict[str, Any]]:
+    signature, parsed = _ingredient_aggregation_signature(ingredient_text)
+    return signature, copy.deepcopy(parsed)
+
+
+@lru_cache(maxsize=4096)
+def _ingredient_aggregation_signature(ingredient_text: str) -> tuple[str, dict[str, Any]]:
     profile, parsed = profile_from_query(ingredient_text)
     parts = [
         profile.family or profile.canonical or normalize_text(parsed.get("canonical_name") or ingredient_text),

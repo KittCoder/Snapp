@@ -92,11 +92,11 @@ class BasketComparison:
         catalog = catalogs[0]
         plans = [self._plan([recipe],catalogs,mw_semantic,pantry_items) for recipe in recipes]
         results = [self._cached(plan) for plan in plans]
-        def publish(i):
+        def publish(i, emit=True):
             result=results[i]
             price=dict(result['stores'][0],recipe_id=str(recipes[i].get('id')),basket_id=result['basket_id'],
                        versions=result['versions'],cache_hit=result['cache_hit'])
-            if on_result:on_result(price)
+            if emit and on_result:on_result(price)
             return price
         for i,value in enumerate(results):
             if value is not None and on_result:publish(i)
@@ -104,6 +104,18 @@ class BasketComparison:
         if missing:
             from types import SimpleNamespace
             with catalog.lock, store_timing(store_id):
+                # Another request may have finished pricing while we waited for
+                # the catalog, such as opening a recipe from a result card.
+                pending = []
+                for i in missing:
+                    results[i] = self._cached(plans[i])
+                    if results[i] is None:
+                        pending.append(i)
+                    elif on_result:
+                        publish(i)
+                missing = pending
+                if not missing:
+                    return [publish(i, emit=False) for i in range(len(recipes))]
                 prepared_recipes = [recipe for i in missing for recipe in plans[i][0]]
                 prepared = catalog.request_catalog(prepared_recipes) if hasattr(catalog,'request_catalog') else catalog
                 builder = prepared.builder()
@@ -122,8 +134,7 @@ class BasketComparison:
                         if on_result:publish(i)
                 finally:
                     builder._basket_cache.clear()
-        return [dict(result['stores'][0],recipe_id=str(recipe.get('id')),basket_id=result['basket_id'],
-                     versions=result['versions'],cache_hit=result['cache_hit']) for recipe,result in zip(recipes,results)]
+        return [publish(i, emit=False) for i in range(len(recipes))]
 
     def _calculate(self, plan, catalogs, mw_semantic, matches=None):
         recipes, pantry, key, cache_key = plan

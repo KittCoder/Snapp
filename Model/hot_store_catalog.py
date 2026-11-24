@@ -1,6 +1,7 @@
 """Bounded worker-local store indexes; Supabase remains the versioned source of truth."""
 from collections import OrderedDict
 from concurrent.futures import Future, ThreadPoolExecutor
+from contextvars import copy_context
 import os
 import threading
 from catalog_timing import timing
@@ -91,35 +92,44 @@ class HotStoreCatalogCache:
             raise CatalogUnavailable('Inventory changed before store load')
         rows = []
         seen = set()
-        offset = 0
-        while True:
+        page_size = 900
+        page_workers = 4
+        product_count = catalog.metadata.product_count
+
+        def read_page(offset):
             page = catalog.gateway.select('store_products', {
                 'select': 'feature_json,identity_json,source_json,source_position',
                 'store_id': 'eq.' + catalog.metadata.id,
                 'inventory_version_id': 'eq.' + catalog.version_id,
-                'order': 'source_position.asc', 'offset': offset, 'limit': 900})
-            if not isinstance(page, list):
-                raise CatalogUnavailable('Invalid bulk inventory page')
-            for row in page:
-                feature = row['feature_json']
-                pid = feature.get('product_id')
-                source = row['source_json']
-                if not isinstance(pid, str) or not pid or pid in seen:
-                    raise CatalogUnavailable('Duplicate or missing bulk product ID')
-                if catalog.metadata.retailer == 'ctown' and (
-                        source.get('retailer') != 'ctown' or source.get('store_id') != catalog.metadata.store_id):
-                    raise CatalogUnavailable('Cross-store bulk inventory rejected')
-                seen.add(pid)
-                # Keep matching/package features and identities, never source row blobs.
-                rows.append({'feature_json': feature, 'identity_json': row['identity_json'],
-                             'source_position': row['source_position'],
-                             'source_json': {k: source.get(k) for k in
-                                             ('source_url', 'availability', 'retailer', 'store_id')}})
-            offset += len(page)
-            if offset > catalog.metadata.product_count:
-                raise CatalogUnavailable('Bulk inventory count exceeds verified version')
-            if len(page) < 900:
-                break
+                'order': 'source_position.asc', 'offset': offset, 'limit': page_size})
+            if not isinstance(page, list) or len(page) != min(page_size, product_count - offset):
+                raise CatalogUnavailable('Bulk inventory count differs from verified version')
+            return page
+
+        # Read the immutable inventory version in bounded waves. Consume pages
+        # in source order so candidate and optimizer tie-breaking stay identical.
+        offsets = range(0, product_count + 1, page_size)
+        with ThreadPoolExecutor(max_workers=page_workers, thread_name_prefix='store-page') as pages:
+            for start in range(0, len(offsets), page_workers):
+                pending = [pages.submit(copy_context().run, read_page, offset)
+                           for offset in offsets[start:start + page_workers]]
+                for future in pending:
+                    page = future.result()
+                    for row in page:
+                        feature = row['feature_json']
+                        pid = feature.get('product_id')
+                        source = row['source_json']
+                        if not isinstance(pid, str) or not pid or pid in seen:
+                            raise CatalogUnavailable('Duplicate or missing bulk product ID')
+                        if catalog.metadata.retailer == 'ctown' and (
+                                source.get('retailer') != 'ctown' or source.get('store_id') != catalog.metadata.store_id):
+                            raise CatalogUnavailable('Cross-store bulk inventory rejected')
+                        seen.add(pid)
+                        # Keep matching/package features and identities, never source row blobs.
+                        rows.append({'feature_json': feature, 'identity_json': row['identity_json'],
+                                     'source_position': row['source_position'],
+                                     'source_json': {k: source.get(k) for k in
+                                                     ('source_url', 'availability', 'retailer', 'store_id')}})
         if len(rows) != catalog.metadata.product_count:
             raise CatalogUnavailable('Bulk inventory count differs from verified version')
         if not catalog.current():

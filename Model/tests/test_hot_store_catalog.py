@@ -63,6 +63,24 @@ class HotStoreTests(unittest.TestCase):
         c=self.catalog()
         with ThreadPoolExecutor(max_workers=5) as pool:values=list(pool.map(lambda _:self.hot.get(c),range(5)))
         self.assertEqual(len(self.products()),1);self.assertTrue(all(v is values[0] for v in values))
+    def test_bulk_pages_overlap_but_keep_source_order(self):
+        c=self.catalog()
+        c.metadata=replace(c.metadata,product_count=901)
+        template=self.gateway.rows[c.metadata.id][0]
+        self.gateway.rows[c.metadata.id]=[
+            dict(template,source_position=i,feature_json=dict(template['feature_json'],product_id=str(i)))
+            for i in range(901)
+        ]
+        both_pages=threading.Barrier(2)
+        select=self.gateway.select
+        def overlapping_select(table,params):
+            if table=='store_products':
+                both_pages.wait(timeout=5)
+            return select(table,params)
+        with patch.object(self.gateway,'select',side_effect=overlapping_select):
+            prepared=self.hot.get(c)
+        self.assertEqual(list(prepared._rows),[str(i) for i in range(901)])
+        self.assertEqual(sorted(p['offset'] for p in self.products()),[0,900])
     def test_inventory_and_feature_versions_invalidate(self):
         c=self.catalog();first=self.hot.get(c)
         c.version_id='database-v2';c.metadata=replace(c.metadata,inventory_version='source-v2')

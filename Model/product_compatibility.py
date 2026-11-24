@@ -6,7 +6,7 @@ import re
 import math
 import time
 from collections import OrderedDict
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -2608,9 +2608,9 @@ class ProductMatchService:
             profiles[text] = (query_profile, parsed, key)
             cached = self.cache.get(key)
             if cached and self._cached_selection_is_valid(cached, query_profile):
-                result = copy.deepcopy(cached)
-                result.cache_hit = True
-                result.total_timing_ms = round((time.perf_counter() - started_by_text[text]) * 1000, 2)
+                # Clone the nested match data only when emitting a result to a caller.
+                result = replace(cached, cache_hit=True,
+                                 total_timing_ms=round((time.perf_counter() - started_by_text[text]) * 1000, 2))
                 results_by_key[key] = result
                 continue
             forced = self._forced_result(text, query_profile, parsed, started_by_text[text])
@@ -2643,17 +2643,12 @@ class ProductMatchService:
                 results_by_key[key] = result
 
         ordered = []
-        emitted_keys = set()
         for text in texts:
-            _profile, _parsed, key = profiles[text]
+            _profile, parsed, key = profiles[text]
             result = copy.deepcopy(results_by_key[key])
             result.raw_ingredient = text
-            result.parsed_ingredient = profiles[text][1]
-            if key in emitted_keys:
-                ordered.append(copy.deepcopy(result))
-            else:
-                ordered.append(result)
-                emitted_keys.add(key)
+            result.parsed_ingredient = copy.deepcopy(parsed)
+            ordered.append(result)
         return ordered
 
 
