@@ -309,7 +309,7 @@ function getApiEndpoints(path) {
 const SIGNED_OUT_PANEL_IDS = new Set(["home", "account"]);
 const ONBOARDING_PANEL_ID = "onboarding";
 const SIGNED_IN_DEFAULT_PANEL_ID = "home";
-const SIGNED_OUT_DEFAULT_PANEL_ID = "home";
+const SIGNED_OUT_DEFAULT_PANEL_ID = "account";
 const ONBOARDING_TOTAL_STEPS = 4;
 const SNAP101_PANEL_IDS = new Set(["snap101-snap", "snap101-nutrition", "snap101-signup", "snap101-signup-options", "snap101-centers"]);
 const SNAP101_DEFAULT_PANEL_ID = "snap101-snap";
@@ -1540,6 +1540,8 @@ function showAuthMode(mode) {
   }
   showSignInButton.classList.toggle("active", !isSignUp);
   showSignUpButton.classList.toggle("active", isSignUp);
+  showSignInButton.setAttribute("aria-pressed", String(!isSignUp));
+  showSignUpButton.setAttribute("aria-pressed", String(isSignUp));
   setAuthStatus("");
 }
 
@@ -1602,10 +1604,11 @@ async function renderAuthState(user) {
     onboardingForNewAccount = false;
     authLandingPending = false;
     pendingNewAccountUsername = "";
-    showAuthMode("sign-in");
+    showAuthMode("sign-up");
     setAuthStatus(t("copy.signed.out.05d2a7", {}), "success");
   }
-  if (activeAppMode === "snapp") {
+  if (activeAppMode === "snapp" &&
+      (wasSignedIn || !SIGNED_OUT_PANEL_IDS.has(document.querySelector(".panel.visible")?.id))) {
     showPanel(SIGNED_OUT_DEFAULT_PANEL_ID);
   }
 }
@@ -4566,7 +4569,7 @@ updateSnackGame();
 updateWaterGame();
 applyLanguage();
 renderSchedule();
-showAuthMode("sign-in");
+showAuthMode("sign-up");
 primeHomeSales();
 initializeAuth();
 handleInitialUrlState();

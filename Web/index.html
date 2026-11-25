@@ -26,8 +26,8 @@
       </div>
       <label class="global-language-control"><span data-i18n="settings.language">Language</span><select id="global-language-select" aria-label="Language" data-i18n-aria-label-key="settings.language"><option value="en">English</option><option value="es">Español</option><option value="zh-CN">简体中文</option><option value="zh-TW">繁體中文</option><option value="ru">Русский</option><option value="bn">বাংলা</option><option value="ht">Kreyòl ayisyen</option><option value="ko">한국어</option><option value="ar">العربية</option><option value="fr">Français</option><option value="ur">اردو</option><option value="pl">Polski</option></select></label>
       <nav class="nav-buttons">
-        <button data-target="home" data-app-view="snapp" class="nav-button active"><span data-i18n="nav.home">Home</span></button>
-        <button data-target="account" data-app-view="snapp" data-auth-view="signed-out" class="nav-button"><span data-i18n="nav.account">Account</span></button>
+        <button data-target="home" data-app-view="snapp" class="nav-button"><span data-i18n="nav.home">Home</span></button>
+        <button data-target="account" data-app-view="snapp" data-auth-view="signed-out" class="nav-button active"><span data-i18n="nav.account">Account</span></button>
         <button data-target="recipe-chat" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden><span data-i18n="nav.recipeChat">Recipe Chat</span></button>
         <button data-target="my" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden><span data-i18n="nav.stores">Stores</span></button>
         <button data-target="pantry" data-app-view="snapp" data-auth-view="signed-in" class="nav-button" hidden><span data-i18n="nav.pantry">Pantry</span></button>
@@ -46,47 +46,31 @@
     </header>
 
     <main>
-      <section id="account" class="panel">
+      <section id="account" class="panel visible" aria-labelledby="account-title">
         <div class="auth-layout">
           <div class="auth-copy">
-            <p class="eyebrow"><span data-i18n="copy.snapp.account">SNAPP Account</span></p>
-            <h1><span data-i18n="copy.save.your.planning.session.with.supabase">Save your planning session with Supabase.</span></h1>
-            <p>
-              <span data-i18n="copy.create.an.account.or.sign.in.to.use.snapp">Create an account or sign in to use SNAPP with your username and password.</span>
-            </p>
+            <h1 id="account-title" data-i18n="copy.snapp.account">SNAPP Account</h1>
+            <ul class="auth-benefits">
+              <li data-i18n="copy.meals.that.fit.your.household">Meals that fit your household</li>
+              <li data-i18n="copy.stores.close.to.home">Stores close to home</li>
+              <li data-i18n="copy.a.simpler.shopping.list">A simpler shopping list</li>
+            </ul>
+            <img class="auth-photo" src="https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&amp;fit=crop&amp;w=850&amp;q=80" alt="" width="850" height="600" />
           </div>
           <div class="auth-card">
-            <div class="auth-tabs" role="tablist" aria-label="Account actions" data-i18n-aria-label-key="copy.account.actions">
-              <button id="show-sign-in" type="button" class="active"><span data-i18n="copy.sign.in">Sign in</span></button>
-              <button id="show-sign-up" type="button"><span data-i18n="copy.create.account">Create account</span></button>
+            <div class="auth-tabs" role="group" aria-label="Account actions" data-i18n-aria-label-key="copy.account.actions">
+              <button id="show-sign-up" type="button" class="active" aria-pressed="true" aria-controls="sign-up-form"><span data-i18n="copy.create.account">Create account</span></button>
+              <button id="show-sign-in" type="button" aria-pressed="false" aria-controls="sign-in-form"><span data-i18n="copy.sign.in">Sign in</span></button>
             </div>
 
-            <form id="sign-in-form" class="auth-form">
-              <label>
-                <span data-i18n="copy.username">Username</span>
-                <input
-                  type="text"
-                  id="sign-in-username"
-                  autocomplete="username"
-                  pattern="[A-Za-z0-9._-]{3,24}"
-                  required
-                />
-              </label>
-              <label>
-                <span data-i18n="copy.password">Password</span>
-                <input type="password" id="sign-in-password" autocomplete="current-password" required />
-              </label>
-              <button type="submit"><span data-i18n="copy.sign.in">Sign in</span></button>
-            </form>
-
-            <form id="sign-up-form" class="auth-form" hidden>
+            <form id="sign-up-form" class="auth-form" aria-labelledby="show-sign-up">
               <label>
                 <span data-i18n="copy.username">Username</span>
                 <input
                   type="text"
                   id="sign-up-username"
                   autocomplete="username"
-                  pattern="[A-Za-z0-9._-]{3,24}"
+                  pattern="[A-Za-z0-9._\-]{3,24}"
                   required
                 />
               </label>
@@ -101,6 +85,24 @@
                 />
               </label>
               <button type="submit"><span data-i18n="copy.create.account">Create account</span></button>
+            </form>
+
+            <form id="sign-in-form" class="auth-form" hidden aria-labelledby="show-sign-in">
+              <label>
+                <span data-i18n="copy.username">Username</span>
+                <input
+                  type="text"
+                  id="sign-in-username"
+                  autocomplete="username"
+                  pattern="[A-Za-z0-9._\-]{3,24}"
+                  required
+                />
+              </label>
+              <label>
+                <span data-i18n="copy.password">Password</span>
+                <input type="password" id="sign-in-password" autocomplete="current-password" required />
+              </label>
+              <button type="submit"><span data-i18n="copy.sign.in">Sign in</span></button>
             </form>
 
             <div id="signed-in-account" class="signed-in-account" hidden>
@@ -469,7 +471,7 @@
         </div>
       </section>
 
-      <section id="home" class="panel visible">
+      <section id="home" class="panel">
         <div class="home-hero signed-out-home">
           <div>
             <p class="eyebrow"><span data-i18n="copy.nourishment.made.practical">Nourishment Made Practical</span></p>
