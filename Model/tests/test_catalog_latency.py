@@ -20,7 +20,7 @@ from test_supabase_store_catalog import Cache
 
 def stable(value):
     if isinstance(value, dict):
-        return {k: stable(v) for k, v in value.items() if k not in ('elapsed_ms', 'latency_ms', 'cache_hit')}
+        return {k: stable(v) for k, v in value.items() if k not in ('elapsed_ms', 'basket_generation_ms', 'latency_ms', 'cache_hit')}
     if isinstance(value, list):
         return [stable(v) for v in value]
     return value

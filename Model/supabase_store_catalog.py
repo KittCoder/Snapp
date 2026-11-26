@@ -23,15 +23,15 @@ _FEATURE_DEPENDENCIES = ('scripts/store_scrapers/aggregate.py', 'Model/ingredien
                          'Model/product_ontology.py', 'Model/food_identity_rules.py', 'Model/structural_identity_policy.py')
 FEATURE_VERSION = MATCHER_VERSION + ':' + ONTOLOGY_VERSION + ':catalog-v2:' + hashlib.sha256(
     b''.join((ROOT / path).read_bytes() for path in _FEATURE_DEPENDENCIES)).hexdigest()
-# The preceding snapshot uses the identical feature schema. Rebuild its
-# identities once per hot-store load so a code rollout never blanks pricing
-# while the durable catalogs are being reindexed. All other versions fail closed.
+# These snapshots use a compatible feature schema. Rebuild their identities
+# on load under current purchase rules. Other versions fail closed.
 PREVIOUS_FEATURE_VERSION = 'ingredient-product-matcher-v3.9:food-identity-v3.13:catalog-v2:08bd3a11d806ee40eccae2f5e4fb963ee4912a99e234bc9fadcee4ea6ccaeaab'
 KITCHEN_PREVIOUS_FEATURE_VERSION = 'ingredient-product-matcher-v3.10:food-identity-v3.14:catalog-v2:b026a525a5dd5ca7d43a7a05116a14c9d116972079f4d20f7c7e798e241ea402'
 PACKAGE_PREVIOUS_FEATURE_VERSION = 'ingredient-product-matcher-v3.10:food-identity-v3.15:catalog-v2:ef737fc969b6a8252f931a79f59d25abe406f079af603b4b362ed5b330b74296'
 PORTION_PREVIOUS_FEATURE_VERSION = 'ingredient-product-matcher-v3.11:food-identity-v3.15:catalog-v2:ef737fc969b6a8252f931a79f59d25abe406f079af603b4b362ed5b330b74296'
 HOUSEHOLD_PREVIOUS_FEATURE_VERSION = 'ingredient-product-matcher-v3.11:food-identity-v3.16:catalog-v2:46634a92400cedab3680f25ad36e7c0419914f392ac16856b992a85e52ddcdbd'
-READABLE_FEATURE_VERSIONS = frozenset(('ingredient-product-matcher-v3.11:food-identity-v3.17:catalog-v2:3036d67d76bb340899ceae0042c65269b27ee9643dc70b252d31467ab46a4c6c', FEATURE_VERSION, PREVIOUS_FEATURE_VERSION, KITCHEN_PREVIOUS_FEATURE_VERSION, PACKAGE_PREVIOUS_FEATURE_VERSION, PORTION_PREVIOUS_FEATURE_VERSION, HOUSEHOLD_PREVIOUS_FEATURE_VERSION))
+BUTTER_PREVIOUS_FEATURE_VERSION = 'ingredient-product-matcher-v3.11:food-identity-v3.18:catalog-v2:e7a5cbd9f5293a70dbfc593a01872a4e85ece5d64450be773f3a27172c415cad'
+READABLE_FEATURE_VERSIONS = frozenset((BUTTER_PREVIOUS_FEATURE_VERSION, 'ingredient-product-matcher-v3.11:food-identity-v3.17:catalog-v2:3036d67d76bb340899ceae0042c65269b27ee9643dc70b252d31467ab46a4c6c', FEATURE_VERSION, PREVIOUS_FEATURE_VERSION, KITCHEN_PREVIOUS_FEATURE_VERSION, PACKAGE_PREVIOUS_FEATURE_VERSION, PORTION_PREVIOUS_FEATURE_VERSION, HOUSEHOLD_PREVIOUS_FEATURE_VERSION))
 POOL_LIMIT = 4500
 BASKET_POOL_LIMIT = 6000
 
@@ -194,7 +194,7 @@ class DatabaseStoreCatalog:
 
     @property
     def cache_version(self):
-        return (self.version_id, FEATURE_VERSION)
+        return (self.version_id, self.feature_version, FEATURE_VERSION)
 
     def current(self):
         versions = self.gateway.select('store_inventory_versions', {
@@ -238,7 +238,7 @@ class DatabaseStoreCatalog:
                 # Quantity is not a candidate predicate. Keep every required
                 # attribute AND the exact lexical fallback term in the key.
                 identity['normalized_text'] = profile.normalized_signature or query.normalized_text
-                key = self.cache.key(self.metadata.id, (self.metadata.inventory_version, self.version_id),
+                key = self.cache.key(self.metadata.id, (self.metadata.inventory_version, self.version_id, self.feature_version),
                                      identity, self.override_hash)
                 candidates = self.cache.get(key)
                 if candidates is None:
@@ -254,6 +254,10 @@ class DatabaseStoreCatalog:
                         candidates = query_pool('semantic_head', [b.semantic_head for b in branches if b.semantic_head not in (None,'unknown')])
                     if not candidates:
                         candidates = query_pool('normalized_name', [profile.normalized_signature or query.normalized_text])
+                    if self.feature_version != FEATURE_VERSION and {'cracker', 'cookie', 'chips'}.intersection(families):
+                        # Legacy indexes still place short butter-flavor titles under dairy:butter.
+                        legacy = query_pool('subfamily', ['butter'])
+                        candidates = list({r['feature_json']['product_id']: r for r in candidates + legacy}.values())
                     if len(candidates)>POOL_LIMIT: raise CatalogUnavailable('Candidate pool exceeds safe limit')
                     self.cache.put(key,candidates)
                 if len(candidates)>POOL_LIMIT: raise CatalogUnavailable('Cached candidate pool exceeds safe limit')
@@ -270,7 +274,7 @@ class DatabaseStoreCatalog:
             # reusing parsed state even if a malformed cache changes a row in place.
             row_hash = hashlib.sha256(json.dumps(ordered, sort_keys=True,
                                       separators=(',', ':'), allow_nan=False).encode()).hexdigest()
-            key = (self.metadata.id, self.version_id, FEATURE_VERSION, self.override_hash, row_hash, self.metadata)
+            key = (self.metadata.id, self.version_id, FEATURE_VERSION, self.override_hash, row_hash, self.metadata, self.feature_version)
             prepared = self.prepared_cache.get(key)
         if prepared is None:
             prepared = RequestCatalog(self.metadata, ordered, rebuild_identities=self.feature_version!=FEATURE_VERSION)

@@ -13,7 +13,7 @@ from food_identity_rules import (FOUNDATION_HEADS, BASIC_COMPOUNDS, COMPOSITE_MA
 
 from structural_identity_policy import (Evidence, REQUIRED_ATTRIBUTES, identity_form, semantic_head, required_evidence, generic_child, attribute_exception, derived_parts, purchased_compound_head, verified_whole_produce_base)
 
-ONTOLOGY_VERSION = 'food-identity-v3.18'
+ONTOLOGY_VERSION = 'food-identity-v3.19'
 
 @dataclass(frozen=True)
 class FoodIdentity:
@@ -231,8 +231,51 @@ FOUNDATIONS = ((
 ) + FOUNDATIONS)
 
 
+# Product-line alias verified by the manufacturer:
+# https://colombinaus.com/collections/crakenas
+CRAKENAS = r'\bcrac?kenas\b'
+BUTTER_WORD = r'\b(?:butter|buttery)\b'
+SNACK_HEADS = (
+    ('cracker', 'generic', r'\bcrackers?\b(?! barrel\b)'),
+    ('cookie', 'generic', r'\b(?:cookies?|wafers?)\b'),
+    ('chips', 'generic', r'\b(?:chips?|crisps?)\b'),
+    ('prepared', 'source_snack', r'\b(?:pretzels?|popcorn|puffcorn|snacks?)\b'),
+)
+SNACK_CATEGORIES = {
+    'cracker': ('cracker', 'generic'), 'crackers': ('cracker', 'generic'),
+    'cookie': ('cookie', 'generic'), 'cookies': ('cookie', 'generic'),
+    'cookies and wafers': ('cookie', 'generic'),
+    'chips': ('chips', 'generic'), 'potato chips': ('chips', 'generic'),
+    'popcorn': ('prepared', 'source_snack'), 'pretzels': ('prepared', 'source_snack'),
+    'snacks': ('prepared', 'source_snack'), 'frozen snacks': ('prepared', 'source_snack'),
+    'cookies and crackers': ('prepared', 'source_snack'),
+}
+
+
+def butter_snack_head(text, feature, product, title):
+    if product and has(title, CRAKENAS):
+        return ('cracker', 'generic'), 'verified_crakenas_cracker_line'
+    if not has(text, BUTTER_WORD):
+        return None, None
+    for family, subfamily, pattern in SNACK_HEADS:
+        if has(text, pattern):
+            return (family, subfamily), 'explicit_snack_head'
+    if product:
+        labels = (feature.get('category'), feature.get('subcategory'), *feature.get('source_categories', ()))
+        types = {SNACK_CATEGORIES[label] for label in map(norm, labels) if label in SNACK_CATEGORIES}
+        specific = types - {('prepared', 'source_snack')}
+        if len(specific) == 1:
+            return specific.pop(), 'source_snack_product_type'
+        if types:
+            return ('prepared', 'source_snack'), 'source_snack_product_type'
+    return None, None
+
+
 def describe(text, *, feature=None, product=False):
     feature=feature or {}
+    categories = feature.get('source_categories', ())
+    if not isinstance(categories, (tuple, list)):
+        feature = {**feature, 'source_categories': (categories,) if isinstance(categories, str) else ()}
     raw=norm(text)
     if not product:
         raw=re.sub(r"\bpeppeer\b","pepper",raw)
@@ -317,6 +360,13 @@ def describe(text, *, feature=None, product=False):
     elif has(detection, r'\bbeverages?\b|(?<!to )(?<!can )\bdrinks?\b(?! (?:it|them)\b)'):
         beverage = ('beverage', 'drink', 'drink')
     precision=beverage or purchased_compound_head(detection) or precision_identity(detection)
+    snack_head, snack_evidence = butter_snack_head(detection, feature, product, raw)
+    if not product and norm(parsed.canonical_name) in ('cracker', 'crackers'):
+        snack_head, snack_evidence = ('cracker', 'generic'), 'explicit_snack_head'
+    elif product and detection in ('cracker', 'crackers'):
+        snack_head, snack_evidence = ('cracker', 'generic'), 'explicit_snack_head'
+    if snack_head and (not precision or precision[0] != snack_head[0]):
+        precision = (*snack_head, detection)
     if product and precision and precision[:2]==('extract','vanilla') and not has(detection,r'vanilla (?:extract|essence)'):
         precision=('prepared','unverified_flavor_head','vanilla')
     micro=micro_identity(detection)
@@ -793,6 +843,15 @@ def describe(text, *, feature=None, product=False):
             label=norm(feature.get('verified_label_text'))
             if has(label,r'plant based|meat from plants|vegan|vegetarian'):
                 values['dietary_identity']='plant';evidence.append('explicit_plant_label')
+    if snack_head and values.get('family') == snack_head[0]:
+        evidence.append(snack_evidence)
+        if snack_head[0] in ('cracker', 'cookie') and has(detection, BUTTER_WORD):
+            values['flavor'] = 'butter'
+    if product and (values.get('family'), values.get('subfamily')) == ('dairy', 'butter'):
+        label = norm(feature.get('verified_label_text'))
+        if has(detection, r'\bbutter flavou?r(?:ed|ing)?\b') or has(label, r'\bbutter flavou?r(?:ed|ing)?\b'):
+            values['ambiguous'] = True
+            evidence.append('unverified_butter_flavor_head')
     values['evidence']=tuple(evidence)
     return FoodIdentity(**values)
 

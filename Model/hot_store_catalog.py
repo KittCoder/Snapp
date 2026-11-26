@@ -22,7 +22,7 @@ class HotStoreCatalogCache:
     def key(catalog):
         from supabase_store_catalog import FEATURE_VERSION
         return (catalog.metadata.id, catalog.metadata.inventory_version, FEATURE_VERSION,
-                catalog.version_id, catalog.override_hash)
+                catalog.version_id, catalog.feature_version, catalog.override_hash)
 
     def is_hot(self, catalog):
         with self.lock:

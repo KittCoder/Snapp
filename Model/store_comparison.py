@@ -76,11 +76,15 @@ class BasketComparison:
             raise CatalogError('Store inventory changed or unavailable; reload registry')
 
     def compare(self, recipes, store_ids, mw_semantic=False, pantry_items=None):
+        started = time.perf_counter()
         catalogs = self.registry.select(store_ids)
         self._current(catalogs)
         plan = self._plan(recipes,catalogs,mw_semantic,pantry_items)
         cached = self._cached(plan)
-        return cached if cached is not None else self._calculate(plan,catalogs,mw_semantic)
+        result = cached if cached is not None else self._calculate(plan,catalogs,mw_semantic)
+        # Measure this comparison independently of the cached basket generation.
+        result['elapsed_ms'] = round((time.perf_counter() - started) * 1000, 2)
+        return result
 
     def compare_recipes(self, recipes, store_id, mw_semantic=False, pantry_items=None, on_result=None):
         """One version check and one matching/embedding batch; independent purchases."""
@@ -140,7 +144,7 @@ class BasketComparison:
             r['best_basket']=bool(len(complete)>=2 and r['complete'] and r['basket_total']==best)
             r['savings_vs_other_stores']={o['id']:round(o['basket_total']-r['basket_total'],2) for o in complete if r['complete'] and o['id']!=r['id']}
         results.sort(key=lambda r:(not r['complete'],-r['coverage_count'],r['basket_total'] if r['basket_total'] is not None else float('inf'),r['id']))
-        result={'basket_id':key,'stores':results,'comparable_store_count':len(complete),'cache_hit':False,'elapsed_ms':round((time.perf_counter()-started)*1000,2),'fees_taxes_excluded':True,'versions':{'matcher':MATCHER_VERSION,'ontology':ONTOLOGY_VERSION,'deal_optimizer':DEAL_OPTIMIZER_VERSION,'basket':OPTIMIZER_VERSION,'adapter':ADAPTER_VERSION}}
+        result={'basket_id':key,'stores':results,'comparable_store_count':len(complete),'cache_hit':False,'basket_generation_ms':round((time.perf_counter()-started)*1000,2),'fees_taxes_excluded':True,'versions':{'matcher':MATCHER_VERSION,'ontology':ONTOLOGY_VERSION,'deal_optimizer':DEAL_OPTIMIZER_VERSION,'basket':OPTIMIZER_VERSION,'adapter':ADAPTER_VERSION}}
         with self.cache_lock:
             self.cache[cache_key]=copy.deepcopy(result)
             while len(self.cache)>64:self.cache.popitem(last=False)
